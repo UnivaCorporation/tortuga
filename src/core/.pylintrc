@@ -1,0 +1,5 @@
+[MESSAGES CONTROL]
+disable=invalid-name,missing-docstring,locally-disabled,locally-enabled
+
+[VARIABLES]
+additional-builtins = _

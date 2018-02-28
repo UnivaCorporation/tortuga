@@ -1,0 +1,5 @@
+include etc/LICENSE
+include etc/tortuga-release
+include etc/tortuga_functions
+recursive-include man *.8
+include setup.py

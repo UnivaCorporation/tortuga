@@ -1,0 +1,65 @@
+#!/usr/bin/env python
+
+# Copyright 2008-2018 Univa Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# pylint: disable=no-member
+
+from tortuga.cli.tortugaCli import TortugaCli
+from tortuga.hardwareprofile.hardwareProfileFactory \
+    import getHardwareProfileApi
+from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
+
+
+class ClearIdleSoftwareProfileCli(TortugaCli):
+    """
+    Clear idle software profile of a hardware profile command line interface.
+    """
+
+    def __init__(self):
+        TortugaCli.__init__(self)
+
+        clearIdleSoftwareProfileAttrGroup = \
+            _('Set Idle Software Profile Attribute Options')
+
+        self.addOptionGroup(
+            clearIdleSoftwareProfileAttrGroup,
+            _('Hardware and profile must be specified.'))
+
+        self.addOptionToGroup(
+            clearIdleSoftwareProfileAttrGroup, '--hardware-profile',
+            dest='hwprofile', help=_('hardware profile name'))
+
+    def runCommand(self):
+        self.parseArgs(_("""
+    clear-idle-software-profile --hardware-profile=HWPROFILE
+
+Description:
+    The clear-idle-software-profile tool removes the association between a
+    hardware profile and its current idle software profile.
+"""))
+
+        hwprofile = self.getOptions().hwprofile
+
+        if not hwprofile:
+            raise InvalidCliRequest(
+                _('Hardware profile name must be specified'))
+
+        api = getHardwareProfileApi(self.getUsername(), self.getPassword())
+
+        api.setIdleSoftwareProfile(hwprofile)
+
+
+if __name__ == '__main__':
+    ClearIdleSoftwareProfileCli().run()

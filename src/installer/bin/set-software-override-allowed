@@ -1,0 +1,66 @@
+#!/usr/bin/env python
+
+# Copyright 2008-2018 Univa Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# pylint: disable=no-member
+
+from tortuga.kit.kitCli import KitCli
+from tortuga.hardwareprofile.hardwareProfileFactory import getHardwareProfileApi
+
+
+class SetSoftwareOverrideAllowed(KitCli):
+    def __init__(self):
+        super(SetSoftwareOverrideAllowed, self).__init__(validArgCount=2)
+
+    def runCommand(self):
+        self.parseArgs('''
+    set-software-override-allowed HARDWAREPROFILENAME [true | false]
+
+Description:
+    The set-software-override-allowed tool  sets  the  software  ovveride
+    allowed  attribute  on a given hardware profile.  When this attribute
+    is set the Tortuga tools use the values, if set, in the software pro-
+    file  of  a given node for initrd, kernel, and kernel parameters.  If
+    the attribute is false the values will always come from the  hardware
+    profile.
+''')
+
+        if self.getNArgs() != 2:
+            self.usage(_('Missing required arguments'))
+
+        hardwareProfileName = self.getArg(0)
+
+        flag = self.getArg(1)
+
+        if flag.upper() == _('TRUE'):
+            flag = True
+        elif flag.upper() == _('FALSE'):
+            flag = False
+        else:
+            self.usage(_('Value must be one of "true" or "false"'))
+
+        api = getHardwareProfileApi(self.getUsername(), self.getPassword())
+        api.updateSoftwareOverrideAllowed(hardwareProfileName, flag)
+
+        msg = _('Set softwareOverrideAllowed of [{0}] to [{1}]').format(
+            hardwareProfileName, str(flag))
+
+        self.getLogger().info(msg)
+
+        print(msg)
+
+
+if __name__ == '__main__':
+    SetSoftwareOverrideAllowed().run()

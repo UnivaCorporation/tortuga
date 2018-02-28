@@ -1,0 +1,638 @@
+# Copyright 2008-2018 Univa Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import configparser
+import copy
+import importlib
+import inspect
+from logging import getLogger
+import json
+import os
+import pkgutil
+
+from .metadata import KIT_METADATA_FILE, KitMetadataSchema
+from .registry import register_kit_installer
+from .utils import pip_install_requirements
+from tortuga.config.configManager import ConfigManager
+from tortuga.exceptions.configurationError import ConfigurationError
+from tortuga.objects.eula import Eula
+from tortuga.objects.component import Component
+from tortuga.objects.osFamilyInfo import OsFamilyInfo
+from tortuga.objects.kit import Kit
+
+logger = getLogger(__name__)
+
+
+EULA_FILE = 'docs/EULA.txt'
+
+
+class ConfigurableMixin:
+    """
+    A mixin class for configurable entities.
+
+    """
+    config_type = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._config_parser = None
+        self.config_path = os.path.join(self.get_config_base(), self.name)
+        self.config_file = os.path.join(
+            self.config_path,
+            '{}-{}.conf'.format(self.name, self.config_type)
+        )
+
+    def get_config_base(self):
+        raise NotImplementedError()
+
+    def get_config_defaults(self):
+        return {}
+
+    def get_config(self, reread=False):
+        if self._config_parser is None or reread:
+            try:
+                self._config_parser = configparser.ConfigParser()
+                self._config_parser.read(self.config_file)
+            except:
+                logger.debug(
+                    'No valid configuration for {}: {}'.format(
+                        self.config_type, self.name))
+        return self._config_parser
+    
+    def set_defaults(self, config_parser):
+        if config_parser is None:
+            config_parser = self.get_config()
+
+        #
+        # Load defaults
+        #
+        defaults = self.get_config_defaults()
+        defaults_config_parser = configparser.ConfigParser()
+        if defaults is not None:
+            for k, v in list(defaults.items()):
+                if not defaults_config_parser.has_section(k):
+                    defaults_config_parser.add_section(k)
+                if v is not None:
+                    for vk, vv in list(v.items()):
+                        defaults_config_parser.set(k, vk, vv)
+
+        #
+        # Now override program defaults with existing values
+        #
+        for section in config_parser.sections():
+            if not defaults_config_parser.has_section(section):
+                defaults_config_parser.add_section(section)
+            for option in config_parser.options(section):
+                defaults_config_parser.set(
+                    section, option, config_parser.get(section, option))
+
+        #
+        # Finally set the internal config parser to our new defaults
+        #
+        self._config_parser = defaults_config_parser
+
+    def write_default_config(self):
+        import configparser
+        config_parser = configparser.ConfigParser()
+        self.set_defaults(config_parser)
+        self.write_config()
+    
+    def write_config(self):
+        if self.config_file is None:
+            return
+        
+        if not os.path.exists(os.path.dirname(self.config_file)):
+            os.makedirs(os.path.dirname(self.config_file))
+        config_parser = self.get_config()
+        with open(self.config_file, 'w') as fd:
+            config_parser.write(fd)
+
+
+class KitInstallerMeta(type):
+    """
+    Metaclass for kit installers.
+
+    The purpose of this metaclass is to load the metadata from the
+    KIT_METADATA_FILE file.
+
+    """
+    def __init__(cls, name, bases, attrs):
+        super().__init__(name, bases, attrs)
+
+        #
+        # Don't attempt to load the base installer
+        #
+        if name == 'KitInstallerBase':
+            return
+
+        #
+        # Load the kit metadata
+        #
+        kit_pkg_name = inspect.getmodule(cls).__package__
+        kit_pkg_depth = len(kit_pkg_name.split('.'))
+        kit_file_path = inspect.getfile(cls)
+        kit_file_path_segments = kit_file_path.split(os.path.sep)
+        kit_install_path_segments = \
+            kit_file_path_segments[:-(kit_pkg_depth + 1)]
+        kit_install_path = os.path.abspath(
+            os.path.join(
+                os.path.sep,
+                *kit_install_path_segments
+            )
+        )
+
+        metadata_file_path = os.path.join(kit_install_path, KIT_METADATA_FILE)
+        kit_meta_fp = None
+        try:
+            kit_meta_fp = open(metadata_file_path)
+        except FileNotFoundError:
+            pass
+        if not kit_meta_fp:
+            raise Exception(
+                'Metadata not found for kit: {}'.format(cls.__module__))
+        cls.install_path = kit_install_path
+        cls.load_meta(json.load(kit_meta_fp))
+
+        #
+        # Register the kit class
+        #
+        register_kit_installer(cls)
+
+
+class KitInstallerBase(ConfigurableMixin, metaclass=KitInstallerMeta):
+    """
+    Base class for kit installers.
+
+    """
+    config_type = 'kit'
+
+    #
+    # The kit installation directory
+    #
+    install_path = None
+
+    #
+    # Metadata, loaded via the load_meta class method.
+    #
+    name = None
+    version = None
+    iteration = None
+    spec = (None, None, None)
+    meta = {}
+
+    #
+    # Attributes, provided by instances of this class
+    #
+    puppet_modules = []
+
+    def __init__(self):
+        self.config_manager = ConfigManager()
+
+        #
+        # Setup paths
+        #
+        self.kit_path = os.path.dirname(inspect.getfile(self.__class__))
+        self.puppet_modules_path = os.path.join(
+            self.kit_path,
+            'puppet_modules'
+        )
+        self.files_path = os.path.join(
+            self.kit_path,
+            'files'
+        )
+
+        #
+        # Initialize configuration
+        #
+        super().__init__()
+
+        #
+        # Load components and resource adapters
+        #
+        self._component_installers = {}
+        self._component_installers_loaded = False
+
+        #
+        # Web service controller classes
+        #
+        self._ws_controller_classes = []
+        self._ws_controller_classes_loaded = False
+
+    def get_config_base(self):
+        return self.config_manager.getKitConfigBase()
+
+    @classmethod
+    def load_meta(cls, meta_dict):
+        """
+        Loads the meta data for the kit into the class.
+
+        :param meta_dict: A dict containing the metadata, as specified by
+                          the KitMetadataSchema class.
+
+        """
+        errors = KitMetadataSchema().validate(meta_dict)
+        if errors:
+            raise Exception(
+                'Kit metadata validation error: {}'.format(errors))
+        meta_dict = copy.deepcopy(meta_dict)
+        cls.name = meta_dict.pop('name')
+        cls.version = meta_dict.pop('version')
+        cls.iteration = meta_dict.pop('iteration')
+        cls.spec = (cls.name, cls.version, cls.iteration)
+        cls.meta = meta_dict
+
+    def _load_component_installers(self):
+        """
+        Load component installers for this kit.
+
+        """
+        if self._component_installers_loaded:
+            return
+
+        kit_pkg_name = inspect.getmodule(self).__package__
+        comp_pkg_name = '{}.components'.format(kit_pkg_name)
+        logger.debug(
+            'Searching for component installers in package: {}'.format(
+                comp_pkg_name)
+        )
+
+        #
+        # Look for the components sub-package
+        #
+        try:
+            comp_pkg = importlib.import_module(comp_pkg_name)
+        except ModuleNotFoundError:
+            logger.warning(
+                'No component installers found for kit: {}'.format(
+                    kit_pkg_name)
+            )
+            return
+
+        #
+        # Walk the components sub-package, looking for component installers
+        #
+        for loader, name, ispkg in pkgutil.walk_packages(comp_pkg.__path__):
+            if not ispkg:
+                continue
+
+            full_pkg_path = '{}.{}'.format(comp_pkg_name, name)
+            try:
+                #
+                # Look for the component module in the package
+                #
+                comp_inst_mod = importlib.import_module(
+                    '{}.component'.format(full_pkg_path))
+
+                #
+                # Look for the ComponentInstaller class in the module
+                #
+                if not hasattr(comp_inst_mod, 'ComponentInstaller'):
+                    logger.warning(
+                        'ComponentInstaller class not found: {}'.format(
+                            full_pkg_path)
+                    )
+
+                #
+                # Initialize the ComponentInstaller class and register
+                # it with the KitInstaller
+                #
+                comp_inst_class = comp_inst_mod.ComponentInstaller
+                comp_inst = comp_inst_class(self)
+                self._component_installers[comp_inst_class.name] = \
+                    comp_inst
+                logger.debug(
+                    'Component installer registered: {}'.format(
+                        comp_inst.spec)
+                )
+
+            except ModuleNotFoundError:
+                logger.debug('Package not a component: {}'.format(
+                    full_pkg_path))
+
+            self._component_installers_loaded = True
+
+    def is_installable(self):
+        """
+        Determines whether or not this kit is installable under the given
+        conditions/circumstances. Override this in your implementations as
+        necessary.
+
+        :return: True if it is installable, False otherwise.
+
+        """
+        return True
+
+    def run_action(self, action_name, *args, **kwargs):
+        """
+        Runs the specified action.
+
+        :param action_name: the name of the action to run
+
+        """
+        try:
+            logger.debug(
+                'Calling kit action: {} with arguments {}, {}'.format(
+                action_name, args, kwargs)
+            )
+            action = getattr(self, 'action_{}'.format(action_name))
+            return action(*args, **kwargs)
+        except KeyError:
+            raise Exception('Unknown action: {}'.format(action_name))
+
+    def get_kit(self):
+        """
+        Gets the Kit instance for this kit.
+
+        :return: a Kit instance
+
+        """
+        kit = Kit(
+            name=self.name,
+            version=self.version,
+            iteration=self.iteration
+        )
+        kit.setDescription(self.meta.get('description', None))
+        for component_installer in self.get_all_component_installers():
+            kit.addComponent(component_installer.get_component())
+        return kit
+
+    def get_eula(self):
+        """
+        Gets the EULA for this kit, if it exists.
+
+        :return: a Eula instance if there is a EULA file, otherwise None.
+
+        """
+        eula = None
+        eula_path = os.path.join(self.install_path, EULA_FILE)
+        if os.path.exists(eula_path) and os.path.isfile(eula_path):
+            eula_fp = open(eula_path)
+            text = eula_fp.read()
+            eula_fp.close()
+            eula = Eula(text=text)
+        return eula
+
+    def get_component_installer(self, component_name):
+        self._load_component_installers()
+        return self._component_installers[component_name]
+
+    def get_all_component_installers(self):
+        self._load_component_installers()
+        return [ci for ci in self._component_installers.values()]
+
+    def register_database_table_mappers(self):
+        """
+        Register database table mappers for this kit.
+
+        """
+        kit_pkg_name = inspect.getmodule(self).__package__
+        db_table_pkg_name = '{}.db.tables'.format(kit_pkg_name)
+        logger.debug(
+            'Searching for database table mappers in package: {}'.format(
+                db_table_pkg_name)
+        )
+        try:
+           importlib.import_module(db_table_pkg_name)
+        except ModuleNotFoundError:
+            logger.debug(
+                'No database table mappers found for kit: {}'.format(
+                   self.spec)
+            )
+
+    def register_web_service_controllers(self):
+        """
+        Register web service controllers for this kit.
+
+        """
+        kit_pkg_name = inspect.getmodule(self).__package__
+        ws_pkg_name = '{}.web_service.controllers'.format(kit_pkg_name)
+        logger.debug(
+            'Searching for web service controllers in package: {}'.format(
+                ws_pkg_name)
+        )
+        try:
+           importlib.import_module(ws_pkg_name)
+        except ModuleNotFoundError:
+            logger.debug(
+                'No web service controllers found for kit: {}'.format(
+                    self.spec)
+            )
+
+    def register_web_service_worker_actions(self):
+        """
+        Register web service worker actions for this kit.
+
+        """
+        kit_pkg_name = inspect.getmodule(self).__package__
+        ws_pkg_name = '{}.web_service.worker'.format(kit_pkg_name)
+        logger.debug(
+            'Searching for web service worker actions in package: {}'.format(
+                ws_pkg_name)
+        )
+        try:
+           importlib.import_module(ws_pkg_name)
+        except ModuleNotFoundError:
+            logger.debug(
+                'No web service worker actions found for kit: {}'.format(
+                    self.spec)
+            )
+
+    def action_install_puppet_modules(self, *args, **kwargs):
+        #
+        # Prevent circular import
+        #
+        from .actions import InstallPuppetModulesAction
+        return InstallPuppetModulesAction(self)(*args, **kwargs)
+
+    def action_pre_install(self):
+        pass
+
+    def action_pre_uninstall(self):
+        pass
+
+    def action_post_install(self):
+        #
+        # Install required python packages from requirements.txt
+        #
+        requirements_path = os.path.join(
+            self.kit_path,
+            'requirements.txt'
+        )
+        pip_install_requirements(self, requirements_path)
+
+    def action_post_uninstall(self):
+        pass
+
+    def action_uninstall_puppet_modules(self, *args, **kwargs):
+        #
+        # Prevent circular import
+        #
+        from .actions import UninstallPuppetModulesAction
+        return UninstallPuppetModulesAction(self)(*args, **kwargs)
+
+
+class ComponentInstallerBase(ConfigurableMixin):
+    config_type = 'component'
+
+    name = None
+    version = None
+    os_list = []
+
+    #
+    # Attributes, provided by instances of this class
+    #
+    installer_only = False
+    compute_only = False
+
+    def __init__(self, kit_installer):
+        self.kit_installer = kit_installer
+        self.spec = (self.kit_installer.spec, self.name, self.version)
+
+        #
+        # Setup paths
+        #
+        self.component_path = os.path.dirname(inspect.getfile(self.__class__))
+        self.files_path = os.path.join(
+            self.component_path,
+            'files'
+        )
+
+        #
+        # Initialize configuration
+        #
+        super().__init__()
+
+    def get_config_base(self):
+        return self.kit_installer.get_config_base()
+
+    def is_enableable(self, software_profile):
+        """
+        Determines whether this component can be enabled under the
+        given conditions/circumstances. Override this in your
+        implementations as necessary.
+
+        :param software_profile: the software profile to test
+
+        :return:                 True if it can be enabled, False otherwise.
+
+        """
+        node_type = software_profile.getType()
+
+        if node_type != 'installer' and self.installer_only:
+            raise ConfigurationError(
+                'Component can only be enabled on installer software'
+                'profiles: {}'.format(self.name))
+
+        if node_type == 'installer' and self.compute_only:
+            raise ConfigurationError(
+                'Component can only be enabled on compute software'
+                'profiles: {}'.format(self.name))
+
+        return True
+
+    def run_action(self, action_name, *args, **kwargs):
+        """
+        Runs the specified action.
+
+        :param action_name: the name of the action to run
+
+        """
+        try:
+            logger.debug(
+                'Calling component action: {} with arguments {}, {}'.format(
+                action_name, args, kwargs)
+            )
+            action = getattr(self, 'action_{}'.format(action_name))
+            return action(*args, **kwargs)
+        except KeyError:
+            raise Exception('Unknown action: {}'.format(action_name))
+
+    def get_component(self):
+        """
+        Gets a Component instance for this component.
+
+        :return: a Component instance
+
+        """
+        component = Component(
+            name=self.name,
+            version=self.version
+        )
+        for os_spec in self.os_list:
+            component.addOsFamilyInfo(
+                OsFamilyInfo(name=os_spec['family'],
+                             version=os_spec['version'],
+                             arch=os_spec['arch'])
+            )
+        return component
+
+    def action_add_host(self, hardware_profile_name, software_profile_name,
+                        nodes, *args, **kwargs):
+        pass
+
+    def action_delete_host(self, hardware_profile_name, software_profile_name,
+                           nodes, *args, **kwargs):
+        pass
+
+    def action_configure(self, software_profile_name, *args, **kwargs):
+        pass
+
+    def action_disable(self, software_profile_name, *args, **kwargs):
+        pass
+
+    def action_enable(self, software_profile_name, *args, **kwargs):
+        pass
+
+    def action_get_cloud_config(self, node, hardware_profile,
+                                software_profile, user_data, *args, **kwargs):
+        pass
+
+    def action_get_puppet_args(self, db_software_profile,
+                               db_hardware_profile):
+        return {}
+
+    def action_pre_add_host(self, hardware_profile, software_profile,
+                            hostname, ip, *args, **kwargs):
+        pass
+
+    def action_pre_delete_host(self, hardware_profile, software_profile,
+                               nodes, *args, **kwargs):
+        pass
+
+    def action_pre_disable(self, software_profile_name, *args, **kwargs):
+        pass
+
+    def action_pre_enable(self, software_profile_name, *args, **kwargs):
+        pass
+
+    def action_pre_install(self, *args, **kwargs):
+        pass
+
+    def action_pre_remove(self, *args, **kwargs):
+        pass
+
+    def action_post_disable(self, software_profile_name, *args, **kwargs):
+        pass
+
+    def action_post_enable(self, software_profile_name, *args, **kwargs):
+        pass
+
+    def action_post_install(self, *args, **kwargs):
+        pass
+
+    def action_post_remove(self, *args, **kwargs):
+        pass
+
+    def action_refresh(self, software_profile_list, *args, **kwargs):
+        pass

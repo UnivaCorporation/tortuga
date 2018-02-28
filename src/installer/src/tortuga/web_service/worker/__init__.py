@@ -1,0 +1,7 @@
+from .action_add_host import AddHostWorkerAction
+from .action_delete_host import DeleteHostWorkerAction
+from .registry import get_all_ws_worker_actions, register_ws_worker_action
+from .thread import worker_thread
+
+register_ws_worker_action(AddHostWorkerAction)
+register_ws_worker_action(DeleteHostWorkerAction)

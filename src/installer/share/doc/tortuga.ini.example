@@ -1,0 +1,81 @@
+; Copyright 2008-2018 Univa Corporation
+;
+; Licensed under the Apache License, Version 2.0 (the "License");
+; you may not use this file except in compliance with the License.
+; You may obtain a copy of the License at
+;
+;    http://www.apache.org/licenses/LICENSE-2.0
+;
+; Unless required by applicable law or agreed to in writing, software
+; distributed under the License is distributed on an "AS IS" BASIS,
+; WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+; See the License for the specific language governing permissions and
+; limitations under the License.
+
+;
+; Default configuration file for Tortuga
+;
+; Note: This file does *not* need to exist in order for the Tortuga
+;       installation to proceed.
+;
+
+[installer]
+;
+; Ports used by Tortuga. Values shown are defaults
+;
+; IntWebPort = 8008
+; WebservicePort = 8443
+; IntWebServicePort = 8444
+;
+
+;
+; Location of file repository used by Tortuga for storing OS distribution
+; media and other files required for provisioning.
+;
+; depotpath = /depot
+;
+
+;
+; 'host_action_hook_script' is called with the following arguments:
+;
+;   --action <add|delete|refresh>
+;   --software-profiles <name of affected software profiles>[,<...>]
+;                       Note: this is a comma-separated list
+;   --nodes <filename>
+;           Text file containing list of affected nodes, one per line.
+;
+; '--nodes' argument is not specified by the system when performing a 'refresh'
+; action.
+;
+; See the sample script in $TORTUGA_ROOT/etc/host-action-script.sh.example
+;
+; The script need not be a shell script, any script or executable can be used.
+;
+; host_action_hook_script = $TORTUGA_ROOT/etc/host-action-script.sh
+;
+
+;
+; [database]
+; Select backing database 'engine' used by Tortuga. Currently only 'sqlite'
+; and 'mysql' (default) are supported.
+;
+; engine = sqlite
+;
+
+;
+; Disable ActiveMQ (must be supplied in conjunction with --disable-activemq
+; argument to 'install-tortuga.sh'. ActiveMQ is enabled by default.
+;
+; [activemq]
+; enable = false
+;
+
+;
+; Disable services from specific kits.
+;
+; [tortuga_kit_base]
+;
+; Space-separated list of services from 'tortuga_kit_base' to be disabled.
+;
+; disable_services = nfs ssh ntpd
+;

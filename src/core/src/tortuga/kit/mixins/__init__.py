@@ -1,0 +1,1 @@
+from .resource_adapter import ResourceAdapterMixin

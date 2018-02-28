@@ -1,0 +1,35 @@
+#######################################################################
+##                                                                   ##
+##   Copyright (c) 2011-2015, Univa.  All rights reserved.           ##
+##   Copyright (c) 2010, Univa UD.  All rights reserved.             ##
+##   http://univa.com                                                ##
+##                                                                   ##
+##   License:                                                        ##
+##     Tortuga Draft                                                ##
+##                                                                   ##
+##                                                                   ##
+#######################################################################
+
+setenv TORTUGA_ROOT <%= @instroot -%>
+
+if ! $?TORTUGA_ROOT then
+    echo "Error: Tortuga has not been properly installed. Please reinstall."
+else
+    source $TORTUGA_ROOT/bin/activate.csh
+
+    if ( $?PYTHONPATH == 1 ) then
+       setenv PYTHONPATH $TORTUGA_ROOT/lib:$PYTHONPATH
+    else
+       setenv PYTHONPATH $TORTUGA_ROOT/lib
+    endif
+
+    setenv PATH $TORTUGA_ROOT/bin:$PATH
+
+    if ( $?MANPATH == 1 ) then
+       setenv MANPATH $TORTUGA_ROOT/man:$MANPATH
+    else
+       setenv MANPATH $TORTUGA_ROOT/man
+    endif
+endif
+
+alias get-node-list get-node-status -l

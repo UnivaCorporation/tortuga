@@ -1,0 +1,241 @@
+#!/usr/bin/env python
+
+# Copyright 2008-2018 Univa Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# pylint: disable=no-member
+
+import os.path
+from optparse import OptionValueError
+import json
+import glob
+
+from jinja2 import Template
+
+from tortuga.cli.tortugaCli import TortugaCli
+from tortuga.objects.osInfo import OsInfo
+from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
+from tortuga.softwareprofile.softwareProfileFactory \
+    import getSoftwareProfileApi
+from tortuga.objects.hardwareProfile import HardwareProfile
+from tortuga.hardwareprofile.hardwareProfileFactory \
+    import getHardwareProfileApi
+from tortuga.exceptions.invalidProfileCreationTemplate \
+    import InvalidProfileCreationTemplate
+from tortuga.exceptions.configurationError import ConfigurationError
+from tortuga.config.configManager import ConfigManager
+
+
+class CreateHardwareProfileCli(TortugaCli):
+    def __init__(self):
+        TortugaCli.__init__(self)
+
+        self._default_tmpl_dir = os.path.join(
+            ConfigManager().getRoot(),
+            'share/templates/hardware')
+
+        # Set up some defaults
+        #   Don't need user info here...this is an open api...
+
+        primaryInstallerSp = \
+            getSoftwareProfileApi().getSoftwareProfileById(1)
+
+        self.osInfo = primaryInstallerSp.getOsInfo()
+
+        self.defaultOs = '%s-%s-%s' % (self.osInfo.getName(),
+                                       self.osInfo.getVersion(),
+                                       self.osInfo.getArch())
+
+        self.tmplDict = {}
+
+        optionGroupName = _('Information')
+        self.addOptionGroup(optionGroupName, '')
+        self.addOptionToGroup(optionGroupName, '--list-templates',
+                              action='store_true',
+                              dest='bDisplayTemplateList',
+                              default=False,
+                              help=_('List available hardware profile'
+                                     ' templates'))
+
+        optionGroupName = _('Create Hardware Profile Options')
+        self.addOptionGroup(optionGroupName, '')
+        self.addOptionToGroup(optionGroupName, '-x', '--xml-file',
+                              dest='templatePath',
+                              help=_('Path to hardware profile creation'
+                                     ' template'))
+
+        self.addOptionToGroup(
+            optionGroupName, '-j', '--json-file', dest='jsonTemplatePath',
+            help=_('Path to JSON-formatted hardware profile creation'
+                   ' template'))
+
+        self.addOptionToGroup(optionGroupName, '--name', type='str',
+                              action='callback', callback=self.optCallback,
+                              help=_('Hardware profile name'))
+        self.addOptionToGroup(optionGroupName, '--description',
+                              action='callback', callback=self.optCallback,
+                              type='str', dest='description',
+                              help=_('Description for hardware profile'))
+        self.addOptionToGroup(optionGroupName, '--os', action='callback',
+                              metavar='OS SPEC', default=self.defaultOs,
+                              callback=self.optCallback, type="str", dest='os',
+                              help=_('Operating system (default: %default)'))
+        self.addOptionToGroup(optionGroupName, '--idleSoftwareProfile',
+                              type='str', dest='idleSoftwareProfile',
+                              action='callback', callback=self.optCallback,
+                              help=_('Specify idle software profile'))
+
+        self.addOptionToGroup(optionGroupName, '--defaults',
+                              dest='bUseDefaults', default=False,
+                              action='store_true',
+                              help=_('Do not use any defaults when'
+                                     ' creating the hardware profile'))
+
+    def optCallback(self, option, opt, value, parser): \
+            # pylint: disable=unused-argument
+        _optname = opt[2:]
+        _value = value
+
+        if _optname == 'os':
+            osValues = _value.split('-', 3)
+            if len(osValues) != 3:
+                raise InvalidCliRequest(
+                    _('Error: Incorrect operating system'
+                      ' specification.\n\n'
+                      '--os argument should be in NAME-VERSION-ARCH'
+                      ' format'))
+            name = osValues[0]
+            version = osValues[1]
+            arch = osValues[2]
+            self.osInfo = OsInfo(name, version, arch)
+            return
+
+        self.tmplDict[_optname] = _value
+
+    def displayTemplateList(self): \
+            # pylint: disable=no-self-use
+        templateFiles = glob.glob(
+            os.path.join(self._default_tmpl_dir, '*.xml'))
+
+        if templateFiles:
+            print('\n'.join(templateFiles))
+
+    def runCommand(self):
+        self.parseArgs(_("""
+    create-hardware-profile --list-templates
+
+    create-hardware-profile --xml-file TEMPLATEPATH --name=NAME
+       [ --description=DESCRIPTION ] [ --os=OS ] [ --idle=SOFTWAREPROFILENAME ]
+
+Description:
+    The  create-hardware-profile  tool either lists the paths of available
+    templates or creates a hardware profile from  an  existing  template.
+    When  creating a hardware profile the description, os, and idle soft-
+    ware profile specified in the template can be overridden by providing
+    the appropriate command line options.
+"""))
+
+        if self.getOptions().bDisplayTemplateList:
+            self.displayTemplateList()
+            return
+
+        if self.getOptions().templatePath and \
+                self.getOptions().jsonTemplatePath:
+            raise OptionValueError(
+                _('Only one hardware profile template can be specified'))
+
+        templatePath = self.getOptions().templatePath \
+            if self.getOptions().templatePath else \
+            self.getOptions().jsonTemplatePath
+
+        bUseDefaultTemplate = False
+        if not templatePath:
+            templatePath = os.path.join(
+                self._default_tmpl_dir, 'defaultHardwareProfile.tmpl.xml')
+
+            bUseDefaultTemplate = True
+
+        if not os.path.exists(templatePath):
+            raise InvalidCliRequest(
+                _('Cannot read template from %s') % (
+                    self.getOptions().templatePath))
+
+        settingsDict = {
+            'bUseDefaults': self.getOptions().bUseDefaults,
+            'osInfo': self.osInfo,
+        }
+
+        hardwareProfileApi = getHardwareProfileApi(
+            self.getUsername(), self.getPassword())
+
+        try:
+            # Process the hardware profile template
+            with open(templatePath) as fp:
+                tmpl = fp.read()
+
+            hwProfileTmpl = Template(tmpl).render(self.tmplDict)
+        except Exception as ex:
+            self.getLogger().error(
+                'Error applying template substitutions')
+
+            self.getLogger().exception(ex)
+
+            raise InvalidProfileCreationTemplate(
+                'Invalid hardware profile creation template: %s' % (ex))
+
+        try:
+            # We want to ignore all elements with id and hardware profile
+            # id...they would be there if the template was created from a
+            # dump of an existing profile
+
+            if bUseDefaultTemplate or self.getOptions().templatePath:
+                hwProfileSpec = HardwareProfile.getFromXml(
+                    hwProfileTmpl, ['id', 'hardwareProfileId'])
+            else:
+                hwProfileDict = json.loads(hwProfileTmpl)
+
+                hwProfileSpec = HardwareProfile.getFromDict(
+                    hwProfileDict['hardwareProfile'])
+
+            # Override any preset hardware profile name in the template
+            # if specified on the command-line
+            if 'name' in self.tmplDict:
+                hwProfileSpec.setName(self.tmplDict['name'])
+        except ConfigurationError as ex:
+            self.getLogger().exception(ex)
+
+            raise InvalidProfileCreationTemplate(
+                'Invalid hardware profile creation template: %s' % (ex))
+        except Exception as ex:
+            self.getLogger().debug(
+                'Error parsing hardware profile template')
+
+            self.getLogger().exception(ex)
+
+            raise InvalidProfileCreationTemplate(
+                'Invalid hardware profile creation template')
+
+        if hwProfileSpec is None:
+            raise InvalidProfileCreationTemplate(
+                'Invalid hardware creation template')
+
+        if not hwProfileSpec.getDescription():
+            hwProfileSpec.setDescription('{0} hardware profile'.format(
+                hwProfileSpec.getName()))
+
+        hardwareProfileApi.createHardwareProfile(hwProfileSpec, settingsDict)
+
+
+if __name__ == '__main__':
+    CreateHardwareProfileCli().run()

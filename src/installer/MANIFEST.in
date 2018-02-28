@@ -1,0 +1,8 @@
+graft etc
+graft sys
+include share/locale/en/LC_MESSAGES/tortugaapps.mo
+graft config
+recursive-include share/templates/hardware *.xml
+recursive-include share/templates/software *.xml
+recursive-include man *.8
+include setup.py

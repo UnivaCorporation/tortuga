@@ -1,0 +1,509 @@
+#!/usr/bin/env python
+
+# Copyright 2008-2018 Univa Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# pylint: disable=no-member
+
+"""Resource adapter configuration management CLI"""
+
+import os.path
+import sys
+import json
+import configparser
+import argparse
+from tortuga.resourceAdapterConfiguration.resourceAdapterConfigurationApi \
+    import ResourceAdapterConfigurationApi
+from tortuga.exceptions.tortugaException import TortugaException
+from tortuga.exceptions.resourceAdapterNotFound \
+    import ResourceAdapterNotFound
+from tortuga.exceptions.resourceNotFound import ResourceNotFound
+from tortuga.exceptions.resourceAlreadyExists import ResourceAlreadyExists
+
+
+class AdapterMgmtCLI(object):
+    def __init__(self):
+        self.parser = None
+        self.subparser_update = None
+
+        self.api = ResourceAdapterConfigurationApi()
+
+    def run(self):
+        self.parser = argparse.ArgumentParser(
+            description='Manage Tortuga resource adapter configuration')
+
+        common_args = argparse.ArgumentParser(add_help=False)
+        common_args.add_argument('--verbose', action='store_true',
+                                 help='Enable verbose output')
+        common_args.add_argument(
+            '--resource-adapter', '-r', metavar='NAME', required=True,
+            help='Resource adapter name')
+
+        show_list_common_args = argparse.ArgumentParser(add_help=False)
+        show_list_common_args.add_argument('--json', action='store_true',
+                                           help='JSON output')
+
+        create_update_common_args = argparse.ArgumentParser(add_help=False)
+        create_update_common_args.add_argument(
+            '--setting', '-s', metavar="KEY=VALUE",
+            action='append', type=key_value_pair,
+            help='key=value pair. Multiple --setting arguments may be'
+                 ' specified.')
+
+        subparsers = self.parser.add_subparsers(
+            title='subcommands',
+            description='valid subcommands',
+            help='additional help',
+            dest='subparser_name')
+
+        # show
+        show_args = argparse.ArgumentParser(add_help=False)
+        show_args.add_argument(
+            '--resource-adapter', '-r', metavar='NAME', required=True,
+            help='Resource adapter name')
+        show_args.add_argument(
+            '--profile', '-p', metavar='NAME', required=True,
+            help='Configuration profile name')
+        show_args.add_argument(
+            '--all', dest='show_all', required=False, action='store_true',
+            default=False,
+            help='Display all settings, including passwords/keys')
+        show_args.add_argument(
+            '--setting', '-s', metavar='KEY',
+            help='Display specfied setting only')
+        subparser_show = subparsers.add_parser(
+            'show', parents=[show_args, show_list_common_args])
+
+        # create
+        create_args = argparse.ArgumentParser(add_help=False)
+        create_args.add_argument(
+            '--profile', '-p', metavar='NAME',
+            help='Configuration profile name', required=True)
+        subparser_create = subparsers.add_parser(
+            'create',
+            parents=[common_args, create_args, show_list_common_args,
+                     create_update_common_args])
+
+        # copy
+        subparser_copy = subparsers.add_parser('copy')
+
+        subparser_reqd_arguments_group = subparser_copy.add_argument_group(
+            'required arguments')
+
+        subparser_reqd_arguments_group.add_argument(
+            '--resource-adapter', '-r', metavar='NAME', required=True,
+            help='Resource adapter name')
+        subparser_reqd_arguments_group.add_argument(
+            '--profile', '-p', metavar='NAME', required=True,
+            help='Configuration profile name')
+
+        subparser_reqd_arguments_group.add_argument(
+            '--src', metavar='NAME',
+            required=True, help='Source configuration profile name')
+
+        # import
+        subparser_import = subparsers.add_parser(
+            'import', parents=[common_args])
+        subparser_import.add_argument('--force', action='store_true')
+
+        group = subparser_import.add_mutually_exclusive_group(required=True)
+
+        group.add_argument(
+            '--json-file', metavar='FILENAME', type=argparse.FileType('r'),
+            help='Import from JSON formatted file')
+
+        group.add_argument(
+            '--adapter-config', metavar='FILENAME',
+            type=argparse.FileType('r'),
+            help='Import from legacy resource adapter configuration file')
+
+        # export
+        subparsers.add_parser('export', parents=[common_args])
+
+        # list
+        subparsers.add_parser(
+            'list', parents=[common_args, show_list_common_args])
+
+        # delete
+        self.subparser_delete = subparsers.add_parser(
+            'delete', parents=[common_args])
+
+        self.subparser_delete.add_argument(
+            '--profile', '-p', metavar='NAME',
+            help='Configuration profile name', required=True)
+
+        self.subparser_delete.add_argument(
+            '--force', '-f', action='store_true', default=False,
+            help='Do not prompt when deleting profile')
+
+        # update
+        update_args = argparse.ArgumentParser(add_help=False)
+        update_args.add_argument(
+            '--profile', '-p', metavar='NAME',
+            help='Configuration profile name', required=True)
+        self.subparser_update = subparsers.add_parser(
+            'update', parents=[common_args, update_args, create_update_common_args])
+
+        self.subparser_update.add_argument(
+            '--delete-setting', '-d', metavar="KEY", type=cfgkey,
+            action='append', help='Delete specified setting from profile')
+
+        args = self.parser.parse_args()
+
+        if not hasattr(
+                self,
+                '{0}_resource_adapter_config'.format(args.subparser_name)):
+            raise NotImplementedError(
+                'Handler for action [{0}] not implemented'.format(
+                    args.subparser_name))
+
+        handler = getattr(
+            self, '{0}_resource_adapter_config'.format(args.subparser_name))
+
+        handler(args)
+
+    def list_resource_adapter_config(self, args): \
+            # pylint: disable=no-self-use
+        try:
+            cfg = self.api.get_profile_names(args.resource_adapter)
+
+            if args.json:
+                sys.stdout.write(json.dumps(cfg))
+            else:
+                if cfg:
+                    sys.stdout.write('\n'.join(cfg) + '\n')
+
+            sys.stdout.flush()
+        except TortugaException as exc:
+            sys.stderr.write('Error: {0}\n'.format(exc))
+            sys.stderr.flush()
+            sys.exit(1)
+
+    def show_resource_adapter_config(self, args): \
+            # pylint: disable=no-self-use
+
+        try:
+            cfg = self.api.get(args.resource_adapter, args.profile)
+
+            if args.setting:
+                # Display only specified configuration setting
+                for cfgitem in cfg['configuration']:
+                    if cfgitem['key'] == args.setting:
+                        sys.stdout.write(cfgitem['value'] + '\n')
+
+                        break
+                else:
+                    # Requested configuration setting not found
+                    sys.stderr.write(
+                        'Error: setting \'{0}\' does not exist\n'.format(
+                            args.setting))
+
+                    sys.exit(1)
+
+                sys.exit(0)
+
+            if args.json:
+                sys.stdout.write(json.dumps(cfg))
+                sys.stdout.flush()
+            else:
+                sys.stdout.write(
+                    'Resource adapter: {0}\n'.format(cfg['resourceadapter']))
+                sys.stdout.write('Profile: {0}\n'.format(cfg['name']))
+
+                secret_keys = [
+                    'secret',
+                    'subscription_id',
+                    'tenant_id',
+                    'client_id',
+                    'awssecretkey',
+                    'awsaccesskey',
+                    'password',
+                ]
+
+                sys.stdout.write('Configuration:\n')
+                for cfgitem in cfg['configuration']:
+                    value = cfgitem['value'] \
+                        if args.show_all or \
+                        cfgitem['key'] not in secret_keys else '<REDACTED>'
+
+                    sys.stdout.write(
+                        '  - {0} = {1}\n'.format(cfgitem['key'], value))
+        except TortugaException as exc:
+            sys.stderr.write('Error: {0}\n'.format(exc))
+            sys.stderr.flush()
+            sys.exit(1)
+
+    def create_resource_adapter_config(self, args): \
+            # pylint: disable=no-self-use
+
+        try:
+            cfg = [dict(key=key, value=value) for key, value in args.setting]
+
+            self.api.create(args.resource_adapter, args.profile, cfg)
+        except TortugaException as exc:
+            sys.stderr.write('Error: {0}\n'.format(exc))
+            sys.stderr.flush()
+            sys.exit(1)
+
+    def copy_resource_adapter_config(self, args): \
+            # pylint: disable=no-self-use
+
+        try:
+            src_cfg = self.api.get(args.resource_adapter, args.src)
+
+            self.api.create(args.resource_adapter, args.profile,
+                            src_cfg['configuration'])
+        except TortugaException as exc:
+            sys.stderr.write('Error: {0}\n'.format(exc))
+            sys.stderr.flush()
+            sys.exit(1)
+
+    def delete_resource_adapter_config(self, args): \
+            # pylint: disable=no-self-use
+
+        try:
+            if not args.force:
+                sys.stdout.write(
+                    'Are you sure you want to delete configuration profile {0}'
+                    ' for resource adapter {1} [N/y]? '.format(
+                        args.profile, args.resource_adapter))
+
+                response = input('')
+
+                if not response.lower().startswith('y'):
+                    sys.stderr.write('Aborted by user.\n')
+                    sys.stderr.flush()
+                    sys.exit(1)
+
+            self.api.delete(args.resource_adapter, args.profile)
+        except TortugaException as exc:
+            sys.stderr.write('Error: {0}\n'.format(exc))
+            sys.stderr.flush()
+            sys.exit(1)
+
+    def update_resource_adapter_config(self, args): \
+            # pylint: disable=no-self-use
+
+        if args.setting is None and args.delete_setting is None:
+            self.subparser_update.error(
+                'arguments --setting/-s and/or'
+                ' --delete-setting/-d are required')
+
+        if args.verbose:
+            sys.stdout.write(
+                'Updating resource adapter [{0}] profile [{1}]...\n'.format(
+                    args.resource_adapter, args.profile))
+            sys.stdout.flush()
+
+        try:
+            cfg = []
+
+            for key, value in args.setting or []:
+                if args.verbose:
+                    sys.stdout.write(
+                        '  - updating setting [{0}]\n'.format(key))
+                    sys.stdout.flush()
+
+                cfg.append(dict(key=key, value=value))
+
+            for delete_key in args.delete_setting or []:
+                if args.verbose:
+                    sys.stdout.write(
+                        '  - deleting setting [{0}]\n'.format(delete_key))
+                    sys.stdout.flush()
+
+                cfg.append(dict(key=delete_key, value=None))
+
+            self.api.update(args.resource_adapter, args.profile, cfg)
+
+            if args.verbose:
+                sys.stdout.write('Done.\n')
+                sys.stdout.flush()
+        except TortugaException as exc:
+            sys.stderr.write('Error: {0}\n'.format(exc))
+            sys.stderr.flush()
+            sys.exit(1)
+
+    def import_resource_adapter_config(self, args): \
+            # pylint: disable=no-self-use
+
+        if args.json_file:
+            self.__import_json_file(args)
+        elif args.adapter_config:
+            self.__import_resource_adapter_config(args)
+
+    def __import_json_file(self, args):
+        # Import from JSON'
+        cfg = json.load(args.json_file)
+
+        profile_name = cfg['name']
+
+        # Check if profile already exists
+        try:
+            self.api.get(args.resource_adapter, profile_name)
+
+            profile_exists = True
+        except ResourceNotFound:
+            # This is good!
+            pass
+
+        try:
+            if profile_exists and not args.force:
+                _raise_profile_already_exists(
+                    args.resource_adapter, profile_name)
+
+            # Deleting existing profile
+            self.api.delete(args.resource_adapter, profile_name)
+
+            self.api.create(
+                args.resource_adapter, profile_name, cfg['configuration'])
+        except TortugaException as exc:
+            sys.stderr.write('Error: {}\n'.format(exc))
+            sys.stderr.flush()
+            sys.exit(1)
+
+    def __import_resource_adapter_config(self, args):
+        # Import from legacy resource adapter configuration file
+        cfg = configparser.ConfigParser()
+
+        sys.stdout.write('Processing resource adapter configuration... ')
+        sys.stdout.flush()
+
+        cfg.readfp(args.adapter_config)
+
+        sys.stdout.write('done.\n')
+        sys.stdout.flush()
+
+        delete_profiles = []
+
+        profile_names = [name
+                         if name != 'resource-adapter' else 'default'
+                         for name in cfg.sections()]
+
+        # Ensure profile name(s) do not already exist
+        sys.stdout.write(
+            'Checking for existing (conflicting) profiles... ')
+        sys.stdout.flush()
+
+        for profile_name in profile_names:
+            try:
+                self.api.get(args.resource_adapter, profile_name)
+
+                if not args.force:
+                    sys.stdout.write('done.\n')
+                    sys.stdout.flush()
+
+                    _raise_profile_already_exists(
+                        args.resource_adapter, profile_name)
+
+                # Append profile to be deleted prior to importing
+                delete_profiles.append(profile_name)
+            except (ResourceAdapterNotFound, ResourceNotFound):
+                pass
+
+        sys.stdout.write('done.\n')
+        sys.stdout.flush()
+
+        # Delete any conflicting profiles. 'delete_profiles' only defined
+        # if --force specified.
+        if delete_profiles:
+            for profile_name in delete_profiles:
+                sys.stdout.write(
+                    'Deleting existing profile [{0}]... '.format(
+                        profile_name))
+                sys.stdout.flush()
+
+                self.api.delete(args.resource_adapter, profile_name)
+
+                sys.stdout.write('done.\n')
+                sys.stdout.flush()
+
+        for section_name in cfg.sections():
+            profile_name = section_name \
+                if section_name != 'resource-adapter' else 'default'
+
+            configuration = []
+
+            for name, value in cfg.items(section_name):
+                if not value:
+                    sys.stdout.write(
+                        '* skipping empty setting [{0}] in'
+                        ' section [{1}]\n'.format(name, profile_name))
+                    sys.stdout.flush()
+
+                    continue
+
+                configuration.append(dict(key=name.lower(), value=value))
+
+            sys.stdout.write(
+                'Creating profile [{0}] for resource adapter'
+                ' [{1}]... '.format(profile_name, args.resource_adapter))
+            sys.stdout.flush()
+
+            self.api.create(
+                args.resource_adapter, profile_name, configuration)
+
+            sys.stdout.write('done.\n')
+            sys.stdout.flush()
+
+        sys.stdout.write('Import completed successfully.\n')
+        sys.stdout.flush()
+
+    def export_resource_adapter_config(self, args):
+        dstfile = 'adapter-defaults-{0}.conf'.format(args.resource_adapter)
+
+        if os.path.exists(dstfile):
+            sys.stderr.write(
+                'Error: file {0} already exists. Will not'
+                ' overwrite.\n'.format(dstfile))
+
+            sys.exit(1)
+
+        output = configparser.ConfigParser()
+
+        for profile_name in \
+                self.api.get_profile_names(args.resource_adapter):
+            section = profile_name \
+                if profile_name != 'default' else 'resource-adapter'
+
+            output.add_section(section)
+
+            for cfg_item in self.api.get(
+                    args.resource_adapter, profile_name)['configuration']:
+                key = cfg_item['key']
+                value = cfg_item['value']
+                output.set(section, key, value)
+
+        with open(dstfile, 'w') as fp:
+            output.write(fp)
+
+
+def key_value_pair(arg):
+    key, value = arg.split('=', 1)
+
+    return key.lower(), value
+
+
+def cfgkey(arg):
+    return arg.lower()
+
+
+def _raise_profile_already_exists(adapter_name, profile_name):
+    raise ResourceAlreadyExists(
+        'Profile [{0}] already exists for resource adapter'
+        ' [{1}]'.format(profile_name, adapter_name))
+
+
+if __name__ == '__main__':
+    AdapterMgmtCLI().run()

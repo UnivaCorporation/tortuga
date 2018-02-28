@@ -1,0 +1,13 @@
+-e src/core
+mock
+wheel
+pylint
+pyflakes
+pep8
+flake8
+marshmallow
+virtualenv
+Paver
+pytest
+pytest-cov
+Babel

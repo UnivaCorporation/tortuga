@@ -1,0 +1,6 @@
+build/
+dist/
+man/**/*.8
+*.egg-info/
+**/puppet_modules/**/pkg/
+univa-tortuga_kit_base-*.tar.gz

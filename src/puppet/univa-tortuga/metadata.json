@@ -1,0 +1,16 @@
+{
+  "name": "univa-tortuga",
+  "version": "6.3.0",
+  "author": "Univa Corporation",
+  "summary": "Tortuga integration module",
+  "license": "Commercial",
+  "source": "Univa Corporation",
+  "issues_url": "http://suppport.univa.com",
+  "description": "Tortuga integration module",
+  "project_page": "http://univa.com",
+  "dependencies": [
+    {
+      "name": "puppetlabs/stdlib"
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+#!/usr/bin/env python
+
+# Copyright 2008-2018 Univa Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+from tortuga.admin.adminCli import AdminCli
+from tortuga.admin.adminApiFactory import getAdminApi
+
+
+class GetAdminListCli(AdminCli):
+    def __init__(self):
+        super(GetAdminListCli, self).__init__()
+
+        self.addOption('-v', '--verbose',
+                       action='store_true', default=False,
+                       help=_('Enable verbose output'))
+
+    def runCommand(self):
+        self.parseArgs(_("""
+    get-admin-list [options]
+
+Description:
+    Returns list of administrators in the Tortuga system.
+"""))
+
+        api = getAdminApi(self.getUsername(), self.getPassword())
+
+        for admin_entry in api.getAdminList():
+            result = '{0}'.format(admin_entry.getUsername())
+
+            if self.getOptions().verbose:
+                if admin_entry.getRealname() and \
+                        admin_entry.getUsername() != admin_entry.getRealname():
+                    result += ' ({0})'.format(admin_entry.getRealname())
+
+                if admin_entry.getDescription():
+                    result += '\n        {0}'.format(
+                        admin_entry.getDescription())
+
+            print(result)
+
+
+if __name__ == '__main__':
+    GetAdminListCli().run()

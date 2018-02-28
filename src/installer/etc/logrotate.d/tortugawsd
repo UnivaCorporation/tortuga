@@ -1,0 +1,9 @@
+/var/log/tortugaws_access_log /var/log/tortugaws_error_log {
+    missingok
+    notifempty
+    sharedscripts
+    delaycompress
+    postrotate
+        /usr/sbin/service tortugawsd restart >/dev/null 2>/dev/null || true
+    endscript
+}

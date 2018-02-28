@@ -1,0 +1,1073 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Tortuga 4.0\n"
+"Report-Msgid-Bugs-To: support@univa.com\n"
+"POT-Creation-Date: 2007-03-13 12:06-0400\n"
+"PO-Revision-Date: 2008-06-30 10:30-0500\n"
+"Last-Translator: <support@univa.com>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Adding Node: %s, %s"
+msgstr "Adding Node: %s, %s"
+
+msgid "Adding script: %s\n"
+msgstr "Adding script: %s\n"
+
+msgid "Chroot'ing to run script(s)\n"
+msgstr "Chroot'ing to run script(s)\n"
+
+msgid "Compressing Image.  This will take some time.  Please wait\n"
+msgstr "Compressing Image.  This will take some time.  Please wait\n"
+
+msgid ""
+"Could not move the requested nodes to the '%s' node group. They may be "
+"already in the same node group or do not have a valid network to associate "
+"them to the new node group."
+msgstr ""
+"Could not move the requested nodes to the '%s' node group. They may be "
+"already in the same node group or do not have a valid network to associate "
+"them to the new node group."
+
+msgid ""
+"Could not move the selected nodes to the '%s' node group. They may be "
+"already in the same node group or do not have a valid network to associate "
+"them to the new node group."
+msgstr ""
+"Could not move the selected nodes to the '%s' node group. They may be "
+"already in the same node group or do not have a valid network to associate "
+"them to the new node group."
+
+msgid "DB_Duplicate_Error\n"
+msgstr "ERROR:  Unable to add entry into database. Duplicate value\n"
+
+msgid "DB_Query_Error\n"
+msgstr "ERROR:  Database query failed!  Make sure the database is available\n"
+
+msgid "DB_Query_Error: %s\n"
+msgstr ""
+"ERROR:  Database query failed!  Make sure the database is available\n"
+"Failed running: %s\n"
+
+msgid "DB_Update_Error\n"
+msgstr "ERROR:  Unable to update database\n"
+
+msgid "Deleting network: %s"
+msgstr "Deleting network: %s"
+
+msgid ""
+"Discovered Node: %s\n"
+"Mac Address: %s"
+msgstr ""
+"Discovered Node: %s\n"
+"Mac Address: %s"
+
+msgid "Display tool help"
+msgstr "Display tool help"
+
+msgid "Display tool version"
+msgstr "Display the version of the tool"
+
+msgid "Distributing %i KBytes to all nodes.\n"
+msgstr "Distributing %i KBytes to all nodes.\n"
+
+msgid "Do you want to delete the network '%s'?"
+msgstr "Do you want to delete the network '%s'?"
+
+msgid "Duplicate: %s, Ignoring"
+msgstr "Duplicate: %s, Ignoring"
+
+msgid "ERROR: Invalid node group: %s\n"
+msgstr "ERROR: Invalid node group: %s\n"
+
+msgid "ERROR: Unable to locate kernel package in: %s  Try running:  ls %s\n"
+msgstr "ERROR: Unable to locate kernel package in: %s  Try running:  ls %s\n"
+
+msgid "ERROR: Unknown kernel package type: %s"
+msgstr "ERROR: Unknown kernel package type: %s"
+
+msgid "ERROR: Yum Failed!\n"
+msgstr "ERROR: Yum Failed!\n"
+
+msgid "Error"
+msgstr "Error"
+
+msgid "Error: The value %s is not a number. Please try again"
+msgstr "Error: The value %s is not a number. Please try again"
+
+msgid "Extracting modules\n"
+msgstr "Extracting modules\n"
+
+msgid "Extracting template Initial Ram Disk\n"
+msgstr "Extracting template Initial Ram Disk\n"
+
+msgid "Kit %s has been added already.\n"
+msgstr "Kit %s has been added already.\n"
+
+msgid ""
+"Kit: %s, version %s, architecture %s, has been added to repo: %s.  Remember "
+"to refresh with -u\n"
+msgstr ""
+"Kit: %s, version %s, architecture %s, has been added to repo: %s.  Remember "
+"to refresh with -u\n"
+
+msgid "Node Group"
+msgstr "Node Group"
+
+msgid "Node Group Editor"
+msgstr "Node Group Editor"
+
+msgid "Node Group Names"
+msgstr "Node Group Names"
+
+msgid "Node not found: %s"
+msgstr "Node not found: %s"
+
+msgid "Notice"
+msgstr "Notice"
+
+msgid ""
+"Only can move %d nodes because other nodes do not have a valid network boot "
+"device. Could not move %d nodes (%s) to the node group '%s'."
+msgstr ""
+"Only can move %d nodes because other nodes do not have a valid network boot "
+"device. Could not move %d nodes (%s) to the node group '%s'."
+
+msgid "Patching in modules:\n"
+msgstr "Patching in modules:\n"
+
+msgid "Reinstall Nodes"
+msgstr "Reinstall Nodes"
+
+msgid "Removing Node: %s"
+msgstr "Removing Node: %s"
+
+msgid "Removing: %s\n"
+msgstr "Removing: %s\n"
+
+msgid "Skipping '%s'. Not a MAC address"
+msgstr "Skipping '%s'. Not a MAC address"
+
+msgid "The file '%s' was not found"
+msgstr "The file '%s' was not found"
+
+msgid ""
+"The network '%s' is in use. If you wish to delete this, please use the node "
+"group editor"
+msgstr ""
+"The network '%s' is in use. If you wish to delete this, please use the node "
+"group editor"
+
+msgid "The network '%s' is in use. Only some fields may be changed"
+msgstr "The network '%s' is in use. Only some fields may be changed"
+
+msgid ""
+"The network '%s' is in use. To change non-destructive properties use the -w "
+"option"
+msgstr ""
+"The network '%s' is in use. To change non-destructive properties use the -w "
+"option"
+
+msgid "The node %s is not found. Please try again\n"
+msgstr "The node %s is not found. Please try again\n"
+
+msgid "There are no valid nodes to move to the node group '%s'"
+msgstr "There are no valid nodes to move to the node group '%s'"
+
+msgid "Unknown arguments %i\n"
+msgstr "ERROR:  Unknown argument(s): %i\n"
+
+msgid "Version %s\n"
+msgstr "Version: %s\n"
+
+msgid "WARNING:  The base kit is not installed\n"
+msgstr "WARNING:  The base kit is not installed\n"
+
+msgid "WARNING: Unable to locate module(s): %s\n"
+msgstr "WARNING: Unable to locate module(s): %s\n"
+
+msgid "WARNING: Unable to use System.map to verify module symbols\n"
+msgstr "WARNING: Unable to use System.map to verify module symbols\n"
+
+msgid ""
+"Warning: Invalid plugin '%s'. Does not have a AddHostPlugin class.\n"
+"This plugin will be IGNORED."
+msgstr ""
+"Warning: Invalid plugin '%s'. Does not have a AddHostPlugin class.\n"
+"This plugin will be IGNORED."
+
+msgid "Will move the following hosts: [%s] to the node group '%s'"
+msgstr "Will move the following hosts: [%s] to the node group '%s'"
+
+msgid "Winky"
+msgstr "Nodd"
+
+msgid "accept_button"
+msgstr "Accept"
+
+msgid "add_button"
+msgstr "Add"
+
+msgid "add_primary_installer_error\n"
+msgstr "ERROR:  Cannot add the installer again!\n"
+
+msgid "addhost_Help"
+msgstr ""
+"addhost [-hvu]\n"
+"\t       [-n {node group}]\n"
+"\t       [-r rack#]\n"
+"\t       [-i ifname -n {node group} [-r rack #]]\n"
+"\t       [-f file -j ifname -n {node group} [-r rack#]]\n"
+"\t       [-p hostname]\n"
+"\t       [-e {nodes_to_remove}]\n"
+"\t       [-s static_hostname -x ip_addr]"
+
+msgid "addhost_already_inuse"
+msgstr ""
+"ERROR:   Addhost is already in use. Delete the /var/lock/subsys/addhost "
+"lockfile if it is not"
+
+msgid "addhost_gui_text_rack"
+msgstr "Rack Number"
+
+msgid "addhost_helpline_instructions"
+msgstr "Instructions: Press F5 to go back, F8 to goto next screen, F12 to quit"
+
+msgid "addhost_hostname_label"
+msgstr "Hostname: "
+
+msgid "addhost_installing_string"
+msgstr "Installing"
+
+msgid "addhost_instruction_interface"
+msgstr "Select the network interface to install your node group from"
+
+msgid "addhost_instruction_nodegroup"
+msgstr "Select the node group to use for the installation of new nodes."
+
+msgid "addhost_instructions_exit"
+msgstr "Are you sure you want to quit?"
+
+msgid "addhost_instructions_rack"
+msgstr "Please enter a rack number"
+
+msgid "addhost_interface_usage"
+msgstr "Set the interface to provide DHCP on"
+
+msgid "addhost_invalid_ip"
+msgstr "ERROR:  Invalid IP address"
+
+msgid "addhost_ipaddr_label"
+msgstr "IP Address: "
+
+msgid "addhost_ipaddr_usage"
+msgstr "The static IP address to assign to the device"
+
+msgid "addhost_macfile_usage"
+msgstr "Use the following file as the source of the MAC address"
+
+msgid "addhost_nghosts_lock"
+msgstr ""
+"ERROR:   Cannot run addhost because nghosts is running. Please exit nghosts "
+"first"
+
+msgid "addhost_node_discovery"
+msgstr "Node Discovery"
+
+msgid "addhost_nodegroup_usage"
+msgstr "Set the node group of the hosts that are to be added"
+
+msgid "addhost_nodeinterface_usage"
+msgstr ""
+"Select the interface from the nodes/nodegroups view different then -i which "
+"is from installers view"
+
+msgid "addhost_options_exclusive"
+msgstr "The options -n, -p and -e are mutually exclusive"
+
+msgid "addhost_options_interface_options_needed"
+msgstr "The -i option requires the -n option also"
+
+msgid "addhost_options_interface_required"
+msgstr "The -i option requires an interface name"
+
+msgid "addhost_options_invalid_interface"
+msgstr "Not a valid network interface. Please try again"
+
+msgid "addhost_options_invalid_node"
+msgstr "The -p option requires a valid node name"
+
+msgid "addhost_options_macfile_options_needed"
+msgstr "The -f option requires the -j and -n options"
+
+msgid "addhost_options_nodegroup_required"
+msgstr "The -n option requires a Node group name"
+
+msgid "addhost_options_remove_required"
+msgstr "The -e option requires a node name"
+
+msgid "addhost_rack_usage"
+msgstr "The rack number to assign the hosts to (if used)"
+
+msgid "addhost_remove_usage"
+msgstr "Remove the list of hosts"
+
+msgid "addhost_replace_usage"
+msgstr ""
+"Replace an existing host using the same node information except MAC address"
+
+msgid "addhost_statichost_usage"
+msgstr "The static hostname to assign"
+
+msgid "addhost_unmanaged_instructions"
+msgstr ""
+"Type a hostname, choose DHCP if the device is able to get an IP dynamically. "
+"Otherwise, type an IP address"
+
+msgid "addhost_unmanaged_no_ip"
+msgstr "Missing -x option. Must provide an IP Address for the unmanaged node"
+
+msgid "addhost_update_usage"
+msgstr "Updates configurations on the installer node the tool is run from"
+
+msgid "addhost_version_usage"
+msgstr "Display version of tool"
+
+msgid "addhost_window_title_exit"
+msgstr "Exit add hosts?"
+
+msgid "addhost_window_title_installing"
+msgstr "Installing Node Status"
+
+msgid "addhost_window_title_interface"
+msgstr "Select Network Interface"
+
+msgid "addhost_window_title_nodegroup"
+msgstr "Select node group"
+
+msgid "addhost_window_title_rack"
+msgstr "Enter rack number"
+
+msgid "addhost_window_title_unmanaged"
+msgstr "Add an unmanaged device"
+
+msgid "back_button"
+msgstr "Back"
+
+msgid "boothost_Help"
+msgstr ""
+"boothost [-h|-v|-l {nodename}]\n"
+"boothost [-n hardwareProfile] | [-m node_list] | [-s hardwareProfile]\n"
+"         [-r] [-k Kernel] [-i Initrd] [-p Kern_Parms]\n"
+"The boothost tool is responsible for generating the PXE configuration\n"
+"files nodes will use to boot over the network with.  This tool can\n"
+"manipulate the kernel, initrd, and kernel parameters a hardware profile or\n"
+"node will boot with.  It can optionally attempt to trigger a reinstall\n"
+"of all the nodes in a hardware profile, or a list of nodes.  The options are:\n"
+"    -h             - Provide tool help (This screen)\n"
+"    -v             - Print the tool version\n"
+"    -l {nodename}  - Output the booting status of the given node.\n"
+"                     If no name is provided list all nodes that PXE.\n"
+"    -n hardwareProfile  - Update all the PXE files for all nodes in the\n"
+"                     node group hardware profile.\n"
+"    -m node_list   - Update all the PXE files for all nodes in the\n"
+"                     comma seperated list of nodes.\n"
+"    -s hardwareProfile  - Update all the PXE files for all nodes in the\n"
+"                     hardware profile that are out of sync.\n"
+"                     (This option may be removed)\n"
+"    -r             - If specified attempt to connect to all affected\n"
+"                     nodes and trigger a reinstall.  Uses pdsh."
+
+msgid "boothost_no_such_host %s\n"
+msgstr "ERROR:  No such host: %s\n"
+
+msgid "boothost_no_such_hardwareprofile %s\n"
+msgstr "ERROR:  No such hardware profile: %s\n"
+
+msgid "boothost_reboot"
+msgstr "Attempting to reboot: "
+
+msgid "boothost_root_reboot"
+msgstr "ERROR:  Only root can reboot nodes.  Not attempting reboot!"
+
+msgid "boothost_unable_to_get_hardwareprofile %s\n"
+msgstr "ERROR:  Unable to query database for hardwareprofile %s information.\n"
+
+msgid "boothost_unable_to_update_hardwareprofile %s\n"
+msgstr "ERROR:  Unable to update hardware profile %s database entries.\n"
+
+msgid "boothost_hardwareprofile_is_empty %s\n"
+msgstr "ERROR:  Hardware profile %s is empty\n"
+
+msgid "boothost_hardwareprofile_has_no_expired_nodes %s\n"
+msgstr "ERROR:  Hardware profile %s contains no Expired nodes\n"
+
+msgid "buildimage_Help"
+msgstr ""
+"buildimage [-h|-v| -s software-profile {-i image_name}]\n"
+"\n"
+"The buildimage tool will build the root filesystem for diskless and disked\n"
+"nodes.  It uses the data in the database for a node group to determine "
+"which\n"
+"packages to install.  It then creates a chroot'ed filesystem under which it\n"
+"copies the files.  It then runs any post installation scripts and any user\n"
+"provided custom scripts.  The arguments have the following meanings:\n"
+"  -h             - Provide help on this tool.\n"
+"  -v             - Print the tool version.\n"
+"  -s software-profile  - The name of the software profile to generate the root\n"
+"                   filesystem for.\n"
+"  -i image_name  - (Optional) The name to assign the generated image.\n"
+"The full list of arguments is as follows:"
+
+msgid "buildimage_need_a_node_group\n"
+msgstr "ERROR:  No software profile specified\n"
+
+msgid "buildinitrd_Help"
+msgstr ""
+"buildinitrd [-h|-v| -n node_group {-i image_name} {-r}]\n"
+"\n"
+"The buildinitrd tool creates the initial RAM disk for\n"
+" Diskless and Disked nodes running from an image.\n"
+"The tool is typically run by ngedit.  It can build both initramfs\n"
+"and initrd type images.  By default it will build initramfs.  The -r \n"
+"argument causes cramfs initrd's to be built instead."
+
+msgid "cancel_button"
+msgstr "Cancel"
+
+msgid "copy_button"
+msgstr "Copy"
+
+msgid "delete_button"
+msgstr "Delete"
+
+msgid "edit_button"
+msgstr "Edit"
+
+msgid "exit_button"
+msgstr "Exit"
+
+msgid "finish_button"
+msgstr "Finish"
+
+msgid "genconfig_Apache_Help"
+msgstr ""
+"This plugin generates the Apache configuration file.\n"
+"USE:  genconfig apache_conf\n"
+"The resulting file should be placed in /etc/httpd/conf.d"
+
+msgid "genconfig_Bashrc_Help"
+msgstr ""
+"This plugin generates the contents of .bashrc file added to new\n"
+"home directories."
+
+msgid "genconfig_Debug_Help"
+msgstr ""
+"This plugin provides debugging information for support.\n"
+"Currently it provides a dump of the database."
+
+msgid "genconfig_Dhcpd_Help"
+msgstr ""
+"This plugin generates the DHCP daemon configuration file.\n"
+"No arguments are needed for the plugin."
+
+msgid "genconfig_Help"
+msgstr ""
+"Usage:\n"
+"\tgenconfig -v\n"
+"or\n"
+"\tgenconfig -h [plugin]\n"
+"or\n"
+"\tgenconfig [-d dbname] [-u dbuser] [-p dbpass] plugin [plugin_args...]\n"
+"\n"
+"Options:\n"
+"\t-h           - Displays help for this tool, or the given plugin.\n"
+"\n"
+"\t-v           - Displays the version of this tool.\n"
+"\n"
+"\t-d dbname    - (optional) Connect to this database.\n"
+"\t               Defaults to [%s].\n"
+"\n"
+"\t-u dbuser    - (optional) Connect to database as this user.\n"
+"\t               Defaults to [%s].\n"
+"\n"
+"\t-p dbpass    - (optional) Connect to database with this password.\n"
+"\t               Defaults to [%s].\n"
+"\n"
+"Description:\n"
+"\tThe genconfig tool runs various plugins to generate configuration\n"
+"\tfiles for various applications.  It may also be used to gather\n"
+"\tinformation about the cluster.\n"
+"\n"
+"\tWhen run with no arguments it generates a list of all available\n"
+"\tplugins."
+
+msgid "genconfig_HostsEquiv_Help"
+msgstr ""
+"This plugin generates the contents of the /etc/hosts.equiv file for r* based "
+"commands such as rhosts, rdate."
+
+msgid "genconfig_HostsPdsh_Help"
+msgstr "This plugin generates the contents of the /etc/hosts.pdsh file."
+
+msgid "genconfig_Hosts_Help"
+msgstr "This plugin generates the contents of the /etc/hosts file."
+
+msgid "genconfig_Named_Help"
+msgstr ""
+"This plugin generates the named.conf.\n"
+"USE:  genconfig named [master|slave]   (defaults to master)\n"
+"No output will be generated if InstallerServeDNS=False\n"
+"in the appglobals database table."
+
+msgid "genconfig_Nodegroups_Help"
+msgstr ""
+"This plugin generates a list of all nodegroups.\n"
+"USE:  genconfig nodegroups {Optional SQL}\n"
+"The optional SQL forms part of a WHERE clause\n"
+" which can be used to adjust the query e.g.\n"
+"    genconfig nodegroups 'ngid=1'"
+
+msgid "genconfig_Nodes_Help"
+msgstr ""
+"This plugin generates a list of all nodes installed by the installer.\n"
+"If the plugin is provided with a node group name it will generate\n"
+"a list of nodes in node group."
+
+msgid "genconfig_Resolv_Help"
+msgstr ""
+"This plugin generates the contents of the /etc/resolv.conf file.\n"
+"By default it will generate the file for the installers, but \n"
+"when provided with the arguement 'client' generates the file\n"
+"for a compute node."
+
+msgid "genconfig_Reverse_Help"
+msgstr ""
+"This plugin generates the DNS zone file.\n"
+"USE:  genconfig reverse {network}\n"
+"No output will be generated if InstallerServeDNS=False\n"
+"in the appglobals database table.  The network is one of the\n"
+"networks defined in the networks table in the database."
+
+msgid "genconfig_Ssh_Help"
+msgstr "This plugin generates the contents of the /etc/ssh/ssh_config file."
+
+msgid "genconfig_Zone_Help"
+msgstr ""
+"This plugin generates the DNS zone file.\n"
+"USE:  genconfig zone\n"
+"No output will be generated if InstallerServeDNS=False\n"
+"in the appglobals database table."
+
+msgid "genconfig_cannot_determine_DNS_forwarders\n"
+msgstr "ERROR:  Cannot determine DNS forwarders from the database!\n"
+
+msgid "genconfig_cannot_determine_DNS_zone\n"
+msgstr "ERROR:  Cannot determine DNS Zone from the database!\n"
+
+msgid "genconfig_cannot_determine_primary_installer\n"
+msgstr ""
+"ERROR:  Database query failed!  Unable to determine the installer.\n"
+
+msgid "genconfig_cannot_find_plugin: %s\n"
+msgstr "ERROR:  Cannot find plugin: %s\n"
+
+msgid "genconfig_provide_database_user_password\n"
+msgstr "ERROR:  The database, user, and password must all be specified\n"
+
+msgid "helpline_instructions"
+msgstr "Instructions: Press F5 to cancel screen, Press F8 to accept changes"
+
+msgid "kitops: Exactly one kit operation expected\n"
+msgstr ""
+"kitops: Exactly one kit operation expected. Choose from add,remmove,upgrade,"
+"list\n"
+
+msgid "kitops_Help"
+msgstr "TORTUGA kitops - kit operations tool"
+
+msgid "kitops_usage_add"
+msgstr "add the kit specified with -m"
+
+msgid "kitops_usage_list"
+msgstr "list all the kits available on the system"
+
+msgid "kitops_usage_media"
+msgstr "specify the media iso or mountpoint for the kit"
+
+msgid "kitops_usage_remove"
+msgstr "remove the specified kit"
+
+msgid "kitops_usage_skip_confirm"
+msgstr "Assume the answer to any question is Yes"
+
+msgid "kitops_usage_upgrade"
+msgstr "upgrade the specified kit"
+
+msgid "move_button"
+msgstr "Move"
+
+msgid "netedit_Help"
+msgstr ""
+"netedit [-hvl]\n"
+"\t       [-d netid#]\n"
+"\t       [-a -n network -s subnet -i ifname -t start_ipaddr [-g gateway] -e "
+"{network description} -x suffix [-o {network options}] [-y | -z]\n"
+" [-r increment]]\n"
+"\t       [-a -i ifname -x suffix -e {network description} [-o {network "
+"options}] [-y | -z] -p] - DHCP Mode\n"
+"\t       [-c netid# -n network -s subnet -i ifname -t start_ipaddr -g "
+"gateway -e {network description} [-x suffix] [-o {network options}]\n"
+" [-y | -z]] [-r increment]\n"
+"\t       [-c netid# -i ifname [-x suffix] -e {network description} [-o "
+"{network options}] [-y | -z] -p] - DHCP Mode\n"
+"\t       [-w netid# [-x suffix] [-o netoptions] [-y | -z] [-t start_ipaddr] "
+"[-e {network description}] [-r increment]]"
+
+msgid "netedit_add_usage"
+msgstr "Add a network"
+
+msgid "netedit_already_inuse"
+msgstr ""
+"ERROR:   Netedit is already in use. Delete the /var/lock/subsys/netedit "
+"lockfile if it is not"
+
+msgid "netedit_change_usage"
+msgstr "Change an existing network not in use"
+
+msgid "netedit_changeused_usage"
+msgstr ""
+"Change non-destructive values for a network in use (associated with ngedit)"
+
+msgid "netedit_delete_usage"
+msgstr "Delete a network"
+
+msgid "netedit_description_usage"
+msgstr "Description of the network entry"
+
+msgid "netedit_dhcp_usage"
+msgstr "Specify to enable or disable using DHCP. By default disabled"
+
+msgid "netedit_empty_description"
+msgstr "Cannot have an empty network description"
+
+msgid "netedit_error_invalid_id"
+msgstr "ERROR: The network specified does not exist"
+
+msgid "netedit_error_invalid_network"
+msgstr "ERROR:  The subnet or network values specified are invalid"
+
+msgid "netedit_field_description"
+msgstr "Description: "
+
+msgid "netedit_field_device"
+msgstr "Device: "
+
+msgid "netedit_field_dhcp"
+msgstr "Use DHCP"
+
+msgid "netedit_field_gateway"
+msgstr "Gateway: "
+
+msgid "netedit_field_increment"
+msgstr "Increment: "
+
+msgid "netedit_field_network"
+msgstr "Network: "
+
+msgid "netedit_field_options"
+msgstr "Options: "
+
+msgid "netedit_field_startip"
+msgstr "Starting IP: "
+
+msgid "netedit_field_subnet"
+msgstr "Subnet: "
+
+msgid "netedit_field_suffix"
+msgstr "Suffix: "
+
+msgid "netedit_gateway_usage"
+msgstr "Gateway to use when adding or changing a network entry"
+
+msgid "netedit_increment_usage"
+msgstr ""
+"IP increment value. This may be a positive or negative number. If not "
+"specified defaults to 1"
+
+msgid "netedit_instruction_edit"
+msgstr "Please edit any of the network information below."
+
+msgid "netedit_instruction_network"
+msgstr "Welcome to the Tortuga Network Editor! Please make a choice."
+
+msgid "netedit_instruction_new"
+msgstr "Please enter the network information below."
+
+msgid "netedit_instructions_exit"
+msgstr "Do you want to quit the Network editor?"
+
+msgid "netedit_interface_label"
+msgstr "Interface Type"
+
+msgid "netedit_interface_usage"
+msgstr "Interface to use when adding or changing a network entry"
+
+msgid "netedit_item_labels"
+msgstr "DEVICE NETWORK SUBNET DESCRIPTION"
+
+msgid "netedit_list_description_field"
+msgstr "Network Description"
+
+msgid "netedit_list_device_field"
+msgstr "Device"
+
+msgid "netedit_list_network_field"
+msgstr "Network"
+
+msgid "netedit_list_networkid_field"
+msgstr "Network ID"
+
+msgid "netedit_list_subnet_field"
+msgstr "Subnet"
+
+msgid "netedit_listnetworks_usage"
+msgstr "Display a list of networks"
+
+msgid "netedit_missing_description"
+msgstr "Missing -e option. Must have a network description set"
+
+msgid "netedit_missing_interface"
+msgstr "Missing -i option. Must have an interface set"
+
+msgid "netedit_network_usage"
+msgstr "Network to use when adding, deleting or changing a network entry"
+
+msgid "netedit_oldnet_usage"
+msgstr "Old network value to change"
+
+msgid "netedit_oldsubnet_usage"
+msgstr "Old subnet value to change"
+
+msgid "netedit_options_add_options_needed"
+msgstr ""
+"The -a option needs the -n, -s, -i, -t, -x and -e specified when not using "
+"the -p option. Otherwise -a requires -i -e when using the -p option."
+
+msgid "netedit_options_change_options_needed"
+msgstr "The -c option needs the options -n, -s, -g, -t, -i, -e"
+
+msgid "netedit_options_conflict_type"
+msgstr "Cannot specify the options -z and -y at the same time"
+
+msgid "netedit_options_delete_options_needed"
+msgstr "The -d option needs the -n and -s options specified"
+
+msgid "netedit_options_exclusive"
+msgstr "The options -a, -d, -c, w and -l are mutually exclusive"
+
+msgid "netedit_options_illegal_usednetwork"
+msgstr ""
+"Cannot specify -s, -n, -g, -i, -x or -p options when changing a network "
+"already assigned with ngedit (in use)"
+
+msgid "netedit_options_required_options"
+msgstr "Can only specify -a, -c, -w, -l and -d as command options"
+
+msgid "netedit_options_usage"
+msgstr "Options to use for this network, i.e, bonding interfaces"
+
+msgid "netedit_provision_conflict"
+msgstr "Cannot specify -z and -y at same time"
+
+msgid "netedit_provision_usage"
+msgstr "Set network to 'provision' type"
+
+msgid "netedit_public_usage"
+msgstr "Set network to 'public' type"
+
+msgid "netedit_startip_usage"
+msgstr "Specify the starting IP value"
+
+msgid "netedit_subnet_usage"
+msgstr "Subnet to use when adding, deleting or changing a network entry"
+
+msgid "netedit_suffix_usage"
+msgstr "Hostname suffix to use when adding or changing a network entry"
+
+msgid "netedit_validate_description"
+msgstr "The description field must not be empty. Please specify a name"
+
+msgid "netedit_validate_device"
+msgstr "The device value cannot be empty"
+
+msgid "netedit_validate_gateway"
+msgstr "The gateway is not valid. Please try a different gateway value"
+
+msgid "netedit_validate_gateway_on_network"
+msgstr ""
+"The gateway specified does not reside on the network. Please try a different "
+"network value"
+
+msgid "netedit_validate_inc_not_empty"
+msgstr "The incremental number cannot be empty"
+
+msgid "netedit_validate_inc_not_number"
+msgstr "The incremental value is not a number"
+
+msgid "netedit_validate_inc_not_zero"
+msgstr "The incremental number cannot be 0"
+
+msgid "netedit_validate_network"
+msgstr "The network is not valid. Please try a different network value"
+
+msgid "netedit_validate_startip"
+msgstr "The start ip is not valid. Please try a different start ip value"
+
+msgid "netedit_validate_startip_on_network"
+msgstr ""
+"The starting IP specified does not reside on the network. Please try a "
+"different starting IP address"
+
+msgid "netedit_validate_subnet"
+msgstr "The subnet is not valid. Please try a different subnet value"
+
+msgid "netedit_validate_suffix"
+msgstr "The suffix field must not be empty. Please specify a suffix"
+
+msgid "netedit_version_usage"
+msgstr "Display version of tool"
+
+msgid "netedit_window_title_delete"
+msgstr "Delete Selected Network"
+
+msgid "netedit_window_title_edit"
+msgstr "Edit existing network"
+
+msgid "netedit_window_title_exit"
+msgstr "Exit netedit?"
+
+msgid "netedit_window_title_network"
+msgstr "Network Editor"
+
+msgid "netedit_window_title_new"
+msgstr "Create new network"
+
+msgid "new_button"
+msgstr "New"
+
+msgid "next_button"
+msgstr "Next"
+
+msgid "ngedit_Help"
+msgstr ""
+"Node Group Editor is an administrative tool for nodegroup related "
+"operations,\n"
+"including their copying/deletion/modification. It allows ultimate control "
+"over\n"
+"the specific behavior/configuration of node groups. ngedit is used as "
+"follows:\n"
+"ngedit [ -l | { -p | -s | -d } <NGName> | -c <NGName> -n <NewNGName> ]"
+
+msgid "ngedit_usage_copy"
+msgstr "Copy specified nodegroup"
+
+msgid "ngedit_usage_delete"
+msgstr "Delete specified nodegroup"
+
+msgid "ngedit_usage_list"
+msgstr "List all nodegroups"
+
+msgid "ngedit_usage_new"
+msgstr "NG name to use for a new nodegroup"
+
+msgid "ngedit_usage_print"
+msgstr "Provide detailed printout of a specified NG"
+
+msgid "ngedit_usage_stale"
+msgstr "Print all nodes with expired state for a given NG"
+
+msgid "nghosts_Help"
+msgstr ""
+"nghosts [-hvl]\n"
+"\t       [-g {node group}]\n"
+"\t       [-m {hosts} -t {node group} [-f {node group}] [-a rack#] [-r]]\n"
+"\t       [-f {node group} -t {node group} [-a rack#] [-r]]"
+
+msgid "nghosts_addhost_lock"
+msgstr ""
+"ERROR:  Cannot run nghosts because addhost is running. Please exit addhost "
+"first"
+
+msgid "nghosts_already_inuse"
+msgstr ""
+"ERROR:   Nghosts is already in use. Delete the /var/lock/subsys/nghosts "
+"lockfile if it is not"
+
+msgid "nghosts_from_group_usage"
+msgstr "Specify node group to move from"
+
+msgid "nghosts_helpline_intro"
+msgstr "Instructions: Select an option. Press F12 to quit, Press F8 to go next"
+
+msgid "nghosts_instruction_prompt"
+msgstr ""
+"Welcome to the Tortuga membership editor! Please choose an option then click "
+"next."
+
+msgid "nghosts_instruction_select_node"
+msgstr "Select node(s) from a node group to move to a new node group."
+
+msgid "nghosts_instruction_select_nodegroup"
+msgstr "Select node group(s) to move all it's nodes to a new node group."
+
+msgid "nghosts_instructions_exit"
+msgstr "Do you want to quit the Network membership editor?"
+
+msgid "nghosts_instructions_move_nodegroups"
+msgstr ""
+"Do you wish to move the nodes in the selected node group(s) to the new node "
+"group?"
+
+msgid "nghosts_instructions_move_nodes"
+msgstr "Do you wish to move the selected node(s) to the new node group?"
+
+msgid "nghosts_list_a_nodegroup_usage"
+msgstr "List a specific node group"
+
+msgid "nghosts_list_all_nodegroups_usage"
+msgstr "List all the node groups"
+
+msgid "nghosts_move_hosts_usage"
+msgstr "Specify a list of nodes to move"
+
+msgid "nghosts_move_nodegroup"
+msgstr "Move all nodes from a node group to a new node group"
+
+msgid "nghosts_move_selected_nodes"
+msgstr "Move selected nodes to a node group"
+
+msgid "nghosts_moving_nodes"
+msgstr "Moving nodes"
+
+msgid "nghosts_moving_nodes_progress"
+msgstr "Moving nodes, please wait..."
+
+msgid "nghosts_nodegroup_label"
+msgstr "Source Nodegroups, Destination Nodegroup"
+
+msgid "nghosts_nothing_selected"
+msgstr "Error: No nodes selected or destination node group selected."
+
+msgid "nghosts_nothing_selected_groups"
+msgstr "Error: No node groups selected or destination node group selected."
+
+msgid "nghosts_options_exclusive"
+msgstr "The options -l, -g and -t are mutually exclusive"
+
+msgid "nghosts_options_groups_missing"
+msgstr "The -f option requires node group(s) to be specified"
+
+msgid "nghosts_options_missing_togroup"
+msgstr "The -t option is required"
+
+msgid "nghosts_options_nodes_missing"
+msgstr "The -m option requires node(s) to be specified"
+
+msgid "nghosts_options_required_options"
+msgstr "Can only specify -l, -g, -t, -m as command options"
+
+msgid "nghosts_options_togroup_options_needed"
+msgstr "The -t option needs the -m or -f options specified"
+
+msgid "nghosts_rack_usage"
+msgstr "The rack number to use (if applicable)"
+
+msgid "nghosts_reinstall_nodes_progress"
+msgstr ""
+"Initiating nodes to reinstall, please wait. This may take time if nodes are "
+"unreachable..."
+
+msgid "nghosts_reinstall_usage"
+msgstr "Specify to mark the nodes as expired for reinstallation"
+
+msgid "nghosts_reinstalling_nodes"
+msgstr "Reinstalling nodes"
+
+msgid "nghosts_source_label"
+msgstr "Source Nodes, Destination Nodegroup"
+
+msgid "nghosts_to_group_usage"
+msgstr ""
+"Move the nodes to the specified node group. Must be used with option -m or -f"
+
+msgid "nghosts_version_usage"
+msgstr "Display version of tool"
+
+msgid "nghosts_window_select_option"
+msgstr "Please select an option to continue."
+
+msgid "nghosts_window_title_exit"
+msgstr "Exit nghosts?"
+
+msgid "nghosts_window_title_move_prompt"
+msgstr "Move nodes prompt"
+
+msgid "nghosts_window_title_no_option"
+msgstr "No option selected"
+
+msgid "nghosts_window_title_prompt"
+msgstr "Node Membership Editor"
+
+msgid "nghosts_window_title_select_node"
+msgstr "Node Selection"
+
+msgid "nghosts_window_title_select_nodegroup"
+msgstr "Node group selection"
+
+msgid "no_button"
+msgstr "No"
+
+msgid "nodeboot_no_hostname_or_ip\n"
+msgstr "ERROR: Missing hostname or IP\n"
+
+msgid "nonroot_execution\n"
+msgstr "ERROR:  Only root can run this tool\n"
+
+msgid "ok_button"
+msgstr "OK"
+
+msgid "options_invalid_nodegroup"
+msgstr "Not a valid node group. Please try again"
+
+msgid "prev_button"
+msgstr "Previous"
+
+msgid "previous_button"
+msgstr "Previous"
+
+msgid "prompt_for_rack"
+msgstr "Please enter a rack number: "
+
+msgid "quit_button"
+msgstr "Quit"
+
+msgid "rack_negative_number"
+msgstr "Error: Cannot specify a negative number. Please try again."
+
+msgid "remove_primary_installer_error\n"
+msgstr "ERROR:  Cannot remove the installer!\n"
+
+msgid "replace_primary_installer_error\n"
+msgstr "ERROR:  Cannot replace the installer!\n"
+
+msgid "restore_button"
+msgstr "Restore"
+
+msgid "toggleview_button"
+msgstr "Toggle View"
+
+msgid "yes_button"
+msgstr "Yes"

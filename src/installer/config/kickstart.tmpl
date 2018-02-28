@@ -1,0 +1,195 @@
+# Copyright 2008-2018 Univa Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# ===================================================================
+# Sample Anaconda Kickstart file for provisioning RHEL/CentOS 6 and 7
+# ===================================================================
+
+install
+
+url --url {{ url }}
+
+# Do not halt installation if the CPU is reportedly incompatible with the
+# version of the OS.
+unsupported_hardware
+
+# Ensure text mode installation
+text
+
+{% if osfamily == 'rhel' and osfamilyvers >= 7 %}
+%addon com_redhat_kdump --disable
+%end
+{% endif %}
+
+{% if os == 'rhel' and osfamilyvers < 7 %}
+# Skip the need for a registration key on RHEL -- DO NOT REMOVE
+key --skip
+{% endif %}
+
+{% if osfamilyvers < 7 %}
+lang {{ lang }}
+
+keyboard {{ keyboard }}
+{% else %}
+keyboard --vckeymap=us --xlayouts='us'
+
+# System language
+lang en_US.UTF-8
+{% endif %}
+
+# START -- Network configuration provided by Tortuga -- DO NOT REMOVE
+{{ networkcfg }}
+# END -- Network configuration provided by Tortuga
+
+rootpw --iscrypted {{ rootpw }}
+firewall --disabled
+authconfig --enableshadow --enablemd5
+selinux --disabled
+{% if osfamilyvers < 7 %}
+timezone --utc {{ timezone }}
+{% else %}
+timezone --utc {{ timezone }} --ntpservers {{ ntpserver }}
+{% endif %}
+
+{% if osfamilyvers < 7 %}
+services --disable=puppet
+{% else %}
+services --disable=puppet,NetworkManager --enable=network
+{% endif %}
+
+{{ includes }}
+
+{{ repos }}
+
+# NOTE: do not exclude the 'reboot', otherwise the node won't automatically
+# reboot when provisioning is complete
+reboot
+
+%packages --nobase
+@core
+{% if osfamilyvers == 6 %}
+## RHEL/CentOS 6
+system-config-firewall-base
+{% endif %}
+yum-utils
+nfs-utils
+puppet-agent
+ntp
+ntpdate
+%end
+
+%pre
+# START -- Tortuga pre-install script -- DO NOT REMOVE
+{{ prescript }}
+# END -- Tortuga pre-install script
+%end
+
+%post
+installer_public_fqdn="{{ installer_public_fqdn }}"
+installer_private_fqdn="{{ installer_private_fqdn }}"
+installer_private_ip="{{ installer_private_ip }}"
+puppet_master_fqdn="{{ puppet_master_fqdn }}"
+
+touch /var/lock/subsys/tortuga.initialboot
+
+{% if installer_private_domain == domain %}
+# Add a host alias for the Puppet master using the private IP address for
+# hosts on the private (provisioning) network
+cat >>/etc/hosts <<ENDL
+$installer_private_ip $puppet_master_fqdn
+ENDL
+{% endif %}
+
+{% if osfamilyvers < 7 %}
+## RHEL/CentOS 6
+
+puppetcmdline="/opt/puppetlabs/bin/puppet agent --detailed-exitcodes --color false --logdest /tmp/puppet_bootstrap.log --onetime --no-daemonize --verbose --server $puppet_master_fqdn"
+
+cat >>/etc/rc.d/rc.local <<ENDL
+
+{% raw %}
+# The initial Puppet communication only needs to be run once
+if [ -f /var/lock/subsys/tortuga.initialboot ]; then
+    # Wait 120s for Puppet certificate to be signed on first boot
+    \$puppetcmdline --waitforcert 120
+    retval=\$?
+
+    if [[ \$retval -eq 0 ]] || [[ \$retval -eq 2 ]]; then
+        echo "Puppet bootstrap successful" >&2
+
+        # Remove first boot marker file
+        rm -f /var/lock/subsys/tortuga.initialboot
+    else
+        echo "Puppet bootstrap failed" >&2
+    fi
+fi
+{% endraw %}
+
+# Run 'puppet agent' on every boot
+\$puppetcmdline
+ENDL
+{% else %}
+## RHEL/CentOS 7
+
+{% raw %}
+cat >/tmp/tortuga-bootstrap.sh <<ENDL
+#!/bin/bash
+
+readonly puppet_master_host=\$1
+
+puppetcmdline="/opt/puppetlabs/bin/puppet agent --onetime --server \$puppet_master_host"
+
+# Wait 120s for Puppet certificate to be signed on first boot
+puppetcmdline+=" --waitforcert 120"
+
+# Run 'puppet agent' on every boot
+\$puppetcmdline
+ENDL
+{% endraw %}
+
+chmod +x /tmp/tortuga-bootstrap.sh
+
+# Ensure Puppet runs during node boot
+cat >/etc/systemd/system/tortuga-bootstrap.service <<ENDL
+[Unit]
+Description=Tortuga bootstrap
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/tmp/tortuga-bootstrap.sh $puppet_master_fqdn
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+ENDL
+
+systemctl daemon-reload
+systemctl enable tortuga-bootstrap.service
+{% endif %}
+
+# Set node status to 'Provisioned'
+curl -sk -X PUT --retry 5 --retry-delay 12 \
+    -u"cfm:{{ cfmstring }}" \
+    -H "Content-Type: application/json" \
+    -d "{ \"state\": \"Provisioned\", \"bootFrom\": \"1\" }" \
+    {{ installer_url }}/v1/nodes/{{ fqdn }} >/dev/null 2>&1
+
+# Disable enabled YUM repos
+yum-config-manager --disable \*
+
+# These repositories must be enabled to gain access to SCL
+yum-config-manager --enable extras,updates
+
+%end

@@ -1,0 +1,66 @@
+.\" Copyright 2008-2018 Univa Corporation
+.\"
+.\" Licensed under the Apache License, Version 2.0 (the "License");
+.\" you may not use this file except in compliance with the License.
+.\" You may obtain a copy of the License at
+.\"
+.\"    http://www.apache.org/licenses/LICENSE-2.0
+.\"
+.\" Unless required by applicable law or agreed to in writing, software
+.\" distributed under the License is distributed on an "AS IS" BASIS,
+.\" WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+.\" See the License for the specific language governing permissions and
+.\" limitations under the License.
+
+.TH "update-node-status" "8" "6.3" "Univa" "Tortuga"
+.SH "NAME"
+.LP
+update-node-status - *INTERNAL, DO NOT USE* - Update a node's status
+.SH "SYNTAX"
+.LP
+\fBupdate-node-status [--node=\fINODENAME\fB] [--status=\fISTATUS\fB] [--boot-from=\fIBOOTFROM\fB]
+.SH "DESCRIPTION"
+.LP
+The update-node-status tool updates the status of a node in the database.
+.LP
+THIS COMMAND IS USED INTERNALLY AND IS NOT MEANT FOR USE BY END-USERS.
+.LP
+It is called automatically after a node's first boot and should not be used manually unless advised to do so by customer support.  Improper usage can corrupt the database and leave nodes in an unmanageable state.
+.LP
+.SH "OPTIONS"
+.LP
+.TP
+\fB--node=\fINODENAME
+Name of node to update (default is the current node)
+.TP
+\fB--status=\fISTATUS
+Status to write into database (default is 'Installed')
+.TP
+\fB--boot-from=\fIBOOTFROM
+Bootfrom value to write into database (default is 1)
+.LP
+.SH "Common Tortuga Options"
+.LP
+.TP
+\fB-h, --help
+show this help message and exit.
+.TP
+\fB-?
+show this help message and exit.
+.TP
+\fB-v
+print version and exit.
+.TP
+\fB-d \fPCONSOLELOGLEVEL\fB, --debug=\fPCONSOLELOGLEVEL
+set debug level; valid values are: critical, error, warning, info, debug
+.TP
+\fB--username=\fPUSERNAME
+Credential to use when not running as root on the Installer.
+.TP
+\fB--password=\fPPASSWORD
+Credential to use when not running as root on the Installer.
+.\".SH "EXAMPLES"
+.\".LP
+.SH "AUTHORS"
+.LP
+Univa Support <support@univa.com>

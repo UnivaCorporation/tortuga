@@ -1,0 +1,44 @@
+UseCanonicalName Off
+
+ServerName <%= @installer_fqdn %>
+
+Listen 8008
+
+<Location /tortuga>
+    Options FollowSymLinks Indexes
+</Location>
+
+<Location /repos>
+    Options FollowSymLinks Indexes
+</Location>
+
+<VirtualHost *:8008>
+    DocumentRoot /var/www/tortuga
+    Options FollowSymLinks Indexes
+    AddHandler cgi-script cgi
+    <Directory /var/www/tortuga>
+        Order allow,deny
+        Allow from all
+    </Directory>
+<% if @cache_enabled -%>
+    CacheRoot <%= @cache_dir %>
+    CacheMaxFileSize <%= @cache_max_file_size %>
+    CacheEnable disk /
+<% end -%>
+
+<% if @proxy_hash -%>
+    ProxyRequests Off
+    <Proxy *>
+        Order deny,allow
+        Allow from all
+    </Proxy>
+
+<% @proxy_hash.each do |key,value| -%>
+    ProxyPass <%= value['path'] -%> <%= value['url'] %>
+    ProxyPassReverse <%= value['path'] -%> <%= value['url'] %>
+<% end -%>
+<% end -%>
+
+    CustomLog logs/tortugaint_access_log combined
+    ErrorLog logs/tortugaint_error_log
+</VirtualHost>

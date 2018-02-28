@@ -1,0 +1,6 @@
+build
+.deps
+.make.out
+.checkrpms
+nohup.out
+tortugaapps.mo

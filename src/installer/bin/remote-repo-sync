@@ -1,0 +1,240 @@
+#!/usr/bin/env python
+
+# Copyright 2008-2018 Univa Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# pylint: disable=no-member
+
+import sys
+import os.path
+import urllib.parse
+import subprocess
+import configparser
+
+from tortuga.cli.tortugaCli import TortugaCli
+from tortuga.exceptions.invalidArgument import InvalidArgument
+from tortuga.exceptions.commandFailed import CommandFailed
+from tortuga.db.dbManager import DbManager
+from tortuga.db.kitSources import KitSources
+from tortuga.db.kits import Kits
+from tortuga.config.configManager import ConfigManager
+from tortuga.exceptions.parameterNotFound import ParameterNotFound
+from tortuga.parameter.parameterApi import ParameterApi
+
+from sqlalchemy.orm.exc import NoResultFound
+
+
+class RemoteRepoSyncApp(TortugaCli):
+    def __init__(self):
+        super(RemoteRepoSyncApp, self).__init__()
+
+        cfg = configparser.ConfigParser()
+        cfg.read(os.path.join(
+            ConfigManager().getKitConfigBase(), 'tortuga.ini'))
+
+        try:
+            ConfigManager().setDepotDir(
+                ParameterApi().getParameter('depot'))
+        except ParameterNotFound:
+            pass
+
+        self.addOption(
+            '--all', dest='syncAll', action='store_true', default=False,
+            help='Synchronize all defined remote repositories')
+
+        self.addOption(
+            '--repo-id', type='int', dest='repoId',
+            help='Synchronize specific remote repository')
+
+        self.addOption(
+            '--kit',
+            help='Synchronize remote repositories for specified kit')
+
+        self.addOption(
+            '--verbose',
+            action='store_true', default=False,
+            help='Enable verbose logging on rsync command')
+
+        self.addOption(
+            '--force',
+            action='store_true', default=False,
+            help='Proceed with syncing even if errors occur')
+
+        self.addOption(
+            '--dry-run',
+            action='store_true', dest='dryrun', default=False,
+            help='Do not actually perform rsync operation')
+
+    def runCommand(self):
+        self.parseArgs('''
+    remote-repo-sync < --all | --repo-id=REPOID | --kit=KITNAME > [--force] [--verbose]
+
+Description:
+    Automatically synchronize kits to defined remote repositories.
+
+Examples:
+
+    remote-repo-sync --all
+
+        Synchronize all remote repositories
+
+    remote-repo-sync --repo-id <REPOID>
+
+        Synchronize remote repository specified by REPOID.  Use
+        remote-repo-list to determine repository ID.
+
+    remote-repo-sync --kit <KITNAME>
+
+        Synchronize specified kit to all defined remote repositories.''')
+
+        if not self.getOptions().syncAll and \
+                not self.getOptions().repoId and not self.getOptions().kit:
+            raise InvalidArgument(
+                'One of --all, --repo-id, or --kit must be specified')
+
+        session = DbManager().openSession()
+
+        if self.getOptions().repoId:
+            try:
+                dbKitSource = session.query(KitSources).filter(
+                    KitSources.id == self.getOptions().repoId).one()
+            except NoResultFound:
+                sys.stderr.write(
+                    'No remote repository matching ID [%d] found\n' % (
+                        self.getOptions().repoId))
+
+                raise SystemExit(1)
+
+            self._syncKitSource(dbKitSource)
+        elif self.getOptions().syncAll:
+            # Iterate over all configured remote repositories
+            dbKitSources = session.query(KitSources).all()
+
+            if not dbKitSources:
+                print('No remote repositories defined.')
+
+                raise SystemExit(0)
+
+            self._syncKitSources(dbKitSources)
+        elif self.getOptions().kit:
+            try:
+                dbKit = session.query(Kits).filter(
+                    Kits.name == self.getOptions().kit).one()
+            except NoResultFound:
+                sys.stderr.write(
+                    'Error: no kit matching name [%s] found\n' % (
+                        self.getOptions().kit))
+
+                raise SystemExit(1)
+
+            self._syncKitSources(dbKit.sources)
+
+    def _rsync(self, srcPath, dstPath, **kwargs): \
+            # pylint: disable=no-self-use
+        bVerbose = 'verbose' in kwargs and kwargs['verbose']
+        bDryRun = 'dryrun' in kwargs and kwargs['dryrun']
+
+        # Create all remote directories, do not assume any already exist
+        rsyncCmd = 'rsync -a --no-implied-dirs'
+
+        if bVerbose:
+            rsyncCmd += ' -v'
+
+        if bDryRun:
+            rsyncCmd += ' -n'
+
+        cmd = '%s %s %s' % (rsyncCmd, srcPath, dstPath)
+
+        p = subprocess.Popen(
+            cmd, shell=True, stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT, bufsize=1)
+
+        while True:
+            buf = p.stdout.readline()
+            if not buf:
+                break
+
+            if bVerbose:
+                print(buf, end=' ')
+
+        retval = p.wait()
+        if retval != 0:
+            raise CommandFailed('rsync failed (retval=%d)' % (retval))
+
+    def _syncKitSource(self, dbKitSource):
+        # Parse out the host name
+        o = urllib.parse.urlparse(dbKitSource.url)
+
+        # Validate scheme
+        if not o.scheme.lower() in ['http', 'https']:
+            sys.stderr.write('Error: unsupported URL scheme [%s]' % (
+                o.scheme))
+
+            raise SystemExit(1)
+
+        kitDir = ConfigManager().getDepotDir() + '/kits'
+
+        if dbKitSource.kit.isOs:
+            verstr = dbKitSource.kit.version
+            arch = dbKitSource.kit.components[0].os[0].arch
+        else:
+            verstr = '%s-%s' % (
+                dbKitSource.kit.version, dbKitSource.kit.iteration)
+            arch = 'noarch'
+
+        repoPath = '/%s/%s/%s' % (dbKitSource.kit.name, verstr, arch)
+
+        srcPath = kitDir + repoPath
+
+        dstPath = '%s:%s' % (o.netloc, o.path)
+
+        if not os.path.exists(srcPath):
+            print('Fatal error: kit path [%s] does not exist' % (srcPath))
+
+            raise SystemExit(1)
+
+        kitDescr = '%s-%s-%s' % (dbKitSource.kit.name, verstr, arch)
+
+        if self.getOptions().verbose:
+            print('Syncing [%s] to [%s]' % (srcPath, dstPath))
+        else:
+            print('Syncing [%s] to infrastructure node [%s]' % (
+                kitDescr, o.netloc))
+
+        try:
+            self._rsync(
+                srcPath + '/',
+                dstPath,
+                verbose=self.getOptions().verbose,
+                dryrun=self.getOptions().dryrun)
+        except CommandFailed as ex:
+            errmsg = 'Error: rsync failed (%s)' % (ex)
+
+            sys.stderr.write(errmsg + '\n')
+
+            # Abort the operation unless --force is specified
+            if not self.getOptions().force:
+                raise SystemExit(1)
+
+    def _syncKitSources(self, dbKitSources):
+        for dbKitSource in dbKitSources:
+            self._syncKitSource(dbKitSource)
+
+
+def main():
+    RemoteRepoSyncApp().run()
+
+
+if __name__ == '__main__':
+    main()
