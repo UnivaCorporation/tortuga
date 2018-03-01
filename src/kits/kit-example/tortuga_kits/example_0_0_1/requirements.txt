@@ -1,0 +1,5 @@
+#
+# If your kit requires additional Python modules to be installed on the
+# installer node via pip, list them here. By default, they are installed
+# in the post_install hook.
+#
