@@ -579,19 +579,61 @@ class ComponentInstallerBase(ConfigurableMixin):
 
     def action_add_host(self, hardware_profile_name, software_profile_name,
                         nodes, *args, **kwargs):
-        pass
+        """
+        This hook is invoked on the installer when adding a host with
+        a software profile that has this component enabled.
 
-    def action_delete_host(self, hardware_profile_name, software_profile_name,
-                           nodes, *args, **kwargs):
+        :param hardware_profile_name: the name of the hosts hardware profile
+        :param software_profile_name: the name of the hosts software profile
+        :param nodes:                 the nodes (hosts) added
+        :param args:
+        :param kwargs:
+
+        """
         pass
 
     def action_configure(self, software_profile_name, *args, **kwargs):
         pass
 
+    def action_delete_host(self, hardware_profile_name, software_profile_name,
+                           nodes, *args, **kwargs):
+        """
+        This hook is invoked on the installer when deleting a host with
+        a software profile that has this component enabled.
+
+        :param hardware_profile_name: the name of the hosts hardware profile
+        :param software_profile_name: the name of the hosts software profile
+        :param nodes:                 the nodes (hosts) deleted
+        :param args:
+        :param kwargs:
+
+        """
+        pass
+
     def action_disable(self, software_profile_name, *args, **kwargs):
+        """
+        This hook is invoked on the installer prior to disabling it on a
+        software profile.
+
+        :param software_profile_name: the name of the software profile on
+                                      which the component is being disabled.
+        :param args:
+        :param kwargs:
+
+        """
         pass
 
     def action_enable(self, software_profile_name, *args, **kwargs):
+        """
+        This hook is invoked on the installer when the component is enabled
+        on a software profile.
+
+        :param software_profile_name: the name of the software profile on
+                                      which the component is being enabled.
+        :param args:
+        :param kwargs:
+
+        """
         pass
 
     def action_get_cloud_config(self, node, hardware_profile,
@@ -604,16 +646,59 @@ class ComponentInstallerBase(ConfigurableMixin):
 
     def action_pre_add_host(self, hardware_profile, software_profile,
                             hostname, ip, *args, **kwargs):
+        """
+        This hook is invoked on the installer prior to adding a host with
+        a software profile that has this component enabled.
+
+        :param hardware_profile: the hardware profile of the host being added
+        :param software_profile: the software profile of the host being added
+        :param hostname:         the hostname of the host being added
+        :param ip:               the ip address of the host being added
+        :param args:
+        :param kwargs:
+
+        """
         pass
 
     def action_pre_delete_host(self, hardware_profile, software_profile,
                                nodes, *args, **kwargs):
+        """
+        This hook is invoked on the installer piror to deleting a host with
+        a software profile that has this component enabled.
+
+        :param hardware_profile: the hardware profile
+        :param software_profile: the software profile
+        :param nodes:            the nodes (hosts) deleted
+        :param args:
+        :param kwargs:
+
+        """
         pass
 
     def action_pre_disable(self, software_profile_name, *args, **kwargs):
+        """
+        This hook is invoked on the installer prior to disabling it on a
+        software profile.
+
+        :param software_profile_name: the name of the software profile on
+                                      which the component is being disabled.
+        :param args:
+        :param kwargs:
+
+        """
         pass
 
     def action_pre_enable(self, software_profile_name, *args, **kwargs):
+        """
+        This hook is invoked on the installer prior to enabling the
+        component on a software profile.
+
+        :param software_profile_name: the name of the software profile on
+                                      which the component is being enabled.
+        :param args:
+        :param kwargs:
+
+        """
         pass
 
     def action_pre_install(self, *args, **kwargs):
@@ -623,9 +708,29 @@ class ComponentInstallerBase(ConfigurableMixin):
         pass
 
     def action_post_disable(self, software_profile_name, *args, **kwargs):
+        """
+        This hook is invoked on the installer after disabling it on a
+        software profile.
+
+        :param software_profile_name: the name of the software profile on
+                                      which the component was disabled.
+        :param args:
+        :param kwargs:
+
+        """
         pass
 
     def action_post_enable(self, software_profile_name, *args, **kwargs):
+        """
+        This hook is invoked on the installer after the component has been
+        enabled on a software profile.
+
+        :param software_profile_name: the name of the software profile on
+                                      which the component is being enabled.
+        :param args:
+        :param kwargs:
+
+        """
         pass
 
     def action_post_install(self, *args, **kwargs):
