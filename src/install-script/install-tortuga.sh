@@ -823,10 +823,10 @@ readonly tortuga_core_tarball=$(basename $(find . -maxdepth 1 -type f -name tort
 
 cp -f ${tortuga_core_tarball} ${INTWEBROOT}
 
-[[ $tortuga_core_tarball == tortuga_core-${tortuga_version}-py2-none-any.whl ]] || {
+[[ $tortuga_core_tarball == tortuga_core-${tortuga_version}-py3-none-any.whl ]] || {
     # Symlink from tarball to "expected" tarball filename
     ln -sf "${INTWEBROOT}/${tortuga_core_tarball}" \
-        "${INTWEBROOT}/tortuga_core-${tortuga_version}-py2-none-any.whl"
+        "${INTWEBROOT}/tortuga_core-${tortuga_version}-py3-none-any.whl"
 }
 
 # Copy Puppet Hiera configuration
