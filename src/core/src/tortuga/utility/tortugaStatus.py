@@ -124,6 +124,8 @@ TORTUGA_RESOURCE_NOT_FOUND_ERROR = 117
 TORTUGA_RESOURCE_ALREADY_EXISTS_ERROR = 118
 TORTUGA_OPERATION_FAILED_ERROR = 119
 TORTUGA_NOT_FOUND_ERROR = 120
+TORTUGA_UGE_CLUSTER_NOT_FOUND_ERROR = 121
+TORTUGA_UGE_CLUSTER_ALREADY_EXISTS_ERROR = 122
 TORTUGA_KIT_BUILD_ERROR = 123
 
 exceptionMap = {
@@ -349,4 +351,8 @@ exceptionMap = {
         'exceptions.notFound.NotFound',
     TORTUGA_KIT_BUILD_ERROR:
         'exceptions.kitBuildError.KitBuildError',
+    TORTUGA_UGE_CLUSTER_NOT_FOUND_ERROR:
+        'tortuga_kits.uge_8_5_4.exceptions.ugeClusterNotFound.UgeClusterNotFound',
+    TORTUGA_UGE_CLUSTER_ALREADY_EXISTS_ERROR:
+        'tortuga_kits.uge_8_5_4.exceptions.ugeClusterAlreadyExists.UgeClusterAlreadyExists',
 }
