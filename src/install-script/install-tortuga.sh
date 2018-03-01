@@ -32,8 +32,6 @@ enable_activemq=1
 force_hostname=0
 readonly tortuga_version="6.3.0"
 
-virtualenv_args="--system-site-packages"
-
 TEMP=$( getopt -o v,f --long force,verbose,debug,help,\
 disable-package-caching,\
 download-only,force-hostname,disable-activemq -n $(basename $0) -- "$@" )
@@ -682,7 +680,7 @@ puppet-agent \
     fi
 fi
 
-virtualenv="virtualenv $virtualenv_args"
+virtualenv="python3 -m venv"
 
 if [ $enable_package_caching -eq 1 ]; then
     cachepkgs $cachedpkgs
@@ -753,12 +751,13 @@ fi
 
 echo "Installing Python 3.6..."
 
-installpkg rh-python36-python-virtualenv
+installpkg rh-python36
 [[ $? -eq 0 ]] || {
     echo "Error installing \"rh-python36-python\". Unable to proceed." >&2
     exit 1
 }
 
+# source SCL Python 3.6 environment
 . /opt/rh/rh-python36/enable
 
 # Setup virtualenv (creates $TORTUGA_ROOT)
@@ -773,12 +772,12 @@ fi
 
 echo "done."
 
-# Update setuptools and pip
+# Update pip
 echo -n "Upgrading pip... " | tee -a /tmp/install-tortuga.log
 $TORTUGA_ROOT/bin/pip install --upgrade pip >>/tmp/install-tortuga.log 2>&1
 [[ $? -eq 0 ]] || {
     echo "failed"
-    echo "Error upgrading setuptools/pip Python packages" | tee -a /tmp/install-tortuga.log
+    echo "Error upgrading pip Python packages" | tee -a /tmp/install-tortuga.log
     exit 1
 }
 echo "done."
@@ -786,46 +785,28 @@ echo "done."
 # Tortuga pre-installation
 echo "Performing Tortuga pre-installation... " | tee -a /tmp/install-tortuga.log
 
-# These third-party packages must be installed from source
-# to install from the source tarball
-# if [[ $distro_family == rhel ]]; then
-#     # Install Python packnot specifed in Tortuga Python modules
-#     $TORTUGA_ROOT/bin/pip install CherryPy Routes 2>&1 >>/tmp/install-tortuga.log
-# fi
-
 # Install Tortuga Python packages
-for module in tortuga-core tortuga-installer; do
-    echo "Installing ${module} Python package... " | tee -a /tmp/install-tortuga.log
+echo -n "Installing tortuga-core Python package... "
+$TORTUGA_ROOT/bin/pip install tortuga_core*.whl 2>&1 >>/tmp/install-tortuga.log
+$TORTUGA_ROOT/bin/pip show tortuga-core &>/dev/null || {
+    echo "failed."
+    echo
+    echo "Error installing tortuga-core package" >&2
+    exit 1
+}
 
-    # Attempt to install each module 5 times before giving up
-    for ((retry = 0; retry < 5; retry++)); do
-        $TORTUGA_ROOT/bin/pip install ${module/-/_}*.whl 2>&1 >>/tmp/install-tortuga.log
+echo "done."
 
-        # Ensure the module was actually installed
-        if ! $($TORTUGA_ROOT/bin/pip freeze | grep -q ^${module}=); then
-            echo "===> Retry attempt #$(printf "%d" $((retry + 1)))" >>/tmp/install-tortuga.log
+echo -n "Installing tortuga-installer Python package... "
+$TORTUGA_ROOT/bin/pip install tortuga_installer*.whl 2>&1 >>/tmp/install-tortuga.log
+$TORTUGA_ROOT/bin/pip show tortuga-installer &>/dev/null || {
+    echo "failed."
+    echo
+    echo "Error installing tortuga-installer package" >&2
+    exit 1
+}
 
-            sleep 5
-
-            continue
-        fi
-
-        # Module installation was successful!
-        echo "Module '${module}' installed successfully" >>/tmp/install-tortuga.log
-
-        break
-    done
-
-    if [[ $retry -eq 5 ]]; then
-        logmsg="Error installing ${module} Python package. Unable to proceed"
-
-        echo $logmsg >>/tmp/install-tortuga.log
-
-        echo $logmsg >&2
-
-        exit 1
-    fi
-done
+echo "done."
 
 # Create required directories
 for dirname in var/lib var/action-log; do
