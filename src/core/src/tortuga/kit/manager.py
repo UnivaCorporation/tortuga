@@ -19,6 +19,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
+from typing import Any
 from tortuga.config.configManager import ConfigManager
 from tortuga.db import componentDbApi
 from tortuga.db.dbManager import DbManager
@@ -351,8 +352,8 @@ class KitManager(TortugaObjectManager, Singleton):
 
         return media_list
 
-    def _getKitOpsClass(self, osFamilyInfo): \
-            # pylint: disable=no-self-use
+    @staticmethod
+    def _getKitOpsClass(os_family_info) -> Any:
         """
         Import the KitOps class for the specified OS family name
 
@@ -361,18 +362,22 @@ class KitManager(TortugaObjectManager, Singleton):
         """
         try:
             _temp = __import__(
-                'tortuga.kit.%sOsKitOps' % (osFamilyInfo.getName()),
-                globals(), locals(), ['KitOps'], 0)
+                'tortuga.kit.%sOsKitOps' % os_family_info.getName(),
+                globals(),
+                locals(),
+                ['KitOps'],
+                0
+            )
 
             return getattr(_temp, 'KitOps')
         except ImportError:
             raise OsNotSupported('Currently unsupported distribution')
 
     def _checkExistingKit(self, kitname, kitversion, kitarch):
-        '''
+        """
         Raises:
             KitAlreadyExists
-        '''
+        """
 
         try:
             kit = self._kit_db_api.getKit(kitname, kitversion)
@@ -495,12 +500,7 @@ class KitManager(TortugaObjectManager, Singleton):
                 if os_distro is None:
                     raise OsNotSupported('Could not match media')
 
-                # Adjust the version accordingly if the repository is a
-                # mirror.
-                if is_mirror:
-                    os_distro.version = os_distro.version.split('.', 1)[0]
-
-                os_info = os_distro.getOsInfo()
+                os_info = os_distro.get_os_info()
 
                 # Check if OS is already installed before attempting to
                 # perform copy operation...
@@ -526,7 +526,7 @@ class KitManager(TortugaObjectManager, Singleton):
                 kit_ops = kit_ops_class(
                     os_distro, bUseSymlinks=use_symlinks, mirror=is_mirror)
 
-                kit = kit_ops.prepareOSKit(source_path)
+                kit = kit_ops.prepareOSKit()
 
             # Copy files here
             if enable_proxy:
@@ -537,7 +537,7 @@ class KitManager(TortugaObjectManager, Singleton):
                 if is_interactive:
                     descr = "Installing..."
 
-                kit_ops.copyOsMedia(source_path, descr=descr)
+                kit_ops.copyOsMedia(descr=descr)
         finally:
             if mount_manager_source_path:
                 # MountManager instance exists.  Unmount any mounted

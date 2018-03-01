@@ -18,14 +18,16 @@ Base class for OS kit 'plugins'
 
 import os
 import logging
+from typing import Dict
+from tortuga.boot.distro import DistributionFactory
 from tortuga.exceptions.abstractMethod import AbstractMethod
 from tortuga.config.configManager import ConfigManager
 from tortuga.os_utility.osUtility import getOsObjectFactory
 
 
 class OsKitOps(object):
-    def __init__(self, osdistro, **kwargs):
-        self._osdistro = osdistro
+    def __init__(self, osdistro: DistributionFactory, **kwargs):
+        self._osdistro: DistributionFactory = osdistro
 
         self._kit = None
 
@@ -72,10 +74,8 @@ class OsKitOps(object):
     def kit(self, value):
         self._kit = value
 
-    def copyOsMedia(self, srcPath): \
-            # pylint: disable=unused-argument,no-self-use
+    def copyOsMedia(self) -> None:
         raise AbstractMethod('copyOsMedia() is an abstract method')
 
-    def prepareOSKit(self, srcPath): \
-            # pylint: disable=unused-argument,no-self-use
+    def prepareOSKit(self) -> Dict[str, str]:
         raise AbstractMethod('prepareOSKit() is an abstract method')

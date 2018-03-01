@@ -19,21 +19,21 @@ from tempfile import NamedTemporaryFile, TemporaryDirectory
 from .base import RedHatFamily, RedHatFamilyPrimitives, REPO_CONFIGURATION_TEMPLATE
 
 
-class CentOs7Primitives(RedHatFamilyPrimitives):
+class CentOs6Primitives(RedHatFamilyPrimitives):
     """
     Represent locations of needed primitives
-    from the CentOS 7 distributions.
+    from the CentOS 6 distributions.
     """
     def __new__(cls) -> Dict[str, str]:
         """
         :return: None
         """
-        return super(CentOs7Primitives, cls).__new__(cls, rpm_gpg_key='RPM-GPG-KEY-CentOS-7')
+        return super(CentOs6Primitives, cls).__new__(cls, rpm_gpg_key='RPM-GPG-KEY-CentOS-6')
 
 
-class CentOs7(RedHatFamily):
+class CentOs6(RedHatFamily):
     """
-    Represents a CentOS 7 distribution.
+    Represents a CentOS 6 distribution.
     """
     __abstract__ = False
 
@@ -43,15 +43,15 @@ class CentOs7(RedHatFamily):
         :param architecture: String targeted architecture
         :returns: None
         """
-        super(CentOs7, self).__init__(
+        super(CentOs6, self).__init__(
             source_path,
             'centos',
-            7,
+            6,
             0,
             architecture
         )
 
-        self._primitives: CentOs7Primitives = CentOs7Primitives()
+        self._primitives: CentOs6Primitives = CentOs6Primitives()
 
     def _update_version(self) -> None:
         """

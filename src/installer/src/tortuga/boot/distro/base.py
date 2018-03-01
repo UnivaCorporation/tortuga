@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
+import shutil
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -29,8 +30,8 @@ class DistributionPrimitivesBase(dict):
     TODO: This needs to be implemented better
     """
     def __new__(cls, isolinux_dir: str, isolinux_bin: str, kernel: str, initrd: str,
-                 images_dir: str, base_os_dir: str, packages_dir: str, repo_data_dir: str,
-                 **kwargs : str) -> Dict[str, str]:
+                images_dir: str, base_os_dir: str, packages_dir: str, repo_data_dir: str,
+                **kwargs: str) -> Dict[str, str]:
         """
         :param isolinux_dir: String
         :param isolinux_bin: String
@@ -159,6 +160,13 @@ class DistributionBase(object):
         self._minor = int(value)
 
     @property
+    def release_package(self) -> str:
+        """
+        :return: String
+        """
+        return '{}-release'.format(self.name)
+
+    @property
     def architecture(self) -> str:
         """
         :return: String
@@ -174,11 +182,96 @@ class DistributionBase(object):
         self._architecture = str(value)
 
     @property
+    def kernel_path(self) -> str:
+        """
+        :return: String
+        """
+        return self._primitives.get('kernel')
+
+    @property
+    def initrd_path(self) -> str:
+        """
+        :return: String
+        """
+        return self._primitives.get('initrd')
+
+    @property
     def is_remote(self) -> bool:
         """
         :return: Boolean
         """
         return self._source_uri.scheme in ('http', 'https')
+
+    @staticmethod
+    def _copy_remote_uri(uri: str, file_path: str) -> None:
+        """
+        :param uri: String
+        :param file_path: String
+        :return: None
+        """
+        with urllib.request.urlopen(uri) as r:
+            with open(file_path, 'wb') as f:
+                f.write(r.read())
+
+    def _copy_uri(self, source: str, destination: str, overwrite: bool) -> None:
+        """
+        :param source: String
+        :param destination: String
+        :param overwrite: Boolean
+        :return: None
+        """
+        if os.path.isdir(destination):
+            file_path: str = os.path.join(destination, os.path.basename(source))
+        else:
+            file_path: str = destination
+
+        if os.path.exists(file_path):
+            if not overwrite:
+                raise IOError('{} already exists'.format(file_path))
+
+        if not os.path.isdir(os.path.dirname(file_path)):
+            os.makedirs(os.path.dirname(file_path))
+
+        if self.is_remote:
+            self._copy_remote_uri(source, file_path)
+        else:
+            shutil.copy(source, file_path)
+
+    def copy_kernel(self, destination: str, overwrite: bool = False) -> None:
+        """
+        :param destination: String
+        :param overwrite: Boolean
+        :return: None
+        """
+        kernel_name: str = 'kernel-{}-{}-{}'.format(
+            self.name,
+            self.version,
+            self.architecture
+        )
+
+        self._copy_uri(
+            os.path.join(self.source_path, self.kernel_path),
+            os.path.join(destination, kernel_name),
+            overwrite
+        )
+
+    def copy_initrd(self, destination: str, overwrite: bool = False) -> None:
+        """
+        :param destination: String
+        :param overwrite: Boolean
+        :return: None
+        """
+        initrd_name: str = 'initrd-{}-{}-{}.img'.format(
+            self.name,
+            self.version,
+            self.architecture
+        )
+
+        self._copy_uri(
+            os.path.join(self.source_path, self.initrd_path),
+            os.path.join(destination, initrd_name),
+            overwrite
+        )
 
     @property
     def is_source_valid(self) -> bool:
@@ -244,7 +337,8 @@ class DistributionBase(object):
         target: int = len(self._primitives.keys())
 
         for primitive, path in self._primitives.items():
-            if os.path.exists(path):
+            absolute: str = os.path.join(self.source_path, path)
+            if os.path.exists(absolute):
                 count += 1
 
         if count == target:
