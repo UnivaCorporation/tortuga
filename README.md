@@ -4,8 +4,7 @@
 
 Tortuga allows you to create and resize High Performance Computing clusters on
 demand and it supports so called 'cloud bursting' in hybrid cloud scenarios.
-Tortuga is tightly integrated with (Univa Grid
-Engine)[http://www.univa.com/products/] to deliver ready-to-use clusters
+Tortuga is tightly integrated with [Univa Grid Engine](http://www.univa.com/products/) to deliver ready-to-use clusters
 including workload and resource management.
 
 "Kits" are available that augment the set of software Tortuga can install and
@@ -40,11 +39,7 @@ Key features of Tortuga are:
   management, cloud storage, and security
 
 For a developer level introduction with instructions on how to build Tortuga
-please refer to <https://github.com/UnivaCorporation/tortuga>.
-
-An introduction to how to install Tortuga can be found under
-<https://github.com/UnivaCorporation/tortuga/tree/master/doc> and the Adminstration Guide
-is available at <https://github.com/UnivaCorporation/tortuga/tree/master/doc/tortuga-6-admin-guide.md>.
+please refer to [Developer information](#dev_info)
 
 To try Tortuga with Univa Grid Engine, you will need the [Univa Grid Engine Trial Kit](http://www.univa.com/resources/univa-navops-launch-trial.php) which
 can be downloaded and used for free.
@@ -86,7 +81,7 @@ pandoc -f markdown -o tortuga-6-admin-guide.pdf \
     tortuga-6-admin-guide.md
 ```
 
-## Developer information
+## Developer information {#dev_info}
 
 ### Prerequisites
 
