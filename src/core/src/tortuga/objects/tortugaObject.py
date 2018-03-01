@@ -173,7 +173,7 @@ class TortugaObject(dict): \
         return ET.tostring(rootElement)
 
     def getXmlRep(self):
-        return self.getPrettyXmlString(self.getXmlDom().getroot())
+        return self.getPrettyXmlString(self.getXmlDom().getroot()).decode()
 
     def getXmlDom(self, parent=None):
         """
