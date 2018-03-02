@@ -9,7 +9,7 @@ including workload and resource management.
 
 "Kits" are available that augment the set of software Tortuga can install and
 the target infrastructures onto which Tortuga can deploy. Kits are installable
-packages with metadata. Additional open source kits for Tortuga can be found under <https://github.com/UnivaCorporation/tortuga-kit-*> The Univa Grid Engine integration is implemented as a
+packages with metadata. Additional open source kits for Tortuga can be found under <https://github.com/UnivaCorporation/tortuga-kit-*>. The Univa Grid Engine integration is implemented as a
 kit, for example. The "cloud resource adapters" are also kits and Tortuga
 currently supports the following cloud/virtualization platforms:
 
