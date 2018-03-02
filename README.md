@@ -9,17 +9,17 @@ including workload and resource management.
 
 "Kits" are available that augment the set of software Tortuga can install and
 the target infrastructures onto which Tortuga can deploy. Kits are installable
-packages with metadata. The Univa Grid Engine integration is implemented as a
+packages with metadata. Additional open source kits for Tortuga can be found under <https://github.com/UnivaCorporation/tortuga-kit-*> The Univa Grid Engine integration is implemented as a
 kit, for example. The "cloud resource adapters" are also kits and Tortuga
 currently supports the following cloud/virtualization platforms:
 
-* Amazon AWS
-* Google Cloud Platform
-* Microsoft Azure
-* Oracle Cloud Infrastructure
-* OpenStack
-* VMware vSphere 5.x
-* On-premise (physical) nodes
+* Amazon AWS (<https://github.com/UnivaCorporation/tortuga-kit-awsadapter>)
+* Google Cloud Platform (<https://github.com/UnivaCorporation/tortuga-kit-gceadapter>)
+* Microsoft Azure (<https://github.com/UnivaCorporation/tortuga-kit-azureadapter>)
+* Oracle Cloud Infrastructure (<https://github.com/UnivaCorporation/tortuga-kit-oraclecloudadapter>)
+* OpenStack (<https://github.com/UnivaCorporation/tortuga-kit-openstackadapter>)
+* VMware vSphere 5.x (<https://github.com/UnivaCorporation/tortuga-kit-vmwareadapter>)
+* On-premise (physical) nodes (built-in)
 
 Key features of Tortuga are:
 
