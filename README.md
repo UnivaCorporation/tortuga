@@ -39,7 +39,7 @@ Key features of Tortuga are:
   management, cloud storage, and security
 
 For a developer level introduction with instructions on how to build Tortuga
-please refer to [Developer information](#dev_info)
+please refer to [Developer information](#developer-information).
 
 To try Tortuga with Univa Grid Engine, you will need the [Univa Grid Engine Trial Kit](http://www.univa.com/resources/univa-navops-launch-trial.php) which
 can be downloaded and used for free.
@@ -53,9 +53,9 @@ support options, services and extensions.
 
 The Tortuga Installation and Administration Guide (in Markdown format) is available in the `doc` subdirectory.
 
-See the [Building documentation](#build_documentation) section below for instructions on creating a PDF file.
+See the [Building documentation](#building-documentation) section below for instructions on creating a PDF file.
 
-### Building documentation {#build_documentation}
+### Building documentation
 
 Tortuga documentation is provided in Markdown format which can be easily converted to
 PDF using [Pandoc](https://pandoc.org).
@@ -81,7 +81,7 @@ pandoc -f markdown -o tortuga-6-admin-guide.pdf \
     tortuga-6-admin-guide.md
 ```
 
-## Developer information {#dev_info}
+## Developer information
 
 ### Prerequisites
 
