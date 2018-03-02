@@ -39,7 +39,7 @@ Key features of Tortuga are:
   management, cloud storage, and security
 
 For a developer level introduction with instructions on how to build Tortuga
-please refer to [Developer information](#developer-information)
+please refer to [Developer information](#developer-information).
 
 To try Tortuga with Univa Grid Engine, you will need the [Univa Grid Engine Trial Kit](http://www.univa.com/resources/univa-navops-launch-trial.php) which
 can be downloaded and used for free.
