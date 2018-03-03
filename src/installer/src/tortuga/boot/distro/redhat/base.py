@@ -16,42 +16,74 @@ import subprocess
 from typing import Dict
 from jinja2 import Template
 from tempfile import NamedTemporaryFile, TemporaryDirectory
-from .base import RedHatFamily, RedHatFamilyPrimitives, REPO_CONFIGURATION_TEMPLATE
+from ..base import DistributionBase, DistributionPrimitivesBase
 
 
-class CentOs7Primitives(RedHatFamilyPrimitives):
+REPO_CONFIGURATION_TEMPLATE = """[main]
+cachedir=/tmp/cache/yum/$basearch/$releasever
+keepcache=0
+debuglevel=2
+logfile=/var/log/yum.log
+exactarch=1
+obsoletes=1
+gpgcheck=1
+plugins=0
+installonly_limit=5
+[temp]
+name=temp
+baseurl={{ base_url }}
+gpgcheck=1
+gpgkey={{ gpg_key }}
+enabled = 1
+"""
+
+
+class RedHatFamilyPrimitives(DistributionPrimitivesBase):
     """
     Represent locations of needed primitives
-    from the CentOS 7 distributions.
+    from any Red Hat like distributions.
     """
-    def __new__(cls) -> Dict[str, str]:
+    def __new__(cls, rpm_gpg_key: str) -> Dict[str, str]:
         """
         :return: None
         """
-        return super(CentOs7Primitives, cls).__new__(cls, rpm_gpg_key='RPM-GPG-KEY-CentOS-7')
-
-
-class CentOs7(RedHatFamily):
-    """
-    Represents a CentOS 7 distribution.
-    """
-    __abstract__ = False
-
-    def __init__(self, source_path: str, architecture: str = 'x84_64') -> None:
-        """
-        :param source_path: String local path or remote uri
-        :param architecture: String targeted architecture
-        :returns: None
-        """
-        super(CentOs7, self).__init__(
-            source_path,
-            'centos',
-            7,
-            0,
-            architecture
+        return super(RedHatFamilyPrimitives, cls).__new__(
+            cls,
+            isolinux_dir='isolinux',
+            isolinux_bin='isolinux/isolinux.bin',
+            kernel='isolinux/isolinux.bin',
+            initrd='isolinux/initrd.img',
+            images_dir='images',
+            base_os_dir='Packages',
+            packages_dir='Packages',
+            repo_data_dir='repodata',
+            rpm_gpg_key=rpm_gpg_key
         )
 
-        self._primitives: CentOs7Primitives = CentOs7Primitives()
+
+class RedHatFamily(DistributionBase):
+    """
+    Represents any Red Hat like distribution.
+    """
+    __abstract__ = True
+
+    def __init__(self, source_path: str, name: str, major: int, minor: int, architecture: str = 'x84_64') -> None:
+        """
+        :param source_path: String local path or remote uri
+        :param name: String name of distribution
+        :param major: Integer major minor version of distribution
+        :param minor: Integer minor minor version of distribution
+        :param architecture: String targeted architecture
+        :return: None
+        """
+
+        super(RedHatFamily, self).__init__(
+            source_path,
+            name,
+            major,
+            minor,
+            architecture
+        )
 
     def _update_version(self) -> None:
         """
@@ -84,16 +116,16 @@ class CentOs7(RedHatFamily):
                     '-c', repo_configuration.name,
                     '--disablerepo=*',
                     '--enablerepo=temp',
-                    'info', 'centos-release'
+                    'info', self.release_package
                 ])
 
                 if b'Release' in output:
                     for line in output.split(b'\n'):
                         if line.startswith(b'Version'):
-                            major: int = int(line.split(b'Version     : ')[1])
+                            version: list = line.split(b'Version     : ')[1].split(b'.')
+                            major: int = int(version[0])
+                            minor: int = int(version[1])
                             self.major = major
-                        elif line.startswith(b'Release'):
-                            minor: int = int(line.split(b'Release     : ')[1].split(b'.')[0])
                             self.minor = minor
                             break
                 else:

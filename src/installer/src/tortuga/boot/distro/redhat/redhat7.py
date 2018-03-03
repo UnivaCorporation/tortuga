@@ -12,34 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from typing import Dict
-from ..base import DistributionBase, DistributionPrimitivesBase
+from .base import RedHatFamily, RedHatFamilyPrimitives
 
-class RedHat6Primitives(DistributionPrimitivesBase):
+
+class RedHat7Primitives(RedHatFamilyPrimitives):
     """
     Represent locations of needed primitives
-    from the Red Hat 6 like distributions.
+    from the Red Hat 7 distributions.
     """
     def __new__(cls) -> Dict[str, str]:
         """
         :return: None
         """
-        return super(RedHat6Primitives, cls).__new__(
-            cls,
-            isolinux_dir='isolinux',
-            isolinux_bin='isolinux/isolinux.bin',
-            kernel='isolinux/isolinux.bin',
-            initrd='isolinux/initrd.img',
-            images_dir='images',
-            base_os_dir='Packages',
-            packages_dir='Packages',
-            repo_data_dir='repodata',
-            rpm_gpg_key='RPM-GPG-KEY-redhat-release'
-        )
+        return super(RedHat7Primitives, cls).__new__(cls, rpm_gpg_key='RPM-GPG-KEY-redhat-release')
 
 
-class RedHat6(DistributionBase):
+class RedHat7(RedHatFamily):
     """
-    Represents a Red Hat 6 distribution.
+    Represents a Red Hat 7 distribution.
     """
     __abstract__ = False
 
@@ -49,18 +39,19 @@ class RedHat6(DistributionBase):
         :param architecture: String targeted architecture
         :returns: None
         """
-        super(RedHat6, self).__init__(
+        super(RedHat7, self).__init__(
             source_path,
-            'redhat',
-            6,
+            'rhel',
+            7,
             0,
             architecture
         )
 
-        self._primitives: DistributionPrimitivesBase = RedHat6Primitives()
+        self._primitives: RedHat7Primitives = RedHat7Primitives()
 
-    def _update_version(self):
+    @property
+    def release_package(self) -> str:
         """
-        :return: None
+        :return: String
         """
-        pass  # TODO
+        return 'redhat-release-server'

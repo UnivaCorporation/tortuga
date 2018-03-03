@@ -37,8 +37,9 @@ class DistributionFactory(object):
             for distribution in module:
                 if not distribution.__abstract__:
                     try:
-                        if distribution(self._uri).matches_path():
-                            return distribution
+                        instantiated = distribution(self._uri)
+                        if instantiated.matches_path():
+                            return instantiated
                     except OsNotSupported:
                         continue
 
@@ -49,7 +50,7 @@ class DistributionFactory(object):
         :returns:
         """
         base_path: str = os.path.dirname(__file__)
-        for _, base_distro, _ in pkgutil.walk_packages(base_path):
+        for _, base_distro, _ in pkgutil.walk_packages([base_path]):
             if not base_distro == 'base':
                 for file_name in os.listdir(os.path.join(base_path, base_distro)):
                     module_name = file_name.split('.')[0]
