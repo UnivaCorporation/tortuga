@@ -42,7 +42,7 @@ For a developer level introduction with instructions on how to build Tortuga
 please refer to [Developer information](#developer-information).
 
 To try Tortuga with Univa Grid Engine, you will need the [Univa Grid Engine Trial Kit](http://www.univa.com/resources/univa-navops-launch-trial-kits.php) which
-can be downloaded and used for free.
+can be downloaded and used for free. Installation instructions for the Univa Grid Engine Kit are available [here](https://github.com/UnivaCorporation/tortuga-kit-uge/blob/master/doc/tortuga-kit-uge.md). You should refer to the Tortuga [documentation](#documentation) in addition.
 
 If you are interested in using Tortuga in production and you require support or
 add-ons then [Univa](http://univa.com) is providing a productized version of
