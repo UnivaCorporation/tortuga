@@ -51,7 +51,7 @@ support options, services and integrated products.
 
 ## Documentation
 
-The Tortuga Installation and Administration Guide (in Markdown format) is available in the [doc](https://github.com/UnivaCorporation/tortuga/tree/master/doc) subdirectory.
+The Tortuga Installation and Administration Guide (in Markdown format) is available in the [doc](doc) subdirectory.
 
 See the [Building documentation](#building-documentation) section below for instructions on creating a PDF file.
 
@@ -141,5 +141,5 @@ build the base Tortuga installation:
     paver build
 
 The resultant distribution tarball can be found in the `dist` folder. Refer to
-the Tortuga Installation and Administration Guide (found in the [doc](https://github.com/UnivaCorporation/tortuga/tree/master/doc) folder in
+the Tortuga Installation and Administration Guide (found in the [doc](doc) folder in
 this source repository) for guidance on how to install and configure Tortuga.
