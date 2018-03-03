@@ -1,16 +1,11 @@
-tortuga
+# Tortuga Core Module
 
-This is the tortuga module.
+This is the source of the Tortuga core module.
 
-License
--------
+## License
 
+Tortuga is licensed under the [Apache License, Version 2.0](https://github.com/UnivaCorporation/tortuga/blob/master/LICENSE)
 
-Contact
--------
+## Support
 
-
-Support
--------
-
-Please log tickets and issues at our [Projects site](http://projects.example.com)
+Please log tickets and issues [here](https://github.com/UnivaCorporation/tortuga/issues)
