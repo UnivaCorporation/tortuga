@@ -154,7 +154,7 @@ class ComponentInstaller(ComponentInstallerBase):
         self._provider = DhcpdDhcpProvider(self)
         self._manager = self._get_os_dhcpd_manager('dhcpd')
         self._config = ConfigManager()
-        self._installer_node = nodeApiFactory.getNodeApi().getMyNode()
+        self._installer_node = nodeApiFactory.getNodeApi().getInstallerNode()
 
     def _get_os_dhcpd_manager(self, name):
         """
