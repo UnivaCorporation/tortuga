@@ -7,10 +7,10 @@ demand and it supports so called 'cloud bursting' in hybrid cloud scenarios.
 Tortuga is tightly integrated with [Univa Grid Engine](http://www.univa.com/products/) to deliver ready-to-use clusters
 including workload and resource management.
 
-"Kits" are available that augment the set of software Tortuga can install and
+Tortuga supports so called "kits" that augment the set of software Tortuga can install as well as
 the target infrastructures onto which Tortuga can deploy. Kits are installable
-packages with metadata. Additional open source kits for Tortuga can be found under <https://github.com/UnivaCorporation/tortuga-kit-*>. The Univa Grid Engine integration is implemented as a
-kit, for example. The "cloud resource adapters" are also kits and Tortuga
+packages with metadata. Open source kits for Tortuga can be found under <https://github.com/UnivaCorporation/tortuga-kit-*>. The Univa Grid Engine integration is implemented as a
+kit as well. The "cloud resource adapters" are also kits and Tortuga
 currently supports the following cloud/virtualization platforms:
 
 * Amazon AWS (<https://github.com/UnivaCorporation/tortuga-kit-awsadapter>)
@@ -24,15 +24,15 @@ currently supports the following cloud/virtualization platforms:
 Key features of Tortuga are:
 
 * Multi-cloud support: a cluster can consist of resources from any cloud and
-  resource from multiple clouds can even be used in a single cluster at the
+  resources from multiple clouds can even be used in a single cluster at the
   same time
 * Reusable, interoperable components: configuration specifics for hardware and
   software get embedded in template-based profiles that can be reused and
   combined
 * Automated configuration: cluster nodes are deployed to specification by
-  leveraging Puppet for configuration management and automated orchestration
-* Cloud on-demand: Scaling up or scaling down of cloud-based infrastructures is
-  dynamically adjusted according to workload through use of a flexible rules
+  leveraging Puppet for configuration management and deployment orchestration
+* Cloud on-demand: Scaling up and down of cloud-based infrastructures happens
+  dynamically dependent on workload demand and through use of a flexible rules
   engine that captures the specifics of cloud use cases
 * Compatible with standard services: Tortuga integrates with and can configure
   standard services such as networking, VPNs, name resolution, identity
@@ -41,17 +41,17 @@ Key features of Tortuga are:
 For a developer level introduction with instructions on how to build Tortuga
 please refer to [Developer information](#developer-information).
 
-To try Tortuga with Univa Grid Engine, you will need the [Univa Grid Engine Trial Kit](http://www.univa.com/resources/univa-navops-launch-trial.php) which
+To try Tortuga with Univa Grid Engine, you will need the [Univa Grid Engine Trial Kit](http://www.univa.com/resources/univa-navops-launch-trial-kits.php) which
 can be downloaded and used for free.
 
 If you are interested in using Tortuga in production and you require support or
 add-ons then [Univa](http://univa.com) is providing a productized version of
 Tortuga under the name [Navops Launch](http://univa.com/products) together with
-support options, services and extensions.
+support options, services and integrated products.
 
 ## Documentation
 
-The Tortuga Installation and Administration Guide (in Markdown format) is available in the `doc` subdirectory.
+The Tortuga Installation and Administration Guide (in Markdown format) is available in the [doc](https://github.com/UnivaCorporation/tortuga/tree/master/doc) subdirectory.
 
 See the [Building documentation](#building-documentation) section below for instructions on creating a PDF file.
 
@@ -141,5 +141,5 @@ build the base Tortuga installation:
     paver build
 
 The resultant distribution tarball can be found in the `dist` folder. Refer to
-the Tortuga Installation and Administration Guide (found in the `doc` folder in
+the Tortuga Installation and Administration Guide (found in the [doc](https://github.com/UnivaCorporation/tortuga/tree/master/doc) folder in
 this source repository) for guidance on how to install and configure Tortuga.
