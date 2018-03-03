@@ -67,7 +67,7 @@ def getOsConfigClass(name):
         if osConfigClass.is_supported(name):
             break
     else:
-        raise OsNotSupported('Operating system [%s] not supported' % (name))
+        raise OsNotSupported('Operating system [{}] not supported'.format(name))
 
     return osConfigClass
 
