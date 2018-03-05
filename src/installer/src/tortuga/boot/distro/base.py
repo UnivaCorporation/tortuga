@@ -13,13 +13,14 @@
 # limitations under the License.
 import os
 import shutil
+import logging
 import urllib.error
 import urllib.parse
 import urllib.request
-import logging
 from typing import Optional, Dict
 from tortuga.objects import osInfo
 from tortuga.helper import osHelper
+from http.client import HTTPResponse
 
 
 class DistributionPrimitivesBase(dict):
@@ -65,7 +66,7 @@ class DistributionBase(object):
     """
     Represents an install source of a distribution.
     """
-    __abstract__ = True
+    __abstract__: bool = True
 
     def __init__(self, source_path: str, name: str, major: int, minor: int, architecture: str = 'x84_64') -> None:
         """
@@ -76,15 +77,15 @@ class DistributionBase(object):
         :param architecture: String targeted architecture
         :return: None
         """
-        self._source_path = str(source_path)
-        self._name = str(name.lower())
-        self._major = int(major)
-        self._minor = int(minor)
-        self._architecture = str(architecture)
+        self._source_path: str = str(source_path)
+        self._name: str = str(name.lower())
+        self._major: int = int(major)
+        self._minor: int = int(minor)
+        self._architecture: str = str(architecture)
 
-        self._source_uri = urllib.parse.urlparse(self._source_path)
+        self._source_uri: urllib.parse.ParseResult = urllib.parse.urlparse(self._source_path)
 
-        self._logger = logging.getLogger(
+        self._logger: logging.Logger = logging.getLogger(
             'tortuga.boot.distro.{}'.format(self.__class__.__name__)
         )
         self._logger.addHandler(logging.NullHandler())
@@ -104,8 +105,8 @@ class DistributionBase(object):
         :param value: String
         :return: None
         """
-        self._source_path = str(value)
-        self._source_uri = urllib.parse.urlparse(value)
+        self._source_path: str = str(value)
+        self._source_uri: urllib.parse.ParseResult = urllib.parse.urlparse(value)
 
     @property
     def name(self) -> str:
@@ -120,7 +121,7 @@ class DistributionBase(object):
         :param value: String
         :return: None
         """
-        self._name = str(value.lower())
+        self._name: str = str(value.lower())
 
     @property
     def version(self) -> str:
@@ -142,7 +143,7 @@ class DistributionBase(object):
         :param value: Integer
         :return: None
         """
-        self._major = int(value)
+        self._major: int = int(value)
 
     @property
     def minor(self) -> int:
@@ -157,7 +158,7 @@ class DistributionBase(object):
         :param value: Integer
         :return: None
         """
-        self._minor = int(value)
+        self._minor: int = int(value)
 
     @property
     def release_package(self) -> str:
@@ -179,7 +180,7 @@ class DistributionBase(object):
         :param value: String
         :return: None
         """
-        self._architecture = str(value)
+        self._architecture: str = str(value)
 
     @property
     def kernel_path(self) -> str:
@@ -279,7 +280,7 @@ class DistributionBase(object):
         :return: Boolean
         """
         if self.is_remote:
-            req = urllib.request.Request(self.source_path, method='HEAD')
+            req: urllib.request.Request = urllib.request.Request(self.source_path, method='HEAD')
             try:
                 urllib.request.urlopen(req)
             except urllib.error.HTTPError as e:
@@ -309,13 +310,13 @@ class DistributionBase(object):
         target: int = len(self._primitives.keys())
 
         for primitive, path in self._primitives.items():
-            url = os.path.join(self._source_path, path)
-            request = urllib.request.Request(
+            url: str = os.path.join(self._source_path, path)
+            request: urllib.request.Request = urllib.request.Request(
                 url=url,
                 method='HEAD'
             )
             try:
-                response = urllib.request.urlopen(request)
+                response: HTTPResponse = urllib.request.urlopen(request)
                 if response.code == 200:
                     count += 1
             except urllib.error.HTTPError as e:
@@ -356,9 +357,9 @@ class DistributionBase(object):
             raise NotImplementedError
 
         if self.is_remote:
-            matches = self._matches_remote()
+            matches: bool = self._matches_remote()
         else:
-            matches = self._matches_local()
+            matches: bool = self._matches_local()
 
         if matches:
             self._update_version()
