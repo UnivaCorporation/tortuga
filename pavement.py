@@ -49,6 +49,10 @@ distKits = [
     'kit-base',
 ]
 
+ignoreKits = [
+    'kit-example'
+]
+
 requirements = 'requirements.txt'
 
 with open(requirements) as fp:
@@ -73,6 +77,19 @@ def build(options):
 
     # Create distribution tarball
     call_task('tarball')
+
+
+@task
+def dist(options):
+    kit_dirs = path('src/kits/').dirs('kit-*')
+    kits_built = []
+    for kit_dir in kit_dirs:
+        if kit_dir.name in distKits or kit_dir.name in ignoreKits:
+            continue
+        cmd = 'build-kit'
+        sh('cd {} && {}'.format(kit_dir, cmd))
+        kits_built.append(kit_dir.name)
+    _copyKits(kits_built, distDir)
 
 
 def _copyKits(kitdirs, destdir):
