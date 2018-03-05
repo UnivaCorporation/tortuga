@@ -14,18 +14,6 @@
 
 # pylint: disable=no-name-in-module,no-member
 
-'''
-In the most common use case, kit "x", version 1.2, is installed as
-<instdir>/kits/kit-x-1.2/x.py. Path "<instdir>/kits/kit-x-1.2" is
-not in PYTHONPATH, and there are no programs that "import x" directly.
-Module "x" is dynamically imported through functions in this module, e.g.:
-
-    from tortuga.kit.actions.kitActionsManager import KitActionsManager
-
-    mgr = KitActionsManager()
-
-    kit = mgr.load_kit('ganglia')
-'''
 from logging import getLogger
 
 from tortuga.kit.loader import load_kits

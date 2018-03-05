@@ -26,7 +26,7 @@ from tortuga.exceptions.resourceAdapterNotFound \
     import ResourceAdapterNotFound
 from tortuga.db.softwareProfilesDbHandler \
     import SoftwareProfilesDbHandler
-from tortuga.kit.actions.kitActionsManager import KitActionsManager
+from tortuga.kit.actions import KitActionsManager
 from tortuga.db.hardwareProfilesDbHandler \
     import HardwareProfilesDbHandler
 from tortuga.wsapi.syncWsApi import SyncWsApi
