@@ -365,28 +365,32 @@ Commands listed in this "Quickstart" section are intended to be run as the
         * `bootstrap.debian.tmpl` for recent Debian/Ubuntu versions
         * `bootstrap.suse.tmpl` for SUSE Linux/openSUSE versions
 
-    For proof-of-concept installations and environments *without* an existing
-    VPN connection to AWS, enable the built-in OpenVPN point-to-point VPN as
-    follows:
-
-        adapter-mgmt update --resource-adapter aws --profile default \
-            --setting vpn=true
-
     `adapter-mgmt update` can be used to manage resource adapter configuration
     profile settings.
 
     1. Create hardware profile to represent EC2 nodes
 
-        The following commands create a hardware profile named `execd-aws`.
+        For EC2-based Tortuga installer:
+
+            create-hardware-profile --name execd-aws
+
+        or for hybrid installation:
 
             create-hardware-profile --name execd-aws --defaults
+
+        The `--defaults` argument requires the provisioning network being
+        set up in an earlier steps.
 
         Configure newly created hardware profile for use with Amazon EC2:
 
             update-hardware-profile --name execd-aws \
                 --resource-adapter aws --location remote
 
-        **Note:** if installing in a hybrid environment using an externally managed VPN, set argument to `--location` to `remote-vpn`, instead of `remote`. This will cause the AWS resource adapter to use IP addresses from the Amazon VPC subnet.
+	When running with an EC2-based Tortuga installer, it is _also_
+        necessary to set the hardware profile name format so EC2-assigned host
+        names are used:
+
+            update-hardware-profile --name execd-aws --name-format "*"
 
     1. Map hardware and software profiles
 
@@ -681,7 +685,6 @@ long as it provides access to the necessary ports:
 | 67    | udp/tcp  | DHCP (only req'd for on-premise node provisioning) (installer)   |
 | 68    | udp/tcp  | DHCP (only req'd for on-premise node provisioning) (installer)   |
 | 111   | udp/tcp  | rpcbind (req'd for NFS)                                          |
-| 1194  | udp/tcp  | OpenVPN (only required when using point-to-point VPN; installer) |
 | 2049  | udp/tcp  | NFS (installer)                                                  |
 | 6444  | tcp      | Grid Engine qmaster (installer) *default*                        |
 | 6445  | tcp      | Grid Engine execd (compute) *default*                            |
@@ -2411,7 +2414,6 @@ Note: changing to "trace" log level will result in much more logging and may hin
 - `/var/log/tortuga_resourceAdapter`
 - `/var/log/tortuga_rules`
 - `/var/log/tortuga_webService`
-- `/tmp/tortuga-vpn.log` (*)
 - `/tmp/tortuga-ca.log.*` (*)
 - `/tmp/tortuga-server.log.*` (*)
 - `/var/log/httpd/tortugaint_{access,error}_log` (*Apache HTTP Server*)
@@ -2544,7 +2546,6 @@ On RHEL/CentOS 6, substitute calls to `systemctl stop <name>` to `service <name>
 [Amazon VPC]:         https://aws.amazon.com/vpc/                   "Amazon VPC"
 [AWS Direct Connect]: https://aws.amazon.com/directconnect/         "AWS Direct Connect"
 [AWS IAM]:            https://aws.amazon.com/iam/                   "AWS Identity and Access Management (IAM)"
-[OpenVPN]:            http://openvpn.net                            "OpenVPN"
 [SQLite]:             http://sqlite.org                             "SQLite"
 [MySQL]:              http://mysql.com                              "MySQL"
 [MariaDB]:            http://mariadb.com                            "MariaDB"
