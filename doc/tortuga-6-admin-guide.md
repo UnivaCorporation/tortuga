@@ -116,6 +116,8 @@ Commands listed in this "Quickstart" section are intended to be run as the
         externally managed, persistent VPN connection between on-premise
         network and Amazon.
 
+        **Note:** Tortuga does not automatically set up or configure a VPN.
+
 * Amazon EC2-based installation
 
     * Amazon EC2 authorization and credentials
@@ -340,15 +342,16 @@ Commands listed in this "Quickstart" section are intended to be run as the
 
         install-kit --i-accept-the-eula kit-awsadapter-*.tar.bz2
         enable-component -p awsadapter-6.3.0-0 management-6.3
-        /opt/puppetlabs/bin/puppet agent --verbose --onetime --no-daemonize
 
     1. Configure AWS resource adapter
 
         The `adapter-mgmt` command is used to manage resource adapter
-        configuration profiles.
+        configuration profiles for all Tortuga supported resource adapters.
+        In this example, we are configuring the `aws` resource adapter:
 
             adapter-mgmt create --resource-adapter aws \
                 --profile default \
+                --setting region=<AWS region name> \
                 --setting awsAccessKey=<AWS access key> \
                 --setting awsSecretKey=<AWS secret key> \
                 --setting keypair=<AWS keypair name> \
@@ -356,6 +359,32 @@ Commands listed in this "Quickstart" section are intended to be run as the
                 --setting instancetype=<AWS instance type> \
                 --setting user_data_script_template=<bootstrap script template> \
                 --setting securitygroup=<AWS security group>
+
+	When using IAM (AWS-specific), the settings `awsAccessKey` and
+        `awsSecretKey` can be omitted as the credentials to manage instances
+        will be automatically provided through the current IAM profile.
+
+        If using Amazon VPC, the `subnet_id` in the desired VPC must be specified:
+
+            adapter-mgmt create --resource-adapter aws \
+                --profile default \
+                <settings from above..>
+                --setting subnet_id=<subnet-XXXXXXXX>
+
+        The AWS region setting (`region`) defaults to `us-east-1` if not provided.
+
+	The list of available regions can be obtained from
+<https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html> or from the AWS CLI using `aws ec2 describe-regions`.
+
+        **Note:** the settings for `ami` and `securitygroup` are dependent on
+        the region setting. Ensure the specified `ami` and `subnet_id` (if
+        applicable) are available in the specified region.
+
+        If the Tortuga installer is hosted on EC2, the specified security
+        group must allow unrestricted access to all instances within the
+        same security group (ie. installer and compute instances.
+        Alternatively, specific ports may be opened as documented in
+        [Firewall Configuration](#firewall) below.
 
         Use one of the following values for `user_data_script_template`:
 
@@ -365,28 +394,34 @@ Commands listed in this "Quickstart" section are intended to be run as the
         * `bootstrap.debian.tmpl` for recent Debian/Ubuntu versions
         * `bootstrap.suse.tmpl` for SUSE Linux/openSUSE versions
 
-    For proof-of-concept installations and environments *without* an existing
-    VPN connection to AWS, enable the built-in OpenVPN point-to-point VPN as
-    follows:
-
-        adapter-mgmt update --resource-adapter aws --profile default \
-            --setting vpn=true
-
     `adapter-mgmt update` can be used to manage resource adapter configuration
-    profile settings.
+    profile settings. Erroneous/invalid settings can be removed by using
+    `adapter-mgmt update PROFILENAME --delete NAME`, where `NAME` is the 
+    setting name.
 
     1. Create hardware profile to represent EC2 nodes
 
-        The following commands create a hardware profile named `execd-aws`.
+        For EC2-based Tortuga installer:
+
+            create-hardware-profile --name execd-aws
+
+        or for hybrid installation:
 
             create-hardware-profile --name execd-aws --defaults
+
+        The `--defaults` argument requires the provisioning network being
+        set up in an earlier steps.
 
         Configure newly created hardware profile for use with Amazon EC2:
 
             update-hardware-profile --name execd-aws \
                 --resource-adapter aws --location remote
 
-        **Note:** if installing in a hybrid environment using an externally managed VPN, set argument to `--location` to `remote-vpn`, instead of `remote`. This will cause the AWS resource adapter to use IP addresses from the Amazon VPC subnet.
+	When running with an EC2-based Tortuga installer, it is _also_
+        necessary to set the hardware profile name format so EC2-assigned host
+        names are used:
+
+            update-hardware-profile --name execd-aws --name-format "*"
 
     1. Map hardware and software profiles
 
@@ -461,12 +496,6 @@ Commands listed in this "Quickstart" section are intended to be run as the
         Finally, export the filesystem:
 
             exportfs -a
-
-        **Hint:** if running on the Tortuga installer on [Amazon EC2][], use
-        security group to allow and/or restrict access to the Tortuga
-        installer, as necessary. This document assumes the security group is
-        configured to allow all traffic between the Tortuga installer and
-        compute instances.
 
     1. Enable `execd` component on software profile(s)
 
@@ -655,7 +684,7 @@ The Tortuga installation program requires Internet access to download packages f
 
 Once Tortuga is configured and operational, the installer no longer requires Internet access. Additional software kits may require Internet access during their installation and configuration to resolve dependencies, however.
 
-### Firewall Configuration
+### Firewall Configuration {#firewall}
 
 If possible, firewalls on Tortuga installer and compute nodes should be
 disabled to maximize speed and compatibility.
@@ -681,7 +710,6 @@ long as it provides access to the necessary ports:
 | 67    | udp/tcp  | DHCP (only req'd for on-premise node provisioning) (installer)   |
 | 68    | udp/tcp  | DHCP (only req'd for on-premise node provisioning) (installer)   |
 | 111   | udp/tcp  | rpcbind (req'd for NFS)                                          |
-| 1194  | udp/tcp  | OpenVPN (only required when using point-to-point VPN; installer) |
 | 2049  | udp/tcp  | NFS (installer)                                                  |
 | 6444  | tcp      | Grid Engine qmaster (installer) *default*                        |
 | 6445  | tcp      | Grid Engine execd (compute) *default*                            |
@@ -2411,7 +2439,6 @@ Note: changing to "trace" log level will result in much more logging and may hin
 - `/var/log/tortuga_resourceAdapter`
 - `/var/log/tortuga_rules`
 - `/var/log/tortuga_webService`
-- `/tmp/tortuga-vpn.log` (*)
 - `/tmp/tortuga-ca.log.*` (*)
 - `/tmp/tortuga-server.log.*` (*)
 - `/var/log/httpd/tortugaint_{access,error}_log` (*Apache HTTP Server*)
@@ -2544,7 +2571,6 @@ On RHEL/CentOS 6, substitute calls to `systemctl stop <name>` to `service <name>
 [Amazon VPC]:         https://aws.amazon.com/vpc/                   "Amazon VPC"
 [AWS Direct Connect]: https://aws.amazon.com/directconnect/         "AWS Direct Connect"
 [AWS IAM]:            https://aws.amazon.com/iam/                   "AWS Identity and Access Management (IAM)"
-[OpenVPN]:            http://openvpn.net                            "OpenVPN"
 [SQLite]:             http://sqlite.org                             "SQLite"
 [MySQL]:              http://mysql.com                              "MySQL"
 [MariaDB]:            http://mariadb.com                            "MariaDB"
