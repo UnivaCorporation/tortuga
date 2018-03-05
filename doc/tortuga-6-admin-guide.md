@@ -116,6 +116,8 @@ Commands listed in this "Quickstart" section are intended to be run as the
         externally managed, persistent VPN connection between on-premise
         network and Amazon.
 
+        **Note:** Tortuga does not automatically set up or configure a VPN.
+
 * Amazon EC2-based installation
 
     * Amazon EC2 authorization and credentials
