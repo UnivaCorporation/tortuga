@@ -38,7 +38,7 @@ from tortuga.db.nodesDbHandler import NodesDbHandler
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
-from tortuga.kit.actions.kitActionsManager import KitActionsManager
+from tortuga.kit.actions import KitActionsManager
 from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
 from tortuga.exceptions.volumeDoesNotExist import VolumeDoesNotExist
 from tortuga.db.hardwareProfiles import HardwareProfiles

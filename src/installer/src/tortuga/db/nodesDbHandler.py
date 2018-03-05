@@ -25,7 +25,7 @@ from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
 from tortuga.db.nodes import Nodes
 from tortuga.db.nics import Nics
 from tortuga.db.softwareProfiles import SoftwareProfiles
-from tortuga.kit.actions.kitActionsManager import KitActionsManager
+from tortuga.kit.actions import KitActionsManager
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.exceptions.nodeSoftwareProfileLocked \
     import NodeSoftwareProfileLocked

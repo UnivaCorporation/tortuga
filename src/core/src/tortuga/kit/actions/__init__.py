@@ -14,4 +14,5 @@
 
 from .base import ComponentActionBase, KitActionBase
 from .install_puppet_modules import InstallPuppetModulesAction
+from .manager import KitActionsManager
 from .uninstall_puppet_modules import UninstallPuppetModulesAction
