@@ -360,7 +360,7 @@ Commands listed in this "Quickstart" section are intended to be run as the
                 --setting user_data_script_template=<bootstrap script template> \
                 --setting securitygroup=<AWS security group>
 
-	When using IAM (AWS-specific), the settings `awsAccessKey` and
+        When using IAM (AWS-specific), the settings `awsAccessKey` and
         `awsSecretKey` can be omitted as the credentials to manage instances
         will be automatically provided through the current IAM profile.
 
@@ -373,12 +373,11 @@ Commands listed in this "Quickstart" section are intended to be run as the
 
         The AWS region setting (`region`) defaults to `us-east-1` if not provided.
 
-	The list of available regions can be obtained from
-<https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html> or from the AWS CLI using `aws ec2 describe-regions`.
+        The list of available regions can be obtained from <https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html> or from the AWS CLI using `aws ec2 describe-regions`.
 
-        **Note:** the settings for `ami` and `securitygroup` are dependent on
-        the region setting. Ensure the specified `ami` and `subnet_id` (if
-        applicable) are available in the specified region.
+        **Note:** settings for `ami` and `securitygroup`, and `subnet_id` (if
+        applicable) are dependent on the `region` setting. Ensure the
+        specified `ami` and `subnet_id` are in the specified region.
 
         If the Tortuga installer is hosted on EC2, the specified security
         group must allow unrestricted access to all instances within the
