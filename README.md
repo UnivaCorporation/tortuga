@@ -123,10 +123,9 @@ yum install -y puppet-agent
 
 This installs the Puppet suite of packages under `/opt/puppetlabs`.
 
-Reload the shell by running `exec -l $SHELL` to add `/opt/puppetlabs/bin` to
-the `PATH`.
+Puppet 5 is also available on [Homebrew](https://brew.sh) for macOS users as `puppet-agent` cask or it is downloadable directly from [Puppet](https://puppet.com).
 
-Puppet 5 is also available on [Homebrew](https://brew.sh) for macOS users or downloadable directly from [Puppet](https://puppet.com).
+Independent of the method of installation, be sure you add `/opt/puppetlabs/bin` to your binary search path in `$PATH`, e.g. via reloading the shell by running `exec -l $SHELL`.
 
 ### Build instructions
 
