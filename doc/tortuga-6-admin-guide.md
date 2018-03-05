@@ -342,15 +342,16 @@ Commands listed in this "Quickstart" section are intended to be run as the
 
         install-kit --i-accept-the-eula kit-awsadapter-*.tar.bz2
         enable-component -p awsadapter-6.3.0-0 management-6.3
-        /opt/puppetlabs/bin/puppet agent --verbose --onetime --no-daemonize
 
     1. Configure AWS resource adapter
 
         The `adapter-mgmt` command is used to manage resource adapter
-        configuration profiles.
+        configuration profiles for all Tortuga supported resource adapters.
+        In this example, we are configuring the `aws` resource adapter:
 
             adapter-mgmt create --resource-adapter aws \
                 --profile default \
+                --setting region=<AWS region name> \
                 --setting awsAccessKey=<AWS access key> \
                 --setting awsSecretKey=<AWS secret key> \
                 --setting keypair=<AWS keypair name> \
@@ -358,6 +359,32 @@ Commands listed in this "Quickstart" section are intended to be run as the
                 --setting instancetype=<AWS instance type> \
                 --setting user_data_script_template=<bootstrap script template> \
                 --setting securitygroup=<AWS security group>
+
+	When using IAM (AWS-specific), the settings `awsAccessKey` and
+        `awsSecretKey` can be omitted as the credentials to manage instances
+        will be automatically provided through the current IAM profile.
+
+        If using Amazon VPC, the `subnet_id` in the desired VPC must be specified:
+
+            adapter-mgmt create --resource-adapter aws \
+                --profile default \
+                <settings from above..>
+                --setting subnet_id=<subnet-XXXXXXXX>
+
+        The AWS region setting (`region`) defaults to `us-east-1` if not provided.
+
+	The list of available regions can be obtained from
+<https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html> or from the AWS CLI using `aws ec2 describe-regions`.
+
+        **Note:** the settings for `ami` and `securitygroup` are dependent on
+        the region setting. Ensure the specified `ami` and `subnet_id` (if
+        applicable) are available in the specified region.
+
+        If the Tortuga installer is hosted on EC2, the specified security
+        group must allow unrestricted access to all instances within the
+        same security group (ie. installer and compute instances.
+        Alternatively, specific ports may be opened as documented in
+        [Firewall Configuration](#firewall) below.
 
         Use one of the following values for `user_data_script_template`:
 
@@ -368,7 +395,9 @@ Commands listed in this "Quickstart" section are intended to be run as the
         * `bootstrap.suse.tmpl` for SUSE Linux/openSUSE versions
 
     `adapter-mgmt update` can be used to manage resource adapter configuration
-    profile settings.
+    profile settings. Erroneous/invalid settings can be removed by using
+    `adapter-mgmt update PROFILENAME --delete NAME`, where `NAME` is the 
+    setting name.
 
     1. Create hardware profile to represent EC2 nodes
 
@@ -467,12 +496,6 @@ Commands listed in this "Quickstart" section are intended to be run as the
         Finally, export the filesystem:
 
             exportfs -a
-
-        **Hint:** if running on the Tortuga installer on [Amazon EC2][], use
-        security group to allow and/or restrict access to the Tortuga
-        installer, as necessary. This document assumes the security group is
-        configured to allow all traffic between the Tortuga installer and
-        compute instances.
 
     1. Enable `execd` component on software profile(s)
 
@@ -661,7 +684,7 @@ The Tortuga installation program requires Internet access to download packages f
 
 Once Tortuga is configured and operational, the installer no longer requires Internet access. Additional software kits may require Internet access during their installation and configuration to resolve dependencies, however.
 
-### Firewall Configuration
+### Firewall Configuration {#firewall}
 
 If possible, firewalls on Tortuga installer and compute nodes should be
 disabled to maximize speed and compatibility.
