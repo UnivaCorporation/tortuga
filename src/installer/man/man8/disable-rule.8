@@ -1,0 +1,68 @@
+.\" Copyright 2008-2018 Univa Corporation
+.\"
+.\" Licensed under the Apache License, Version 2.0 (the "License");
+.\" you may not use this file except in compliance with the License.
+.\" You may obtain a copy of the License at
+.\"
+.\"    http://www.apache.org/licenses/LICENSE-2.0
+.\"
+.\" Unless required by applicable law or agreed to in writing, software
+.\" distributed under the License is distributed on an "AS IS" BASIS,
+.\" WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+.\" See the License for the specific language governing permissions and
+.\" limitations under the License.
+
+.TH "disable-rule" "8" "6.3" "Univa" "Tortuga"
+.SH "NAME"
+.LP
+disable-rule - Disable rule in the Tortuga Simple Policy Engine.
+.SH "SYNTAX"
+.LP
+\fBdisable-rule --app-name=\fIAPPNAME\fB --rule-name=\fIRULENAME\fB
+.SH "DESCRIPTION"
+.LP
+The disable-rule tool disables a rule in the Tortuga Simple Policy Engine.
+.LP
+.SH "OPTIONS"
+.LP
+.TP
+\fB--app-name=\fIAPPNAME
+The application name of the rule to be disabled.
+.TP
+\fB--rule-name=\fIRULENAME
+The name of the rule to be disabled.
+.LP
+.SH "Common Tortuga Options"
+.LP
+.TP
+\fB-h, --help
+show this help message and exit.
+.TP
+\fB-?
+show this help message and exit.
+.TP
+\fB-v
+print version and exit.
+.TP
+\fB-d \fPCONSOLELOGLEVEL\fB, --debug=\fPCONSOLELOGLEVEL
+set debug level; valid values are: critical, error, warning, info, debug
+.TP
+\fB--username=\fPUSERNAME
+Credential to use when not running as root on the Installer.
+.TP
+\fB--password=\fPPASSWORD
+Credential to use when not running as root on the Installer.
+.\".SH "EXAMPLES"
+.\".LP
+.SH "AUTHORS"
+.LP
+Univa Support <support@univa.com>
+.SH "SEE ALSO"
+.LP
+add-rule(8)
+get-rule(8)
+get-rule-list(8)
+delete-rule(8)
+enable-rule(8)
+execute-rule(8)
+post-application-data(8)

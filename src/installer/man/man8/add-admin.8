@@ -1,0 +1,71 @@
+.\" Copyright 2008-2018 Univa Corporation
+.\"
+.\" Licensed under the Apache License, Version 2.0 (the "License");
+.\" you may not use this file except in compliance with the License.
+.\" You may obtain a copy of the License at
+.\"
+.\"    http://www.apache.org/licenses/LICENSE-2.0
+.\"
+.\" Unless required by applicable law or agreed to in writing, software
+.\" distributed under the License is distributed on an "AS IS" BASIS,
+.\" WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+.\" See the License for the specific language governing permissions and
+.\" limitations under the License.
+
+.TH "add-admin" "8" "6.3" "Univa" "Tortuga"
+.SH "NAME"
+.LP
+add-admin - Add an adminstrative user to the Tortuga system.
+.SH "SYNTAX"
+.LP
+\fBadd-admin --admin-username=\fIADMINUSERNAME\fB --admin-password=\fIADMINPASSWORD\fB [--crypted] [--admin-realname=\fIADMINREALNAME\fB] [--admin-description=\fIADMINDESCRIPTION\fB]
+.SH "DESCRIPTION"
+.LP
+The add-admin tool adds a single administrative user to the Tortuga system.  This user does not need to match any operating system user.
+.LP
+.SH "OPTIONS"
+.LP
+.TP
+\fB--admin-username=\fIADMINUSERNAME
+Username of new admin.
+.TP
+\fB--admin-password=\fIADMINPASSWORD
+Password of new admin.
+.TP
+\fB--crypted
+Specified password is crypted
+.TP
+\fB--admin-realname=\fIADMINREALNAME
+Real name of new admin.
+.TP
+\fB--admin-description=\fIADMINDESCRIPTION
+Description of new admin.
+.LP
+.SH "Common Tortuga Options"
+.LP
+.TP
+\fB-h, --help
+show this help message and exit.
+.TP
+\fB-?
+show this help message and exit.
+.TP
+\fB-v
+print version and exit.
+.TP
+\fB-d \fPCONSOLELOGLEVEL\fB, --debug=\fPCONSOLELOGLEVEL
+set debug level; valid values are: critical, error, warning, info, debug
+.TP
+\fB--username=\fPUSERNAME
+Credential to use when not running as root on the Installer.
+.TP
+\fB--password=\fPPASSWORD
+Credential to use when not running as root on the Installer.
+.\".SH "EXAMPLES"
+.\".LP
+.SH "AUTHORS"
+.LP
+Univa Support <support@univa.com>
+.SH "SEE ALSO"
+.LP
+add-admin-to-profile(8) delete-admin(8)
