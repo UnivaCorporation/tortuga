@@ -63,21 +63,6 @@ def get_files():
     result += list_files(Path('config'))
 
     result.append(
-        ('sys/rhel/etc/rc.d/init.d', [
-            'sys/rhel/etc/rc.d/init.d/tortugawsd'
-        ]))
-
-    result.append(
-        ('sys/rhel/usr/lib/systemd/system', [
-            'sys/rhel/usr/lib/systemd/system/tortugawsd.service',
-        ]))
-
-    result.append(
-        ('etc/rc.d/init.d', [
-            'sys/rhel/etc/rc.d/init.d/tortugawsd',
-        ]))
-
-    result.append(
         ('share/locale/en/LC_MESSAGES', [
             'share/locale/en/LC_MESSAGES/tortugaapps.mo',
         ]))
