@@ -25,7 +25,6 @@ from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
 from tortuga.db.nodes import Nodes
 from tortuga.db.nics import Nics
 from tortuga.db.softwareProfiles import SoftwareProfiles
-from tortuga.kit.actions import KitActionsManager
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.exceptions.nodeSoftwareProfileLocked \
     import NodeSoftwareProfileLocked
@@ -750,9 +749,6 @@ class NodesDbHandler(TortugaDbObjectHandler):
 
         session.commit()
 
-        # Call the kit refresh
-        KitActionsManager().refresh(idleSoftwareProfilesDict)
-
         return results
 
     def migrateNode(self, session, nodeName, remainingNodeList, liveMigrate):
@@ -899,8 +895,6 @@ class NodesDbHandler(TortugaDbObjectHandler):
                 activateNodeResults['success'].append(dbNode)
 
         session.commit()
-
-        KitActionsManager().refresh(activateSoftwareProfilesDict)
 
         return activateNodeResults
 
