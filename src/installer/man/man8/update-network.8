@@ -1,0 +1,99 @@
+.\" Copyright 2008-2018 Univa Corporation
+.\"
+.\" Licensed under the Apache License, Version 2.0 (the "License");
+.\" you may not use this file except in compliance with the License.
+.\" You may obtain a copy of the License at
+.\"
+.\"    http://www.apache.org/licenses/LICENSE-2.0
+.\"
+.\" Unless required by applicable law or agreed to in writing, software
+.\" distributed under the License is distributed on an "AS IS" BASIS,
+.\" WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+.\" See the License for the specific language governing permissions and
+.\" limitations under the License.
+
+.TH "update-network" "8" "6.3" "Univa" "Tortuga"
+.SH "NAME"
+.LP
+update-network - Add a network to the Tortuga system.
+.SH "SYNTAX"
+.LP
+\fBupdate-network [--xml-file=\fIXMLFILE\fB|--address=\fINETWORK\fB --subnet=\fINETMASK\fB --name=\fINAME\fB --type=\fI[public|provision]\fB] [--suffix=\fISUFFIX\fB --gateway=\fIIP\fB --options=\fIOPTIONS\fB --start-ip=\fIIP\fB --increment=\fIINCREMENT\fB [--dhcp | --static]\fB]
+.SH "DESCRIPTION"
+.LP
+The update-network tool updates a single network to the Tortuga system.  This network can then be associated with zero or more hardware profiles so that Tortuga can manage the cluster network topology.
+.LP
+The update-network tool has to forms one in which the network is provided via a XML file representation (as returned by \fBget-network(8)\fR) and the other where all of the options are specified on the command line.
+.LP
+.SH "OPTIONS"
+\fB--address=\fINETWORK\fR\%
+Network address for new network (ie. 192.168.15.0)
+.TP
+\fB--subnet=\fINETMASK
+Network subnet address for the new network (ie. 255.255.255.0)
+.TP
+\fB--suffix=\fISUFFIX
+Network suffix for use in making network specific dns entries (ie. compute-01-nfsNet with suffix being -nfsNet)
+.TP
+\fB--gateway=\fIIP
+The default gateway for the network.
+.TP
+\fB--options=\fIOPTIONS
+Extensible network options.
+.TP
+\fB--name=\fINAME
+Descriptive network name.
+.TP
+\fB--start-ip=\fIIP
+Network starting IP address.
+.TP
+\fB--type=\fI[public|provision]
+Network type.
+.TP
+\fB--increment=\fIINCREMENT
+Network address increment when searching for the next address to assign during add-host discovery.
+.TP
+\fB--dhcp
+Indicates that address assignment is made via DHCP.
+.TP
+\fB--static
+Indicates that address assignment is static.
+.TP
+\fB--vlan-id=\fIVLANID
+VLAN ID
+.TP
+\fB--vlan-parent=\fIVLANPARENTNETWORK
+Parent IP network of the VLAN IP network.
+.TP
+\fB--xml-file=\fIXMLFILE
+A file pointing to an XML representation of a Network.
+.LP
+.SH "Common Tortuga Options"
+\fB-h, --help
+show this help message and exit.
+.TP
+\fB-?
+show this help message and exit.
+.TP
+\fB-v
+print version and exit.
+.TP
+\fB-d \fPCONSOLELOGLEVEL\fB, --debug=\fPCONSOLELOGLEVEL
+set debug level; valid values are: critical, error, warning, info, debug
+.TP
+\fB--username=\fPUSERNAME
+Credential to use when not running as root on the Installer.
+.TP
+\fB--password=\fPPASSWORD
+Credential to use when not running as root on the Installer.
+.\".SH "EXAMPLES"
+.\".LP
+.SH "AUTHORS"
+.LP
+Univa Support <support@univa.com>
+.SH "SEE ALSO"
+.LP
+add-network(8)
+delete-network(8)
+get-network(8)
+get-network-list(8)
