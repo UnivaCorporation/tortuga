@@ -65,7 +65,7 @@ class RedHatFamily(DistributionBase):
     """
     Represents any Red Hat like distribution.
     """
-    __abstract__ = True
+    __abstract__: bool = True
 
     def __init__(self, source_path: str, name: str, major: int, minor: int, architecture: str = 'x84_64') -> None:
         """
@@ -125,8 +125,8 @@ class RedHatFamily(DistributionBase):
                             version: list = line.split(b'Version     : ')[1].split(b'.')
                             major: int = int(version[0])
                             minor: int = int(version[1])
-                            self.major = major
-                            self.minor = minor
+                            self.major: int = major
+                            self.minor: int = minor
                             break
                 else:
                     raise RuntimeError('Could not update OS version')

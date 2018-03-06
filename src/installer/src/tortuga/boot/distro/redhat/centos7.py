@@ -35,7 +35,7 @@ class CentOs7(RedHatFamily):
     """
     Represents a CentOS 7 distribution.
     """
-    __abstract__ = False
+    __abstract__: bool = False
 
     def __init__(self, source_path: str, architecture: str = 'x84_64') -> None:
         """
@@ -91,10 +91,10 @@ class CentOs7(RedHatFamily):
                     for line in output.split(b'\n'):
                         if line.startswith(b'Version'):
                             major: int = int(line.split(b'Version     : ')[1])
-                            self.major = major
+                            self.major: int = major
                         elif line.startswith(b'Release'):
                             minor: int = int(line.split(b'Release     : ')[1].split(b'.')[0])
-                            self.minor = minor
+                            self.minor: int = minor
                             break
                 else:
                     raise RuntimeError('Could not update OS version')

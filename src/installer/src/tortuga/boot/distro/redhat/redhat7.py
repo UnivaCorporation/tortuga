@@ -31,7 +31,7 @@ class RedHat7(RedHatFamily):
     """
     Represents a Red Hat 7 distribution.
     """
-    __abstract__ = False
+    __abstract__: bool = False
 
     def __init__(self, source_path: str, architecture: str = 'x84_64') -> None:
         """

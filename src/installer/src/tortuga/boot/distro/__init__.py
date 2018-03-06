@@ -37,7 +37,7 @@ class DistributionFactory(object):
             for distribution in module:
                 if not distribution.__abstract__:
                     try:
-                        instantiated = distribution(self._uri)
+                        instantiated: Any = distribution(self._uri)
                         if instantiated.matches_path():
                             return instantiated
                     except OsNotSupported:
@@ -53,7 +53,7 @@ class DistributionFactory(object):
         for _, base_distro, _ in pkgutil.walk_packages([base_path]):
             if not base_distro == 'base':
                 for file_name in os.listdir(os.path.join(base_path, base_distro)):
-                    module_name = file_name.split('.')[0]
+                    module_name: str = file_name.split('.')[0]
                     yield self._look_for_classes(__name__ + '.' + base_distro + '.' + module_name)
 
     def _look_for_classes(self, module_name: str) -> Generator[DistributionBase, None, None]:
