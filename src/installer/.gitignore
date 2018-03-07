@@ -1,3 +1,2 @@
 *.egg-info/
-man/**/*.8
 .pytest_cache/

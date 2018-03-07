@@ -64,7 +64,7 @@ class bootstrap::pre_conf {
 
   if versioncmp($::operatingsystemmajrelease, '7') < 0 {
     file { '/etc/rc.d/init.d/tortugawsd':
-      source => "${tortuga::config::instroot}/sys/rhel/etc/rc.d/init.d/tortugawsd",
+      source => "${tortuga::config::instroot}/etc/tortugawsd.sysvinit",
       mode   => '0755',
     }
 
@@ -76,7 +76,7 @@ class bootstrap::pre_conf {
     }
   } else {
     file { '/usr/lib/systemd/system/tortugawsd.service':
-      source => "${tortuga::config::instroot}/sys/rhel/usr/lib/systemd/system/tortugawsd.service",
+      source => "${tortuga::config::instroot}/etc/tortugawsd.service",
       mode   => '0644',
     }
   }

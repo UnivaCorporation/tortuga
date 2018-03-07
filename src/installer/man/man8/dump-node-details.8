@@ -1,0 +1,51 @@
+.\" Copyright (c) 2011-2015 Univa
+.\" Copyright (c) 2010 Univa UD
+
+.TH "dump-node-details" "8" "6.2" "Univa" "UniCloud"
+.SH "NAME"
+.LP
+dump-node-details - Create add-nodes compatible node list
+.SH "SYNTAX"
+.LP
+\fBdump-node-details [--show-ips] --hardware-profile=\fIHARDWAREPROFILENAME\fB
+.SH "DESCRIPTION"
+.LP
+Dumps a listing of the current nodes in the form that '--mac-file' to add-nodes takes as input.
+.LP
+.SH "OPTIONS"
+.LP
+.TP
+\fB--hardware-profile=\fIHARDWAREPROFILENAME\fB
+Dump nodes only in this hardware profile.
+.TP
+\fB--show-ips
+Include IP addresses in output.
+.LP
+.SH "Common UniCloud Options"
+.LP
+.TP
+\fB-h, --help
+show this help message and exit.
+.TP
+\fB-?
+show this help message and exit.
+.TP
+\fB-v
+print version and exit.
+.TP
+\fB-d \fPCONSOLELOGLEVEL\fB, --debug=\fPCONSOLELOGLEVEL
+set debug level; valid values are: critical, error, warning, info, debug
+.TP
+\fB--username=\fPUSERNAME
+Credential to use when not running as root on the Installer.
+.TP
+\fB--password=\fPPASSWORD
+Credential to use when not running as root on the Installer.
+.\".SH "EXAMPLES"
+.\".LP
+.SH "AUTHORS"
+.LP
+Univa Support <support@univa.com>
+.SH "SEE ALSO"
+.LP
+add-nodes(8)

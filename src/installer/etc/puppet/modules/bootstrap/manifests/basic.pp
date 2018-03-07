@@ -22,6 +22,6 @@ class bootstrap::basic {
   }
 
   file { '/etc/logrotate.d/tortugawsd':
-    source => "file://${tortuga::config::instroot}/etc/logrotate.d/tortugawsd",
+    source => "file://${tortuga::config::instroot}/etc/tortugawsd.logrotate",
   }
 }
