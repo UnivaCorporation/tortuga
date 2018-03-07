@@ -57,7 +57,7 @@ generates gmetad.conf on the standard output.
         # First argument is component name
         cname = args[0]
 
-        from tortuga.kit.actions.kitActionsManager import KitActionsManager
+        from tortuga.kit.actions.manager import KitActionsManager
         kitmgr = KitActionsManager()
 
         component = kitmgr.load_component(cname)
