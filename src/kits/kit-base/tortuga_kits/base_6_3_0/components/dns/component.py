@@ -240,10 +240,6 @@ class ComponentInstaller(ComponentInstallerBase):
         :param session: Object session
         :returns: None
         """
-        nics = {
-            'internal': [],
-            'external': []
-        }
 
         hardware_profiles = session.query(HardwareProfiles).filter(
             HardwareProfiles.location != 'local'
@@ -253,6 +249,11 @@ class ComponentInstaller(ComponentInstallerBase):
             for node in profile.nodes:
                 if not node.nics:
                     continue
+
+                nics = {
+                    'internal': [],
+                    'external': []
+                }
 
                 for nic in node.nics:
                     if nic.boot:
