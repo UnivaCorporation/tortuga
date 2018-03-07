@@ -467,7 +467,7 @@ Commands listed in this "Quickstart" section are intended to be run as the
 
         Source the UGE environment
 
-            . /opt/uge-8.5.3/default/common/settings.sh
+            . /opt/uge-8.5.4/default/common/settings.sh
 
         **Hint:** Use the UGE `qhost` command to display list of hosts known
         to the UGE cluster.
@@ -490,7 +490,7 @@ Commands listed in this "Quickstart" section are intended to be run as the
 
         Add the following entry to `/etc/exports`:
 
-            /opt/uge-8.5.3 *(rw,async)
+            /opt/uge-8.5.4 *(rw,async)
 
         Finally, export the filesystem:
 
@@ -1078,7 +1078,7 @@ ganglia-3.7.2-1
 gceadapter-6.3.0-0
 simple_policy_engine-6.3.0-0
 snmp-6.3.0-0
-uge-8.5.3-0
+uge-8.5.4-0
 ```
 
 To display operating system kits only, use the `--os` argument:
@@ -1116,8 +1116,8 @@ Use `get-component-list` to display all available components.
     base-6.3.0-0 dns-6.3
     awsadapter-6.3.0-0 management-6.3
     gceadapter-6.3.0-0 management-6.3
-    uge-8.5.3-0 qmaster-8.5.3
-    uge-8.5.3-0 execd-8.5.3
+    uge-8.5.4-0 qmaster-8.5.4
+    uge-8.5.4-0 execd-8.5.4
     simple_policy_engine-6.3.0-0 engine-6.3
     ganglia-3.7.2-1 gmetad-3.7.2
     ganglia-3.7.2-1 gmond-3.7.2
@@ -1132,7 +1132,7 @@ For example, to display the components enabled on the Tortuga installer:
     [root@tortuga ~]# get-component-list --software-profile Installer
     base-6.3.0-0 installer-6.3
     base-6.3.0-0 dns-6.3
-    uge-8.5.3-0 qmaster-8.5.3
+    uge-8.5.4-0 qmaster-8.5.4
     simple_policy_engine-6.3.0-0 engine-6.3
 
 or using the shortcut:
