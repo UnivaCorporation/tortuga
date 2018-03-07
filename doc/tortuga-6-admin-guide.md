@@ -464,10 +464,15 @@ Commands listed in this "Quickstart" section are intended to be run as the
     1. Validate installation of `qmaster`
 
         It is recommended to validate the installation of the `qmaster`.
+	
+	Check the version of UGE kit that was installed, either by looking for 
+	the version in the kit's file name or by running
+	
+	    ls -ld /opt/uge-*
 
-        Source the UGE environment
+        Supposing the version that was installed is `8.5.4`, source the UGE environment by running
 
-            . /opt/uge-8.5.3/default/common/settings.sh
+            . /opt/uge-8.5.4/default/common/settings.sh
 
         **Hint:** Use the UGE `qhost` command to display list of hosts known
         to the UGE cluster.
@@ -525,7 +530,8 @@ Commands listed in this "Quickstart" section are intended to be run as the
     Once the node has reached **Installed** state, it is available to be used.
 
     Nodes will be created momentarily and automatically added to the UGE
-    cluster.  Use `qhost` to display UGE cluster host list.
+    cluster.  Use `qhost` to display UGE cluster host list. It can take a few 
+    minutes until load values show up for newly added nodes.
 
     Tortuga automatically configures key-based authentication for managed nodes
     using the `root` user SSH credentials.
