@@ -15,6 +15,7 @@
 from logging import getLogger
 import os
 import sys
+from pathlib import Path
 
 
 from .registry import discover_kit_installers
@@ -31,7 +32,8 @@ def load_kits():
     """
     config_manager = ConfigManager()
     kits_dir = config_manager.getKitDir()
-    kits_dir_list = os.listdir(config_manager.getKitDir())
+    kits_dir_list = os.listdir(config_manager.getKitDir()) \
+            if Path(config_manager.getKitDir()).exists() else []
     for entry in kits_dir_list:
         kit_search_path = os.path.join(kits_dir, entry)
         if not os.path.isdir(kit_search_path):
