@@ -1,0 +1,60 @@
+.\" Copyright (c) 2011-2015 Univa
+.\" Copyright (c) 2010 Univa UD
+
+.TH "get-nodes-in-software-profile" "8" "6.2" "Univa" "UniCloud"
+.SH "NAME"
+.LP
+get-nodes-in-software-profile - Get the nodes associated with a given software profile that are in the given state.
+.SH "SYNTAX"
+.LP
+\fBget-nodes-in-software-profile --software-profile=\fISOFTWAREPROFILENAME\fB [--state=\fISTATE\fB] [--status=\fISTATUS\fB] [--costGT=\fICOST\fB]
+.SH "DESCRIPTION"
+.LP
+The get-nodes-in-software-profile tool retrieves the list of nodes that are in
+the given software profile and are in the given state.
+.LP
+.SH "OPTIONS"
+.LP
+.TP
+\fB--software-profile=\fISOFTWAREPROFILENAME
+Software profile name
+.TP
+\fB--state=\fISTATE
+Node state
+.TP
+\fB--status=\fISTATUS
+Node status
+.TP
+\fB--cost=\fICOST
+Node cost
+.LP
+.SH "Common UniCloud Options"
+.LP
+.TP
+\fB-h, --help
+show this help message and exit.
+.TP
+\fB-?
+show this help message and exit.
+.TP
+\fB-v
+print version and exit.
+.TP
+\fB-d \fPCONSOLELOGLEVEL\fB, --debug=\fPCONSOLELOGLEVEL
+set debug level; valid values are: critical, error, warning, info, debug
+.TP
+\fB--username=\fPUSERNAME
+Credential to use when not running as root on the Installer.
+.TP
+\fB--password=\fPPASSWORD
+Credential to use when not running as root on the Installer.
+.\".SH "EXAMPLES"
+.\".LP
+.SH "AUTHORS"
+.LP
+Univa Support <support@univa.com>
+.SH "SEE ALSO"
+.LP
+get-software-profile(8)
+idle-node(8)
+activate-node(8)

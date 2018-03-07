@@ -1,0 +1,59 @@
+.\" Copyright (c) 2011-2015 Univa
+.\" Copyright (c) 2010 Univa UD
+
+.TH "unicloud-setup" "8" "6.2" "Univa" "UniCloud"
+.SH "NAME"
+.LP
+unicloud-setup - Create intial UniCloud configuration.
+.SH "SYNTAX"
+.LP
+\fBunicloud-setup [ --force --defaults -i \fIRESPONSEFILE\fB --i-accept-the-eula \fB]
+.SH "DESCRIPTION"
+.LP
+The unicloud-setup tool is run after the installation of the UniCloud software in order to configure the base cluster environment.  A series of questions is asked with the answers determining the configuration to apply.  This command is only run once in a given cluster install.
+.LP
+.SH "OPTIONS"
+.LP
+.TP
+\fB--force
+Flag for forcing installation under certain conditions
+.TP
+\fB--defaults
+Flag for using default settings during installation
+process
+.TP
+\fB-i \fIRESPONSEFILE\fR
+Filename of response file
+.TP
+\fB--i-accept-the-eula
+Accept the UniCloud EULA.
+.SH "Common UniCloud Options"
+.LP
+.TP
+\fB-h, --help
+show this help message and exit.
+.TP
+\fB-?
+show this help message and exit.
+.TP
+\fB-v
+print version and exit.
+.TP
+\fB-d \fPCONSOLELOGLEVEL\fB, --debug=\fPCONSOLELOGLEVEL
+set debug level; valid values are: critical, error, warning, info, debug
+.TP
+\fB--username=\fPUSERNAME
+Credential to use when not running as root on the Installer.
+.TP
+\fB--password=\fPPASSWORD
+Credential to use when not running as root on the Installer.
+.SH "EXAMPLES"
+Reinstall UniCloud on an existing installation:
+
+\fBunicloud-setup --force\fR
+
+Note: this will cause all existing cluster information to be destroyed, including all database records (hardware/software profiles, node information, etc)
+.LP
+.SH "AUTHORS"
+.LP
+Univa Support <support@univa.com>

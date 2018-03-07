@@ -1,0 +1,85 @@
+.\" Copyright 2008-2018 Univa Corporation
+.\"
+.\" Licensed under the Apache License, Version 2.0 (the "License");
+.\" you may not use this file except in compliance with the License.
+.\" You may obtain a copy of the License at
+.\"
+.\"    http://www.apache.org/licenses/LICENSE-2.0
+.\"
+.\" Unless required by applicable law or agreed to in writing, software
+.\" distributed under the License is distributed on an "AS IS" BASIS,
+.\" WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+.\" See the License for the specific language governing permissions and
+.\" limitations under the License.
+
+.TH "install-os-kit" "8" "6.3" "Univa" "Tortuga"
+.SH "NAME"
+.LP
+install-os-kit - Add an os kit to the Tortuga system.
+.SH "SYNTAX"
+.LP
+\fBinstall-os-kit --media=\fIPACKAGEURL\fB [-y] [--symlinks] [--mirror]
+.SH "DESCRIPTION"
+.LP
+The install-os-kit tool adds a new operating system kit to a Tortuga system.  
+.SH "OPTIONS"
+.LP
+.TP
+\fB-m \fIMEDIA\fB, --media=\fIMEDIA
+OS kit package URL
+.TP
+\fB-y, --no-prompt
+Do not prompt for more discs. Ignored when media is a single source or a URL.
+.TP
+\fB--symlinks
+Instead of copying OS media files to Tortuga repository, symlink the files instead. This is useful when permanently mounting on ISO on the local filesystem.
+.TP
+\fB--mirror
+Informs Tortuga that the specified URL is a link to a OS distribution mirror, instead of a fixed OS version. OS media imported in this manner will show only the distribution "major" version in the output of get-kit-list and get-component-list.
+.TP
+\fB--force
+Forcibly reinstall OS media that may already be installed.
+.SH "Common Tortuga Options"
+.LP
+.TP
+\fB-h, --help
+show this help message and exit.
+.TP
+\fB-?
+show this help message and exit.
+.TP
+\fB-v
+print version and exit.
+.TP
+\fB-d \fPCONSOLELOGLEVEL\fB, --debug=\fPCONSOLELOGLEVEL
+set debug level; valid values are: critical, error, warning, info, debug
+.TP
+\fB--username=\fPUSERNAME
+Credential to use when not running as root on the Installer.
+.TP
+\fB--password=\fPPASSWORD
+Credential to use when not running as root on the Installer.
+.SH EXAMPLES
+.TP
+Copy local installation media mounted on directories /media/disc1 and /media/disc2:
+.LP
+.B
+install-os-kit --media /media/disc1,/media/disc2
+.TP
+Symlink local installation media mounted on directories /media/disc1 and /media/disc2:
+.LP
+.B
+install-os-kit --symlink /media/disc1,/media/disc2
+.TP
+Install CentOS 7 mirror repository:
+.LP
+.B
+install-os-kit --media http://mirror.centos.org/centos-7/7/os/x86_64 --mirror
+.LP
+Note: this is not recommended as it will mean that Tortuga proxies a remote repository. This will result in long installation times due to transferring all installation files over the Internet. It is recommended to cache remote repository locally and use that with Tortuga.
+.SH "AUTHORS"
+.LP
+Univa Support <support@univa.com>
+.SH "SEE ALSO"
+.LP
+get-kit-list(8), get-component-list(8)

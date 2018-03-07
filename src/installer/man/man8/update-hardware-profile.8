@@ -1,0 +1,142 @@
+.\" Copyright 2008-2018 Univa Corporation
+.\"
+.\" Licensed under the Apache License, Version 2.0 (the "License");
+.\" you may not use this file except in compliance with the License.
+.\" You may obtain a copy of the License at
+.\"
+.\"    http://www.apache.org/licenses/LICENSE-2.0
+.\"
+.\" Unless required by applicable law or agreed to in writing, software
+.\" distributed under the License is distributed on an "AS IS" BASIS,
+.\" WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+.\" See the License for the specific language governing permissions and
+.\" limitations under the License.
+
+.TH "update-hardware-profile" "8" "6.3" "Univa" "Tortuga"
+.SH "NAME"
+.LP
+update-hardware-profile - Update an existing hardware profile in the Tortuga system.
+.SH "SYNTAX"
+.LP
+\fBupdate-hardware-profile [OPTION] --xml-file=\fIXMLFILE\fB
+.LP
+\fBupdate-hardware-profile [OPTION] --name=\fIHARDWAREPROFILENAME\fB
+.SH "DESCRIPTION"
+.LP
+The update-hardware-profile tool updates a single existing hardware profile in the Tortuga system.
+.LP
+Nodes receive several configuration parameters from the hardware profile they are associated with.
+.LP
+The update-hardware-profile tool is structured to first set up all of their options and then look to see if the --xml-file option is specified. If the --xml-file option is specified, a profile object is created from the file. If the --xml-file option is not present, the tool fetches the hardware profile specified by the --name option.
+.LP
+.SH "OPTIONS"
+.LP
+.TP
+\fB--name=\fIHARDWAREPROFILENAME
+Name of hardware profile to be updated.
+.TP
+\fB--new-name=\fIHARDWAREPROFILENAME
+New name of hardware profile.
+.TP
+\fB--description=\fIDESCRIPTION
+User description of this hardware profile.
+.TP
+\fB--name-format=\fINAMEFORMAT
+Name format for hardware profile.
+.TP
+\fB--kernel=\fIKERNEL 
+Kernel used by this hardware profile.
+.TP
+\fB--kernel-parameters=\fIKERNELPARAMETERS
+Kernel parameters for hardware profile.
+.TP
+\fB--initrd=\fIINITRD
+Initrd for hardware profile.
+.TP
+\fB--software-override-allowed=\fISOALLOWED
+Can kernel and initrd values from a software profile be used.
+.TP
+\fB--idle-software-profile=\fIHARDWAREPROFILENAME
+Idle software profile associated with this hardware profile.
+.TP
+\fB--location=\fILOCATION
+Physical location of nodes in this hardware profile.
+.TP
+\fB--local-boot-parameters=\fILOCALBOOTPARAMETERS
+The Grub configuration contents for member nodes.
+.TP
+\fB--virtual-container-profile=\fIHARDWAREPROFILENAME
+The "parent" hardware profile of this hardware profile.
+.TP
+\fB--max-units=\fIMAXUNITS
+Maximum number of compute units for a node member.
+.TP
+\fB--resource-adapter=\fIRESOURCEADAPTER
+Resource adapter assocated with this hardware profile.
+.TP
+\fB--add-provisioning-nic=\fINIC
+Provisioning NIC to associate with the hardware profile.  Multiple \fB--add-provisioning-nic\fR options can be specified at once.
+.TP
+\fB--delete-provisioning-nic=\fINIC
+Provisioning NIC to delete from the hardware profile.  Multiple \fB--delete-provisioning-nic\fR options can be specified at once.
+.TP
+\fB--add-network=\fINETWORK
+A network to associate with the hardware profile.  Multiple \fB--add-network\fR options can be specified at once.  The format of the network parameter is "network-address/netmask/device-name".
+.TP
+\fB--delete-network=\fINETWORK
+A network to delete from the hardware profile.  Multiple \fB--delete-network\fR options can be specified at once.  The format of the network parameter is "network-address/netmask/device-name".
+.TP
+\fB--xml-file=\fIXMLFILE
+A file pointing to an XML representation of a hardware profile.
+.TP
+\fB--cost=\fICOST
+Set the "cost" of the hardware profile. The cost value is arbitrary and is
+generally used in cloud-bursting rules.
+.LP
+.SH "Common Tortuga Options"
+.LP
+.TP
+\fB-h, --help
+show this help message and exit.
+.TP
+\fB-?
+show this help message and exit.
+.TP
+\fB-v
+print version and exit.
+.TP
+\fB-d \fPCONSOLELOGLEVEL\fB, --debug=\fPCONSOLELOGLEVEL
+set debug level; valid values are: critical, error, warning, info, debug
+.TP
+\fB--username=\fPUSERNAME
+Credential to use when not running as root on the Installer.
+.TP
+\fB--password=\fPPASSWORD
+Credential to use when not running as root on the Installer.
+.SH "EXAMPLES"
+.LP
+\fBBasic Update
+.TP
+\fRupdate-hardware-profile --name HwTest --name-format compute-hwtest-#NN --location "remote"
+.LP
+\fBDelete a provisioning NIC 
+.TP
+\fRupdate-hardware-profile --name HwTest --delete-provisioning-nic 172.19.0.1
+.LP
+\fBAdd a provisioning NIC 
+.TP
+\fRupdate-hardware-profile --name HwTest --add-provisioning-nic 172.19.0.1
+.LP
+\fBDelete a network 
+.TP
+\fRupdate-hardware-profile --name HwTest --delete-network 172.19.0.0/255.255.255.0/e1000g0
+.LP
+\fBAdd a network 
+.TP
+\fRupdate-hardware-profile --name HwTest --add-network 172.19.0.0/255.255.255.0/e1000g0
+.SH "AUTHORS"
+.LP
+Univa Support <support@univa.com>
+.SH "SEE ALSO"
+.LP
+get-hardware-profile(8), get-hardware-profile-list(8)
