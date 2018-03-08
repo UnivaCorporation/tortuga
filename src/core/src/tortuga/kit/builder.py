@@ -37,7 +37,7 @@ DEFAULT_INCLUDE_FILES = [
     'python_packages',
     'tortuga_kits',
     'bin',
-    'doc',
+    'docs',
     'README.*'
 ]
 

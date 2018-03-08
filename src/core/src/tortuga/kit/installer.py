@@ -381,6 +381,8 @@ class KitInstallerBase(ConfigurableMixin, metaclass=KitInstallerMeta):
             text = eula_fp.read()
             eula_fp.close()
             eula = Eula(text=text)
+        else:
+            logger.debug('EULA not found: {}'.format(eula_path))
         return eula
 
     def get_component_installer(self, component_name):
