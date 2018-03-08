@@ -59,30 +59,53 @@ def pip_install_requirements(kit_installer, requirements_path):
     #
     # These directories can easily be created using the py2pi utility.
     #
-    if os.path.exists(requirements_path):
-        logger.debug('Installing requirements: {}'.format(requirements_path))
-
-        pip_arguments = ['install']
-
-        kit_python_repo = os.path.join(
-            kit_installer.install_path,
-            'python_packages',
-            'simple'
-        )
-        if os.path.exists(kit_python_repo):
-            pip_arguments.extend([
-                '--extra-index-url',
-                'file://{}'.format(os.path.abspath(kit_python_repo))
-            ])
-
-        pip_arguments.extend([
-            '-r',
-            requirements_path
-        ])
-        pip.main(pip_arguments)
-
-    else:
+    if not os.path.exists(requirements_path):
         logger.debug('Requirements not found: {}'.format(requirements_path))
+        return
+
+    if is_requirements_empty(requirements_path):
+        logger.debug('Requirements empty: {}'.format(requirements_path))
+        return
+
+    pip_arguments = ['install']
+
+    kit_python_repo = os.path.join(
+        kit_installer.install_path,
+        'python_packages',
+        'simple'
+    )
+    if os.path.exists(kit_python_repo):
+        pip_arguments.extend([
+            '--extra-index-url',
+            'file://{}'.format(os.path.abspath(kit_python_repo))
+        ])
+
+    pip_arguments.extend([
+        '-r',
+        requirements_path
+    ])
+    pip.main(pip_arguments)
+
+
+def is_requirements_empty(requirements_file_path):
+    """
+    Tests to see if a pip requirements.txt file is empty.
+
+    :param requirements_file_path: the path to the requirements.txt file
+    :return:                       True if it is empty, False otherwise
+
+    """
+    fp = open(requirements_file_path)
+    line_count = 0
+    for line in fp.readline():
+        line = line.strip()
+        #
+        # Skip blank lines, or comment lines
+        #
+        if not line or line.startswith('#'):
+            continue
+        line_count += 1
+    return line_count == 0
 
 
 def assembleKitUrl(srcUrl, kitFileName):
