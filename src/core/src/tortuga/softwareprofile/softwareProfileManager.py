@@ -17,6 +17,7 @@
 
 import os
 import shutil
+from typing import Optional, Union
 
 from tortuga.config.configManager import ConfigManager
 from tortuga.db.componentDbApi import ComponentDbApi
@@ -35,6 +36,7 @@ from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.os_utility import osUtility
 from tortuga.types import Singleton
 from tortuga.utility import validation
+from tortuga.objects.softwareProfile import SoftwareProfile
 
 
 class SoftwareProfileManager(TortugaObjectManager, Singleton):
@@ -114,12 +116,18 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
 
-    def getSoftwareProfile(self, name, optionDict=None):
-        return self._sp_db_api.getSoftwareProfile(name, optionDict or {})
+    def getSoftwareProfile(
+            self,
+            name: str,
+            optionDict: Optional[Union[dict, None]] = None) -> SoftwareProfile:
+        return self._sp_db_api.getSoftwareProfile(name, optionDict=optionDict)
 
-    def getSoftwareProfileById(self, id_, optionDict=None):
+    def getSoftwareProfileById(
+            self,
+            id_: int,
+            optionDict: Optional[Union[dict, None]] = None) -> SoftwareProfile:
         return self._sp_db_api.getSoftwareProfileById(
-            id_, optionDict=optionDict or {})
+            id_, optionDict=optionDict)
 
     def _getCoreComponentForOsInfo(self, osInfo):
         # Find core component

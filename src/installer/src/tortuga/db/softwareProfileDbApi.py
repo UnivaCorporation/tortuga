@@ -14,6 +14,7 @@
 
 # pylint: disable=not-callable,multiple-statements,no-member
 
+from typing import Optional, Union
 from tortuga.db.dbManager import DbManager
 
 from tortuga.db.tortugaDbApi import TortugaDbApi
@@ -64,7 +65,9 @@ class SoftwareProfileDbApi(TortugaDbApi):
         self._adminsDbHandler = AdminsDbHandler()
         self._osDbHandler = OperatingSystemsDbHandler()
 
-    def getSoftwareProfile(self, name, optionDict=None):
+    def getSoftwareProfile(
+            self, name: str,
+            optionDict: Optional[Union[dict, None]] = None) -> SoftwareProfile:
         """
         Get softwareProfile from the db.
 
@@ -95,7 +98,9 @@ class SoftwareProfileDbApi(TortugaDbApi):
         finally:
             DbManager().closeSession()
 
-    def getSoftwareProfileById(self, softwareProfileId, optionDict=None):
+    def getSoftwareProfileById(
+            self, softwareProfileId: int,
+            optionDict: Optional[Union[dict, None]] = None) -> SoftwareProfile:
         """
         Get softwareProfile from the db.
 
