@@ -292,10 +292,9 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
                 if k.getIsOs():
                     # This component is a member of the OS kit, set the flag
                     bFoundOsComponent = True
-                else:
-                    if c.getName() == 'core':
-                        # Found the 'core' component, set the flag
-                        bFoundCoreComponent = True
+                elif k.getName() == 'base' and c.getName() == 'core':
+                    # Found the 'core' component in 'base' kit
+                    bFoundCoreComponent = True
 
                 components.append(cobj)
 
