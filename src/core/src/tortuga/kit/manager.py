@@ -161,9 +161,12 @@ class KitManager(TortugaObjectManager, Singleton):
         # Validate eula
         #
         eula = installer.get_eula()
-        if not self._eula_validator.validate_eula(eula):
-            raise EulaAcceptanceRequired(
-                'You must accept the EULA to install this kit')
+        if not eula:
+            self.getLogger().debug('No EULA acceptance required')
+        else:
+            if not self._eula_validator.validate_eula(eula):
+                raise EulaAcceptanceRequired(
+                    'You must accept the EULA to install this kit')
 
         #
         # Runs the kit pre install method

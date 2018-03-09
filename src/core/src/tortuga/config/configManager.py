@@ -15,6 +15,8 @@
 import os
 import socket
 import subprocess
+import shlex
+from typing import Union
 from tortuga.types import Singleton
 from tortuga.objects.provisioningInfo import ProvisioningInfo
 
@@ -66,6 +68,33 @@ DEFAULT_PROVISIONING_INFO = None
 
 # The most amount of data we will read when parsing provisioning info object
 MAX_PROVINFO_LENGTH = 50000
+
+
+def get_default_dns_suffix() -> Union[str, None]:
+    domain_name = None
+    search_domain_name = None
+
+    with open('/etc/resolv.conf') as fp:
+        for buf in fp.readlines():
+            if search_domain_name is None and buf.startswith('search'):
+                result = shlex.split(buf.rstrip())
+                if len(result) < 2:
+                    continue
+
+                # use first entry after "search ..."
+                search_domain_name = result[1].lower()
+            elif buf.startswith('domain'):
+                result = shlex.split(buf.rstrip())
+                if len(result) < 2:
+                    continue
+
+                # use argument to "domain ..."
+                domain_name = result[1].lower()
+
+    if domain_name:
+        return domain_name
+
+    return search_domain_name
 
 
 class ConfigManager(dict, Singleton): \
@@ -186,7 +215,14 @@ class ConfigManager(dict, Singleton): \
 
         # Set host based on provisioning info
         if self.getProvisioningInfo() is None:
-            self['installer'] = self['host'] = socket.getfqdn()
+            installer_fqdn = socket.getfqdn().lower()
+            if '.' not in installer_fqdn:
+                dns_suffix = get_default_dns_suffix()
+                if dns_suffix:
+                    # use dns suffix from /etc/resolv.conf
+                    installer_fqdn += '.{}'.format(dns_suffix)
+
+            self['installer'] = self['host'] = installer_fqdn
         else:
             self['host'] = self.getProvisioningInfo().getNode().getName()
 

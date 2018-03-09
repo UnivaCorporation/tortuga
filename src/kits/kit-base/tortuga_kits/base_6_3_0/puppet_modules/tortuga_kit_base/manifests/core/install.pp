@@ -42,9 +42,20 @@ class tortuga_kit_base::core::install::virtualenv::package {
 
     Package['centos-release-scl']
       -> Package['rh-python36-python-virtualenv']
+  } else {
+    if $::osfamily == 'Debian' {
+      $pkgs = [
+        'python3',
+        'python3-venv',
+      ]
+    } else {
+      $pkgs = []
+    }
   }
 
-  ensure_packages($pkgs, {'ensure' => 'installed'})
+  if $pkgs {
+    ensure_packages($pkgs, {'ensure' => 'installed'})
+  }
 }
 
 class tortuga_kit_base::core::install::virtualenv::pip {
@@ -69,9 +80,10 @@ class tortuga_kit_base::core::install::create_tortuga_instroot {
   include tortuga::config
 
   $virtualenv = $::osfamily ? {
-    'RedHat'        => '/opt/rh/rh-python36/root/bin/python -m venv',
-    /(Debian|Suse)/ => 'virtualenv --system-site-packages',
-    default                => undef,
+    'RedHat' => '/opt/rh/rh-python36/root/bin/python -m venv',
+    'Debian' => 'python3 -m venv',
+    'Suse'   => 'virtualenv --system-site-packages',
+    default  => undef,
   }
 
   if $virtualenv == undef {

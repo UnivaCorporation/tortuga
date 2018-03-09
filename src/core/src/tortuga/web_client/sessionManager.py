@@ -92,7 +92,7 @@ class SessionManager(object):
         exceptionMapper.checkStatus(response.headers)
 
         # Otherwise, return the parsed JSON response body
-        responseDict = json.load(response) \
+        responseDict = json.loads(response.read().decode()) \
             if 'Content-Length' in response.headers and \
             int(response.headers['Content-Length']) else {}
 

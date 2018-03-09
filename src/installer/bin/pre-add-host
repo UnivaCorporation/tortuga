@@ -20,7 +20,7 @@ import signal
 import errno
 
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.kit.actions.kitActionsManager import KitActionsManager
+from tortuga.kit.actions.manager import KitActionsManager
 from tortuga.softwareprofile.softwareProfileFactory \
     import getSoftwareProfileApi
 
