@@ -19,12 +19,10 @@ import shutil
 import platform
 
 from tortuga.exceptions.commandFailed import CommandFailed
-from tortuga.os_objects.osServiceManagerInterface \
-    import OsServiceManagerInterface
 from tortuga.os_objects.osObjectManager import OsObjectManager
 
 
-class RhelServiceManager(OsObjectManager, OsServiceManagerInterface):
+class RhelServiceManager(OsObjectManager):
     """
     RHEL service manager.
     """

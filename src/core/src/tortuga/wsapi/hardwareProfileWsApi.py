@@ -16,15 +16,13 @@
 
 import json
 
-from tortuga.hardwareprofile.hardwareProfileInterface \
-    import HardwareProfileApiInterface
 from tortuga.exceptions.tortugaException import TortugaException
 import tortuga.objects.provisioningInfo
 from tortuga.objects.hardwareProfile import HardwareProfile
 from .tortugaWsApi import TortugaWsApi
 
 
-class HardwareProfileWsApi(TortugaWsApi, HardwareProfileApiInterface):
+class HardwareProfileWsApi(TortugaWsApi):
     """
     Hardware profile WS API class.
     """

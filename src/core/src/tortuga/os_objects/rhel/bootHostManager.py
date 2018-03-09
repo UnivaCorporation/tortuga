@@ -22,8 +22,6 @@ from textwrap import dedent
 
 from tortuga.os_objects.osBootHostManagerCommon \
     import OsBootHostManagerCommon
-from tortuga.os_objects.bootHostManagerInterface \
-    import BootHostManagerInterface
 from tortuga.exceptions.osNotSupported import OsNotSupported
 from tortuga.exceptions.nicNotFound import NicNotFound
 from tortuga.utility.bootParameters import getBootParameters
@@ -31,7 +29,7 @@ from tortuga.objects.osFamilyInfo import OsFamilyInfo
 from tortuga.resourceAdapter.utility import get_provisioning_nic
 
 
-class BootHostManager(OsBootHostManagerCommon, BootHostManagerInterface):
+class BootHostManager(OsBootHostManagerCommon):
     """Methods for manipulating PXE files"""
 
     def __getPxelinuxBootFilePath(self, mac):

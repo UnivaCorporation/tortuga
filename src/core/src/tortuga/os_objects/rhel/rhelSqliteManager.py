@@ -16,12 +16,10 @@
 
 import os
 
-from tortuga.os_objects.osSqliteManagerInterface \
-    import OsSqliteManagerInterface
 from tortuga.os_objects.osObjectManager import OsObjectManager
 
 
-class RhelSqliteManager(OsObjectManager, OsSqliteManagerInterface):
+class RhelSqliteManager(OsObjectManager):
     """
     RHEL sqlite manager.
     """

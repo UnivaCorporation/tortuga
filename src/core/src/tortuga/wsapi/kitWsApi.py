@@ -19,13 +19,12 @@ import base64
 
 from tortuga.objects.eula import Eula
 from tortuga.objects.kit import Kit
-from tortuga.kit.kitApiInterface import KitApiInterface
 from tortuga.exceptions.tortugaException import TortugaException
 from .tortugaWsApi import TortugaWsApi
 from typing import List
 
 
-class KitWsApi(TortugaWsApi, KitApiInterface):
+class KitWsApi(TortugaWsApi):
     """
     Kit WS API class.
     """

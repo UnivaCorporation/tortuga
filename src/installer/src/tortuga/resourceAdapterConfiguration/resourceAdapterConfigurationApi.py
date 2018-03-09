@@ -14,13 +14,11 @@
 
 # pylint: disable=no-member
 
-from .resourceAdapterConfigurationInterface \
-    import ResourceAdapterConfigurationInterface
 from .resourceAdapterConfigurationManager \
     import ResourceAdapterConfigurationManager
 
 
-class ResourceAdapterConfigurationApi(ResourceAdapterConfigurationInterface):
+class ResourceAdapterConfigurationApi:
     def create(self, resadapter_name, name, configuration):
         self.getLogger().debug(
             '[{0}] create(resadapter_name=[{1}], name=[{2}],'

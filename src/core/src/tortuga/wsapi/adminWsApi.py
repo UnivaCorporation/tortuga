@@ -17,14 +17,13 @@
 import json
 import urllib.request, urllib.parse, urllib.error
 
-from tortuga.admin.adminApiInterface import AdminApiInterface
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.objects.admin import Admin
 from tortuga.objects.tortugaObject import toBool
 from .tortugaWsApi import TortugaWsApi
 
 
-class AdminWsApi(TortugaWsApi, AdminApiInterface):
+class AdminWsApi(TortugaWsApi):
     """Admin WS API class"""
 
     def getAdmin(self, adminName):

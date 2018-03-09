@@ -15,13 +15,11 @@
 import os
 import glob
 
-from tortuga.os_objects.osPackageManagerInterface \
-    import OsPackageManagerInterface
 from tortuga.os_objects.osObjectManager import OsObjectManager
 from tortuga.config.configManager import ConfigManager
 
 
-class RhelPackageManager(OsObjectManager, OsPackageManagerInterface):
+class RhelPackageManager(OsObjectManager):
     """
     RHEL package manager.
     """

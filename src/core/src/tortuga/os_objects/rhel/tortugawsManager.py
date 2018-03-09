@@ -12,12 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tortuga.os_objects.tortugawsManagerInterface \
-    import TortugawsManagerInterface
 from tortuga.os_objects.osObjectManager import OsObjectManager
 
 
-class TortugawsManager(OsObjectManager, TortugawsManagerInterface):
+class TortugawsManager(OsObjectManager):
     """
     RHEL tortugaws manager.
     """

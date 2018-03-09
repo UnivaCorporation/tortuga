@@ -16,11 +16,10 @@
 
 import os
 
-from tortuga.os_objects.osSysManagerInterface import OsSysManagerInterface
 from tortuga.os_objects.osObjectManager import OsObjectManager
 
 
-class SysManager(OsObjectManager, OsSysManagerInterface):
+class SysManager(OsObjectManager):
     TIME = '/etc/sysconfig/clock'
     KEYBOARD = '/etc/sysconfig/keyboard'
     I18N = '/etc/sysconfig/i18n'

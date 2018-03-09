@@ -15,12 +15,11 @@
 # pylint: disable=no-member
 
 from tortuga.admin.adminManager import AdminManager
-from tortuga.admin.adminApiInterface import AdminApiInterface
 from tortuga.utility.tortugaApi import TortugaApi
 from tortuga.exceptions.tortugaException import TortugaException
 
 
-class AdminApi(TortugaApi, AdminApiInterface):
+class AdminApi(TortugaApi):
     """Admin API class"""
 
     def __init__(self):

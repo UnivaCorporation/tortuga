@@ -12,12 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tortuga.os_objects.osFileSystemManagerInterface \
-    import OsFileSystemManagerInterface
 from tortuga.os_objects.osObjectManager import OsObjectManager
 
 
-class FileSystemManager(OsObjectManager, OsFileSystemManagerInterface):
+class FileSystemManager(OsObjectManager):
     """
     RHEL file system manager.
     """

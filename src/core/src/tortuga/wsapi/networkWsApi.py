@@ -16,13 +16,12 @@
 
 import json
 
-from tortuga.network.networkApiInterface import NetworkApiInterface
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.objects.network import Network
 from .tortugaWsApi import TortugaWsApi
 
 
-class NetworkWsApi(TortugaWsApi, NetworkApiInterface):
+class NetworkWsApi(TortugaWsApi):
     """
     Network WS API class.
     """

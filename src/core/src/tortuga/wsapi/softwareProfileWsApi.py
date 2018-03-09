@@ -18,8 +18,6 @@ import json
 import urllib.request, urllib.parse, urllib.error
 import urllib.request, urllib.error, urllib.parse
 
-from tortuga.softwareprofile.softwareProfileInterface \
-    import SoftwareProfileApiInterface
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.objects.softwareProfile import SoftwareProfile
 from tortuga.objects.node import Node
@@ -28,7 +26,7 @@ from tortuga.exceptions.softwareProfileNotFound import SoftwareProfileNotFound
 from .tortugaWsApi import TortugaWsApi
 
 
-class SoftwareProfileWsApi(TortugaWsApi, SoftwareProfileApiInterface):
+class SoftwareProfileWsApi(TortugaWsApi):
     """
     SoftwareProfile WS API class.
     """

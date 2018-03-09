@@ -20,13 +20,11 @@ import struct
 import json
 import re
 
-from tortuga.os_objects.osNetworkManagerInterface \
-    import OsNetworkManagerInterface
 from tortuga.exceptions.nicNotFound import NicNotFound
 from tortuga.os_objects.osObjectManager import OsObjectManager
 
 
-class NetworkManager(OsObjectManager, OsNetworkManagerInterface):
+class NetworkManager(OsObjectManager):
     NETWORK = '/etc/sysconfig/network'
     NIC_PATTERN = '/etc/sysconfig/network-scripts/ifcfg-*'
     DNS = '/etc/resolv.conf'
