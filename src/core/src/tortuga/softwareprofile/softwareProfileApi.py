@@ -43,7 +43,7 @@ class SoftwareProfileApi(TortugaApi): \
         """
         try:
             return self._softwareProfileManager.\
-                getSoftwareProfile(softwareProfileName, optionDict or {})
+                getSoftwareProfile(softwareProfileName, optionDict)
         except TortugaException as ex:
             raise
         except Exception as ex:
@@ -62,7 +62,7 @@ class SoftwareProfileApi(TortugaApi): \
         """
         try:
             return self._softwareProfileManager.\
-                getSoftwareProfileById(softwareProfileId, optionDict or {})
+                getSoftwareProfileById(softwareProfileId, optionDict)
         except TortugaException as ex:
             raise
         except Exception as ex:
@@ -303,7 +303,7 @@ class SoftwareProfileApi(TortugaApi): \
     def createSoftwareProfile(self, swProfileSpec, settingsDict=None):
         try:
             self._softwareProfileManager.createSoftwareProfile(
-                swProfileSpec, settingsDict or {})
+                swProfileSpec, settingsDict)
         except TortugaException as ex:
             raise
         except Exception as ex:
