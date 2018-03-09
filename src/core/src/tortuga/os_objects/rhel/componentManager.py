@@ -12,17 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tortuga.db.componentDbApi import ComponentDbApi
 from tortuga.helper import osHelper
 from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.os_objects.osObjectManager import OsObjectManager
 
 
 class ComponentManager(OsObjectManager):
-    def getBestMatchComponent(self, compName, compVersion, osInfo, kitId):
-        return ComponentDbApi().getBestMatchComponent(
-            compName, compVersion, osInfo, kitId)
-
     def _isMatchingMajorVersion(self, ver1, ver2):
         """Match major versions only"""
         return ver1.split('.')[0] == ver2.split('.')[0]

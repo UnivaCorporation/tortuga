@@ -145,10 +145,9 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
             raise ComponentNotFound('Component [%s] not found in kit [%s]'
                                     % ('core', baseKit.getName()))
 
-        comp = osUtility.getOsObjectFactory().getComponentManager().\
-            getBestMatchComponent(
-                baseComp.getName(), baseComp.getVersion(), osInfo,
-                baseKit.getId())
+        comp = self._component_db_api.getBestMatchComponent(
+            baseComp.getName(), baseComp.getVersion(), osInfo,
+            baseKit.getId())
 
         comp.setKit(baseKit)
 
@@ -274,10 +273,11 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
 
             # Iterate over components, adding them to the software profile
             for c in spComponents:
-                cobj = compManager.getBestMatchComponent(c.getName(),
-                                                         c.getVersion(),
-                                                         osInfo,
-                                                         c.getKit().getId())
+                cobj = self._component_db_api.getBestMatchComponent(
+                    c.getName(),
+                    c.getVersion(),
+                    osInfo,
+                    c.getKit().getId())
 
                 k = cobj.getKit()
 
@@ -578,12 +578,10 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
         :return:                 the Component instance that was added
 
         """
-        os_obj_factory = osUtility.getOsObjectFactory(
-            software_profile.getOsInfo().getOsFamilyInfo().getName())
-        comp_manager = os_obj_factory.getComponentManager()
-        best_match_component = comp_manager.getBestMatchComponent(
-            comp_name, comp_version, software_profile.getOsInfo(),
-            kit.getId())
+        best_match_component = \
+            self._component_db_api.getBestMatchComponent(
+                comp_name, comp_version, software_profile.getOsInfo(),
+                kit.getId())
         self._component_db_api.addComponentToSoftwareProfile(
             best_match_component.getId(), software_profile.getId())
 
@@ -694,10 +692,7 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
         :return:                 the Component instance that was removed
 
         """
-        os_obj_factory = osUtility.getOsObjectFactory(
-            software_profile.getOsInfo().getOsFamilyInfo().getName())
-        comp_manager = os_obj_factory.getComponentManager()
-        best_match_component = comp_manager.getBestMatchComponent(
+        best_match_component = self._component_db_api.getBestMatchComponent(
             comp_name, comp_version, software_profile.getOsInfo(),
             kit.getId())
         self._component_db_api.deleteComponentFromSoftwareProfile(
