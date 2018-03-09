@@ -15,12 +15,11 @@
 # pylint: disable=no-member
 
 from tortuga.network.networkManager import NetworkManager
-from tortuga.network.networkApiInterface import NetworkApiInterface
 from tortuga.utility.tortugaApi import TortugaApi
 from tortuga.exceptions.tortugaException import TortugaException
 
 
-class NetworkApi(TortugaApi, NetworkApiInterface):
+class NetworkApi(TortugaApi):
     """
     Network API class.
     """

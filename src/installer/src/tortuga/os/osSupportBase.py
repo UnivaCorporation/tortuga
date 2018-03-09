@@ -28,7 +28,7 @@ class OsSupportBase(object):
     def getLogger(self):
         return self._logger
 
-    def getKickstartFileContents(self, dbNode, hardwareprofile,
+    def getKickstartFileContents(self, node, hardwareprofile,
                                  softwareprofile): \
             # pylint: disable=no-self-use,unused-argument
         '''
@@ -42,7 +42,7 @@ class OsSupportBase(object):
 
         return ''
 
-    def getPXEReinstallSnippet(self, ksUrl, node, hardwareprofile=None,
+    def getPXEReinstallSnippet(self, ksurl, node, hardwareprofile=None,
                                softwareprofile=None): \
             # pylint: disable=no-self-use,unused-argument
         return ''

@@ -14,7 +14,6 @@
 
 # pylint: disable=no-member
 
-from tortuga.san.sanApiInterface import SanApiInterface
 from tortuga.utility.tortugaApi import TortugaApi
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
@@ -22,7 +21,7 @@ from tortuga.san.san import San
 from tortuga.objects.tortugaObject import TortugaObjectList
 
 
-class SanApi(TortugaApi, SanApiInterface):
+class SanApi(TortugaApi):
     """
     SAN API class.
     """

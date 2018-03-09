@@ -14,25 +14,20 @@
 
 # pylint: disable=no-member
 
-import subprocess
 import ipaddress
-import struct
 import json
 import re
+import struct
+import subprocess
 
-from tortuga.os_objects.osNetworkManagerInterface \
-    import OsNetworkManagerInterface
 from tortuga.exceptions.nicNotFound import NicNotFound
 from tortuga.os_objects.osObjectManager import OsObjectManager
 
 
-class NetworkManager(OsObjectManager, OsNetworkManagerInterface):
+class NetworkManager(OsObjectManager):
     NETWORK = '/etc/sysconfig/network'
     NIC_PATTERN = '/etc/sysconfig/network-scripts/ifcfg-*'
     DNS = '/etc/resolv.conf'
-
-    def __init__(self):
-        OsObjectManager.__init__(self)
 
     def _isNetworkManagerInUse(self):
         cmd = 'service NetworkManager status'

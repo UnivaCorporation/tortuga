@@ -19,12 +19,11 @@ import base64
 import urllib.request, urllib.parse, urllib.error
 
 from tortuga.objects import rule
-from tortuga.rule.ruleApiInterface import RuleApiInterface
 from tortuga.exceptions.tortugaException import TortugaException
 from .tortugaWsApi import TortugaWsApi
 
 
-class RuleWsApi(TortugaWsApi, RuleApiInterface):
+class RuleWsApi(TortugaWsApi):
     """
     Rule WS API class.
     """

@@ -19,13 +19,12 @@ import urllib.request, urllib.parse, urllib.error
 
 from tortuga.objects.tortugaObject import TortugaObjectList
 import tortuga.objects.node
-from tortuga.node.nodeApiInterface import NodeApiInterface
 from tortuga.exceptions.tortugaException import TortugaException
 import tortuga.objects.provisioningInfo
 from .tortugaWsApi import TortugaWsApi
 
 
-class NodeWsApi(TortugaWsApi, NodeApiInterface): \
+class NodeWsApi(TortugaWsApi): \
         # pylint: disable=too-many-public-methods
 
     """

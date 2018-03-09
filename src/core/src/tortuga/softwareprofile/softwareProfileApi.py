@@ -16,13 +16,11 @@
 
 from tortuga.softwareprofile.softwareProfileManager \
     import SoftwareProfileManager
-from tortuga.softwareprofile.softwareProfileInterface \
-    import SoftwareProfileApiInterface
 from tortuga.utility.tortugaApi import TortugaApi
 from tortuga.exceptions.tortugaException import TortugaException
 
 
-class SoftwareProfileApi(TortugaApi, SoftwareProfileApiInterface): \
+class SoftwareProfileApi(TortugaApi): \
         # pylint: disable=too-many-public-methods
     """
     SoftwareProfile API class.

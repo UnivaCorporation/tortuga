@@ -16,13 +16,12 @@
 
 from .eula import CommandLineEulaValidator
 from tortuga.kit.manager import KitManager
-from tortuga.kit.kitApiInterface import KitApiInterface
 from tortuga.utility.tortugaApi import TortugaApi
 from tortuga.exceptions.tortugaException import TortugaException
 from typing import List
 
 
-class KitApi(TortugaApi, KitApiInterface):
+class KitApi(TortugaApi):
     """
     Kit API class.
     """

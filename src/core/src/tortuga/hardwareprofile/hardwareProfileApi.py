@@ -16,13 +16,11 @@
 
 from tortuga.hardwareprofile.hardwareProfileManager \
     import HardwareProfileManager
-from tortuga.hardwareprofile.hardwareProfileInterface \
-    import HardwareProfileApiInterface
 from tortuga.utility.tortugaApi import TortugaApi
 from tortuga.exceptions.tortugaException import TortugaException
 
 
-class HardwareProfileApi(TortugaApi, HardwareProfileApiInterface):
+class HardwareProfileApi(TortugaApi):
     """
     HardwareProfile API class.
     """
