@@ -37,7 +37,7 @@ class CentOs6(RedHatFamily):
     """
     __abstract__: bool = False
 
-    def __init__(self, source_path: str, architecture: str = 'x84_64') -> None:
+    def __init__(self, source_path: str, architecture: str = 'x86_64') -> None:
         """
         :param source_path: String local path or remote uri
         :param architecture: String targeted architecture

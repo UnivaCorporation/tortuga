@@ -67,7 +67,7 @@ class RedHatFamily(DistributionBase):
     """
     __abstract__: bool = True
 
-    def __init__(self, source_path: str, name: str, major: int, minor: int, architecture: str = 'x84_64') -> None:
+    def __init__(self, source_path: str, name: str, major: int, minor: int, architecture: str = 'x86_64') -> None:
         """
         :param source_path: String local path or remote uri
         :param name: String name of distribution
