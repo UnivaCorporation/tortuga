@@ -28,7 +28,6 @@ from tortuga.exceptions.componentNotFound import ComponentNotFound
 from tortuga.exceptions.kitNotFound import KitNotFound
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.helper import osHelper
-from tortuga.kit import kitApiFactory
 from tortuga.kit.loader import load_kits
 from tortuga.kit.registry import get_kit_installer
 from tortuga.objects.tortugaObject import TortugaObjectList
@@ -36,11 +35,6 @@ from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.os_utility import osUtility
 from tortuga.types import Singleton
 from tortuga.utility import validation
-
-
-def _get_os_kits():
-    return [kit for kit in kitApiFactory.getKitApi().getKitList()
-            if kit.getIsOs()]
 
 
 class SoftwareProfileManager(TortugaObjectManager, Singleton):
@@ -130,13 +124,9 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
     def _getCoreComponentForOsInfo(self, osInfo):
         # Find core component
 
-        # Find the version of the 'core' component
-        import tortuga.kit.kitApi
-        _kitApi = tortuga.kit.kitApi.KitApi()
-
         baseKit = None
 
-        for baseKit in _kitApi.getKitList():
+        for baseKit in self._kit_db_api.getKitList():
             if not baseKit.getName() == self.BASE_KIT_NAME:
                 continue
 
@@ -164,6 +154,9 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
 
         return comp
 
+    def _get_os_kits(self):
+        return [kit for kit in self._kit_db_api.getKitList() if kit.getIsOs()]
+
     def _getOsInfo(self, bOsMediaRequired):
         if not bOsMediaRequired:
             # As a placeholder, use the same OS as the installer
@@ -178,7 +171,7 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
         # Use available operating system kit; raise exception if
         # multiple available
 
-        os_kits = _get_os_kits()
+        os_kits = self._get_os_kits()
         if not os_kits:
             raise KitNotFound('No operating system kit installed')
 
@@ -187,7 +180,7 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
                 'Multiple OS kits defined; use --os option to specify'
                 ' operating system')
 
-        kit = kitApiFactory.getKitApi().getKit(
+        kit = self._kit_db_api.getKit(
             os_kits[0].getName(), os_kits[0].getVersion(), '0')
 
         components = kit.getComponentList()
@@ -247,7 +240,7 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
         else:
             if bOsMediaRequired and swProfileSpec.getOsInfo():
                 try:
-                    kitApiFactory.getKitApi().getKit(
+                    self._kit_db_api.getKit(
                         swProfileSpec.getOsInfo().getName(),
                         swProfileSpec.getOsInfo().getVersion(),
                         '0')
