@@ -84,7 +84,7 @@ class SoftwareProfileDbApi(TortugaDbApi):
             dbSoftwareProfile = self._softwareProfilesDbHandler.\
                 getSoftwareProfile(session, name)
 
-            self.loadRelations(dbSoftwareProfile, optionDict or {})
+            self.loadRelations(dbSoftwareProfile, optionDict)
 
             self.loadRelations(dbSoftwareProfile, dict(tags=True))
 
@@ -117,7 +117,7 @@ class SoftwareProfileDbApi(TortugaDbApi):
             dbSoftwareProfile = self._softwareProfilesDbHandler.\
                 getSoftwareProfileById(session, softwareProfileId)
 
-            self.loadRelations(dbSoftwareProfile, optionDict or {})
+            self.loadRelations(dbSoftwareProfile, optionDict)
 
             return SoftwareProfile.getFromDbDict(
                 dbSoftwareProfile.__dict__)

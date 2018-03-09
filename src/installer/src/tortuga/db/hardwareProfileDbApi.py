@@ -15,6 +15,7 @@
 # pylint: disable=multiple-statements,no-member,no-name-in-module
 # pylint: disable=maybe-no-member,not-callable
 
+from typing import Optional, Union
 import sqlalchemy.exc
 
 from tortuga.db.dbManager import DbManager
@@ -68,7 +69,8 @@ class HardwareProfileDbApi(TortugaDbApi):
         self._networkDevicesDbHandler = NetworkDevicesDbHandler()
         self._networksDbHandler = NetworksDbHandler()
 
-    def getHardwareProfile(self, name, optionDict=None):
+    def getHardwareProfile(self, name: str,
+                           optionDict: Optional[Union[dict, None]] = None):
         """
         Get hardwareProfile from the db.
 
@@ -85,7 +87,7 @@ class HardwareProfileDbApi(TortugaDbApi):
             dbHardwareProfile = self._hardwareProfilesDbHandler.\
                 getHardwareProfile(session, name)
 
-            self.loadRelations(dbHardwareProfile, optionDict or {})
+            self.loadRelations(dbHardwareProfile, optionDict)
             self.loadRelations(dbHardwareProfile, dict(tags=True))
 
             return HardwareProfile.getFromDbDict(
@@ -98,7 +100,8 @@ class HardwareProfileDbApi(TortugaDbApi):
         finally:
             DbManager().closeSession()
 
-    def getHardwareProfileById(self, hardwareProfileId, optionDict=None):
+    def getHardwareProfileById(self, hardwareProfileId: int,
+                               optionDict: Optional[Union[dict, None]] = None):
         """
         Get hardwareProfile from the db.
 
@@ -115,7 +118,7 @@ class HardwareProfileDbApi(TortugaDbApi):
             dbHardwareProfile = self._hardwareProfilesDbHandler.\
                 getHardwareProfileById(session, hardwareProfileId)
 
-            self.loadRelations(dbHardwareProfile, optionDict or {})
+            self.loadRelations(dbHardwareProfile, optionDict)
 
             return HardwareProfile.getFromDbDict(
                 dbHardwareProfile.__dict__)
@@ -127,7 +130,8 @@ class HardwareProfileDbApi(TortugaDbApi):
         finally:
             DbManager().closeSession()
 
-    def getHardwareProfileList(self, optionDict=None, tags=None):
+    def getHardwareProfileList(self, optionDict: Optional[Union[dict, None]] = None,
+                               tags: Optional[Union[dict, None]] = None):
         """
         Get list of all available hardwareProfiles from the db.
 
@@ -150,7 +154,7 @@ class HardwareProfileDbApi(TortugaDbApi):
                 self.loadRelation(
                     dbHardwareProfile, 'hardwareprofilenetworks')
 
-                self.loadRelations(dbHardwareProfile, optionDict or {})
+                self.loadRelations(dbHardwareProfile, optionDict)
 
                 self.loadRelations(dbHardwareProfile, dict(tags=True))
 

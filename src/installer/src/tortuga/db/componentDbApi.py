@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Optional, Union
 from tortuga.db.tortugaDbApi import TortugaDbApi
 from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
 from tortuga.db.componentsDbHandler import ComponentsDbHandler
@@ -19,6 +20,7 @@ from tortuga.db.componentsDbHandler import ComponentsDbHandler
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.db.dbManager import DbManager
 from tortuga.objects.component import Component
+from tortuga.objects.osInfo import OsInfo
 
 
 class ComponentDbApi(TortugaDbApi):
@@ -32,7 +34,8 @@ class ComponentDbApi(TortugaDbApi):
         self._softwareProfilesDbHandler = SoftwareProfilesDbHandler()
         self._componentsDbHandler = ComponentsDbHandler()
 
-    def getComponent(self, name, version, osInfo, optionDict=None):
+    def getComponent(self, name: str, version: str, osInfo: OsInfo,
+                     optionDict: Optional[Union[dict, None]] = None) -> Component:
         """
         Get component from the db.
 
@@ -42,23 +45,19 @@ class ComponentDbApi(TortugaDbApi):
                 ComponentNotFound
                 DbError
         """
+        with DbManager().session() as session:
+            try:
+                dbComponent = self._componentsDbHandler.getComponentByOsInfo(
+                    session, name, version, osInfo)
 
-        session = DbManager().openSession()
+                self.loadRelations(dbComponent, optionDict)
 
-        try:
-            dbComponent = self._componentsDbHandler.getComponentByOsInfo(
-                session, name, version, osInfo)
-
-            self.loadRelations(dbComponent, optionDict or {})
-
-            return Component.getFromDbDict(dbComponent.__dict__)
-        except TortugaException as ex:
-            raise
-        except Exception as ex:
-            self.getLogger().exception('%s' % ex)
-            raise
-        finally:
-            DbManager().closeSession()
+                return Component.getFromDbDict(dbComponent.__dict__)
+            except TortugaException as ex:
+                raise
+            except Exception as ex:
+                self.getLogger().exception('%s' % ex)
+                raise
 
     def getBestMatchComponent(self, name, version, osInfo, kitId):
         """

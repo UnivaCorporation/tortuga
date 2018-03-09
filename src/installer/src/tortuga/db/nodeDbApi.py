@@ -14,6 +14,7 @@
 
 # pylint: disable=no-member
 
+from typing import Optional, Union
 import socket
 
 from tortuga.db.tortugaDbApi import TortugaDbApi
@@ -39,7 +40,7 @@ class NodeDbApi(TortugaDbApi):
         self._nodesDbHandler = NodesDbHandler()
         self._globalParameterDbApi = GlobalParameterDbApi()
 
-    def getNode(self, name, optionDict=None):
+    def getNode(self, name: str, optionDict: Optional[Union[dict, None]] = None):
         """
         Get node from the db.
 
@@ -55,7 +56,7 @@ class NodeDbApi(TortugaDbApi):
         try:
             dbNode = self._nodesDbHandler.getNode(session, name)
 
-            self.loadRelations(dbNode, optionDict or {})
+            self.loadRelations(dbNode, optionDict)
 
             self.loadRelations(dbNode, {
                 'softwareprofile': True,
@@ -111,14 +112,14 @@ class NodeDbApi(TortugaDbApi):
         finally:
             DbManager().closeSession()
 
-    def getNodeById(self, nodeId, optionDict=None):
+    def getNodeById(self, nodeId: int, optionDict: Optional[Union[dict, None]] = None):
 
         session = DbManager().openSession()
 
         try:
             dbNode = self._nodesDbHandler.getNodeById(session, nodeId)
 
-            self.loadRelations(dbNode, optionDict or {})
+            self.loadRelations(dbNode, optionDict)
 
             return Node.getFromDbDict(dbNode.__dict__)
         except TortugaException as ex:
@@ -144,7 +145,8 @@ class NodeDbApi(TortugaDbApi):
         finally:
             DbManager().closeSession()
 
-    def __convert_nodes_to_TortugaObjectList(self, nodes, relations=None):
+    def __convert_nodes_to_TortugaObjectList(
+            self, nodes, relations: Optional[Union[dict, None]] = None) -> TortugaObjectList:
         nodeList = TortugaObjectList()
 
         relations = relations or dict(softwareprofile=True,
