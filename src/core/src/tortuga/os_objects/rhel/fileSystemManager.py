@@ -19,9 +19,5 @@ class FileSystemManager(OsObjectManager):
     """
     RHEL file system manager.
     """
-
-    def __init__(self):
-        OsObjectManager.__init__(self)
-
     def getOsLockFilePath(self):
         return '/var/lock/subsys'

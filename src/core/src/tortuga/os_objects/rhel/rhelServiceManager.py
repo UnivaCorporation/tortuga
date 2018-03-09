@@ -15,8 +15,8 @@
 # pylint: disable=no-member
 
 import os
-import shutil
 import platform
+import shutil
 
 from tortuga.exceptions.commandFailed import CommandFailed
 from tortuga.os_objects.osObjectManager import OsObjectManager

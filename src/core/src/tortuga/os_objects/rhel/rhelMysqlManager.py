@@ -22,9 +22,6 @@ class RhelMysqlManager(OsObjectManager):
 
     MYSQL_SERVICE_NAME = 'mysqld'
 
-    def __init__(self):
-        OsObjectManager.__init__(self)
-
     def destroyDb(self, dbSchema):
         """
         Destroy DB.
