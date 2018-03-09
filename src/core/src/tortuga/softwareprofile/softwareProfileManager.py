@@ -337,6 +337,11 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
 
                     components.append(comp)
                 except ComponentNotFound:
+                    self.getLogger().warn(
+                        'OS [{}] does not have a compatible \'core\' component'.format(
+                            osInfo
+                        )
+                    )
                     pass
 
                 # Initialize values for kernel, kernelParams, and initrd
