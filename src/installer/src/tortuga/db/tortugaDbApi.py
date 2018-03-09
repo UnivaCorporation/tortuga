@@ -47,6 +47,9 @@ class TortugaDbApi(object):
         return o
 
     def loadRelations(self, dbObject, optionDict: dict) -> NoReturn:
+        if not optionDict:
+            return
+
         for k in list(optionDict.keys()):
             # The optionDict contains key-value pairs of relation name
             # and a boolean to indicate whether to load that relation
