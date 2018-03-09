@@ -12,18 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tortuga.os_objects.componentManagerInterface \
-    import ComponentManagerInterface
-from tortuga.os_objects.osObjectManager import OsObjectManager
-from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.db.componentDbApi import ComponentDbApi
 from tortuga.helper import osHelper
+from tortuga.objects.tortugaObject import TortugaObjectList
+from tortuga.os_objects.osObjectManager import OsObjectManager
 
 
-class ComponentManager(OsObjectManager, ComponentManagerInterface):
-    def __init__(self):
-        OsObjectManager.__init__(self)
-
+class ComponentManager(OsObjectManager):
     def getBestMatchComponent(self, compName, compVersion, osInfo, kitId):
         return ComponentDbApi().getBestMatchComponent(
             compName, compVersion, osInfo, kitId)

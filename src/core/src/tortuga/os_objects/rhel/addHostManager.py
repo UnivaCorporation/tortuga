@@ -15,12 +15,10 @@
 import re
 import subprocess
 
-from tortuga.os_objects.osAddHostManagerInterface \
-    import OsAddHostManagerInterface
 from tortuga.os_objects.osObjectManager import OsObjectManager
 
 
-class AddHostManager(OsObjectManager, OsAddHostManagerInterface):
+class AddHostManager(OsObjectManager):
     def __init__(self):
         OsObjectManager.__init__(self)
 

@@ -12,25 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import glob
+import os
 
-from tortuga.os_objects.osPackageManagerInterface \
-    import OsPackageManagerInterface
 from tortuga.os_objects.osObjectManager import OsObjectManager
-from tortuga.config.configManager import ConfigManager
 
 
-class RhelPackageManager(OsObjectManager, OsPackageManagerInterface):
+class RhelPackageManager(OsObjectManager):
     """
     RHEL package manager.
     """
-
-    def __init__(self):
-        OsObjectManager.__init__(self)
-
-        self._cm = ConfigManager()
-
     def buildPackageUrl(self, host, kitName, kitVersion, arch, isOs,
                         portNum=None):
         """

@@ -12,19 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tortuga.os_objects.osMysqlManagerInterface import OsMysqlManagerInterface
 from tortuga.os_objects.osObjectManager import OsObjectManager
 
 
-class RhelMysqlManager(OsObjectManager, OsMysqlManagerInterface):
+class RhelMysqlManager(OsObjectManager):
     """
     RHEL mysql manager.
     """
 
     MYSQL_SERVICE_NAME = 'mysqld'
-
-    def __init__(self):
-        OsObjectManager.__init__(self)
 
     def destroyDb(self, dbSchema):
         """

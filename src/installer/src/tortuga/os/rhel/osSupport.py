@@ -12,23 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import crypt
 import os.path
 import socket
 import string
-import crypt
-from random import choice
 import time
+from random import choice
 
 from jinja2 import Template
-
-from tortuga.os.osSupportBase import OsSupportBase
-from tortuga.config.configManager import ConfigManager
 from tortuga.db.globalParameterDbApi import GlobalParameterDbApi
-from tortuga.exceptions.parameterNotFound import ParameterNotFound
-from tortuga.exceptions.nicNotFound import NicNotFound
-from tortuga.utility.bootParameters import getBootParameters
-from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.db.helper import get_installer_hostname_suffix
+from tortuga.exceptions.nicNotFound import NicNotFound
+from tortuga.exceptions.nodeNotFound import NodeNotFound
+from tortuga.exceptions.parameterNotFound import ParameterNotFound
+from tortuga.os.osSupportBase import OsSupportBase
+from tortuga.utility.bootParameters import getBootParameters
 
 
 def sort_by_devicename_comparator(nic1, nic2):
@@ -54,7 +52,6 @@ class OSSupport(OsSupportBase):
     def __init__(self, osFamilyInfo):
         super(OSSupport, self).__init__(osFamilyInfo)
 
-        self._cm = ConfigManager()
         self._globalParameterDbApi = GlobalParameterDbApi()
 
         try:

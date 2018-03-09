@@ -12,18 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tortuga.os_objects.osFileSystemManagerInterface \
-    import OsFileSystemManagerInterface
 from tortuga.os_objects.osObjectManager import OsObjectManager
 
 
-class FileSystemManager(OsObjectManager, OsFileSystemManagerInterface):
+class FileSystemManager(OsObjectManager):
     """
     RHEL file system manager.
     """
-
-    def __init__(self):
-        OsObjectManager.__init__(self)
-
     def getOsLockFilePath(self):
         return '/var/lock/subsys'

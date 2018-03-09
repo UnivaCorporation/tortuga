@@ -15,12 +15,11 @@
 # pylint: disable=no-member
 
 import tortuga.objects.parameter
-from tortuga.parameter.parameterApiInterface import ParameterApiInterface
 from tortuga.exceptions.tortugaException import TortugaException
 from .tortugaWsApi import TortugaWsApi
 
 
-class ParameterWsApi(TortugaWsApi, ParameterApiInterface):
+class ParameterWsApi(TortugaWsApi):
     """
     Parameter WS API class.
     """
