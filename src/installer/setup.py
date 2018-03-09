@@ -106,6 +106,11 @@ class SdistCommand(setuptools.command.sdist.sdist, CommonBuildStep):
 setup(
     name=module_name,
     version=module_version,
+    description='Tortuga installer component',
+    author='Univa Corporation',
+    author_email='engineering@univa.com',
+    url='http://univa.com',
+    license='Apache 2.0',
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
     zip_safe=False,
