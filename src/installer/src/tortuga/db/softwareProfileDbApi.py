@@ -14,6 +14,7 @@
 
 # pylint: disable=not-callable,multiple-statements,no-member
 
+from typing import Optional, Union
 from tortuga.db.dbManager import DbManager
 
 from tortuga.db.tortugaDbApi import TortugaDbApi
@@ -64,7 +65,9 @@ class SoftwareProfileDbApi(TortugaDbApi):
         self._adminsDbHandler = AdminsDbHandler()
         self._osDbHandler = OperatingSystemsDbHandler()
 
-    def getSoftwareProfile(self, name, optionDict=None):
+    def getSoftwareProfile(
+            self, name: str,
+            optionDict: Optional[Union[dict, None]] = None) -> SoftwareProfile:
         """
         Get softwareProfile from the db.
 
@@ -81,7 +84,7 @@ class SoftwareProfileDbApi(TortugaDbApi):
             dbSoftwareProfile = self._softwareProfilesDbHandler.\
                 getSoftwareProfile(session, name)
 
-            self.loadRelations(dbSoftwareProfile, optionDict or {})
+            self.loadRelations(dbSoftwareProfile, optionDict)
 
             self.loadRelations(dbSoftwareProfile, dict(tags=True))
 
@@ -95,7 +98,9 @@ class SoftwareProfileDbApi(TortugaDbApi):
         finally:
             DbManager().closeSession()
 
-    def getSoftwareProfileById(self, softwareProfileId, optionDict=None):
+    def getSoftwareProfileById(
+            self, softwareProfileId: int,
+            optionDict: Optional[Union[dict, None]] = None) -> SoftwareProfile:
         """
         Get softwareProfile from the db.
 
@@ -112,7 +117,7 @@ class SoftwareProfileDbApi(TortugaDbApi):
             dbSoftwareProfile = self._softwareProfilesDbHandler.\
                 getSoftwareProfileById(session, softwareProfileId)
 
-            self.loadRelations(dbSoftwareProfile, optionDict or {})
+            self.loadRelations(dbSoftwareProfile, optionDict)
 
             return SoftwareProfile.getFromDbDict(
                 dbSoftwareProfile.__dict__)

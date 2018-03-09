@@ -17,6 +17,7 @@
 
 import os
 import shutil
+from typing import Optional, Union
 
 from tortuga.config.configManager import ConfigManager
 from tortuga.db.componentDbApi import ComponentDbApi
@@ -28,7 +29,6 @@ from tortuga.exceptions.componentNotFound import ComponentNotFound
 from tortuga.exceptions.kitNotFound import KitNotFound
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.helper import osHelper
-from tortuga.kit import kitApiFactory
 from tortuga.kit.loader import load_kits
 from tortuga.kit.registry import get_kit_installer
 from tortuga.objects.tortugaObject import TortugaObjectList
@@ -36,11 +36,7 @@ from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.os_utility import osUtility
 from tortuga.types import Singleton
 from tortuga.utility import validation
-
-
-def _get_os_kits():
-    return [kit for kit in kitApiFactory.getKitApi().getKitList()
-            if kit.getIsOs()]
+from tortuga.objects.softwareProfile import SoftwareProfile
 
 
 class SoftwareProfileManager(TortugaObjectManager, Singleton):
@@ -120,23 +116,25 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
 
-    def getSoftwareProfile(self, name, optionDict=None):
-        return self._sp_db_api.getSoftwareProfile(name, optionDict or {})
+    def getSoftwareProfile(
+            self,
+            name: str,
+            optionDict: Optional[Union[dict, None]] = None) -> SoftwareProfile:
+        return self._sp_db_api.getSoftwareProfile(name, optionDict=optionDict)
 
-    def getSoftwareProfileById(self, id_, optionDict=None):
+    def getSoftwareProfileById(
+            self,
+            id_: int,
+            optionDict: Optional[Union[dict, None]] = None) -> SoftwareProfile:
         return self._sp_db_api.getSoftwareProfileById(
-            id_, optionDict=optionDict or {})
+            id_, optionDict=optionDict)
 
     def _getCoreComponentForOsInfo(self, osInfo):
         # Find core component
 
-        # Find the version of the 'core' component
-        import tortuga.kit.kitApi
-        _kitApi = tortuga.kit.kitApi.KitApi()
-
         baseKit = None
 
-        for baseKit in _kitApi.getKitList():
+        for baseKit in self._kit_db_api.getKitList():
             if not baseKit.getName() == self.BASE_KIT_NAME:
                 continue
 
@@ -155,14 +153,16 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
             raise ComponentNotFound('Component [%s] not found in kit [%s]'
                                     % ('core', baseKit.getName()))
 
-        comp = osUtility.getOsObjectFactory().getComponentManager().\
-            getBestMatchComponent(
-                baseComp.getName(), baseComp.getVersion(), osInfo,
-                baseKit.getId())
+        comp = self._component_db_api.getBestMatchComponent(
+            baseComp.getName(), baseComp.getVersion(), osInfo,
+            baseKit.getId())
 
         comp.setKit(baseKit)
 
         return comp
+
+    def _get_os_kits(self):
+        return [kit for kit in self._kit_db_api.getKitList() if kit.getIsOs()]
 
     def _getOsInfo(self, bOsMediaRequired):
         if not bOsMediaRequired:
@@ -178,7 +178,7 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
         # Use available operating system kit; raise exception if
         # multiple available
 
-        os_kits = _get_os_kits()
+        os_kits = self._get_os_kits()
         if not os_kits:
             raise KitNotFound('No operating system kit installed')
 
@@ -187,7 +187,7 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
                 'Multiple OS kits defined; use --os option to specify'
                 ' operating system')
 
-        kit = kitApiFactory.getKitApi().getKit(
+        kit = self._kit_db_api.getKit(
             os_kits[0].getName(), os_kits[0].getVersion(), '0')
 
         components = kit.getComponentList()
@@ -247,7 +247,7 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
         else:
             if bOsMediaRequired and swProfileSpec.getOsInfo():
                 try:
-                    kitApiFactory.getKitApi().getKit(
+                    self._kit_db_api.getKit(
                         swProfileSpec.getOsInfo().getName(),
                         swProfileSpec.getOsInfo().getVersion(),
                         '0')
@@ -281,20 +281,20 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
 
             # Iterate over components, adding them to the software profile
             for c in spComponents:
-                cobj = compManager.getBestMatchComponent(c.getName(),
-                                                         c.getVersion(),
-                                                         osInfo,
-                                                         c.getKit().getId())
+                cobj = self._component_db_api.getBestMatchComponent(
+                    c.getName(),
+                    c.getVersion(),
+                    osInfo,
+                    c.getKit().getId())
 
                 k = cobj.getKit()
 
                 if k.getIsOs():
                     # This component is a member of the OS kit, set the flag
                     bFoundOsComponent = True
-                else:
-                    if c.getName() == 'core':
-                        # Found the 'core' component, set the flag
-                        bFoundCoreComponent = True
+                elif k.getName() == 'base' and c.getName() == 'core':
+                    # Found the 'core' component in 'base' kit
+                    bFoundCoreComponent = True
 
                 components.append(cobj)
 
@@ -337,6 +337,11 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
 
                     components.append(comp)
                 except ComponentNotFound:
+                    self.getLogger().warn(
+                        'OS [{}] does not have a compatible \'core\' component'.format(
+                            osInfo
+                        )
+                    )
                     pass
 
                 # Initialize values for kernel, kernelParams, and initrd
@@ -585,12 +590,10 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
         :return:                 the Component instance that was added
 
         """
-        os_obj_factory = osUtility.getOsObjectFactory(
-            software_profile.getOsInfo().getOsFamilyInfo().getName())
-        comp_manager = os_obj_factory.getComponentManager()
-        best_match_component = comp_manager.getBestMatchComponent(
-            comp_name, comp_version, software_profile.getOsInfo(),
-            kit.getId())
+        best_match_component = \
+            self._component_db_api.getBestMatchComponent(
+                comp_name, comp_version, software_profile.getOsInfo(),
+                kit.getId())
         self._component_db_api.addComponentToSoftwareProfile(
             best_match_component.getId(), software_profile.getId())
 
@@ -701,10 +704,7 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
         :return:                 the Component instance that was removed
 
         """
-        os_obj_factory = osUtility.getOsObjectFactory(
-            software_profile.getOsInfo().getOsFamilyInfo().getName())
-        comp_manager = os_obj_factory.getComponentManager()
-        best_match_component = comp_manager.getBestMatchComponent(
+        best_match_component = self._component_db_api.getBestMatchComponent(
             comp_name, comp_version, software_profile.getOsInfo(),
             kit.getId())
         self._component_db_api.deleteComponentFromSoftwareProfile(

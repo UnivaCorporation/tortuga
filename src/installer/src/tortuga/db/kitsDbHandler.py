@@ -15,7 +15,9 @@
 # pylint: disable=not-callable,multiple-statements,no-member,no-self-use
 # pylint; disable=no-name-in-module
 
+from typing import Optional, Union
 from sqlalchemy import and_
+from sqlalchemy.orm.session import Session
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
@@ -52,11 +54,15 @@ class KitsDbHandler(TortugaDbObjectHandler):
 
         return dbKit
 
-    def getKit(self, session, name, version, iteration=None):
+    def getKit(self, session: Session, name: str,
+               version: Optional[Union[str, None]] = None,
+               iteration: Optional[Union[str, None]] = None) -> Kits:
         """
         Get kit from the db.
-        """
 
+        Raises:
+            KitNotFound
+        """
         self.getLogger().debug('Retrieving kit [%s]' % (name))
 
         try:
