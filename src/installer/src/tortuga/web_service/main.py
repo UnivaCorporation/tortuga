@@ -18,7 +18,9 @@ import os.path
 import sys
 from optparse import OptionParser
 import json
+from pathlib import Path
 import logging
+import logging.config
 import logging.handlers
 
 import cherrypy
@@ -32,25 +34,33 @@ from tortuga.web_service.threadManagerPlugin import ThreadManagerPlugin
 from . import app, dbm
 
 
+# read logging configuration
+log_conf_file = Path(app.cm.getEtcDir()) / 'tortugawsd.log.conf'
+if log_conf_file.exists():
+    logging.config.fileConfig(str(log_conf_file))
+
 # Log everything 'tortuga.*'
 root_logger = logging.getLogger('tortuga')
 
-root_logger.setLevel(logging.DEBUG)
+if not log_conf_file.exists():
+    # in the absence of a `tortugawsd` logging configuration, use
+    # sane defaults
+    root_logger.setLevel(logging.DEBUG)
 
-# create console handler and set level to debug
-ch = logging.handlers.TimedRotatingFileHandler(
-    '/var/log/tortugawsd', when='midnight')
-ch.setLevel(logging.DEBUG)
+    # create console handler and set level to debug
+    ch = logging.handlers.TimedRotatingFileHandler(
+        '/var/log/tortugawsd', when='midnight')
+    ch.setLevel(logging.DEBUG)
 
-# create formatter
-formatter = logging.Formatter(
-    '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    # create formatter
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-# add formatter to ch
-ch.setFormatter(formatter)
+    # add formatter to ch
+    ch.setFormatter(formatter)
 
-# add ch to logger
-root_logger.addHandler(ch)
+    # add ch to logger
+    root_logger.addHandler(ch)
 
 logger = logging.getLogger('tortuga.web_service')
 
