@@ -266,8 +266,7 @@ class NodesDbHandler(TortugaDbObjectHandler):
             return
 
         # Migrate or idle any children
-        remainingNodeList = self.\
-            __getRemainingNodeList(dbNode, swProfile)
+        remainingNodeList = self.__getRemainingNodeList(dbNode, swProfile)
 
         self.__migrateOrIdleChildren(
             session, dbNode, remainingNodeList)
