@@ -3,7 +3,7 @@ mock
 wheel
 pylint
 pyflakes
-pep8
+pycodestyle
 flake8
 marshmallow
 Paver
