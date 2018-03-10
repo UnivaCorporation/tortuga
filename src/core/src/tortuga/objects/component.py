@@ -52,8 +52,6 @@ class Component(TortugaObject): \
         """
         Associate an operating system to the component.  Initialize all
         related properties for this operating system
-
-        Used by kitXmlParser.py
         """
         osComponentList = self.getOsComponentList()
         osComponent = OsComponent(osInfo)
@@ -64,8 +62,6 @@ class Component(TortugaObject): \
         """
         Associate an operating system family to this component.  Initialize
         all related properties for this operating system family
-
-        Used by kitXmlParser.py
         """
         osFamilyComponentList = self.getOsFamilyComponentList()
         osFamilyComponent = OsFamilyComponent(osFamilyInfo)
