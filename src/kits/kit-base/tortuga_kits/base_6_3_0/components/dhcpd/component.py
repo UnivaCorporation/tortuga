@@ -25,8 +25,8 @@ from tortuga.db.networksDbHandler import NetworksDbHandler
 from tortuga.exceptions.nicNotFound import NicNotFound
 from tortuga.exceptions.parameterNotFound import ParameterNotFound
 from tortuga.kit.installer import ComponentInstallerBase
-from tortuga.node import nodeApiFactory
 from tortuga.os_utility.osUtility import getOsObjectFactory
+from tortuga.node.nodeApi import NodeApi
 
 
 logger = getLogger(__name__)
@@ -154,7 +154,7 @@ class ComponentInstaller(ComponentInstallerBase):
         self._provider = DhcpdDhcpProvider(self)
         self._manager = self._get_os_dhcpd_manager('dhcpd')
         self._config = ConfigManager()
-        self._installer_node = nodeApiFactory.getNodeApi().getInstallerNode()
+        self._installer_node = NodeApi().getInstallerNode()
 
     def _get_os_dhcpd_manager(self, name):
         """

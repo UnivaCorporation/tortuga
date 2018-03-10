@@ -15,7 +15,7 @@
 from tortuga.db.dbManager import DbManager
 from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
 from tortuga.kit.installer import ComponentInstallerBase
-from tortuga.node.nodeApiFactory import getNodeApi
+from tortuga.node.nodeApi import NodeApi
 
 
 CONFIG_FILE = '/etc/hosts.pdsh'
@@ -40,7 +40,7 @@ class ComponentInstaller(ComponentInstallerBase):
 
             installer = self.kit_installer.config_manager.getInstaller()
 
-            all_node_list = getNodeApi().getNodeList()
+            all_node_list = NodeApi().getNodeList()
             node_list = [
                 node
                 for node in all_node_list
