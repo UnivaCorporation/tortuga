@@ -20,6 +20,7 @@ import time
 from random import choice
 
 from jinja2 import Template
+from typing import Any, Dict, List, Optional
 from tortuga.db.globalParameterDbApi import GlobalParameterDbApi
 from tortuga.db.helper import get_installer_hostname_suffix
 from tortuga.exceptions.nicNotFound import NicNotFound
@@ -381,34 +382,39 @@ dd if=/dev/zero of=$d%s bs=512 count=1
 
         return buf
 
-    def __get_template_subst_dict(self, node, hardwareprofile,
-                                  softwareprofile):
+    def __get_template_subst_dict(self, node, hardwareprofile, softwareprofile) -> Dict[str, Any]:
+        """
+        :param node: Object
+        :param hardwareprofile: Object
+        :param softwareprofile: Object
+        :return: Dictionary
+        """
         hardwareprofile = hardwareprofile \
             if hardwareprofile else node.hardwareprofile
         softwareprofile = softwareprofile \
             if softwareprofile else node.softwareprofile
 
-        installer_public_fqdn = socket.getfqdn()
-        installer_hostname = installer_public_fqdn.split('.')[0]
+        installer_public_fqdn: str = socket.getfqdn()
+        installer_hostname: str = installer_public_fqdn.split('.')[0]
 
-        installer_private_ip = hardwareprofile.nics[0].ip
+        installer_private_ip: str = hardwareprofile.nics[0].ip
 
         try:
-            private_domain = self._globalParameterDbApi.\
+            private_domain: Optional[str] = self._globalParameterDbApi.\
                 getParameter('DNSZone').getValue()
         except ParameterNotFound:
-            private_domain = None
+            private_domain: Optional[str] = None
 
-        installer_private_fqdn = '%s%s%s' % (
+        installer_private_fqdn: str = '%s%s%s' % (
             installer_hostname,
             get_installer_hostname_suffix(
                 hardwareprofile.nics[0], enable_interface_aliases=None),
-            '.%s' % (private_domain) if private_domain else '')
+            '.%s' % private_domain if private_domain else '')
 
-        vals = node.name.split('.', 1)
-        domain = vals[1].lower() if len(vals) == 2 else ''
+        values: List[str] = node.name.split('.', 1)
+        domain: str = values[1].lower() if len(values) == 2 else ''
 
-        d = {
+        return {
             'fqdn': node.name,
             'domain': domain,
             'hostname': installer_hostname,
@@ -426,44 +432,36 @@ dd if=/dev/zero of=$d%s bs=512 count=1
             'primaryinstaller': installer_private_fqdn,
             'puppetserver': installer_public_fqdn,
             'installerip': installer_private_ip,
+            # Add entry for install package source
+            'url': '%s/%s/%s/%s' % (
+                self._cm.getYumRootUrl(installer_private_fqdn),
+                softwareprofile.os.name,
+                softwareprofile.os.version,
+                softwareprofile.os.arch
+            ),
+            'lang': 'en_US.UTF-8',
+            'keyboard': 'us',
+            'networkcfg': self.__kickstart_get_network_section(
+                node, hardwareprofile
+            ),
+            'rootpw': self._generatePassword(),
+            'timezone': self.__kickstart_get_timezone(),
+            'includes': '%include /tmp/partinfo',
+            'repos': '\n'.join(
+                self.__kickstart_get_repos(
+                    softwareprofile,
+                    installer_private_fqdn
+                )
+            ),
+            # Retain this for backwards compatibility with legacy Kickstart
+            # templates
+            'packages': '\n'.join([]),
+            'prescript': self.__kickstart_get_partition_section(
+                softwareprofile
+            ),
+            'installer_url': self._cm.getInstallerUrl(installer_private_fqdn),
+            'cfmstring': self._cm.getCfmPassword()
         }
-
-        # Add entry for install package source
-        d['url'] = '%s/%s/%s/%s' % (
-            self._cm.getYumRootUrl(installer_private_fqdn),
-            softwareprofile.os.name,
-            softwareprofile.os.version,
-            softwareprofile.os.arch)
-
-        d['lang'] = 'en_US.UTF-8'
-
-        d['keyboard'] = 'us'
-
-        d['networkcfg'] = self.__kickstart_get_network_section(
-            node, hardwareprofile)
-
-        d['rootpw'] = self._generatePassword()
-
-        d['timezone'] = self.__kickstart_get_timezone()
-
-        d['includes'] = '%include /tmp/partinfo'
-
-        d['repos'] = '\n'.join(
-            self.__kickstart_get_repos(
-                softwareprofile, installer_private_fqdn))
-
-        # Retain this for backwards compatibility with legacy Kickstart
-        # templates
-        d['packages'] = '\n'.join([])
-
-        d['prescript'] = self.__kickstart_get_partition_section(
-            softwareprofile)
-
-        d['installer_url'] = self._cm.getInstallerUrl(installer_private_fqdn)
-
-        d['cfmstring'] = self._cm.getCfmPassword()
-
-        return d
 
     def getKickstartFileContents(self, node, hardwareprofile,
                                  softwareprofile):
@@ -478,15 +476,13 @@ dd if=/dev/zero of=$d%s bs=512 count=1
 
         return Template(tmpl).render(template_subst_dict)
 
-    def _generatePassword(self): \
-            # pylint: disable=no-self-use
-        # Generate a random password, used when creating a Kickstart file
-        # for package-based node provisioning.
-        strlength = 8
-        strchars = string.ascii_letters + string.digits
-        rootpw = ''.join([choice(strchars) for _ in range(strlength)])
-        rootpw = crypt.crypt(str(rootpw), str(time.time()))
-        return rootpw
+    @staticmethod
+    def _generatePassword() -> str:
+        string_length: int = 8
+        string_characters: str = string.ascii_letters + string.digits
+        root_password: str = ''.join([choice(string_characters) for _ in range(string_length)])
+        root_password_salted: str = crypt.crypt(str(root_password), str(time.time()))
+        return root_password_salted
 
     def __get_partition_mountpoint(self, dbPartition): \
             # pylint: disable=no-self-use
