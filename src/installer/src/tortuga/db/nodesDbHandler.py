@@ -396,17 +396,6 @@ class NodesDbHandler(TortugaDbObjectHandler):
 
         adapter.updateNode(session, node, updateNodeRequest)
 
-    def updateNodeStatus(self, dbNode, state=None, bootFrom=None):
-        """
-        Returns:
-            bool indicating whether state and/or bootFrom are different
-            from current value.
-        Raises:
-            NodeNotFound
-        """
-
-
-
     def transferNode(self, session, dbNodes, newSoftwareProfile,
                      bForce=False): \
             # pylint: disable=unused-argument
