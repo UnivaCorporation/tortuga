@@ -19,7 +19,6 @@ import pwd
 import shutil
 
 from tortuga.os_objects.osObjectManager import OsObjectManager
-from tortuga.node import nodeApi
 from tortuga.db.hardwareProfileDbApi import HardwareProfileDbApi
 from tortuga.db.softwareProfileDbApi import SoftwareProfileDbApi
 from tortuga.config.configManager import ConfigManager
