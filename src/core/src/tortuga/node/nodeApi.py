@@ -143,25 +143,6 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def getKickstartFile(self, node: Nodes,
-                         hardwareprofile: Optional[Union[HardwareProfiles, None]] = None,
-                         softwareprofile: Optional[Union[SoftwareProfiles, None]] = None):
-        """ Get the kickstart file for a given node """
-
-        try:
-            return self._nodeManager.getKickstartFile(
-                node,
-                hardwareprofile=hardwareprofile,
-                softwareprofile=softwareprofile)
-        except TortugaException:
-            raise
-        except Exception as ex:
-            self.getLogger().exception(
-                'Fatal error retrieving kickstart for node [{}]'.format(
-                    node.name))
-
-            raise TortugaException(exception=ex)
-
     def getProvisioningInfo(self, nodeName: str):
         """ Get provisioning information for a node """
         try:

@@ -40,8 +40,6 @@ class OsBootHostManagerCommon(OsObjectManager):
         self.hardwareProfileDbApi = HardwareProfileDbApi()
         self.softwareProfileDbApi = SoftwareProfileDbApi()
 
-        self._nodeApi = nodeApi.NodeApi()
-
         self._cm = ConfigManager()
 
     def __getActualSoftwareProfile(self, node, softwareProfileName):

@@ -55,6 +55,7 @@ class NodeManager(TortugaObjectManager): \
         self._hardwareProfileDbApi = HardwareProfileDbApi()
         self._cm = ConfigManager()
         self._san = san.San()
+        self._bhm = osUtility.getOsObjectFactory().getOsBootHostManager()
 
     def __validateHostName(self, hostname: str, name_format: str) -> NoReturn:
         """
@@ -348,13 +349,11 @@ class NodeManager(TortugaObjectManager): \
             if addHostSessions:
                 AddHostManager().delete_sessions(addHostSessions)
 
-            bhm = osUtility.getOsObjectFactory().getOsBootHostManager()
-
             for nodeName in result['NodesDeleted']:
                 # Remove the Puppet cert
-                bhm.deletePuppetNodeCert(nodeName)
+                self._bhm.deletePuppetNodeCert(nodeName)
 
-                bhm.nodeCleanup(nodeName)
+                self._bhm.nodeCleanup(nodeName)
 
                 self.getLogger().info('Node [%s] deleted' % (nodeName))
 
@@ -459,34 +458,6 @@ class NodeManager(TortugaObjectManager): \
     def getProvisioningInfo(self, nodeName):
         return self._nodeDbApi.getProvisioningInfo(nodeName)
 
-    def getKickstartFile(self, node, hardwareprofile, softwareprofile):
-        """
-        Generate kickstart file for specified node
-
-        Raises:
-            OsNotSupported
-        """
-
-        osFamilyName = softwareprofile.os.family.name
-
-        try:
-            osSupportModule = __import__(
-                'tortuga.os.%s.osSupport' % (osFamilyName),
-                fromlist=['OSSupport'])
-        except ImportError:
-            raise OsNotSupported(
-                'Operating system family [%s] not supported' % (
-                    osFamilyName))
-
-        OSSupport = osSupportModule.OSSupport
-
-        tmpOsFamilyInfo = OsFamilyInfo(
-            softwareprofile.os.family.name,
-            softwareprofile.os.family.version,
-            softwareprofile.os.family.arch)
-
-        return OSSupport(tmpOsFamilyInfo).getKickstartFileContents(
-            node, hardwareprofile, softwareprofile)
 
     def __transferNodeCommon(self, session, dbDstSoftwareProfile,
                              results): \
@@ -647,8 +618,7 @@ class NodeManager(TortugaObjectManager): \
             # Remove Puppet certificate(s) for idled node(s)
             for node_name in result_dict['success']:
                 # Remove Puppet certificate for idled node
-                bhm = osUtility.getOsObjectFactory().getOsBootHostManager()
-                bhm.deletePuppetNodeCert(node_name)
+                self._bhm.deletePuppetNodeCert(node_name)
 
             # Schedule a cluster update
             self.__scheduleUpdate()
@@ -805,11 +775,9 @@ class NodeManager(TortugaObjectManager): \
                 raise NodeNotFound(
                     'No nodes matching nodespec [%s]' % (nodespec))
 
-            bhm = osUtility.getOsObjectFactory().getOsBootHostManager()
-
             if bReinstall:
                 for dbNode in nodes:
-                    bhm.setNodeForNetworkBoot(dbNode)
+                    self._bhm.setNodeForNetworkBoot(dbNode)
 
             results = NodesDbHandler().rebootNode(
                 session, nodes, bSoftReset)
