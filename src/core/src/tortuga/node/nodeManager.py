@@ -16,6 +16,7 @@
 
 import os
 import socket
+import time
 from typing import Optional, NoReturn
 
 from sqlalchemy.orm.session import Session
@@ -253,18 +254,52 @@ class NodeManager(TortugaObjectManager): \
         session = DbManager().openSession()
 
         try:
-            node = NodesDbHandler().getNode(session, nodeName)
+            dbNode = NodesDbHandler().getNode(session, nodeName)
 
-            result = NodesDbHandler().updateNodeStatus(dbNode, state, bootFrom)
+            # Bitfield representing node changes (0 = state change, 1 = bootFrom
+            # change)
+            changed = 0
+
+            if state is not None and state != dbNode.state:
+                # 'state' changed
+                changed |= 1
+
+            if bootFrom is not None and bootFrom != dbNode.bootFrom:
+                # 'bootFrom' changed
+                changed |= 2
+
+            if changed:
+                # Create custom log message
+                msg = 'Node [%s] state change:' % (dbNode.name)
+
+                if changed & 1:
+                    msg += ' state: [%s] -> [%s]' % (dbNode.state, state)
+
+                    dbNode.state = state
+
+                if changed & 2:
+                    msg += ' bootFrom: [%d] -> [%d]' % (
+                        dbNode.bootFrom, bootFrom)
+
+                    dbNode.bootFrom = bootFrom
+
+                self.getLogger().info(msg)
+            else:
+                self.getLogger().info(
+                    'Updated timestamp for node [%s]' % (dbNode.name))
+
+            dbNode.lastUpdate = time.strftime(
+                '%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+
+            result = bool(changed)
 
             # Only change local boot configuration if the hardware profile is
             # not marked as 'remote' and we're not acting on the installer node.
             if dbNode.softwareprofile and \
                     dbNode.softwareprofile.type != 'installer' and \
-                    dbNode.hardwareprofile.location not in \
-                    ('remote', 'remote-vpn'):
-                osUtility.getOsObjectFactory().getOsBootHostManager().\
-                    writePXEFile(dbNode, localboot=bootFrom)
+                    dbNode.hardwareprofile.location != 'remote':
+                # update local boot configuration for on-premise nodes
+                self._bhm.writePXEFile(dbNode, localboot=bootFrom)
 
             session.commit()
 
