@@ -41,42 +41,6 @@ class OsBootHostManagerCommon(OsObjectManager):
 
         self._cm = ConfigManager()
 
-    def __getActualSoftwareProfile(self, node, softwareProfileName):
-        """
-        Determine the actual software profile. For example,
-        """
-        self.getLogger().debug(
-            '__getActualSoftwareProfile(): node=[%s],'
-            ' softwareProfileName=[%s]' % (node.name, softwareProfileName))
-
-        softwareProfile = None
-
-        if node.isIdle:
-            # Use the software profile that was passed in if there is one,
-            if softwareProfileName:
-                softwareProfile = self.softwareProfileDbApi.\
-                    getSoftwareProfile(softwareProfileName, {'os': True})
-            else:
-                # ELSE use the default idle software profile
-                hardwareProfile = node.getHardwareProfile()
-
-                idleSoftwareProfileId = hardwareProfile.\
-                    getIdleSoftwareProfileId()
-
-                if idleSoftwareProfileId:
-                    softwareProfile = self.softwareProfileDbApi.\
-                        getSoftwareProfileById(idleSoftwareProfileId,
-                                               {'os': True})
-        else:
-            # Use active software profile
-            if softwareProfileName is None:
-                softwareProfile = node.getSoftwareProfile()
-            else:
-                softwareProfile = self.softwareProfileDbApi.\
-                    getSoftwareProfile(softwareProfileName, {'os': True})
-
-        return softwareProfile
-
     def deletePuppetNodeCert(self, nodeName):
         # Remove the Puppet certificate when the node is reinstalled
 
