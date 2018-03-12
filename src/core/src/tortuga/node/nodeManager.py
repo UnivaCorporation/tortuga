@@ -254,34 +254,22 @@ class NodeManager(TortugaObjectManager): \
         try:
             node = NodesDbHandler().getNode(session, nodeName)
 
-            result = self._updateNodeStatus(node,
-                                            state=state,
-                                            bootFrom=bootFrom)
+            result = NodesDbHandler().updateNodeStatus(dbNode, state, bootFrom)
+
+            # Only change local boot configuration if the hardware profile is
+            # not marked as 'remote' and we're not acting on the installer node.
+            if dbNode.softwareprofile and \
+                    dbNode.softwareprofile.type != 'installer' and \
+                    dbNode.hardwareprofile.location not in \
+                    ('remote', 'remote-vpn'):
+                osUtility.getOsObjectFactory().getOsBootHostManager().\
+                    writePXEFile(dbNode, localboot=bootFrom)
 
             session.commit()
 
             return result
         finally:
             DbManager().closeSession()
-
-    def _updateNodeStatus(self, dbNode, state=None, bootFrom=None):
-        """
-        Internal method which takes a 'Nodes' object instead of a node
-        name.
-        """
-
-        result = NodesDbHandler().updateNodeStatus(dbNode, state, bootFrom)
-
-        # Only change local boot configuration if the hardware profile is
-        # not marked as 'remote' and we're not acting on the installer node.
-        if dbNode.softwareprofile and \
-                dbNode.softwareprofile.type != 'installer' and \
-                dbNode.hardwareprofile.location not in \
-                ('remote', 'remote-vpn'):
-            osUtility.getOsObjectFactory().getOsBootHostManager().\
-                writePXEFile(dbNode, localboot=bootFrom)
-
-        return result
 
     def __process_nodeErrorDict(self, nodeErrorDict):
         result = {}

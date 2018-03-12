@@ -200,20 +200,6 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def _updateNodeStatus(self, name: str,
-                          state: Optional[Union[str, None]] = None,
-                          bootFrom: Optional[Union[int, None]] = None) -> NoReturn:
-        try:
-            # pylint: disable=protected-access
-            self._nodeManager._updateNodeStatus(name, state, bootFrom)
-        except TortugaException:
-            raise
-        except Exception as ex:
-            self.getLogger().exception(
-                'Fatal error updating status for node [{}]'.format(name))
-
-            raise TortugaException(exception=ex)
-
     def transferNode(self, nodespec: str, softwareProfileName: str,
                      bForce: Optional[bool] = False):
         try:
