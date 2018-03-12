@@ -851,7 +851,8 @@ class NodeManager(TortugaObjectManager): \
     def setParentNode(self, nodeName, parentNodeName):
         self._nodeDbApi.setParentNode(nodeName, parentNodeName)
 
-    def addStorageVolume(self, nodeName, volume, isDirect="DEFAULT"):
+    def addStorageVolume(self, nodeName: str, volume: str,
+                         isDirect: Optional[str] = "DEFAULT") -> NoReturn:
         """
         Raises:
             VolumeDoesNotExist
@@ -873,11 +874,11 @@ class NodeManager(TortugaObjectManager): \
             node.getHardwareProfile().getResourceAdapter().getName())
 
         if isDirect == "DEFAULT":
-            return api.addVolumeToNode(node, volume)
+            api.addVolumeToNode(node, volume)
 
-        return api.addVolumeToNode(node, volume, isDirect)
+        api.addVolumeToNode(node, volume, isDirect)
 
-    def removeStorageVolume(self, nodeName, volume):
+    def removeStorageVolume(self, nodeName: str, volume: str) -> NoReturn:
         """
         Raises:
             VolumeDoesNotExist
@@ -899,13 +900,13 @@ class NodeManager(TortugaObjectManager): \
             raise UnsupportedOperation(
                 'Only persistent volumes can be detached')
 
-        return api.removeVolumeFromNode(node, volume)
+        api.removeVolumeFromNode(node, volume)
 
-    def getStorageVolumes(self, nodeName):
+    def getStorageVolumes(self, nodeName: str):
         return self._san.getNodeVolumes(self.getNode(nodeName).getName())
 
-    def getNodesByNodeState(self, state):
+    def getNodesByNodeState(self, state: str):
         return self._nodeDbApi.getNodesByNodeState(state)
 
-    def getNodesByNameFilter(self, _filter):
+    def getNodesByNameFilter(self, _filter: str):
         return self._nodeDbApi.getNodesByNameFilter(_filter)
