@@ -19,8 +19,6 @@ import pwd
 import shutil
 
 from tortuga.os_objects.osObjectManager import OsObjectManager
-from tortuga.db.hardwareProfileDbApi import HardwareProfileDbApi
-from tortuga.db.softwareProfileDbApi import SoftwareProfileDbApi
 from tortuga.config.configManager import ConfigManager
 
 
@@ -35,9 +33,6 @@ class OsBootHostManagerCommon(OsObjectManager):
             self.passdata = pwd.getpwnam('apache')
         except KeyError:
             self.passdata = pwd.getpwnam(os.getenv('USER'))
-
-        self.hardwareProfileDbApi = HardwareProfileDbApi()
-        self.softwareProfileDbApi = SoftwareProfileDbApi()
 
         self._cm = ConfigManager()
 
