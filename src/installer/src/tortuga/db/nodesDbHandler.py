@@ -396,51 +396,6 @@ class NodesDbHandler(TortugaDbObjectHandler):
 
         adapter.updateNode(session, node, updateNodeRequest)
 
-    def updateNodeStatus(self, dbNode, state=None, bootFrom=None):
-        """
-        Returns:
-            bool indicating whether state and/or bootFrom are different
-            from current value.
-        Raises:
-            NodeNotFound
-        """
-
-        # Bitfield representing node changes (0 = state change, 1 = bootFrom
-        # change)
-        changed = 0
-
-        if state is not None and state != dbNode.state:
-            # 'state' changed
-            changed |= 1
-
-        if bootFrom is not None and bootFrom != dbNode.bootFrom:
-            # 'bootFrom' changed
-            changed |= 2
-
-        if changed:
-            # Create custom log message
-            msg = 'Node [%s] state change:' % (dbNode.name)
-
-            if changed & 1:
-                msg += ' state: [%s] -> [%s]' % (dbNode.state, state)
-
-                dbNode.state = state
-
-            if changed & 2:
-                msg += ' bootFrom: [%d] -> [%d]' % (dbNode.bootFrom, bootFrom)
-
-                dbNode.bootFrom = bootFrom
-
-            self.getLogger().info(msg)
-        else:
-            self.getLogger().info(
-                'Updated timestamp for node [%s]' % (dbNode.name))
-
-        dbNode.lastUpdate = time.strftime(
-            '%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
-
-        return bool(changed)
-
     def transferNode(self, session, dbNodes, newSoftwareProfile,
                      bForce=False): \
             # pylint: disable=unused-argument

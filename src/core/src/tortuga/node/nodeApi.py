@@ -14,7 +14,7 @@
 
 # pylint: disable=no-member,too-many-public-methods
 
-from typing import Optional, NoReturn
+from typing import Optional, NoReturn, List, Union
 
 from sqlalchemy.orm.session import Session
 from tortuga.db.hardwareProfiles import HardwareProfiles
@@ -23,6 +23,7 @@ from tortuga.db.softwareProfiles import SoftwareProfiles
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.node.nodeManager import NodeManager
 from tortuga.utility.tortugaApi import TortugaApi
+from tortuga.objects.node import Node
 
 
 class NodeApi(TortugaApi):
@@ -36,7 +37,7 @@ class NodeApi(TortugaApi):
 
     def createNewNode(self, session: Session, addNodeRequest: dict,
                       dbHardwareProfile: HardwareProfiles,
-                      dbSoftwareProfile: Optional[SoftwareProfiles] = None,
+                      dbSoftwareProfile: Optional[Union[SoftwareProfiles, None]] = None,
                       validateIp: bool = True, bGenerateIp: bool = True,
                       dns_zone: Optional[str] = None) -> Nodes:
         try:
@@ -52,7 +53,7 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def getNodeList(self, tags: Optional[dict] = None):
+    def getNodeList(self, tags: Optional[Union[dict, None]] = None) -> List[Node]:
         """
         Get node list..
 
@@ -70,7 +71,7 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def getNode(self, name: str, optionDict: Optional[dict] = None):
+    def getNode(self, name: str, optionDict: Optional[Union[dict, None]] = None):
         """Get node id by name"""
         try:
             return self._nodeManager.getNode(name, optionDict=optionDict)
@@ -82,7 +83,7 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def getInstallerNode(self, optionDict: Optional[dict] = None):
+    def getInstallerNode(self, optionDict: Optional[Union[dict, None]] = None) -> Node:
         """Get installer node"""
         try:
             return self._nodeManager.getInstallerNode(
@@ -95,7 +96,8 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def getNodeById(self, nodeId: int, optionDict: Optional[dict] = None):
+    def getNodeById(self, nodeId: int,
+                    optionDict: Optional[Union[dict, None]] = None) -> Node:
         """Get a node by id"""
         try:
             return self._nodeManager.getNodeById(nodeId, optionDict)
@@ -107,7 +109,7 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def getNodeByIp(self, ip: str):
+    def getNodeByIp(self, ip: str) -> Node:
         """Get a node by ip"""
         try:
             return self._nodeManager.getNodeByIp(ip)
@@ -130,7 +132,7 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def getMyNode(self):
+    def getMyNode(self) -> Node:
         """ get a node entry of the current node """
         try:
             return self._nodeManager.getInstallerNode()
@@ -138,24 +140,6 @@ class NodeApi(TortugaApi):
             raise
         except Exception as ex:
             self.getLogger().exception('Fatal error retrieving current node')
-
-            raise TortugaException(exception=ex)
-
-    def getKickstartFile(self, node, hardwareprofile=None,
-                         softwareprofile=None):
-        """ Get the kickstart file for a given node """
-
-        try:
-            return self._nodeManager.getKickstartFile(
-                node,
-                hardwareprofile=hardwareprofile,
-                softwareprofile=softwareprofile)
-        except TortugaException:
-            raise
-        except Exception as ex:
-            self.getLogger().exception(
-                'Fatal error retrieving kickstart for node [{}]'.format(
-                    node.name))
 
             raise TortugaException(exception=ex)
 
@@ -189,19 +173,6 @@ class NodeApi(TortugaApi):
         try:
             return self._nodeManager.updateNodeStatus(
                 name, state, bootFrom)
-        except TortugaException:
-            raise
-        except Exception as ex:
-            self.getLogger().exception(
-                'Fatal error updating status for node [{}]'.format(name))
-
-            raise TortugaException(exception=ex)
-
-    def _updateNodeStatus(self, name: str, state: Optional[str] = None,
-                          bootFrom: Optional[int] = None) -> NoReturn:
-        try:
-            # pylint: disable=protected-access
-            self._nodeManager._updateNodeStatus(name, state, bootFrom)
         except TortugaException:
             raise
         except Exception as ex:
@@ -262,8 +233,8 @@ class NodeApi(TortugaApi):
             raise TortugaException(exception=ex)
 
     def startupNode(self, nodespec: str,
-                    remainingNodeList: Optional[list] = None,
-                    bootMethod: Optional[str] = 'n'):
+                    remainingNodeList: Optional[Union[list, None]] = None,
+                    bootMethod: Optional[str] = 'n') -> NoReturn:
         try:
             self._nodeManager.startupNode(
                 nodespec, remainingNodeList=remainingNodeList or [],
@@ -277,7 +248,8 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def shutdownNode(self, nodespec: str, bSoftShutdown: Optional[bool] = False):
+    def shutdownNode(self, nodespec: str,
+                     bSoftShutdown: Optional[bool] = False) -> NoReturn:
         try:
             self._nodeManager.shutdownNode(nodespec, bSoftShutdown)
         except TortugaException:
@@ -290,7 +262,7 @@ class NodeApi(TortugaApi):
             raise TortugaException(exception=ex)
 
     def rebootNode(self, nodespec: str, bSoftReset: Optional[bool] = True,
-                   bReinstall: Optional[bool] = False):
+                   bReinstall: Optional[bool] = False) -> NoReturn:
         try:
             self._nodeManager.rebootNode(
                 nodespec, bSoftReset=bSoftReset, bReinstall=bReinstall)
@@ -303,7 +275,7 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def checkpointNode(self, nodeName: str):
+    def checkpointNode(self, nodeName: str) -> NoReturn:
         try:
             self._nodeManager.checkpointNode(nodeName)
         except TortugaException:
@@ -314,7 +286,7 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def revertNodeToCheckpoint(self, nodeName: str):
+    def revertNodeToCheckpoint(self, nodeName: str) -> NoReturn:
         try:
             self._nodeManager.revertNodeToCheckpoint(nodeName)
         except TortugaException:
@@ -326,8 +298,8 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def migrateNode(self, nodeName: str, remainingNodeList: list,
-                    liveMigrate: bool):
+    def migrateNode(self, nodeName: str, remainingNodeList: List[Node],
+                    liveMigrate: bool) -> NoReturn:
         try:
             self._nodeManager.migrateNode(
                 nodeName, remainingNodeList, liveMigrate)
@@ -339,7 +311,7 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def evacuateChildren(self, nodeName: str):
+    def evacuateChildren(self, nodeName: str) -> NoReturn:
         try:
             self._nodeManager.evacuateChildren(nodeName)
         except TortugaException:
@@ -350,7 +322,7 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def getChildrenList(self, nodeName: str):
+    def getChildrenList(self, nodeName: str) -> List[Node]:
         try:
             return self._nodeManager.getChildrenList(nodeName)
         except TortugaException:
@@ -413,7 +385,7 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def getNodesByNodeState(self, state: str):
+    def getNodesByNodeState(self, state: str) -> List[Node]:
         """
         Get list of nodes in specified state
 

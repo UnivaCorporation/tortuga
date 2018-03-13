@@ -27,6 +27,9 @@ from tortuga.os_objects.osBootHostManagerCommon \
     import OsBootHostManagerCommon
 from tortuga.resourceAdapter.utility import get_provisioning_nic
 from tortuga.utility.bootParameters import getBootParameters
+from tortuga.db.nodes import Nodes
+from tortuga.db.softwareProfiles import SoftwareProfiles
+from tortuga.db.hardwareProfiles import HardwareProfiles
 
 
 class BootHostManager(OsBootHostManagerCommon):
@@ -227,12 +230,34 @@ label Reinstall
 
         self.write_other_boot_files(node, hwprofile, swprofile)
 
-    def _writeKickstartFile(self, node, hardwareprofile,
-                            softwareprofile):
-        contents = self._nodeApi.getKickstartFile(
-            node,
-            hardwareprofile=hardwareprofile,
-            softwareprofile=softwareprofile)
+    def _writeKickstartFile(self, node: Nodes, hardwareprofile: HardwareProfiles,
+                            softwareprofile: SoftwareProfiles):
+        """
+        Generate kickstart file for specified node
+
+        Raises:
+            OsNotSupported
+        """
+        osFamilyName = softwareprofile.os.family.name
+
+        try:
+            osSupportModule = __import__(
+                'tortuga.os.%s.osSupport' % (osFamilyName),
+                fromlist=['OSSupport'])
+        except ImportError:
+            raise OsNotSupported(
+                'Operating system family [%s] not supported' % (
+                    osFamilyName))
+
+        OSSupport = osSupportModule.OSSupport
+
+        tmpOsFamilyInfo = OsFamilyInfo(
+            softwareprofile.os.family.name,
+            softwareprofile.os.family.version,
+            softwareprofile.os.family.arch)
+
+        contents = OSSupport(tmpOsFamilyInfo).getKickstartFileContents(
+            node, hardwareprofile, softwareprofile)
 
         with open(self.__get_kickstart_file_path(node), 'w') as fp:
             fp.write(contents)

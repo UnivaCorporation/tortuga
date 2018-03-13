@@ -35,3 +35,4 @@ __pycache__/
 paver-minilib.zip
 **/.vscode/tags
 .pytest_cache/
+.mypy_cache/

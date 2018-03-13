@@ -16,6 +16,7 @@
 
 import os
 import socket
+import time
 from typing import Optional, NoReturn
 
 from sqlalchemy.orm.session import Session
@@ -55,6 +56,7 @@ class NodeManager(TortugaObjectManager): \
         self._hardwareProfileDbApi = HardwareProfileDbApi()
         self._cm = ConfigManager()
         self._san = san.San()
+        self._bhm = osUtility.getOsObjectFactory().getOsBootHostManager()
 
     def __validateHostName(self, hostname: str, name_format: str) -> NoReturn:
         """
@@ -252,36 +254,58 @@ class NodeManager(TortugaObjectManager): \
         session = DbManager().openSession()
 
         try:
-            node = NodesDbHandler().getNode(session, nodeName)
+            dbNode = NodesDbHandler().getNode(session, nodeName)
 
-            result = self._updateNodeStatus(node,
-                                            state=state,
-                                            bootFrom=bootFrom)
+            # Bitfield representing node changes (0 = state change, 1 = bootFrom
+            # change)
+            changed = 0
+
+            if state is not None and state != dbNode.state:
+                # 'state' changed
+                changed |= 1
+
+            if bootFrom is not None and bootFrom != dbNode.bootFrom:
+                # 'bootFrom' changed
+                changed |= 2
+
+            if changed:
+                # Create custom log message
+                msg = 'Node [%s] state change:' % (dbNode.name)
+
+                if changed & 1:
+                    msg += ' state: [%s] -> [%s]' % (dbNode.state, state)
+
+                    dbNode.state = state
+
+                if changed & 2:
+                    msg += ' bootFrom: [%d] -> [%d]' % (
+                        dbNode.bootFrom, bootFrom)
+
+                    dbNode.bootFrom = bootFrom
+
+                self.getLogger().info(msg)
+            else:
+                self.getLogger().info(
+                    'Updated timestamp for node [%s]' % (dbNode.name))
+
+            dbNode.lastUpdate = time.strftime(
+                '%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+
+            result = bool(changed)
+
+            # Only change local boot configuration if the hardware profile is
+            # not marked as 'remote' and we're not acting on the installer node.
+            if dbNode.softwareprofile and \
+                    dbNode.softwareprofile.type != 'installer' and \
+                    dbNode.hardwareprofile.location != 'remote':
+                # update local boot configuration for on-premise nodes
+                self._bhm.writePXEFile(dbNode, localboot=bootFrom)
 
             session.commit()
 
             return result
         finally:
             DbManager().closeSession()
-
-    def _updateNodeStatus(self, dbNode, state=None, bootFrom=None):
-        """
-        Internal method which takes a 'Nodes' object instead of a node
-        name.
-        """
-
-        result = NodesDbHandler().updateNodeStatus(dbNode, state, bootFrom)
-
-        # Only change local boot configuration if the hardware profile is
-        # not marked as 'remote' and we're not acting on the installer node.
-        if dbNode.softwareprofile and \
-                dbNode.softwareprofile.type != 'installer' and \
-                dbNode.hardwareprofile.location not in \
-                ('remote', 'remote-vpn'):
-            osUtility.getOsObjectFactory().getOsBootHostManager().\
-                writePXEFile(dbNode, localboot=bootFrom)
-
-        return result
 
     def __process_nodeErrorDict(self, nodeErrorDict):
         result = {}
@@ -360,13 +384,11 @@ class NodeManager(TortugaObjectManager): \
             if addHostSessions:
                 AddHostManager().delete_sessions(addHostSessions)
 
-            bhm = osUtility.getOsObjectFactory().getOsBootHostManager()
-
             for nodeName in result['NodesDeleted']:
                 # Remove the Puppet cert
-                bhm.deletePuppetNodeCert(nodeName)
+                self._bhm.deletePuppetNodeCert(nodeName)
 
-                bhm.nodeCleanup(nodeName)
+                self._bhm.nodeCleanup(nodeName)
 
                 self.getLogger().info('Node [%s] deleted' % (nodeName))
 
@@ -471,34 +493,6 @@ class NodeManager(TortugaObjectManager): \
     def getProvisioningInfo(self, nodeName):
         return self._nodeDbApi.getProvisioningInfo(nodeName)
 
-    def getKickstartFile(self, node, hardwareprofile, softwareprofile):
-        """
-        Generate kickstart file for specified node
-
-        Raises:
-            OsNotSupported
-        """
-
-        osFamilyName = softwareprofile.os.family.name
-
-        try:
-            osSupportModule = __import__(
-                'tortuga.os.%s.osSupport' % (osFamilyName),
-                fromlist=['OSSupport'])
-        except ImportError:
-            raise OsNotSupported(
-                'Operating system family [%s] not supported' % (
-                    osFamilyName))
-
-        OSSupport = osSupportModule.OSSupport
-
-        tmpOsFamilyInfo = OsFamilyInfo(
-            softwareprofile.os.family.name,
-            softwareprofile.os.family.version,
-            softwareprofile.os.family.arch)
-
-        return OSSupport(tmpOsFamilyInfo).getKickstartFileContents(
-            node, hardwareprofile, softwareprofile)
 
     def __transferNodeCommon(self, session, dbDstSoftwareProfile,
                              results): \
@@ -659,8 +653,7 @@ class NodeManager(TortugaObjectManager): \
             # Remove Puppet certificate(s) for idled node(s)
             for node_name in result_dict['success']:
                 # Remove Puppet certificate for idled node
-                bhm = osUtility.getOsObjectFactory().getOsBootHostManager()
-                bhm.deletePuppetNodeCert(node_name)
+                self._bhm.deletePuppetNodeCert(node_name)
 
             # Schedule a cluster update
             self.__scheduleUpdate()
@@ -817,11 +810,9 @@ class NodeManager(TortugaObjectManager): \
                 raise NodeNotFound(
                     'No nodes matching nodespec [%s]' % (nodespec))
 
-            bhm = osUtility.getOsObjectFactory().getOsBootHostManager()
-
             if bReinstall:
                 for dbNode in nodes:
-                    bhm.setNodeForNetworkBoot(dbNode)
+                    self._bhm.setNodeForNetworkBoot(dbNode)
 
             results = NodesDbHandler().rebootNode(
                 session, nodes, bSoftReset)
@@ -851,7 +842,8 @@ class NodeManager(TortugaObjectManager): \
     def setParentNode(self, nodeName, parentNodeName):
         self._nodeDbApi.setParentNode(nodeName, parentNodeName)
 
-    def addStorageVolume(self, nodeName, volume, isDirect="DEFAULT"):
+    def addStorageVolume(self, nodeName: str, volume: str,
+                         isDirect: Optional[str] = "DEFAULT") -> NoReturn:
         """
         Raises:
             VolumeDoesNotExist
@@ -873,11 +865,11 @@ class NodeManager(TortugaObjectManager): \
             node.getHardwareProfile().getResourceAdapter().getName())
 
         if isDirect == "DEFAULT":
-            return api.addVolumeToNode(node, volume)
+            api.addVolumeToNode(node, volume)
 
-        return api.addVolumeToNode(node, volume, isDirect)
+        api.addVolumeToNode(node, volume, isDirect)
 
-    def removeStorageVolume(self, nodeName, volume):
+    def removeStorageVolume(self, nodeName: str, volume: str) -> NoReturn:
         """
         Raises:
             VolumeDoesNotExist
@@ -899,13 +891,13 @@ class NodeManager(TortugaObjectManager): \
             raise UnsupportedOperation(
                 'Only persistent volumes can be detached')
 
-        return api.removeVolumeFromNode(node, volume)
+        api.removeVolumeFromNode(node, volume)
 
-    def getStorageVolumes(self, nodeName):
+    def getStorageVolumes(self, nodeName: str):
         return self._san.getNodeVolumes(self.getNode(nodeName).getName())
 
-    def getNodesByNodeState(self, state):
+    def getNodesByNodeState(self, state: str):
         return self._nodeDbApi.getNodesByNodeState(state)
 
-    def getNodesByNameFilter(self, _filter):
+    def getNodesByNameFilter(self, _filter: str):
         return self._nodeDbApi.getNodesByNameFilter(_filter)
