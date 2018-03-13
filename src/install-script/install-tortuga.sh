@@ -423,6 +423,16 @@ function install_yum_plugins() {
     fi
 }
 
+function disto_patches() {
+    case $1 in
+        oracle)
+            installpkg yum-utils
+            yum-config-manager -q --enable ol7_software_collections > /dev/null
+            YUMCMD="$YUMCMD --skip-broken"
+            ;;
+    esac
+}
+
 # Main script execution starts here
 
 if [[ $TORTUGA_ROOT != /opt/tortuga ]]; then
@@ -582,6 +592,9 @@ if [[ $enable_package_caching -eq 1 ]]; then
     # Initialize the newly created (empty) directory as a valid repository
     update_pkg_cache $ucpkgcachedir
 fi
+
+# Apply any patches needed for specific distribution
+disto_patches $dist
 
 # Check for SELinux
 if $(type -P getenforce >/dev/null 2>&1); then
