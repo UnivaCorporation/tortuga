@@ -1,4 +1,4 @@
-# Tortuga
+# ![Tortuga](http://www.univa.com/img/tortuga_icon-rgb.png) Tortuga
 
 ## Overview
 
