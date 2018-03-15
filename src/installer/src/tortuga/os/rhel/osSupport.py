@@ -98,7 +98,8 @@ class OSSupport(OsSupportBase):
 
         if softwareprofile.os.family.version == '7':
             # RHEL 7.x
-            bootargs.append('inst.ks=%s' % (ksurl))
+            bootargs.append(
+                'inst.ks=%s ip=%s:dhcp' % (ksurl, nic.networkdevice.name))
         else:
             # RHEL 5.x and 6.x
             bootargs.append('ks=%s' % (ksurl))
