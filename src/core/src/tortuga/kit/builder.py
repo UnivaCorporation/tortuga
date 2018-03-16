@@ -82,9 +82,9 @@ class KitBuilder(object):
         """
         Gets kit metadata from the KIT_METADATA_FILE, validates it, and
         returns the result as a python dict.
-        
+
         :return: dict of the loaded metadata
-         
+
         """
         logger.info('Getting kit metadata...')
 
@@ -166,10 +166,10 @@ class KitBuilder(object):
     def _run_command(self, command):
         """
         Runs an external command.
-        
-        :param command:        string the command to run 
+
+        :param command:        string the command to run
         :raises KitBuildError: if the command failed
-        
+
         """
         logger.info('    {}'.format(command))
 
@@ -226,9 +226,9 @@ class KitBuilder(object):
     def build(self):
         """
         Builds the current kit.
-        
+
         :raises KitBuildError:
-        
+
         """
         #
         # Create build directory
@@ -281,7 +281,7 @@ class KitBuilder(object):
     def _build_src(self):
         """
         Builds anyting in the src directory if a Makefile is found.
-        
+
         """
         if not self._src_makefile_found:
             return
@@ -307,7 +307,7 @@ class KitBuilder(object):
     def _build_puppet_modules(self):
         """
         Builds all discovered puppet modules.
-        
+
         """
         if not self._puppet_modules:
             return
@@ -315,8 +315,14 @@ class KitBuilder(object):
         logger.info('Building puppet modules...')
 
         for puppet_module in self._puppet_modules:
-            cmd = 'puppet module build --color false {}'.format(
-                    puppet_module['path'])
+            if os.environ.get('TORTUGA_BUILD_DOCKER'):
+                cmd = 'docker run --rm=true -v {}:/root joedborg/centos-puppet module build /root'.format(
+                    os.path.join(os.environ.get('PWD'), puppet_module['path'])
+                )
+            else:
+                cmd = 'puppet module build --color false {}'.format(
+                    puppet_module['path']
+                )
             self._run_command(cmd)
 
     def _copy_python_package(self, dist_dir, kit_build_dir):
@@ -351,9 +357,9 @@ class KitBuilder(object):
         """
         Copies all puppet modules that were successfully built to the
         kit build directory.
-        
+
         :param kit_build_dir: string the kit build directory root
-        
+
         """
         if not self._puppet_modules:
             return
@@ -402,9 +408,9 @@ class KitBuilder(object):
     def _generate_tarball(self, dist_dir):
         """
         Generates a tarball of the kit.
-        
+
         :param dist_dir: the dist directory in which the tarball will be
-                         created 
+                         created
 
         """
         logger.info('Generating kit tarball...')
@@ -425,7 +431,7 @@ class KitBuilder(object):
     def clean(self):
         """
         Removes all build and dist files for the current kit.
-        
+
         """
         if os.path.exists(BUILD_DIR):
             logger.info('Removing build directory: {}'.format(BUILD_DIR))

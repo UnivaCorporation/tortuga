@@ -1,5 +1,7 @@
 # ![Tortuga](http://www.univa.com/img/tortuga_icon-rgb.png?utm_source=Tortuga%20GitHub&utm_medium=Img&utm_campaign=Tortuga%20on%20GitHub&utm_content=Tortuga%20GitHub) Tortuga
 
+[![Build Status](https://travis-ci.org/UnivaCorporation/tortuga.svg?branch=master)](https://travis-ci.org/UnivaCorporation/tortuga)
+
 ## Overview
 
 Tortuga allows you to create and resize High Performance Computing clusters on

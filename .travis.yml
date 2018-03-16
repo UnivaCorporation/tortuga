@@ -1,0 +1,26 @@
+language: python
+python:
+  - '3.6'
+services:
+  - docker
+env:
+  - TORTUGA_BUILD_DOCKER="true"
+before_install:
+  - docker pull joedborg/centos-puppet
+install:
+  - pip install tox
+  - pip install -r requirements.txt
+  - paver build
+script:
+  - tox -c src/core/tox.ini
+  - tox -c src/installer/tox.ini
+deploy:
+  provider: releases
+  api_key:
+    secure: jlym10dTHv23rjO6Q8m16rGX1fNNkLyfo6WSVRFhrcezzLzzgBjEQU3RfX1nFYAJ7OnzMAn1WvzIaGAuViIAYERpDzIQrhOI/5HQiyL54pV2woKRH2xHThG05bnDwW2421OuaG602gUFI540mNnpylxxYPZ9+0yXbyaONdv0Jx6Kw3PGujFzZOIttd38J4Q0BdYQezFWND2VjHJXItODspcvgU5XA0apSCTJvFAA7k/3/G2dPKXJfabO2fCK9kBUZmhaUwoC0a1EUhjQs0KwtORXhfyZBSVuUwfYy/mk/anjD1O/97sOrbWUbrR0QRreKfgVbHi2+IL3LWUWYSw3SZuXBO0eQJjpbmYQZYhxTOs3CWfJZg96rzCyz+fDUArBsiJa8kHmJ4WNbN9Po+AlaxaPvNcVv7BfW/e/g/CARvuN/EZf4ef8MAnPY46iIXy0g3tUoz0ISE/ePno7d3b0rQ57WiFtZJLxAPrI6mw6OucVBpKLBft4SwaLacOH5IaGeW4NIm0Qt9+oaUiK/irVqbFqZV2u8XJQTmla8pOnqBnhZjbB351Z10Y4C8ZD53PSn0xWkcZCOKL5IJww3WH7m6F491cxQAFQ1XjeQjCwflHNOtVMqYeCty17ljgRM8fyF+t2h/mICYy69IhrsitxRMjHWE6j3FDO3HTEONe1pMU=
+  file_glob: true
+  file: "dist/tortuga*.tar.bz2"
+  skip_cleanup: true
+  on:
+    all_branches: true
+    tags: true

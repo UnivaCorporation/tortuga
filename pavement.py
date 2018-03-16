@@ -15,8 +15,7 @@
 # See README.md for documentation on how to build Tortuga
 
 import os
-
-from paver.easy import path, task, call_task, sh, Bunch, info, needs
+from paver.easy import path, task, call_task, sh, info
 
 
 baseversion = '6.3.0'
@@ -66,7 +65,10 @@ def build(options):
 
         sh('cd src/%s && %s' % (defaultModule, cmd))
 
-    sh('puppet module build --color false src/puppet/univa-tortuga')
+    if os.environ.get('TORTUGA_BUILD_DOCKER'):
+        sh('docker run --rm=true -v $PWD/src/puppet/univa-tortuga:/root joedborg/centos-puppet module build /root')
+    else:
+        sh('puppet module build --color false src/puppet/univa-tortuga')
 
     for kit in distKits:
         cmd = 'build-kit'
