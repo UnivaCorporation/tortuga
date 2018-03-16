@@ -66,7 +66,7 @@ def build(options):
         sh('cd src/%s && %s' % (defaultModule, cmd))
 
     if os.environ.get('TORTUGA_BUILD_DOCKER'):
-        sh('docker run --rm=true -v $PWD/src/puppet/univa-tortuga:/root joedborg/centos-puppet module build /root')
+        sh('docker run --rm=true -v $PWD/src/puppet/univa-tortuga:/root puppet/puppet-agent module build /root')
     else:
         sh('puppet module build --color false src/puppet/univa-tortuga')
 
