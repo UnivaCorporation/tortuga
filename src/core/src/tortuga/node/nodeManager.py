@@ -28,8 +28,6 @@ from tortuga.config.configManager import ConfigManager
 from tortuga.resourceAdapter import resourceAdapterFactory
 from tortuga.san import san
 from tortuga.os_utility import tortugaSubprocess
-from tortuga.exceptions.osNotSupported import OsNotSupported
-from tortuga.objects.osFamilyInfo import OsFamilyInfo
 from tortuga.addhost.addHostServerLocal import AddHostServerLocal
 from tortuga.addhost.addHostManager import AddHostManager
 from tortuga.exceptions.configurationError import ConfigurationError

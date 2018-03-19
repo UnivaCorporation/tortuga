@@ -6,7 +6,7 @@ services:
 env:
   - TORTUGA_BUILD_DOCKER="true"
 before_install:
-  - docker pull joedborg/centos-puppet
+  - docker pull puppet/puppet-agent
 install:
   - pip install tox
   - pip install -r requirements.txt

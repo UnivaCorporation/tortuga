@@ -316,7 +316,7 @@ class KitBuilder(object):
 
         for puppet_module in self._puppet_modules:
             if os.environ.get('TORTUGA_BUILD_DOCKER'):
-                cmd = 'docker run --rm=true -v {}:/root joedborg/centos-puppet module build /root'.format(
+                cmd = 'docker run --rm=true -v {}:/root puppet/puppet-agent module build /root'.format(
                     os.path.join(os.environ.get('PWD'), puppet_module['path'])
                 )
             else:
