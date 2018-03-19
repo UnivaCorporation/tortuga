@@ -150,28 +150,23 @@ class AddHostManager(TortugaObjectManager, Singleton):
         finally:
             self._addHostLock.release()
 
-    def getStatus(self, session, startMessage, getNodes):
+    def getStatus(self, session: str, startMessage: int,
+                  getNodes: bool) -> AddHostStatus:
         """
         Raises:
             NotFound
         """
-
-        statusCopy = AddHostStatus()
-
-        self._addHostLock.acquire()
-
-        try:
-            if getNodes and session is not None and \
-                    self._nodeDbApi is not None:
-                nodeList = self._nodeDbApi.getNodesByAddHostSession(session)
-            else:
-                nodeList = TortugaObjectList()
+        with self._addHostLock:
+            nodeList = self._nodeDbApi.getNodesByAddHostSession(session) \
+                if getNodes else TortugaObjectList()
 
             # Lock and copy for data consistency
             if session not in self._sessions:
                 raise NotFound('Invalid add host session ID [%s]' % (session))
 
             sessionDict = self._sessions.get(session)
+
+            statusCopy = AddHostStatus()
 
             # Copy simple data
             for key in sessionDict['status'].getKeys():
@@ -182,11 +177,10 @@ class AddHostManager(TortugaObjectManager, Singleton):
 
             statusCopy.setMessageList(messages)
 
-            statusCopy.getNodeList().extend(nodeList)
+            if nodeList:
+                statusCopy.getNodeList().extend(nodeList)
 
             return statusCopy
-        finally:
-            self._addHostLock.release()
 
     def createNewSession(self) -> str:
         self.getLogger().debug('createNewSession()')

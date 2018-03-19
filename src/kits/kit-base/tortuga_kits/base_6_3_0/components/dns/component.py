@@ -228,6 +228,9 @@ class ComponentInstaller(ComponentInstallerBase):
                     not nic.boot:
                 continue
 
+            if nic.node.state == 'Deleted':
+                continue
+
             self.provider.add_record(
                 nic.node.name,
                 nic.ip
@@ -277,6 +280,9 @@ class ComponentInstaller(ComponentInstallerBase):
                     continue
 
                 if ip is None:
+                    continue
+
+                if node.state == 'Deleted':
                     continue
 
                 self.provider.add_record(

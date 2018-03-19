@@ -16,15 +16,16 @@
 
 # pylint: disable=no-member
 
-from sqlalchemy.orm import contains_eager
-from sqlalchemy.orm.exc import NoResultFound
+import sys
+
 from sqlalchemy import or_
+from sqlalchemy.orm import contains_eager
 
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.db.dbManager import DbManager
-from tortuga.db.softwareProfiles import SoftwareProfiles
 from tortuga.db.hardwareProfiles import HardwareProfiles
 from tortuga.db.nodes import Nodes
+from tortuga.db.softwareProfiles import SoftwareProfiles
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
 from tortuga.node.nodeManager import NodeManager
 
@@ -294,7 +295,7 @@ Description:
             # pylint: disable=no-self-use
         _swProfileName = dbSoftwareProfile.name \
             if dbSoftwareProfile else \
-                '** No assigned software profile **'
+            '** No assigned software profile **'
 
         return _swProfileName + ' ' + '-' * (76 - len(_swProfileName)) + '\n'
 
@@ -602,7 +603,8 @@ Description:
         return buf
 
 
-def filter_tags(option, opt, value, parser):
+def filter_tags(option, opt, value, parser): \
+        # pylint: disable=unused-argument
     tags = []
 
     vals = value.split('=', 1)
