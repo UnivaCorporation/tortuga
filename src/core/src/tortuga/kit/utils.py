@@ -221,7 +221,7 @@ def getKitNameVersionIteration(kitpath):
     :raises KitNotFound:
 
     """
-    cmd = 'tar jxfO {} */kit.json'.format(kitpath)
+    cmd = 'tar jxfO {} \*/kit.json'.format(kitpath)
     p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE, bufsize=1)
 
