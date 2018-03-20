@@ -14,11 +14,12 @@
 
 # pylint: disable=no-member
 
+from ..utility.tortugaApi import TortugaApi
 from .resourceAdapterConfigurationManager \
     import ResourceAdapterConfigurationManager
 
 
-class ResourceAdapterConfigurationApi:
+class ResourceAdapterConfigurationApi(TortugaApi):
     def create(self, resadapter_name, name, configuration):
         self.getLogger().debug(
             '[{0}] create(resadapter_name=[{1}], name=[{2}],'
