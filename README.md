@@ -80,7 +80,7 @@ pandoc -f markdown -o tortuga-6-admin-guide.pdf \
     --template tortuga-template.tex \
     --smart --listings \
     --variable papersize=letter \
-    tortuga-6-admin-guide.md
+    doc/tortuga-6-admin-guide.md.raw
 ```
 
 ## Developer information
@@ -91,7 +91,7 @@ Tortuga runs on Red Hat Enterprise Linux (RHEL) or CentOS version 6 or 7 (7 is
 preferred). Installation packages for it can be built on most Linux modern
 distributions or macOS.
 
-Python 3.4 or higher is required and can be installed from [The Software Collections
+Python 3.6 or higher is required and can be installed from [The Software Collections
 (SCL) repository](https://wiki.centos.org/AdditionalResources/Repositories/SCL).
 
 CentOS 6 and 7:
