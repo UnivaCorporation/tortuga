@@ -87,9 +87,9 @@ component-ganglia-gmond-3.0.7
             # The first argument is assumed to be the component name.
             compname = self.getArg(0)
 
-            kitName = None
-            kitVersion = None
-            kitIteration = None
+            kitName = self.getOptions().kitName
+            kitVersion = self.getOptions().kitVersion
+            kitIteration = self.getOptions().kitIteration
         else:
             # Get given Kit information
             pkgname = None
