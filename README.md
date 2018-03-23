@@ -4,7 +4,7 @@
 
 ## Tortuga Slack Channel
 
-[Join the dicussion on Slack](https://join.slack.com/t/tortugaproject/shared_invite/enQtMzM1MDU3ODk0MjI2LThjYTNkNzFiMDc1NzdjYmJhMGZhZGI5ZDIzMzUwODBkNzU3ZDBmMGY3NzE3ZmVlNDVhMmRiY2UxNGVjZmFiNzk)
+[Join the discussion on Slack](https://join.slack.com/t/tortugaproject/shared_invite/enQtMzM1MDU3ODk0MjI2LThjYTNkNzFiMDc1NzdjYmJhMGZhZGI5ZDIzMzUwODBkNzU3ZDBmMGY3NzE3ZmVlNDVhMmRiY2UxNGVjZmFiNzk)
 
 ## Overview
 
