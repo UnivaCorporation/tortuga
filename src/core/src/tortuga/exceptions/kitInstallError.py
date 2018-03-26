@@ -12,16 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=no-member
-
-import re
-from tortuga.exceptions.invalidMacAddress import InvalidMacAddress
+from tortuga.exceptions.tortugaException import TortugaException
+from tortuga.utility import tortugaStatus
 
 
-def fixNetworkDeviceName(networkDevice):
-    lastAlpha = 0
-    for i in range(0, len(networkDevice)):
-        if networkDevice[i:i + 1].isalpha():
-            lastAlpha = i
+class KitInstallError(TortugaException):
+    """
+    Kit installation error class. It can be used in the same
+    way as the base TortugaException class.
 
-    return "%s0" % networkDevice[:lastAlpha + 1]
+    """
+    def __init__(self, error="", **kwargs):
+        TortugaException.__init__(
+            self, error, tortugaStatus.TORTUGA_KIT_INSTALL_ERROR,
+            **kwargs)
