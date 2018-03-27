@@ -14,25 +14,29 @@
 
 # pylint: disable=no-self-use,no-name-in-module,no-member
 
-import itertools
-import threading
-import random
-import string
-import logging
 import ipaddress
-from sqlalchemy.orm.session import Session
+import itertools
+import logging
+import random
+import re
+import string
+import threading
 from typing import NoReturn, List, Optional
-from tortuga.utility.tortugaApi import TortugaApi
-from tortuga.db.nodesDbHandler import NodesDbHandler
-from tortuga.exceptions.networkNotFound import NetworkNotFound
-from tortuga.exceptions.invalidArgument import InvalidArgument
-from tortuga.exceptions.nicNotFound import NicNotFound
-from tortuga.db.nics import Nics
-from tortuga.utility.network import validateMacAddress
-from tortuga.resourceAdapter.utility import get_provisioning_nics
-from tortuga.db.nodes import Nodes
-from tortuga.db.hardwareProfiles import HardwareProfiles
 
+from sqlalchemy.orm.session import Session
+
+from tortuga.db.hardwareProfiles import HardwareProfiles
+from tortuga.db.networks import Networks
+from tortuga.db.nics import Nics
+from tortuga.db.nodes import Nodes
+from tortuga.db.nodesDbHandler import NodesDbHandler
+from tortuga.exceptions.invalidArgument import InvalidArgument
+from tortuga.exceptions.invalidMacAddress import InvalidMacAddress
+from tortuga.exceptions.macAddressAlreadyExists import MacAddressAlreadyExists
+from tortuga.exceptions.networkNotFound import NetworkNotFound
+from tortuga.exceptions.nicNotFound import NicNotFound
+from tortuga.resourceAdapter.utility import get_provisioning_nics
+from tortuga.utility.tortugaApi import TortugaApi
 
 session_nodes_lock = threading.RLock()
 
@@ -50,7 +54,6 @@ logger.addHandler(logging.NullHandler())
 class AddHostServerLocal(TortugaApi):
     def __init__(self):
         super(AddHostServerLocal, self).__init__()
-
         self._nodesDbHandler = NodesDbHandler()
 
     @staticmethod
@@ -121,9 +124,10 @@ class AddHostServerLocal(TortugaApi):
                     dns_zone=dns_zone)
 
             # Create NIC entries
-            dbNode.nics = self._initializeNics(
-                dbNode, dbHardwareProfile, nic_defs,
-                bValidateIp=bValidateIp, bGenerateIp=bGenerateIp)
+            dbNode.nics = self._initializeNics(session, dbNode,
+                                               dbHardwareProfile, nic_defs,
+                                               bValidateIp=bValidateIp,
+                                               bGenerateIp=bGenerateIp)
 
             self.getLogger().debug(
                 'initializeNode(): initialized new node [%s]' % (
@@ -264,17 +268,19 @@ class AddHostServerLocal(TortugaApi):
 
         return s
 
-    def _initializeNics(self, dbNode: Nodes, dbHardwareProfile: HardwareProfiles,
+    def _initializeNics(self, session: Session, dbNode: Nodes,
+                        dbHardwareProfile: HardwareProfiles,
                         nic_defs: List[dict], bValidateIp: bool = True,
                         bGenerateIp: bool = True) -> List[Nics]:
         """
         Return list of Nics objects reflecting the configuration of dbNode
         and nic definitions provided in nic_defs.
 
-        Raises:
-            NetworkNotFound
-        """
+        :raises NetworkNotFound:
+        :raises InvalidMacAddress:
+        :raises MacAddressAlreadyExists:
 
+        """
         nics = []
 
         hwpnetworks = dbHardwareProfile.hardwareprofilenetworks[:]
@@ -289,16 +295,21 @@ class AddHostServerLocal(TortugaApi):
             dbNic.node = dbNode
 
             if nic_def and 'mac' in nic_def:
+                #
                 # MAC addresses are generated for virtualization platforms
                 # such as libvirt and VMware
-                dbNic.mac = validateMacAddress(nic_def['mac'])
+                #
+                dbNic.mac = self._validate_mac_address(
+                    session, nic_def['mac'], dbHardwareProfileNetwork.network)
 
+            #
             # Validate IP, if specified, otherwise generate an IP, if
             # requested
+            #
             if nic_def and 'ip' in nic_def:
                 if bValidateIp:
-                    self.__validateIp(nic_def['ip'],
-                                      dbHardwareProfileNetwork.network)
+                    self._validate_ip_address(
+                        nic_def['ip'], dbHardwareProfileNetwork.network)
 
                 dbNic.ip = nic_def['ip']
             else:
@@ -339,26 +350,81 @@ class AddHostServerLocal(TortugaApi):
 
         return nics
 
-    def __validateIp(self, ip, network) -> NoReturn:
+    def _validate_mac_address(self, session: Session, mac_address: str,
+                              network: Networks) -> str:
         """
-        Raises:
-            NetworkNotFound
+        Validate a MAC address and make sure it is not a duplicate.
+
+        :raises InvalidMacAddress:
+        :raises MacAddressAlreadyExists:
+        
         """
 
+        if not mac_address:
+            raise InvalidMacAddress('MAC address is empty/undefined')
+
+        #
+        # Normalize and Validate MAC address formatting
+        #
+        mac_regex = re.compile(
+                r'^([0-9A-Fa-f]{2}[:-]?){5}[0-9A-Fa-f]{2}([:-]?.*)?$')
+        if not mac_regex.match(mac_address):
+            raise InvalidMacAddress(
+                'MAC address [{}] is invalid/malformed'.format(mac_address))
+
+        if '-' in mac_address:
+            mac_address = mac_address.replace('-', ':').lower()
+
+        if ':' not in mac_address:
+            mac_address = '{}:{}:{}:{}:{}:{}'.format(mac_address[0:2],
+                                                     mac_address[2:4],
+                                                     mac_address[4:6],
+                                                     mac_address[6:8],
+                                                     mac_address[8:10],
+                                                     mac_address[10:12])
+
+        #
+        # Make sure that the MAC address does not already exist on the
+        # same provisioning network
+        #
+        db_host_list = self._nodesDbHandler.getNodesByMac(session,
+                                                          [mac_address])
+        for db_host in db_host_list:
+            for db_nic in db_host.nics:
+                if db_nic.mac == mac_address and \
+                        db_nic.networkId == network.id:
+                    raise MacAddressAlreadyExists(
+                        'The MAC address [{}] already exists '
+                        'on the network [{}/{}]'.format(mac_address,
+                                                        network.address,
+                                                        network.netmask)
+                    )
+
+        return mac_address
+
+    def _validate_ip_address(self, ip, network) -> NoReturn:
+        """
+        :raises NetworkNotFound:
+               
+        """
+        #
         # Only validate IP addresses in 'local' hardware profiles
+        #
         try:
             requested_ip = ipaddress.IPv4Address(str(ip))
 
             provisioning_network = ipaddress.IPv4Network(
-                '%s/%s' % (network.address, network.netmask))
+                '{}/{}'.format(network.address, network.netmask))
 
             if requested_ip not in provisioning_network:
                 raise NetworkNotFound(
-                    'IP address [%s] not on network [%s]' % (
+                    'IP address [{}] not on network [{}]'.format(
                         ip, provisioning_network))
         except ipaddress.AddressValueError:
+            #
             # malformed ip address
-            raise NetworkNotFound('IP address [%s] is invalid' % (ip))
+            #
+            raise NetworkNotFound('IP address [{}] is invalid'.format(ip))
 
     def generate_provisioning_ip_address(self, network):
         """
