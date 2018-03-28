@@ -18,7 +18,7 @@ from sqlalchemy import and_
 from sqlalchemy.orm.exc import NoResultFound
 
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
-from tortuga.db.networks import Networks
+from tortuga.db.models.network import Network
 from tortuga.exceptions.networkAlreadyExists import NetworkAlreadyExists
 from tortuga.exceptions.networkNotFound import NetworkNotFound
 from tortuga.exceptions.deleteNetworkFailed import DeleteNetworkFailed
@@ -39,9 +39,9 @@ class NetworksDbHandler(TortugaDbObjectHandler):
             'Retrieving network [%s/%s]' % (address, netmask))
 
         try:
-            return session.query(Networks).filter(
-                and_(Networks.address == address,
-                     Networks.netmask == netmask)).one()
+            return session.query(Network).filter(
+                and_(Network.address == address,
+                     Network.netmask == netmask)).one()
         except NoResultFound:
             raise NetworkNotFound(
                 'Network [%s/%s] not found.' % (address, netmask))
@@ -56,7 +56,7 @@ class NetworksDbHandler(TortugaDbObjectHandler):
 
         self.getLogger().debug('Retrieving network ID [%s]' % (_id))
 
-        dbNetwork = session.query(Networks).get(_id)
+        dbNetwork = session.query(Network).get(_id)
 
         if not dbNetwork:
             raise NetworkNotFound('Network ID [%s] not found.' % (_id))
@@ -70,7 +70,7 @@ class NetworksDbHandler(TortugaDbObjectHandler):
 
         self.getLogger().debug('getNetworkList()')
 
-        return session.query(Networks).all()
+        return session.query(Network).all()
 
     def getNetworkListByType(self, session, network_type):
         """
@@ -81,7 +81,7 @@ class NetworksDbHandler(TortugaDbObjectHandler):
             debug('getNetworkListByType(type=%s)' % (network_type))
 
         return session.query(
-            Networks).filter(Networks.type == network_type).all()
+            Network).filter(Network.type == network_type).all()
 
     def addNetwork(self, session, network):
         """
@@ -132,7 +132,7 @@ class NetworksDbHandler(TortugaDbObjectHandler):
 
     def __populateNetwork(self, network, dbNetwork=None):
         if not dbNetwork:
-            dbNetwork = Networks()
+            dbNetwork = Network()
 
         dbNetwork.address = network.getAddress()
         dbNetwork.netmask = network.getNetmask()

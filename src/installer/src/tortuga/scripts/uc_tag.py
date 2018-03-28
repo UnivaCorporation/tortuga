@@ -18,7 +18,7 @@ from tortuga.db.dbManager import DbManager
 from tortuga.db.nodesDbHandler import NodesDbHandler
 from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
 from tortuga.db.hardwareProfilesDbHandler import HardwareProfilesDbHandler
-from tortuga.db.tags import Tags
+from tortuga.db.models.tag import Tag
 from tortuga.db.tagsDbHandler import TagsDbHandler
 
 
@@ -167,7 +167,7 @@ def get_tag_objects(session, tags):
 
             continue
 
-        new_tag = Tags(key, value)
+        new_tag = Tag(key, value)
         tag_objs.append(new_tag)
 
         session.add(new_tag)
@@ -185,7 +185,7 @@ def delete_tag(args):
     session = DbManager().openSession()
 
     for key in args.tags:
-        tag_obj = session.query(Tags).filter(Tags.name == key).first()
+        tag_obj = session.query(Tag).filter(Tag.name == key).first()
 
         if tag_obj is None:
             sys.stderr.write('Tag [{0}] not found\n'.format(key))

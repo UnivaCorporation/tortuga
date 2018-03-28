@@ -14,11 +14,11 @@
 
 import unittest
 import pytest
-from tortuga.db.softwareProfiles import SoftwareProfiles
+from tortuga.db.models.softwareProfile import SoftwareProfile
 from tortuga.db.softwareProfilesDbHandler \
     import SoftwareProfilesDbHandler
-from tortuga.db.operatingSystems import OperatingSystems
-from tortuga.db.tags import Tags
+from tortuga.db.models.operatingSystem import OperatingSystem
+from tortuga.db.models.tag import Tag
 
 
 @pytest.mark.usefixtures('dbm_class')
@@ -91,19 +91,19 @@ class TestSoftwareProfilesDbHandler(unittest.TestCase):
 
 
 def get_tags():
-    tag1 = Tags('tag1', 'value1')
-    tag2 = Tags('tag2', 'value2')
+    tag1 = Tag('tag1', 'value1')
+    tag2 = Tag('tag2', 'value2')
 
     return [tag1, tag2]
 
 
 def get_software_profiles():
-    osInfo = OperatingSystems('centos', '7', 'x86_64')
+    osInfo = OperatingSystem('centos', '7', 'x86_64')
 
-    softwareprofile1 = SoftwareProfiles('profile1')
+    softwareprofile1 = SoftwareProfile('profile1')
     softwareprofile1.os = osInfo
     softwareprofile1.type = 'compute'
-    softwareprofile2 = SoftwareProfiles('profile2')
+    softwareprofile2 = SoftwareProfile('profile2')
     softwareprofile2.os = osInfo
     softwareprofile2.type = 'compute'
 

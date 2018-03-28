@@ -17,7 +17,7 @@
 # pylint: disable=no-member
 
 from tortuga.db.dbManager import DbManager
-from tortuga.db.kitSources import KitSources
+from tortuga.db.models.kitSource import KitSource
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.exceptions.invalidArgument import InvalidArgument
 
@@ -43,11 +43,11 @@ class RemoteRepoDeleteApp(TortugaCli):
         session = DbManager().openSession()
 
         if self.getOptions().url:
-            dbKitSource = session.query(KitSources).filter(
-                KitSources.url == self.getOptions().url).one()
+            dbKitSource = session.query(KitSource).filter(
+                KitSource.url == self.getOptions().url).one()
         else:
-            dbKitSource = session.query(KitSources).filter(
-                KitSources.id == self.getOptions().repoId).one()
+            dbKitSource = session.query(KitSource).filter(
+                KitSource.id == self.getOptions().repoId).one()
 
         if not self.getOptions().force and dbKitSource.softwareprofiles:
             print((

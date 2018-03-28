@@ -20,8 +20,8 @@ import sys
 
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.db.dbManager import DbManager
-from tortuga.db.kitSources import KitSources
-from tortuga.db.softwareProfiles import SoftwareProfiles
+from tortuga.db.models.kitSource import KitSource
+from tortuga.db.models.softwareProfile import SoftwareProfile
 from tortuga.exceptions.invalidArgument import InvalidArgument
 
 
@@ -42,12 +42,12 @@ class RemoteRepoEnableApp(TortugaCli):
         session = DbManager().openSession()
 
         try:
-            dbKitSource = session.query(KitSources).filter(
-                KitSources.id == self.getOptions().repoId).one()
+            dbKitSource = session.query(KitSource).filter(
+                KitSource.id == self.getOptions().repoId).one()
 
             # Find matching software profile
-            dbSoftwareProfile = session.query(SoftwareProfiles).filter(
-                SoftwareProfiles.name ==
+            dbSoftwareProfile = session.query(SoftwareProfile).filter(
+                SoftwareProfile.name ==
                 self.getOptions().softwareProfile).one()
 
             if dbKitSource in dbSoftwareProfile.kitsources:

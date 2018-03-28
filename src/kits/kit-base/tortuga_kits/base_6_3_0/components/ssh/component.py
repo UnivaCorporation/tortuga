@@ -17,7 +17,7 @@ import os
 import shutil
 
 from tortuga.db.dbManager import DbManager
-from tortuga.db.nics import Nics
+from tortuga.db.models.nic import Nic
 from tortuga.kit.installer import ComponentInstallerBase
 from tortuga.os_utility import tortugaSubprocess
 
@@ -49,7 +49,7 @@ class ComponentInstaller(ComponentInstallerBase):
 
             dnszone = self.kit_installer.get_db_parameter_value('DNSZone')
 
-            for db_nic in session.query(Nics).order_by(Nics.ip).all():
+            for db_nic in session.query(Nic).order_by(Nic.ip).all():
                 if db_nic.node.state == 'Deleted':
                     continue
 

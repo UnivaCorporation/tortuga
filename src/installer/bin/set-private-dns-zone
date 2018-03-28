@@ -26,7 +26,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from tortuga.os_utility import tortugaSubprocess
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.db.globalParameters import GlobalParameters
+from tortuga.db.models.globalParameter import GlobalParameter
 from tortuga.db.dbManager import DbManager
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.db.nodesDbHandler import NodesDbHandler
@@ -86,8 +86,8 @@ class SetPrivateDnsZoneApp(TortugaCli):
         dbValue = None
 
         try:
-            dbValue = session.query(GlobalParameters).filter(
-                GlobalParameters.name == 'DNSZone').one()
+            dbValue = session.query(GlobalParameter).filter(
+                GlobalParameter.name == 'DNSZone').one()
 
             # Update existing value
             dbValue.value = dnsZone
@@ -95,7 +95,7 @@ class SetPrivateDnsZoneApp(TortugaCli):
             pass
 
         if dbValue is None:
-            dbValue = GlobalParameters(name='DNSZone', value=dnsZone)
+            dbValue = GlobalParameter(name='DNSZone', value=dnsZone)
             session.append(dbValue)
 
         session.commit()

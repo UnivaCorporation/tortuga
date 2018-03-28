@@ -12,20 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tortuga.db.nodes import Nodes
-from tortuga.db.nics import Nics
-from tortuga.db.networks import Networks
-from tortuga.db.hardwareProfiles import HardwareProfiles
-from tortuga.db.hardwareProfileNetworks import HardwareProfileNetworks
-from tortuga.resourceAdapter.utility import get_provisioning_nics, \
-    get_provisioning_nic, get_provisioning_hwprofilenetwork, \
-    get_hwprofile_provisioning_nic, iter_provisioning_nics, \
-    NetworkNotFound, NicNotFound
 import pytest
+
+from tortuga.db.models.hardwareProfile import HardwareProfile
+from tortuga.db.models.hardwareProfileNetwork import HardwareProfileNetwork
+from tortuga.db.models.network import Network
+from tortuga.db.models.nic import Nic
+from tortuga.db.models.node import Node
+from tortuga.resourceAdapter.utility import (NetworkNotFound, NicNotFound,
+                                             get_hwprofile_provisioning_nic,
+                                             get_provisioning_hwprofilenetwork,
+                                             get_provisioning_nic,
+                                             get_provisioning_nics,
+                                             iter_provisioning_nics)
 
 
 def get_network():
-    network = Networks()
+    network = Network()
     network.address = '192.168.0.0'
     network.netmask = '255.255.255.0'
     network.type = 'provision'
@@ -34,9 +37,9 @@ def get_network():
 
 
 def get_hardwareprofile():
-    hwprofile = HardwareProfiles()
+    hwprofile = HardwareProfile()
 
-    hwprofile.nics = [Nics(ip='192.168.0.1', boot=True)]
+    hwprofile.nics = [Nic(ip='192.168.0.1', boot=True)]
 
     hwprofile.hardwareprofilenetworks = []
 
@@ -47,7 +50,7 @@ def get_hardwareprofile():
 def hardwareprofile():
     hwprofile = get_hardwareprofile()
 
-    hwprofilenetwork = HardwareProfileNetworks()
+    hwprofilenetwork = HardwareProfileNetwork()
     hwprofilenetwork.network = get_network()
     hwprofilenetwork.hardwareprofile = hwprofile
 
@@ -62,10 +65,10 @@ def hardwareprofile_no_networks():
 
 
 def get_nics(network):
-    nic = Nics(ip='192.168.0.4', boot=True)
+    nic = Nic(ip='192.168.0.4', boot=True)
     nic.network = network
 
-    nic2 = Nics(boot=False)
+    nic2 = Nic(boot=False)
 
     return [nic, nic2]
 
@@ -76,7 +79,7 @@ def nics():
 
 
 def get_node():
-    node = Nodes(name='compute-01.private')
+    node = Node(name='compute-01.private')
     node.nics = []
 
     return node
@@ -84,13 +87,13 @@ def get_node():
 
 @pytest.fixture
 def node():
-    """Return a bare Nodes object"""
+    """Return a bare Node object"""
     return get_node()
 
 
 @pytest.fixture
 def node_with_nics():
-    """Return Nodes object with Nics defined"""
+    """Return Node object with Nics defined"""
     network = get_network()
 
     node = get_node()
@@ -124,7 +127,7 @@ def test_get_provisioning_nic_no_prov_nic(node):
 def test_get_provisioning_hwprofilenetwork(hardwareprofile):
     hwprofilenetwork = get_provisioning_hwprofilenetwork(hardwareprofile)
 
-    assert isinstance(hwprofilenetwork.network, Networks)
+    assert isinstance(hwprofilenetwork.network, Network)
 
 
 def test_get_provisioning_hwprofilenetwork_no_networks(
@@ -136,7 +139,7 @@ def test_get_provisioning_hwprofilenetwork_no_networks(
 def test_get_hwprofile_provisioning_nic(hardwareprofile):
     nic = get_hwprofile_provisioning_nic(hardwareprofile)
 
-    assert isinstance(nic, Nics)
+    assert isinstance(nic, Nic)
 
 
 def test_get_hwprofile_provisioning_nic_no_networks(hardwareprofile_no_networks):
@@ -149,7 +152,7 @@ def test_iter_provisioning_nics(nics):
 
     assert result
 
-    assert isinstance(result[0], Nics)
+    assert isinstance(result[0], Nic)
 
 
 def test_iter_provisioning_nics_no_nics(node):

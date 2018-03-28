@@ -20,7 +20,7 @@ from tortuga.db.hardwareProfilesDbHandler import HardwareProfilesDbHandler
 from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
 from tortuga.resourceAdapter import resourceAdapterFactory
 from tortuga.exceptions.nodeAlreadyExists import NodeAlreadyExists
-from tortuga.db.nodes import Nodes
+from tortuga.db.models.node import Node
 from tortuga.exceptions.profileMappingNotAllowed \
     import ProfileMappingNotAllowed
 from tortuga.config.configManager import ConfigManager
@@ -141,8 +141,8 @@ def validate_addnodes_request(addNodesRequest):
 
             if hostname:
                 # Ensure host does not already exist
-                existing_node = session.query(Nodes).filter(
-                    Nodes.name == hostname).first()
+                existing_node = session.query(Node).filter(
+                    Node.name == hostname).first()
                 if existing_node:
                     raise NodeAlreadyExists(
                         'Node [%s] already exists' % (hostname))

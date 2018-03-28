@@ -26,8 +26,7 @@ from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
 from tortuga.db.nodesDbHandler import NodesDbHandler
 from tortuga.db.adminsDbHandler import AdminsDbHandler
 from tortuga.db.nicsDbHandler import NicsDbHandler
-from tortuga.db.hardwareProfiles import HardwareProfiles
-from tortuga.db.hardwareProfileNetworks import HardwareProfileNetworks
+from tortuga.db.models.hardwareProfileNetwork import HardwareProfileNetwork
 from tortuga.db.resourceAdaptersDbHandler import ResourceAdaptersDbHandler
 
 from tortuga.objects.hardwareProfile import HardwareProfile
@@ -47,7 +46,7 @@ from tortuga.exceptions.adminAlreadyExists import AdminAlreadyExists
 from tortuga.exceptions.configurationError import ConfigurationError
 from tortuga.db.networksDbHandler import NetworksDbHandler
 from tortuga.db.networkDevicesDbHandler import NetworkDevicesDbHandler
-from tortuga.db.networkDevices import NetworkDevices
+from tortuga.db.models.networkDevice import NetworkDevice
 from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
 from tortuga.config.configManager import ConfigManager
 
@@ -493,7 +492,7 @@ class HardwareProfileDbApi(TortugaDbApi):
 
     def __get_network_devices(self, session): \
             # pylint: disable=no-self-use
-        return session.query(NetworkDevices).all()
+        return session.query(NetworkDevice).all()
 
     def __populateHardwareProfile(self, session, hardwareProfile,
                                   dbHardwareProfile=None):
@@ -526,7 +525,7 @@ class HardwareProfileDbApi(TortugaDbApi):
             if hardwareProfile.getIdleSoftwareProfileId else None
 
         if dbHardwareProfile is None:
-            dbHardwareProfile = HardwareProfiles()
+            dbHardwareProfile = HardwareProfile()
 
         dbHardwareProfile.name = hardwareProfile.getName()
         dbHardwareProfile.description = hardwareProfile.getDescription()
@@ -591,7 +590,7 @@ class HardwareProfileDbApi(TortugaDbApi):
 
                     break
             else:
-                dbNetworkDevice = NetworkDevices()
+                dbNetworkDevice = NetworkDevice()
                 dbNetworkDevice.name = network.getNetworkDevice().getName()
 
             # Now check if we have this one already...
@@ -602,7 +601,7 @@ class HardwareProfileDbApi(TortugaDbApi):
                         dbHardwareProfileNetwork.networkId == dbNetwork.id:
                     break
             else:
-                dbHardwareProfileNetwork = HardwareProfileNetworks()
+                dbHardwareProfileNetwork = HardwareProfileNetwork()
 
                 if dbNetwork.id is not None:
                     dbHardwareProfileNetwork.networkId = dbNetwork.id

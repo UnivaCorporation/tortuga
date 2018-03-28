@@ -17,7 +17,7 @@
 from sqlalchemy.orm.exc import NoResultFound
 
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
-from tortuga.db.nics import Nics
+from tortuga.db.models.nic import Nic
 from tortuga.exceptions.nicAlreadyExists import NicAlreadyExists
 from tortuga.exceptions.nicNotFound import NicNotFound
 from tortuga.db.networkDevicesDbHandler import NetworkDevicesDbHandler
@@ -44,7 +44,7 @@ class NicsDbHandler(TortugaDbObjectHandler):
             'Retrieving NIC with MAC address [%s]' % (mac))
 
         try:
-            return session.query(Nics).filter(Nics.mac == mac).one()
+            return session.query(Nic).filter(Nic.mac == mac).one()
         except NoResultFound:
             raise NicNotFound(
                 'NIC with MAC address [%s] not found.' % (mac))
@@ -56,7 +56,7 @@ class NicsDbHandler(TortugaDbObjectHandler):
 
         self.getLogger().debug('Retrieving NIC ID [%s]' % _id)
 
-        dbNic = session.query(Nics).get(_id)
+        dbNic = session.query(Nic).get(_id)
 
         if not dbNic:
             raise NicNotFound('NIC ID [%s] not found.' % (_id))
@@ -79,7 +79,7 @@ class NicsDbHandler(TortugaDbObjectHandler):
                 # OK.
                 pass
 
-        dbNic = Nics(
+        dbNic = Nic(
             mac=nic.getMac(),
             nodeId=nic.getNodeId(),
             networkId=nic.getNetworkId(),

@@ -26,8 +26,8 @@ from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.commandFailed import CommandFailed
 from tortuga.db.dbManager import DbManager
-from tortuga.db.kitSources import KitSources
-from tortuga.db.kits import Kits
+from tortuga.db.models.kitSource import KitSource
+from tortuga.db.models.kit import Kit
 from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.parameterNotFound import ParameterNotFound
 from tortuga.parameter.parameterApi import ParameterApi
@@ -107,8 +107,8 @@ Examples:
 
         if self.getOptions().repoId:
             try:
-                dbKitSource = session.query(KitSources).filter(
-                    KitSources.id == self.getOptions().repoId).one()
+                dbKitSource = session.query(KitSource).filter(
+                    KitSource.id == self.getOptions().repoId).one()
             except NoResultFound:
                 sys.stderr.write(
                     'No remote repository matching ID [%d] found\n' % (
@@ -119,7 +119,7 @@ Examples:
             self._syncKitSource(dbKitSource)
         elif self.getOptions().syncAll:
             # Iterate over all configured remote repositories
-            dbKitSources = session.query(KitSources).all()
+            dbKitSources = session.query(KitSource).all()
 
             if not dbKitSources:
                 print('No remote repositories defined.')
@@ -129,8 +129,8 @@ Examples:
             self._syncKitSources(dbKitSources)
         elif self.getOptions().kit:
             try:
-                dbKit = session.query(Kits).filter(
-                    Kits.name == self.getOptions().kit).one()
+                dbKit = session.query(Kit).filter(
+                    Kit.name == self.getOptions().kit).one()
             except NoResultFound:
                 sys.stderr.write(
                     'Error: no kit matching name [%s] found\n' % (

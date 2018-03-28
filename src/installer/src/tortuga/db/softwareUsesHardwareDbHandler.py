@@ -17,8 +17,8 @@
 from sqlalchemy.orm.exc import NoResultFound
 
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
-from tortuga.db.softwareUsesHardware import SoftwareUsesHardware
-from tortuga.db.softwareProfiles import SoftwareProfiles
+from tortuga.db.models.softwareUsesHardware import SoftwareUsesHardware
+from tortuga.db.models.softwareProfile import SoftwareProfile
 from tortuga.exceptions.softwareProfileNotFound \
     import SoftwareProfileNotFound
 
@@ -45,8 +45,8 @@ class SoftwareUsesHardwareDbHandler(TortugaDbObjectHandler):
 
         try:
             dbSoftwareProfile = session.query(
-                SoftwareProfiles).filter(
-                    SoftwareProfiles.name == softwareProfileName).one()
+                SoftwareProfile).filter(
+                    SoftwareProfile.name == softwareProfileName).one()
         except NoResultFound:
             raise SoftwareProfileNotFound(
                 'Software profile [%s] not found' % (softwareProfileName))

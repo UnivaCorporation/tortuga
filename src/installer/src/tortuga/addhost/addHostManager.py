@@ -16,23 +16,21 @@
 
 import threading
 import uuid
+
+from tortuga.db.hardwareProfilesDbHandler import HardwareProfilesDbHandler
+from tortuga.db.models.tag import Tag
+from tortuga.db.nodeDbApi import NodeDbApi
+from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
+from tortuga.db.tagsDbHandler import TagsDbHandler
+from tortuga.exceptions.notFound import NotFound
+from tortuga.exceptions.resourceAdapterNotFound import ResourceAdapterNotFound
+from tortuga.kit.actions import KitActionsManager
+from tortuga.objects.addHostStatus import AddHostStatus
 from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
-from tortuga.objects.addHostStatus import AddHostStatus
-from tortuga.db.nodeDbApi import NodeDbApi
-from tortuga.exceptions.notFound import NotFound
 from tortuga.resourceAdapter import resourceAdapterFactory
-from tortuga.exceptions.resourceAdapterNotFound \
-    import ResourceAdapterNotFound
-from tortuga.db.softwareProfilesDbHandler \
-    import SoftwareProfilesDbHandler
-from tortuga.kit.actions import KitActionsManager
-from tortuga.db.hardwareProfilesDbHandler \
-    import HardwareProfilesDbHandler
-from tortuga.wsapi.syncWsApi import SyncWsApi
-from tortuga.db.tags import Tags
-from tortuga.db.tagsDbHandler import TagsDbHandler
 from tortuga.types import Singleton
+from tortuga.wsapi.syncWsApi import SyncWsApi
 
 
 class AddHostManager(TortugaObjectManager, Singleton):
@@ -229,7 +227,7 @@ def get_tags(session, tagdict):
     for key, value in list(tagdict.items()):
         tag = TagsDbHandler().get_tag(session, key, value=value)
         if not tag:
-            tag = Tags(key, value)
+            tag = Tag(key, value)
 
         tags.append(tag)
 

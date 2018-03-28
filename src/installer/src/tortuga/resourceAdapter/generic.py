@@ -13,8 +13,8 @@
 # limitations under the License.
 
 from tortuga.resourceAdapter.resourceAdapter import ResourceAdapter
-from tortuga.db.nodes import Nodes
-from tortuga.db.nics import Nics
+from tortuga.db.models.node import Node
+from tortuga.db.models.nic import Nic
 
 
 class Generic(ResourceAdapter):
