@@ -82,7 +82,7 @@ class ResourceAdapterCredentialsDbHandler(TortugaDbObjectHandler):
             # pylint: disable=no-self-use
 
         return session.query(
-            ResourceAdapterCredential).joi(ResourceAdapter).filter(
+            ResourceAdapterCredential).join(ResourceAdapter).filter(
                 and_(ResourceAdapterCredential.name == name,
                      ResourceAdapter.name == resadapter_name))
 
