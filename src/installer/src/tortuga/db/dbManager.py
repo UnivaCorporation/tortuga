@@ -24,16 +24,15 @@ import sqlalchemy.orm
 
 from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.dbError import DbError
-from tortuga.kit.loader import load_kits
-from tortuga.kit.registry import get_all_kit_installers
+# from tortuga.kit.loader import load_kits
+# from tortuga.kit.registry import get_all_kit_installers
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.types import Singleton
 # from .tables import get_all_table_mappers
 from .sessionContextManager import SessionContextManager
 from .models.base import ModelBase
 
-from . import models
-
+from . import models  # noqa pylint: disable=unused-import
 
 
 logger = getLogger(__name__)
@@ -78,11 +77,6 @@ class DbManagerBase(TortugaObjectManager):
         else:
             self._engine = engine
 
-        # self._metadata = sqlalchemy.MetaData(self._engine)
-        # self._mapped_tables = {}
-
-        ModelBase.metadata.create_all(self._engine)
-
     def _map_db_tables(self):
         #
         # Make sure all kit table mappers have been registered
@@ -101,13 +95,13 @@ class DbManagerBase(TortugaObjectManager):
         #         self._mapped_tables[key] = table_mapper()
         #         self._mapped_tables[key].map(self)
         pass
-        
+
     @property
     def engine(self):
         """
         SQLAlchemy Engine object property
         """
-        # self._map_db_tables()
+        self._map_db_tables()
         return self._engine
 
     def session(self):
@@ -120,7 +114,7 @@ class DbManagerBase(TortugaObjectManager):
         #
         # Create tables
         #
-        # self._map_db_tables()
+        self._map_db_tables()
         try:
             ModelBase.metadata.create_all(self.engine)
         except Exception:
