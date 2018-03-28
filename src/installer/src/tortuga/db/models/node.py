@@ -14,7 +14,7 @@
 
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.ext.indexable import index_property
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 
 from .base import ModelBase
 
@@ -50,7 +50,8 @@ class Node(ModelBase):
 
     nics = relationship('Nic', backref='node', lazy=False)
 
-    parentnode = relationship('Node', remote_side=[id], backref='children')
+    parentnode = relationship('Node',
+                              backref=backref('children', remote_side=[id]))
 
     tags = relationship(
         'Tag',
