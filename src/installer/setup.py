@@ -126,6 +126,7 @@ setup(
         'six',
         'pyzmq',
         'gevent',
+        'marshmallow-sqlalchemy',
     ],
     namespace_packages=['tortuga'],
     entry_points={
