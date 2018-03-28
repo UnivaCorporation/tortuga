@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from sqlalchemy import Column, ForeignKey, Integer, String, UniqueConstraint
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 
 from .base import ModelBase
 
@@ -31,7 +31,7 @@ class OperatingSystemFamily(ModelBase):
     arch = Column(String(20))
 
     children = relationship('OperatingSystemFamily',
-                            backref='parent', remote_side=[id])
+                            backref=backref('parent', remote_side=[id]))
 
     def __repr__(self):
         return ('<OperatingSystemFamily(name=[%s], version=[%s],'
