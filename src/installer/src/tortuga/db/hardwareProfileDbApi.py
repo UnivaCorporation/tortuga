@@ -16,39 +16,38 @@
 # pylint: disable=maybe-no-member,not-callable
 
 from typing import Optional, Union
+
 import sqlalchemy.exc
 
-from tortuga.db.dbManager import DbManager
-
-from tortuga.db.tortugaDbApi import TortugaDbApi
-from tortuga.db.hardwareProfilesDbHandler import HardwareProfilesDbHandler
-from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
-from tortuga.db.nodesDbHandler import NodesDbHandler
-from tortuga.db.adminsDbHandler import AdminsDbHandler
-from tortuga.db.nicsDbHandler import NicsDbHandler
-from tortuga.db.models.hardwareProfileNetwork import HardwareProfileNetwork
-from tortuga.db.resourceAdaptersDbHandler import ResourceAdaptersDbHandler
-
-from tortuga.objects.hardwareProfile import HardwareProfile
-from tortuga.objects.tortugaObject import TortugaObjectList
-from tortuga.objects.node import Node
 import tortuga.objects.nic
-
-from tortuga.exceptions.tortugaException import TortugaException
-from tortuga.exceptions.hardwareProfileAlreadyExists \
-    import HardwareProfileAlreadyExists
-from tortuga.exceptions.hardwareProfileNotFound \
-    import HardwareProfileNotFound
+from tortuga.config.configManager import ConfigManager
+from tortuga.db.adminsDbHandler import AdminsDbHandler
+from tortuga.db.dbManager import DbManager
+from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
+from tortuga.db.hardwareProfilesDbHandler import HardwareProfilesDbHandler
+from tortuga.db.models.hardwareProfile import \
+    HardwareProfile as HardwareProfileModel
+from tortuga.db.models.hardwareProfileNetwork import HardwareProfileNetwork
+from tortuga.db.models.networkDevice import NetworkDevice
+from tortuga.db.networkDevicesDbHandler import NetworkDevicesDbHandler
+from tortuga.db.networksDbHandler import NetworksDbHandler
+from tortuga.db.nicsDbHandler import NicsDbHandler
+from tortuga.db.nodesDbHandler import NodesDbHandler
+from tortuga.db.resourceAdaptersDbHandler import ResourceAdaptersDbHandler
+from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
+from tortuga.db.tortugaDbApi import TortugaDbApi
+from tortuga.exceptions.adminAlreadyExists import AdminAlreadyExists
+from tortuga.exceptions.adminNotFound import AdminNotFound
+from tortuga.exceptions.configurationError import ConfigurationError
+from tortuga.exceptions.hardwareProfileAlreadyExists import \
+    HardwareProfileAlreadyExists
+from tortuga.exceptions.hardwareProfileNotFound import HardwareProfileNotFound
 from tortuga.exceptions.networkNotFound import NetworkNotFound
 from tortuga.exceptions.nicNotFound import NicNotFound
-from tortuga.exceptions.adminNotFound import AdminNotFound
-from tortuga.exceptions.adminAlreadyExists import AdminAlreadyExists
-from tortuga.exceptions.configurationError import ConfigurationError
-from tortuga.db.networksDbHandler import NetworksDbHandler
-from tortuga.db.networkDevicesDbHandler import NetworkDevicesDbHandler
-from tortuga.db.models.networkDevice import NetworkDevice
-from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
-from tortuga.config.configManager import ConfigManager
+from tortuga.exceptions.tortugaException import TortugaException
+from tortuga.objects.hardwareProfile import HardwareProfile
+from tortuga.objects.node import Node
+from tortuga.objects.tortugaObject import TortugaObjectList
 
 
 class HardwareProfileDbApi(TortugaDbApi):
@@ -525,7 +524,7 @@ class HardwareProfileDbApi(TortugaDbApi):
             if hardwareProfile.getIdleSoftwareProfileId else None
 
         if dbHardwareProfile is None:
-            dbHardwareProfile = HardwareProfile()
+            dbHardwareProfile = HardwareProfileModel()
 
         dbHardwareProfile.name = hardwareProfile.getName()
         dbHardwareProfile.description = hardwareProfile.getDescription()
