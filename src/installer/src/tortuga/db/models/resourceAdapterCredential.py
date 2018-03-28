@@ -16,10 +16,10 @@
 from sqlalchemy import Column, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import relationship
 
-from .base import BaseModel
+from .base import ModelBase
 
 
-class ResourceAdapterCredential(BaseModel):
+class ResourceAdapterCredential(ModelBase):
     __tablename__ = 'resource_adapter_credentials'
     __table_args__ = (
         UniqueConstraint('name', 'admin_id', 'key', 'resourceadapter_id'),
