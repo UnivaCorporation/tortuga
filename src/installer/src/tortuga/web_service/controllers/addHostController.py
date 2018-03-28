@@ -22,7 +22,7 @@ from tortuga.addhost.addHostManager import AddHostManager
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.notFound import NotFound
 from tortuga.addhost.utility import validate_addnodes_request
-from tortuga.db.nodeRequests import NodeRequests
+from tortuga.db.models.nodeRequest import NodeRequest
 from ..threadManager import threadManager
 from .tortugaController import TortugaController
 from .authController import AuthController, require
@@ -127,7 +127,7 @@ def enqueue_addnodes_request(session, addNodesRequest):
 
 
 def init_node_request_record(addNodesRequest):
-    request = NodeRequests(json.dumps(addNodesRequest['addNodesRequest']))
+    request = NodeRequest(json.dumps(addNodesRequest['addNodesRequest']))
     request.timestamp = datetime.datetime.utcnow()
     request.addHostSession = AddHostManager().createNewSession()
     request.action = 'ADD'

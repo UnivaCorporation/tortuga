@@ -23,9 +23,9 @@ from sqlalchemy.orm import contains_eager
 
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.db.dbManager import DbManager
-from tortuga.db.hardwareProfiles import HardwareProfiles
-from tortuga.db.nodes import Nodes
-from tortuga.db.softwareProfiles import SoftwareProfiles
+from tortuga.db.models.hardwareProfile import HardwareProfile
+from tortuga.db.models.node import Node
+from tortuga.db.models.softwareProfile import SoftwareProfile
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
 from tortuga.node.nodeManager import NodeManager
 
@@ -175,10 +175,10 @@ Description:
 
                 for tag in options.tags or []:
                     if len(tag) == 2:
-                        tag_filter.append(Nodes.tags.any(name=tag[0],
-                                                         value=tag[1]))
+                        tag_filter.append(Node.tags.any(name=tag[0],
+                                                        value=tag[1]))
                     else:
-                        tag_filter.append(Nodes.tags.any(name=tag[0]))
+                        tag_filter.append(Node.tags.any(name=tag[0]))
 
                 buf = self.__getAllNodeOutput(
                     session,
@@ -345,10 +345,10 @@ Description:
         # Perform host name only matching. Handle shell-style wildcards
         filter_spec = NodeManager().build_node_filterspec(filterName)
 
-        node_filter = [Nodes.name.like(filter_spec_item)
+        node_filter = [Node.name.like(filter_spec_item)
                        for filter_spec_item in filter_spec]
 
-        query = session.query(Nodes).filter(or_(*node_filter))
+        query = session.query(Node).filter(or_(*node_filter))
 
         filteredQuery2 = self.__filterDbQuery(
             query,
@@ -380,21 +380,21 @@ Description:
                         bInstalled=None, state=None): \
             # pylint: disable=no-self-use
         if bActiveNodesOnly:
-            filteredQuery = query.filter(Nodes.isIdle == False)  # noqa
+            filteredQuery = query.filter(Node.isIdle == False)  # noqa
         elif bIdleNodesOnly:
-            filteredQuery = query.filter(Nodes.isIdle == True)  # noqa
+            filteredQuery = query.filter(Node.isIdle == True)  # noqa
         else:
             filteredQuery = query
 
         if bNotInstalled:
             filteredQuery2 = filteredQuery.filter(
-                Nodes.state != 'Installed')
+                Node.state != 'Installed')
         elif bInstalled:
             filteredQuery2 = filteredQuery.filter(
-                Nodes.state == 'Installed')
+                Node.state == 'Installed')
         elif state is not None:
             filteredQuery2 = filteredQuery.filter(
-                Nodes.state == state)
+                Node.state == state)
         else:
             filteredQuery2 = filteredQuery
 
@@ -407,9 +407,9 @@ Description:
 
         # Preload the 'nodes' relation to allow sorted node list.
         swProfileList = filteredQuery2.order_by(
-            SoftwareProfiles.name).options(
+            SoftwareProfile.name).options(
                 contains_eager(
-                    SoftwareProfiles.nodes)).order_by(Nodes.name).all()
+                    SoftwareProfile.nodes)).order_by(Node.name).all()
 
         # Account for nodes which do not have associated software profiles
         # by adding a None entry to the software profile list. Only
@@ -421,8 +421,8 @@ Description:
             if _swProfile:
                 nodeList = _swProfile.nodes
             else:
-                query2 = session.query(Nodes).filter(
-                    Nodes.softwareprofile == None)  # noqa
+                query2 = session.query(Node).filter(
+                    Node.softwareprofile == None)  # noqa
 
                 query2 = query2.filter(or_(*tags))
 
@@ -435,7 +435,7 @@ Description:
                     state=ext_filter_spec['state'],
                 )
 
-                nodeList = filteredQuery4.order_by(Nodes.name).all()
+                nodeList = filteredQuery4.order_by(Node.name).all()
 
             if not nodeList:
                 # Do not display software profile "header" if it doesn't
@@ -459,9 +459,9 @@ Description:
 
         # Preload the 'nodes' relation to allow sorted node list.
         hwProfileList = filteredQuery2.order_by(
-            HardwareProfiles.name).options(
+            HardwareProfile.name).options(
                 contains_eager(
-                    HardwareProfiles.nodes)).order_by(Nodes.name).all()
+                    HardwareProfile.nodes)).order_by(Node.name).all()
 
         for _hwProfile in hwProfileList:
             if not _hwProfile.nodes:
@@ -493,13 +493,13 @@ Description:
         # and all nodes.
 
         if softwareprofiles:
-            query = session.query(SoftwareProfiles).filter(
-                SoftwareProfiles.name.in_(softwareprofiles)).join(Nodes)
+            query = session.query(SoftwareProfile).filter(
+                SoftwareProfile.name.in_(softwareprofiles)).join(Node)
         elif hardwareprofiles:
-            query = session.query(HardwareProfiles).filter(
-                HardwareProfiles.name.in_(hardwareprofiles)).join(Nodes)
+            query = session.query(HardwareProfile).filter(
+                HardwareProfile.name.in_(hardwareprofiles)).join(Node)
         else:
-            query = session.query(SoftwareProfiles).join(Nodes)
+            query = session.query(SoftwareProfile).join(Node)
 
         if tags:
             query = query.filter(or_(*tags))
@@ -540,7 +540,7 @@ Description:
                                             state=None):
         buf = ''
 
-        query = session.query(HardwareProfiles).join(Nodes)
+        query = session.query(HardwareProfile).join(Node)
 
         filteredQuery2 = self.__filterDbQuery(
             query,
@@ -553,9 +553,9 @@ Description:
 
         # Preload the 'nodes' relation to allow sorted node list.
         dbHardwareProfiles = filteredQuery2.order_by(
-            HardwareProfiles.name).options(
+            HardwareProfile.name).options(
                 contains_eager(
-                    HardwareProfiles.nodes)).order_by(Nodes.name).all()
+                    HardwareProfile.nodes)).order_by(Node.name).all()
 
         for dbHardwareProfile in dbHardwareProfiles:
             buf += self.__getHardwareProfileDump(

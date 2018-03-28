@@ -17,7 +17,7 @@
 # pylint: disable=no-member
 
 from tortuga.db.dbManager import DbManager
-from tortuga.db.kits import Kits
+from tortuga.db.models.kit import Kit
 from tortuga.cli.tortugaCli import TortugaCli
 
 
@@ -27,7 +27,7 @@ class RemoteRepoListApp(TortugaCli):
 
         session = DbManager().openSession()
 
-        for dbKit in session.query(Kits).all():
+        for dbKit in session.query(Kit).all():
             print(dbKit.name)
 
             if not dbKit.sources:

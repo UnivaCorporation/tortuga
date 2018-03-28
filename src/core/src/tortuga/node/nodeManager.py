@@ -17,31 +17,31 @@
 import os
 import socket
 import time
-from typing import Optional, NoReturn
+from typing import NoReturn, Optional
 
 from sqlalchemy.orm.session import Session
-from tortuga.objects.tortugaObjectManager import TortugaObjectManager
-from tortuga.db.nodeDbApi import NodeDbApi
-from tortuga.db.hardwareProfileDbApi import HardwareProfileDbApi
-from tortuga.os_utility import osUtility
-from tortuga.config.configManager import ConfigManager
-from tortuga.resourceAdapter import resourceAdapterFactory
-from tortuga.san import san
-from tortuga.os_utility import tortugaSubprocess
-from tortuga.addhost.addHostServerLocal import AddHostServerLocal
+
 from tortuga.addhost.addHostManager import AddHostManager
-from tortuga.exceptions.configurationError import ConfigurationError
-from tortuga.db.nodes import Nodes
+from tortuga.addhost.addHostServerLocal import AddHostServerLocal
+from tortuga.config.configManager import ConfigManager
 from tortuga.db.dbManager import DbManager
+from tortuga.db.hardwareProfileDbApi import HardwareProfileDbApi
+from tortuga.db.models.hardwareProfile import HardwareProfile
+from tortuga.db.models.node import Node
+from tortuga.db.models.softwareProfile import SoftwareProfile
+from tortuga.db.nodeDbApi import NodeDbApi
 from tortuga.db.nodesDbHandler import NodesDbHandler
+from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
+from tortuga.exceptions.configurationError import ConfigurationError
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.exceptions.tortugaException import TortugaException
-from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
-from tortuga.kit.actions import KitActionsManager
 from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
 from tortuga.exceptions.volumeDoesNotExist import VolumeDoesNotExist
-from tortuga.db.hardwareProfiles import HardwareProfiles
-from tortuga.db.softwareProfiles import SoftwareProfiles
+from tortuga.kit.actions import KitActionsManager
+from tortuga.objects.tortugaObjectManager import TortugaObjectManager
+from tortuga.os_utility import osUtility, tortugaSubprocess
+from tortuga.resourceAdapter import resourceAdapterFactory
+from tortuga.san import san
 
 
 class NodeManager(TortugaObjectManager): \
@@ -76,10 +76,10 @@ class NodeManager(TortugaObjectManager): \
                 'Hardware profile requires host names to be set')
 
     def createNewNode(self, session: Session, addNodeRequest: dict,
-                      dbHardwareProfile: HardwareProfiles,
-                      dbSoftwareProfile: Optional[SoftwareProfiles] = None,
+                      dbHardwareProfile: HardwareProfile,
+                      dbSoftwareProfile: Optional[SoftwareProfile] = None,
                       validateIp: bool = True, bGenerateIp: bool = True,
-                      dns_zone: Optional[str] = None) -> Nodes:
+                      dns_zone: Optional[str] = None) -> Node:
         """
         Convert the addNodeRequest into a Nodes object
 
@@ -97,8 +97,8 @@ class NodeManager(TortugaObjectManager): \
                 dbSoftwareProfile.name if dbSoftwareProfile else '(none)',
                 validateIp, bGenerateIp))
 
-        # This is where the Nodes() object is first created.
-        node = Nodes()
+        # This is where the Node() object is first created.
+        node = Node()
 
         # Set the default node state
         node.state = 'Discovered'

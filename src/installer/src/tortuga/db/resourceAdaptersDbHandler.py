@@ -17,7 +17,7 @@
 from sqlalchemy.orm.exc import NoResultFound
 
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
-from tortuga.db.resourceAdapters import ResourceAdapters
+from tortuga.db.models.resourceAdapter import ResourceAdapter
 from tortuga.exceptions.resourceAdapterNotFound \
     import ResourceAdapterNotFound
 from tortuga.exceptions.resourceAdapterInUse import ResourceAdapterInUse
@@ -26,7 +26,7 @@ from tortuga.exceptions.resourceAdapterInUse import ResourceAdapterInUse
 class ResourceAdaptersDbHandler(TortugaDbObjectHandler):
     def addResourceAdapter(self, session, name, kitId): \
             # pylint: disable=unused-argument,no-self-use
-        dbResourceAdapter = ResourceAdapters(name, kitId)
+        dbResourceAdapter = ResourceAdapter(name, kitId)
         session.add(dbResourceAdapter)
         return dbResourceAdapter
 
@@ -41,8 +41,8 @@ class ResourceAdaptersDbHandler(TortugaDbObjectHandler):
                 'Retrieving resource adapter [%s]' % (name))
 
             # Resource adapters are named uniquely
-            return session.query(ResourceAdapters).filter(
-                ResourceAdapters.name == name).one()
+            return session.query(ResourceAdapter).filter(
+                ResourceAdapter.name == name).one()
         except NoResultFound:
             raise ResourceAdapterNotFound(
                 'Resource adapter [%s] not found' % (name))
@@ -70,4 +70,4 @@ class ResourceAdaptersDbHandler(TortugaDbObjectHandler):
 
     def getResourceAdapterList(self, session): \
             # pylint: disable=unused-argument,no-self-use
-        return session.query(ResourceAdapters).all()
+        return session.query(ResourceAdapter).all()

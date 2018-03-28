@@ -29,7 +29,7 @@ from tortuga.wsapi.addHostWsApi import AddHostWsApi
 from tortuga.exceptions.httpErrorException import HttpErrorException
 from tortuga.exceptions.urlErrorException import UrlErrorException
 from tortuga.db.dbManager import DbManager
-from tortuga.db.nodeRequests import NodeRequests
+from tortuga.db.models.nodeRequest import NodeRequest
 
 
 class AddNodes(TortugaCli): \
@@ -358,8 +358,8 @@ Description:
             running = True
 
             while running:
-                request = session.query(NodeRequests).filter(
-                    NodeRequests.addHostSession == addHostSession).first()
+                request = session.query(NodeRequest).filter(
+                    NodeRequest.addHostSession == addHostSession).first()
 
                 if request.state == 'error':
                     sys.stderr.write(request.message + '\n')

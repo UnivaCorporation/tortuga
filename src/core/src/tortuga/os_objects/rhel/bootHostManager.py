@@ -27,9 +27,9 @@ from tortuga.os_objects.osBootHostManagerCommon \
     import OsBootHostManagerCommon
 from tortuga.resourceAdapter.utility import get_provisioning_nic
 from tortuga.utility.bootParameters import getBootParameters
-from tortuga.db.nodes import Nodes
-from tortuga.db.softwareProfiles import SoftwareProfiles
-from tortuga.db.hardwareProfiles import HardwareProfiles
+from tortuga.db.models.node import Node
+from tortuga.db.models.softwareProfile import SoftwareProfile
+from tortuga.db.models.hardwareProfile import HardwareProfile
 
 
 class BootHostManager(OsBootHostManagerCommon):
@@ -230,8 +230,8 @@ label Reinstall
 
         self.write_other_boot_files(node, hwprofile, swprofile)
 
-    def _writeKickstartFile(self, node: Nodes, hardwareprofile: HardwareProfiles,
-                            softwareprofile: SoftwareProfiles):
+    def _writeKickstartFile(self, node: Node, hardwareprofile: HardwareProfile,
+                            softwareprofile: SoftwareProfile):
         """
         Generate kickstart file for specified node
 

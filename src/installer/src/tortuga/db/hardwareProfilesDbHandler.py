@@ -18,7 +18,7 @@ from sqlalchemy import or_, and_
 from sqlalchemy.orm.exc import NoResultFound
 
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
-from tortuga.db.hardwareProfiles import HardwareProfiles
+from tortuga.db.models.hardwareProfile import HardwareProfile
 from tortuga.exceptions.hardwareProfileNotFound \
     import HardwareProfileNotFound
 from tortuga.db import networksDbHandler
@@ -48,8 +48,8 @@ class HardwareProfilesDbHandler(TortugaDbObjectHandler):
         self.getLogger().debug('Retrieving hardware profile [%s]' % (name))
 
         try:
-            return session.query(HardwareProfiles).filter(
-                HardwareProfiles.name == name).one()
+            return session.query(HardwareProfile).filter(
+                HardwareProfile.name == name).one()
         except NoResultFound:
             raise HardwareProfileNotFound(
                 'Hardware profile [%s] not found.' % (name))
@@ -62,7 +62,7 @@ class HardwareProfilesDbHandler(TortugaDbObjectHandler):
         self.getLogger().debug(
             'Retrieving hardware profile ID [%s]' % (_id))
 
-        dbHardwareProfile = session.query(HardwareProfiles).get(_id)
+        dbHardwareProfile = session.query(HardwareProfile).get(_id)
 
         if not dbHardwareProfile:
             raise HardwareProfileNotFound(
@@ -83,13 +83,13 @@ class HardwareProfilesDbHandler(TortugaDbObjectHandler):
         for tag in tags or []:
             if len(tag) == 2:
                 searchspec.append(
-                    and_(HardwareProfiles.tags.any(name=tag[0]),
-                         HardwareProfiles.tags.any(value=tag[1])))
+                    and_(HardwareProfile.tags.any(name=tag[0]),
+                         HardwareProfile.tags.any(value=tag[1])))
             else:
-                searchspec.append(HardwareProfiles.tags.any(name=tag[0]))
+                searchspec.append(HardwareProfile.tags.any(name=tag[0]))
 
-        return session.query(HardwareProfiles).filter(
-            or_(*searchspec)).order_by(HardwareProfiles.name).all()
+        return session.query(HardwareProfile).filter(
+            or_(*searchspec)).order_by(HardwareProfile.name).all()
 
     def setIdleSoftwareProfile(self, dbHardwareProfile,
                                dbSoftwareProfile=None): \

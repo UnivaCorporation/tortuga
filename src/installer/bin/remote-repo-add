@@ -17,8 +17,8 @@
 import sys
 
 from tortuga.db.dbManager import DbManager
-from tortuga.db.kits import Kits
-from tortuga.db.kitSources import KitSources
+from tortuga.db.models.kit import Kit
+from tortuga.db.models.kitSource import KitSource
 from tortuga.cli.tortugaCli import TortugaCli
 
 
@@ -35,8 +35,8 @@ class RemoteRepoAddApp(TortugaCli):
 
         session = DbManager().openSession()
 
-        dbKit = session.query(Kits).filter(
-            Kits.name == self.getOptions().kitspec).one()
+        dbKit = session.query(Kit).filter(
+            Kit.name == self.getOptions().kitspec).one()
 
         # Check for existing entry
         for dbKitSource in dbKit.sources:
@@ -49,7 +49,7 @@ class RemoteRepoAddApp(TortugaCli):
                 sys.exit(1)
 
         dbKit.sources.append(
-            KitSources(
+            KitSource(
                 url=self.getOptions().url,
                 description=self.getOptions().description))
 

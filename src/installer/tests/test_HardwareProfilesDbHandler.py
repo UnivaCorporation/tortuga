@@ -14,8 +14,8 @@
 
 import unittest
 import pytest
-from tortuga.db.tags import Tags
-from tortuga.db.hardwareProfiles import HardwareProfiles
+from tortuga.db.models.tag import Tag
+from tortuga.db.models.hardwareProfile import HardwareProfile
 from tortuga.db.hardwareProfilesDbHandler \
     import HardwareProfilesDbHandler
 
@@ -90,15 +90,15 @@ class TestHardwareProfilesDbHandler(unittest.TestCase):
 
 
 def get_tags():
-    tag1 = Tags('tag1', 'value1')
-    tag2 = Tags('tag2', 'value2')
+    tag1 = Tag('tag1', 'value1')
+    tag2 = Tag('tag2', 'value2')
 
     return [tag1, tag2]
 
 
 def get_hardware_profiles():
-    hardwareprofile1 = HardwareProfiles('profile1')
-    hardwareprofile2 = HardwareProfiles('profile2')
+    hardwareprofile1 = HardwareProfile('profile1')
+    hardwareprofile2 = HardwareProfile('profile2')
 
     return [hardwareprofile1, hardwareprofile2]
 

@@ -37,7 +37,7 @@ from tortuga.resourceAdapter.utility import get_provisioning_nic, \
     get_provisioning_nics
 from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
 from tortuga.exceptions.parameterNotFound import ParameterNotFound
-from tortuga.db.nodes import Nodes
+from tortuga.db.models.node import Node
 
 
 def initialize_nics(installer_provisioning_nic, hardwareprofilenetworks,
@@ -238,7 +238,7 @@ class Default(ResourceAdapter):
         return None
 
     def start(self, addNodesRequest, dbSession, dbHardwareProfile,
-              dbSoftwareProfile=None) -> List[Nodes]:
+              dbSoftwareProfile=None) -> List[Node]:
         """
         Raises:
             CommandFailed
@@ -319,7 +319,7 @@ class Default(ResourceAdapter):
 
     def __add_predefined_nodes(self, addNodesRequest: dict, dbSession,
                                dbHardwareProfile, dbSoftwareProfile,
-                               dns_zone: str = None) -> List[Nodes]:
+                               dns_zone: str = None) -> List[Node]:
         nodeDetails = addNodesRequest['nodeDetails'] \
             if 'nodeDetails' in addNodesRequest else []
 

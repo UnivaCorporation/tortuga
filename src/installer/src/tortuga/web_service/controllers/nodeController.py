@@ -19,7 +19,7 @@ import cherrypy
 
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.addhost.addHostManager import AddHostManager
-from tortuga.db.nodeRequests import NodeRequests
+from tortuga.db.models.nodeRequest import NodeRequest
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 from ..threadManager import threadManager
 from .common import parse_tag_query_string
@@ -680,7 +680,7 @@ def enqueue_delete_hosts_request(session, nodespec):
 
 
 def init_node_request_record(nodespec):
-    request = NodeRequests(nodespec)
+    request = NodeRequest(nodespec)
     request.timestamp = datetime.datetime.utcnow()
     request.addHostSession = AddHostManager().createNewSession()
     request.action = 'DELETE'
