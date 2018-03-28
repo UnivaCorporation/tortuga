@@ -22,4 +22,7 @@ from . import node
 from . import hardwareProfile
 from . import partition
 from . import softwareProfile
-
+from . import resourceAdapter
+from . import hardwareProfileProvisioningNic
+from . import package
+from . import nodeRequest
