@@ -26,3 +26,4 @@ from . import resourceAdapter
 from . import hardwareProfileProvisioningNic
 from . import package
 from . import nodeRequest
+from . import resourceAdapterCredential
