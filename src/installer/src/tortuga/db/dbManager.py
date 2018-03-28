@@ -24,8 +24,8 @@ import sqlalchemy.orm
 
 from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.dbError import DbError
-# from tortuga.kit.loader import load_kits
-# from tortuga.kit.registry import get_all_kit_installers
+from tortuga.kit.loader import load_kits
+from tortuga.kit.registry import get_all_kit_installers
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.types import Singleton
 # from .tables import get_all_table_mappers
@@ -81,10 +81,10 @@ class DbManagerBase(TortugaObjectManager):
         #
         # Make sure all kit table mappers have been registered
         #
-        # load_kits()
-        # for kit_installer_class in get_all_kit_installers():
-        #     kit_installer = kit_installer_class()
-        #     kit_installer.register_database_table_mappers()
+        load_kits()
+        for kit_installer_class in get_all_kit_installers():
+            kit_installer = kit_installer_class()
+            kit_installer.register_database_table_mappers()
         #
         # Map all tables that haven't yet been mapped
         #
