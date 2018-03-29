@@ -42,6 +42,8 @@ from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.os_utility import osUtility, tortugaSubprocess
 from tortuga.resourceAdapter import resourceAdapterFactory
 from tortuga.san import san
+from tortuga.db.models.node import Node as NodeModel
+from tortuga.schema import NodeSchema
 
 
 class NodeManager(TortugaObjectManager): \
@@ -165,6 +167,24 @@ class NodeManager(TortugaObjectManager): \
         node.setVcpus(ResourceAdapterClass().get_node_vcpus(node.getName()))
 
         return node
+
+    def getNode_json(self, session: Session, name: str) -> NodeModel:
+        """
+        Get node by name
+        """
+        node = NodesDbHandler().getNode(session, name)
+
+        node_dict = NodeSchema().dump(node).data
+
+        if node.hardwareprofile.resourceadapter:
+            resource_adapter_api = resourceAdapterFactory.getApi(
+                node.hardwareprofile.resourceadapter.name
+            )
+
+            # Query vcpus from resource adapter
+            node_dict['vcpus'] = resource_adapter_api.get_node_vcpus(name)
+
+        return node_dict
 
     def getNodeById(self, nodeId, optionDict=None):
         """
