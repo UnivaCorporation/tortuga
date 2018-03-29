@@ -52,8 +52,9 @@ class Node(ModelBase):
 
     nics = relationship('Nic', backref='node', lazy=False)
 
-    parentnode = relationship('Node',
-                              backref=backref('children', remote_side=[id]))
+    children = relationship('Node',
+                            backref=backref('parentnode',
+                                            remote_side=[id]))
 
     tags = relationship(
         'Tag',
