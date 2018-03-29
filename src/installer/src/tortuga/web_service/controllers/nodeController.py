@@ -25,9 +25,11 @@ from tortuga.exceptions.nodeNotFound import NodeNotFound
 
 from .. import app
 from ..threadManager import threadManager
-from .authController import AuthController, require
+from .authController import require
 from .common import parse_tag_query_string
 from .tortugaController import TortugaController
+from tortuga.db.nodesDbHandler import NodesDbHandler
+from tortuga.schema import NodeSchema
 
 
 class NodeController(TortugaController):
@@ -166,12 +168,8 @@ class NodeController(TortugaController):
             tagspec.extend(parse_tag_query_string(kwargs['tag']))
 
         try:
-            # nodeList = app.node_api.getNodeList(tags=tagspec)
-
-            from tortuga.db.nodesDbHandler import NodesDbHandler
-            from tortuga.schema import NodeSchema
-
-            nodeList = NodesDbHandler().getNodeList(cherrypy.request.db, tags=tagspec)
+            nodeList = NodesDbHandler().getNodeList(
+                cherrypy.request.db, tags=tagspec)
 
             response = {
                 'nodes': NodeSchema().dump(nodeList, many=True).data
@@ -238,11 +236,17 @@ class NodeController(TortugaController):
 
         try:
             if ip == '127.0.0.1' or ip == '::1':
-                node = app.node_api.getInstallerNode()
+                node = NodesDbHandler().getNode(
+                    cherrypy.request.db,
+                    app.cm.getInstaller(),
+                )
             else:
-                node = app.node_api.getNodeByIp(ip)
+                node = NodesDbHandler().getNodeByIp(
+                    cherrypy.request.db,
+                    ip
+                )
 
-            response = {'node': node.getCleanDict()}
+            response = {'node': NodeSchema().dump(node).data}
         except NodeNotFound as ex:
             self.handleException(ex)
             code = self.getTortugaStatusCode(ex)
