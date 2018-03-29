@@ -22,7 +22,8 @@ from tortuga.db.models.hardwareProfile import \
     HardwareProfile as HardwareProfileModel
 from tortuga.db.models.kit import Kit as KitModel
 from tortuga.db.models.network import Network as NetworkModel
-from tortuga.db.models.networkDevice import NetworkDevice as NetworkDeviceModel
+from tortuga.db.models.networkDevice \
+    import NetworkDevice as NetworkDeviceModel
 from tortuga.db.models.nic import Nic as NicModel
 from tortuga.db.models.node import Node as NodeModel
 from tortuga.db.models.operatingSystem import \
