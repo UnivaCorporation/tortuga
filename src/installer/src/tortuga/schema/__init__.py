@@ -34,6 +34,8 @@ from tortuga.db.models.osFamilyComponent import \
     OsFamilyComponent as OsFamilyComponentModel
 from tortuga.db.models.resourceAdapter import \
     ResourceAdapter as ResourceAdapterModel
+from tortuga.db.models.resourceAdapterCredential import \
+    ResourceAdapterCredential as ResourceAdapterCredentialModel
 from tortuga.db.models.softwareProfile import \
     SoftwareProfile as SoftwareProfileModel
 from tortuga.db.models.tag import Tag as TagModel
@@ -63,7 +65,10 @@ class NetworkDeviceSchema(ModelSchema):
 
 
 class NicSchema(ModelSchema):
-    networkdevice = fields.Nested('NetworkDeviceSchema')
+    network = fields.Nested('NetworkSchema',
+                            exclude=('nics', 'hardwareprofilenetworks'))
+    networkdevice = fields.Nested('NetworkDeviceSchema',
+                                  only=('id', 'name'))
 
     class Meta:
         model = NicModel
@@ -103,7 +108,14 @@ class ComponentSchema(ModelSchema):
         model = ComponentModel
 
 
+class ResourceAdapterCredentialSchema(ModelSchema):
+    class Meta:
+        model = ResourceAdapterCredentialModel
+
+
 class ResourceAdapterSchema(ModelSchema):
+    credentials = fields.Nested('ResourceAdapterCredentialSchema')
+
     class Meta:
         model = ResourceAdapterModel
 
@@ -111,15 +123,22 @@ class ResourceAdapterSchema(ModelSchema):
 class NodeSchema(ModelSchema):
     softwareprofile = fields.Nested('SoftwareProfileSchema',
                                     only=('id', 'name'))
-    hardwareprofile = fields.Nested('HardwareProfileSchema',
-                                    only=('id', 'name',
-                                          'resourceadapter'))
-    nics = fields.Nested('NicSchema', many=True, exclude=('nodes',))
+    hardwareprofile = fields.Nested(
+        'HardwareProfileSchema',
+        only=('id', 'name', 'resourceadapter'),
+        exclude=('resourceadapter.hardwareprofiles',
+                 'resourceadapter.credentials',
+                 'resourceadapter.kit')
+    )
+
+    nics = fields.Nested('NicSchema', many=True, exclude=('node',))
 
     vcpus = fields.Integer(default=1)
 
     tags = fields.Nested('TagSchema',
                          only=('id', 'name', 'value'), many=True)
+
+    parentnode = fields.Nested('NodeSchema', only=('id', 'name'))
 
     class Meta:
         model = NodeModel
@@ -153,6 +172,8 @@ class HardwareProfileSchema(ModelSchema):
 
     tags = fields.Nested('TagSchema',
                          only=('id', 'name', 'value'), many=True)
+
+    resourceadapter = fields.Nested('ResourceAdapterSchema')
 
     class Meta:
         model = HardwareProfileModel
