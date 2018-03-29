@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
-from sqlalchemy.ext.indexable import index_property
+# pylint: disable=too-few-public-methods
+
+from sqlalchemy import Column, ForeignKey, Integer
 from sqlalchemy.orm import relationship
 
 from .base import ModelBase

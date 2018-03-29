@@ -12,11 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=too-few-public-methods
+
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Table
-from sqlalchemy.ext.indexable import index_property
 from sqlalchemy.orm import relationship
 
 from .base import ModelBase
+
 
 hardwareprofile_admins = Table(
     'hardwareprofile_admins',

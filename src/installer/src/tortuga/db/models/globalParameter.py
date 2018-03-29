@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from sqlalchemy import Column, Integer, Sequence, String
+# pylint: disable=too-few-public-methods
+
+from sqlalchemy import Column, Integer, String
 
 from .base import ModelBase
 
@@ -20,7 +22,7 @@ from .base import ModelBase
 class GlobalParameter(ModelBase):
     __tablename__ = 'global_parameters'
 
-    id  = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True)
     name = Column(String(255), nullable=False, unique=True)
     value = Column(String(255))
     description = Column(String(255))
