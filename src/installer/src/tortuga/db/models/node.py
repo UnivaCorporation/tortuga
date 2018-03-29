@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=too-few-public-methods
+
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.ext.indexable import index_property
 from sqlalchemy.orm import relationship, backref
@@ -58,7 +60,7 @@ class Node(ModelBase):
         secondary='node_tags',
         backref='nodes'
     )
-    
+
     def __init__(self, name=None):
         super().__init__()
 

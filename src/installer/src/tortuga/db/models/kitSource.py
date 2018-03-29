@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=too-few-public-methods
+
 from sqlalchemy import Column, ForeignKey, Integer, String
 
 from .base import ModelBase
@@ -26,7 +28,8 @@ class KitSource(ModelBase):
     url = Column(String(255))
 
     def __init__(self, name=None, version=None, iteration=None,
-                 description=None, isOs=None, isRemovable=None):
+                 description=None, isOs=None, isRemovable=None): \
+            # pylint: disable=too-many-arguments
         super().__init__()
 
         self.name = name

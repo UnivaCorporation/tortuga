@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=too-few-public-methods
+
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Table
 from sqlalchemy.orm import relationship
 
@@ -21,11 +23,12 @@ softwareprofile_admins = Table(
     'softwareprofile_admins',
     ModelBase.metadata,
     Column('softwareProfileId', Integer,
-        ForeignKey('softwareprofiles.id'), nullable=False,
-        primary_key=True),
+           ForeignKey('softwareprofiles.id'), nullable=False,
+           primary_key=True),
     Column('adminId', Integer, ForeignKey('admins.id'),
-        nullable=False, primary_key=True)
+           nullable=False, primary_key=True)
 )
+
 
 class SoftwareProfile(ModelBase):
     __tablename__ = 'softwareprofiles'
@@ -54,15 +57,17 @@ class SoftwareProfile(ModelBase):
     os = relationship('OperatingSystem', lazy=False)
 
     packages = relationship(
-                'Package', cascade="all,delete-orphan",
-                backref='softwareprofiles')
+        'Package',
+        cascade="all,delete-orphan",
+        backref='softwareprofiles')
 
     partitions = relationship('Partition', cascade="all,delete-orphan")
 
     hardwareprofiles = relationship(
-                'HardwareProfile',
-                secondary='software_uses_hardware',
-                lazy=False, backref='mappedsoftwareprofiles')
+        'HardwareProfile',
+        secondary='software_uses_hardware',
+        lazy=False,
+        backref='mappedsoftwareprofiles')
 
     hwprofileswithidle = relationship(
         'HardwareProfile',
