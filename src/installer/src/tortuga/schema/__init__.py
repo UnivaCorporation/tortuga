@@ -38,7 +38,7 @@ from tortuga.db.models.networkDevice import NetworkDevice as NetworkDeviceModel
 
 
 class OperatingSystemSchema(ModelSchema):
-    family = fields.Nested('OperatingSystemFamilySchema')
+    family = fields.Nested('OperatingSystemFamilySchema', exclude=('children',))
 
     class Meta:
         model = OperatingSystemModel
