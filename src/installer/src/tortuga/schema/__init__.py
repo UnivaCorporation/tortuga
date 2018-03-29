@@ -16,29 +16,37 @@
 
 from marshmallow import fields
 from marshmallow_sqlalchemy import ModelSchema
-from tortuga.db.models.node import Node as NodeModel
-from tortuga.db.models.softwareProfile \
-    import SoftwareProfile as SoftwareProfileModel
-from tortuga.db.models.hardwareProfile \
-    import HardwareProfile as HardwareProfileModel
+
 from tortuga.db.models.component import Component as ComponentModel
+from tortuga.db.models.hardwareProfile import \
+    HardwareProfile as HardwareProfileModel
 from tortuga.db.models.kit import Kit as KitModel
-from tortuga.db.models.nic import Nic as NicModel
 from tortuga.db.models.network import Network as NetworkModel
-from tortuga.db.models.operatingSystem \
-    import OperatingSystem as OperatingSystemModel
-from tortuga.db.models.operatingSystemFamily \
-    import OperatingSystemFamily as OperatingSystemFamilyModel
-from tortuga.db.models.osComponent import OsComponent as OsComponentModel
-from tortuga.db.models.osFamilyComponent \
-    import OsFamilyComponent as OsFamilyComponentModel
-from tortuga.db.models.resourceAdapter \
-    import ResourceAdapter as ResourceAdapterModel
 from tortuga.db.models.networkDevice import NetworkDevice as NetworkDeviceModel
+from tortuga.db.models.nic import Nic as NicModel
+from tortuga.db.models.node import Node as NodeModel
+from tortuga.db.models.operatingSystem import \
+    OperatingSystem as OperatingSystemModel
+from tortuga.db.models.operatingSystemFamily import \
+    OperatingSystemFamily as OperatingSystemFamilyModel
+from tortuga.db.models.osComponent import OsComponent as OsComponentModel
+from tortuga.db.models.osFamilyComponent import \
+    OsFamilyComponent as OsFamilyComponentModel
+from tortuga.db.models.resourceAdapter import \
+    ResourceAdapter as ResourceAdapterModel
+from tortuga.db.models.softwareProfile import \
+    SoftwareProfile as SoftwareProfileModel
+from tortuga.db.models.tag import Tag as TagModel
+
+
+class TagSchema(ModelSchema):
+    class Meta:
+        model = TagModel
 
 
 class OperatingSystemSchema(ModelSchema):
-    family = fields.Nested('OperatingSystemFamilySchema', exclude=('children',))
+    family = fields.Nested('OperatingSystemFamilySchema',
+                           exclude=('children',))
 
     class Meta:
         model = OperatingSystemModel
@@ -75,6 +83,7 @@ class KitSchema(ModelSchema):
 
 class OsComponentSchema(ModelSchema):
     os = fields.Nested('OperatingSystem')
+
     class Meta:
         model = OsComponentModel
 
@@ -109,6 +118,9 @@ class NodeSchema(ModelSchema):
 
     vcpus = fields.Integer(default=1)
 
+    tags = fields.Nested('TagSchema',
+                         only=('id', 'name', 'value'), many=True)
+
     class Meta:
         model = NodeModel
 
@@ -125,6 +137,9 @@ class SoftwareProfileSchema(ModelSchema):
 
     os = fields.Nested('OperatingSystemSchema')
 
+    tags = fields.Nested('TagSchema',
+                         only=('id', 'name', 'value'), many=True)
+
     class Meta:
         model = SoftwareProfileModel
 
@@ -135,6 +150,9 @@ class HardwareProfileSchema(ModelSchema):
 
     mappedsoftwareprofiles = fields.Nested('SoftwareProfileSchema',
                                            only=('id', 'name'), many=True)
+
+    tags = fields.Nested('TagSchema',
+                         only=('id', 'name', 'value'), many=True)
 
     class Meta:
         model = HardwareProfileModel
