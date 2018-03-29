@@ -173,9 +173,19 @@ class SoftwareProfileController(TortugaController):
             cherrypy.request.db, tags=tagspec
         )
 
+        # return a simplified software profile list without explicitly
+        # dumping relationships
         response = {
-            'softwareprofiles': SoftwareProfileSchema().dump(
-                result, many=True).data
+            'softwareprofiles': SoftwareProfileSchema(
+                exclude=(
+                    'admins',
+                    'packages',
+                    'children',
+                    'hwprofileswithidle',
+                    'components',
+                    'nodes',
+                    'partitions')
+                ).dump(result, many=True).data
         }
 
         return self.formatResponse(response)
