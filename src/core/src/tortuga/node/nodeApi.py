@@ -24,6 +24,7 @@ from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.node.nodeManager import NodeManager
 from tortuga.utility.tortugaApi import TortugaApi
 from tortuga.objects.node import Node
+from tortuga.db.models.node import Node as NodeModel
 
 
 class NodeApi(TortugaApi):
@@ -75,6 +76,20 @@ class NodeApi(TortugaApi):
         """Get node id by name"""
         try:
             return self._nodeManager.getNode(name, optionDict=optionDict)
+        except TortugaException:
+            raise
+        except Exception as ex:
+            self.getLogger().exception(
+                'Fatal error retrieving node [{}]'.format(name))
+
+            raise TortugaException(exception=ex)
+
+    def getNode_json(self, session: Session, name: str) -> NodeModel:
+        """
+        Get node by name
+        """
+        try:
+            return self._nodeManager.getNode_json(session, name)
         except TortugaException:
             raise
         except Exception as ex:

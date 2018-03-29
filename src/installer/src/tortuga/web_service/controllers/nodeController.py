@@ -188,10 +188,9 @@ class NodeController(TortugaController):
         """Return node information"""
 
         try:
-            node = app.node_api.getNode(name)
-
             response = {
-                'node': node.getCleanDict(),
+                'node': app.node_api.getNode_json(
+                    cherrypy.request.db, name),
             }
         except NodeNotFound as ex:
             self.handleException(ex)
