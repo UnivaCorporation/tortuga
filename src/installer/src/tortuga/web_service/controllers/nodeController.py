@@ -189,8 +189,8 @@ class NodeController(TortugaController):
 
         try:
             response = {
-                'node': app.node_api.getNode_json(
-                    cherrypy.request.db, name),
+                'node': NodeSchema().dump(app.node_api.getNode2(
+                    cherrypy.request.db, name)).data,
             }
         except NodeNotFound as ex:
             self.handleException(ex)

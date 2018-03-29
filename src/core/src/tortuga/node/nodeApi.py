@@ -84,12 +84,12 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def getNode_json(self, session: Session, name: str) -> NodeModel:
+    def getNode2(self, session: Session, name: str) -> NodeModel:
         """
         Get node by name
         """
         try:
-            return self._nodeManager.getNode_json(session, name)
+            return self._nodeManager.getNode2(session, name)
         except TortugaException:
             raise
         except Exception as ex:
