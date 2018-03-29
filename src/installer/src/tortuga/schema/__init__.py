@@ -85,6 +85,7 @@ class OsFamilyComponentSchema(ModelSchema):
     class Meta:
         model = OsFamilyComponentModel
 
+
 class ComponentSchema(ModelSchema):
     kit = fields.Nested('KitSchema', exclude=('components',))
     os = fields.Nested('OperatingSystemSchema')
@@ -105,6 +106,8 @@ class NodeSchema(ModelSchema):
                                     only=('id', 'name',
                                           'resourceadapter'))
     nics = fields.Nested('NicSchema', many=True, exclude=('nodes',))
+
+    vcpus = fields.Integer(default=1)
 
     class Meta:
         model = NodeModel
