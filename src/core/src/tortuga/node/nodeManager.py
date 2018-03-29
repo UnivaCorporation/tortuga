@@ -168,13 +168,11 @@ class NodeManager(TortugaObjectManager): \
 
         return node
 
-    def getNode_json(self, session: Session, name: str) -> NodeModel:
+    def getNode2(self, session: Session, name: str) -> NodeModel:
         """
         Get node by name
         """
         node = NodesDbHandler().getNode(session, name)
-
-        node_dict = NodeSchema().dump(node).data
 
         if node.hardwareprofile.resourceadapter:
             resource_adapter_api = resourceAdapterFactory.getApi(
@@ -182,9 +180,9 @@ class NodeManager(TortugaObjectManager): \
             )
 
             # Query vcpus from resource adapter
-            node_dict['vcpus'] = resource_adapter_api.get_node_vcpus(name)
+            node.vcpus = resource_adapter_api.get_node_vcpus(name)
 
-        return node_dict
+        return node
 
     def getNodeById(self, nodeId, optionDict=None):
         """
