@@ -20,16 +20,16 @@ import cherrypy
 
 from tortuga.addhost.addHostManager import AddHostManager
 from tortuga.db.models.nodeRequest import NodeRequest
+from tortuga.db.nodesDbHandler import NodesDbHandler
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.nodeNotFound import NodeNotFound
+from tortuga.schema import NodeSchema
 
 from .. import app
 from ..threadManager import threadManager
 from .authController import require
 from .common import parse_tag_query_string
 from .tortugaController import TortugaController
-from tortuga.db.nodesDbHandler import NodesDbHandler
-from tortuga.schema import NodeSchema
 
 
 class NodeController(TortugaController):
