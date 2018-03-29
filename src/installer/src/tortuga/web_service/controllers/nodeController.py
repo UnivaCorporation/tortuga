@@ -15,17 +15,19 @@
 # pylint: disable=no-member
 
 import datetime
+
 import cherrypy
 
-from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.addhost.addHostManager import AddHostManager
 from tortuga.db.models.nodeRequest import NodeRequest
+from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.nodeNotFound import NodeNotFound
-from ..threadManager import threadManager
-from .common import parse_tag_query_string
-from .authController import AuthController, require
-from .tortugaController import TortugaController
+
 from .. import app
+from ..threadManager import threadManager
+from .authController import AuthController, require
+from .common import parse_tag_query_string
+from .tortugaController import TortugaController
 
 
 class NodeController(TortugaController):
@@ -164,10 +166,15 @@ class NodeController(TortugaController):
             tagspec.extend(parse_tag_query_string(kwargs['tag']))
 
         try:
-            nodeList = app.node_api.getNodeList(tags=tagspec)
+            # nodeList = app.node_api.getNodeList(tags=tagspec)
+
+            from tortuga.db.nodesDbHandler import NodesDbHandler
+            from tortuga.schema import NodeSchema
+
+            nodeList = NodesDbHandler().getNodeList(cherrypy.request.db, tags=tagspec)
 
             response = {
-                'nodes': nodeList.getCleanDict(),
+                'nodes': NodeSchema().dump(nodeList, many=True).data
             }
         except Exception as ex:
             self.getLogger().exception('node WS API nodeListRequest() failed')
