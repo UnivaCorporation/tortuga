@@ -16,16 +16,18 @@
 
 import cherrypy
 
-from tortuga.softwareprofile.softwareProfileManager \
-    import SoftwareProfileManager
-from tortuga.objects.softwareProfile import SoftwareProfile
-from tortuga.softwareprofile.softwareProfileApi import SoftwareProfileApi
-from tortuga.exceptions.softwareProfileNotFound \
-    import SoftwareProfileNotFound
+from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
 from tortuga.exceptions.invalidArgument import InvalidArgument
+from tortuga.exceptions.softwareProfileNotFound import SoftwareProfileNotFound
+from tortuga.objects.softwareProfile import SoftwareProfile
+from tortuga.schema import SoftwareProfileSchema
+from tortuga.softwareprofile.softwareProfileApi import SoftwareProfileApi
+from tortuga.softwareprofile.softwareProfileManager import \
+    SoftwareProfileManager
+
+from .authController import AuthController, require
 from .common import parse_tag_query_string
 from .tortugaController import TortugaController
-from .authController import AuthController, require
 
 
 class SoftwareProfileController(TortugaController):
@@ -167,11 +169,13 @@ class SoftwareProfileController(TortugaController):
         if 'tag' in kwargs and kwargs['tag']:
             tagspec.extend(parse_tag_query_string(kwargs['tag']))
 
-        softwareProfiles = self._softwareProfileManager.\
-            getSoftwareProfileList(tags=tagspec)
+        result = SoftwareProfilesDbHandler().getSoftwareProfileList(
+            cherrypy.request.db, tags=tagspec
+        )
 
         response = {
-            'softwareprofiles': softwareProfiles.getCleanDict(),
+            'softwareprofiles': SoftwareProfileSchema().dump(
+                result, many=True).data
         }
 
         return self.formatResponse(response)
