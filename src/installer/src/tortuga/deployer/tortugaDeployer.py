@@ -370,7 +370,7 @@ class TortugaDeployer(object): \
 
         self._logger.info('Running Puppet for post-configuration')
 
-        logFileName = '/tmp/tortuga_setup.log.log'
+        logFileName = '/tmp/tortuga_setup.log'
 
         cmd = ('/opt/puppetlabs/bin/puppet agent --color false --onetime'
                ' --no-daemonize --detailed-exitcodes --verbose 2>&1')
