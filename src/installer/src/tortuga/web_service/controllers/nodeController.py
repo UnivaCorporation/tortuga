@@ -15,17 +15,19 @@
 # pylint: disable=no-member
 
 import datetime
-import cherrypy
 
-from tortuga.exceptions.invalidArgument import InvalidArgument
+import cherrypy
 from tortuga.addhost.addHostManager import AddHostManager
 from tortuga.db.nodeRequests import NodeRequests
+from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.nodeNotFound import NodeNotFound
-from ..threadManager import threadManager
+from tortuga.objects.tortugaObject import TortugaObjectList
+
+from .authController import require
 from .common import parse_tag_query_string
-from .authController import AuthController, require
 from .tortugaController import TortugaController
 from .. import app
+from ..threadManager import threadManager
 
 
 class NodeController(TortugaController):
@@ -48,15 +50,9 @@ class NodeController(TortugaController):
         },
         {
             'name': 'userNode',
-            'path': '/v1/nodes/:name',
+            'path': '/v1/nodes/:(node_id)',
             'action': 'nodeRequest',
-            'method': ['GET', 'POST']
-        },
-        {
-            'name': 'getNodeById',
-            'path': '/v1/nodes/id/:(id)',
-            'action': 'getNodeById',
-            'method': ['POST']
+            'method': ['GET']
         },
         {
             'name': 'getNodeByIpRequest',
@@ -153,10 +149,14 @@ class NodeController(TortugaController):
     ]
 
     @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
     @require()
     def nodeListRequest(self, **kwargs):
-        """Return list of all available nodes"""
+        """
+        Return list of all available nodes
+
+        TODO: implement support for 'optionDict' passed through query
+        string
+        """
 
         tagspec = []
 
@@ -164,7 +164,11 @@ class NodeController(TortugaController):
             tagspec.extend(parse_tag_query_string(kwargs['tag']))
 
         try:
-            nodeList = app.node_api.getNodeList(tags=tagspec)
+            if 'name' in kwargs and kwargs['name']:
+                nodeList = TortugaObjectList(
+                    [app.node_api.getNode(kwargs['name'])])
+            else:
+                nodeList = app.node_api.getNodeList(tags=tagspec)
 
             response = {
                 'nodes': nodeList.getCleanDict(),
@@ -177,13 +181,16 @@ class NodeController(TortugaController):
         return self.formatResponse(response)
 
     @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
     @require()
-    def nodeRequest(self, name):
-        """Return node information"""
+    def nodeRequest(self, node_id):
+        """
+        Return node information
 
+        TODO: implement support for 'optionDict' passed through query
+        string
+        """
         try:
-            node = app.node_api.getNode(name)
+            node = app.node_api.getNodeById(node_id)
 
             response = {
                 'node': node.getCleanDict(),
@@ -194,30 +201,6 @@ class NodeController(TortugaController):
             response = self.notFoundErrorResponse(str(ex), code)
         except Exception as ex:
             self.getLogger().exception('node WS API nodeRequest() failed')
-            self.handleException(ex)
-            response = self.errorResponse(str(ex))
-
-        return self.formatResponse(response)
-
-    @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
-    @require()
-    def getNodeById(self, node_id):
-        postdata = cherrypy.request.json
-
-        optionDict = postdata['optionDict'] \
-            if 'optionDict' in postdata else {}
-
-        try:
-            nodeApi = app.node_api
-
-            node = nodeApi.getNodeById(node_id, optionDict=optionDict)
-
-            response = {
-                'node': node.getCleanDict(),
-            }
-        except Exception as ex:
-            self.getLogger().exception('node WS API getNodeById() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
