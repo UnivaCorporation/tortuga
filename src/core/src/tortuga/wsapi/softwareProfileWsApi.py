@@ -15,14 +15,16 @@
 # pylint: disable=no-member
 
 import json
-import urllib.request, urllib.parse, urllib.error
-import urllib.request, urllib.error, urllib.parse
+import urllib.error
+import urllib.parse
+import urllib.request
 
-from tortuga.exceptions.tortugaException import TortugaException
-from tortuga.objects.softwareProfile import SoftwareProfile
-from tortuga.objects.node import Node
-from tortuga.objects.component import Component
 from tortuga.exceptions.softwareProfileNotFound import SoftwareProfileNotFound
+from tortuga.exceptions.tortugaException import TortugaException
+from tortuga.objects.component import Component
+from tortuga.objects.node import Node
+from tortuga.objects.softwareProfile import SoftwareProfile
+
 from .tortugaWsApi import TortugaWsApi
 
 
@@ -30,7 +32,6 @@ class SoftwareProfileWsApi(TortugaWsApi):
     """
     SoftwareProfile WS API class.
     """
-
     def getSoftwareProfile(self, softwareProfileName, optionDict=None):
         """
         Get software profile information
@@ -41,18 +42,13 @@ class SoftwareProfileWsApi(TortugaWsApi):
                 SoftwareProfileNotFound
                 TortugaException
         """
-
-        url = 'v1/softwareProfiles/%s' % (softwareProfileName)
-
-        postdata = json.dumps({'optionDict': optionDict or {}})
+        url = 'v1/softwareProfiles?name=%s' % (softwareProfileName)
 
         try:
-            _, responseDict = self.sendSessionRequest(
-                url, method='POST', data=postdata)
+            _, responseDict = self.sendSessionRequest(url)
 
-            return SoftwareProfile.getFromDict(
-                responseDict.get('softwareprofile'))
-        except TortugaException as ex:
+            return SoftwareProfile.getListFromDict(responseDict)
+        except TortugaException:
             raise
         except Exception as ex:
             raise TortugaException(exception=ex)
@@ -67,17 +63,13 @@ class SoftwareProfileWsApi(TortugaWsApi):
                 SoftwareProfileNotFound
                 TortugaException
         """
-
-        url = 'v1/softwareProfiles/id/%s' % (swProfileId)
-
-        postdata = json.dumps(optionDict or {})
+        url = 'v1/softwareProfiles/%d' % (swProfileId)
 
         try:
-            _, responseDict = self.sendSessionRequest(url, data=postdata)
+            _, responseDict = self.sendSessionRequest(url)
 
             return SoftwareProfile.getFromDict(
                 responseDict.get('softwareprofile'))
-        # except HttpErrorException as exc:
         except urllib.error.HTTPError as exc:
             if exc.code == 404:
                 raise SoftwareProfileNotFound(
