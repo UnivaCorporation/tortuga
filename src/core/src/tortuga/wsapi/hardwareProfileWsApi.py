@@ -31,17 +31,12 @@ class HardwareProfileWsApi(TortugaWsApi):
         """
         Get hardware profile by name
         """
-
-        url = 'v1/hardwareProfiles/%s' % (hardwareProfileName)
-
-        postdata = json.dumps(optionDict or {})
+        url = 'v1/hardwareProfiles?name=%s' % (hardwareProfileName)
 
         try:
-            (response, responseDict) = self.sendSessionRequest(
-                url, method='POST', data=postdata)
+            _, responseDict = self.sendSessionRequest(url)
 
-            return HardwareProfile.getFromDict(
-                responseDict.get('hardwareprofile'))
+            return HardwareProfile.getListFromDict(responseDict)
         except TortugaException as ex:
             raise
         except Exception as ex:
@@ -51,14 +46,10 @@ class HardwareProfileWsApi(TortugaWsApi):
         """
         Get hardware profile by name
         """
-
-        postdata = json.dumps(optionDict or {})
-
-        url = 'v1/hardwareProfiles/id/%s' % (id_)
+        url = 'v1/hardwareProfiles/%d' % (id_)
 
         try:
-            (response, responseDict) = self.sendSessionRequest(
-                url, method='POST', data=postdata)
+            _, responseDict = self.sendSessionRequest(url)
 
             return HardwareProfile.getFromDict(
                 responseDict.get('hardwareprofile'))
