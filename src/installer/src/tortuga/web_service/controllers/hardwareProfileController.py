@@ -56,12 +56,6 @@ class HardwareProfileController(TortugaController):
             'method': ['POST'],
         },
         {
-            'name': 'getHardwareProfileById',
-            'path': '/v1/hardwareProfiles/id/:(hardware_profile_id)',
-            'action': 'getHardwareProfileById',
-            'method': ['POST'],
-        },
-        {
             'name': 'updateHardwareProfile',
             'path': '/v1/hardwareProfiles/:(hardwareProfileId)',
             'action': 'updateHardwareProfile',
@@ -120,7 +114,7 @@ class HardwareProfileController(TortugaController):
         try:
             if 'name' in kwargs and kwargs['name']:
                 hardwareProfiles = TortugaObjectList(
-                    [HardwareProfileManager().getHardwareProfileById(
+                    [HardwareProfileManager().getHardwareProfile(
                         kwargs['name'])])
             else:
                 hardwareProfiles = HardwareProfileManager().\
