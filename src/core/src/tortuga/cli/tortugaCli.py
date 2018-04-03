@@ -207,7 +207,7 @@ class TortugaCli(object):
 
         cfg_file = os.path.join(os.path.expanduser('~'),
                                 '.local',
-                                'unicloud',
+                                'tortuga',
                                 'credentials')
 
         if os.path.exists(cfg_file):
