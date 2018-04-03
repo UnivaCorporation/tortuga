@@ -15,10 +15,10 @@
 # pylint: disable=no-member
 
 import cherrypy
-
 from tortuga.objects.admin import Admin
+
+from .authController import require
 from .tortugaController import TortugaController
-from .authController import AuthController, require
 from .. import app
 
 
