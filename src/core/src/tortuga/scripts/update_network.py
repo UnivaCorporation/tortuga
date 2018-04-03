@@ -22,10 +22,10 @@ from tortuga.network.networkCli import NetworkCli
 class UpdateNetworkCli(NetworkCli):
     """
     update-network command line interface
-    """
 
+    """
     def __init__(self):
-        super(UpdateNetworkCli, self).__init__()
+        super().__init__()
 
         # Now add in the default options
         self.setupDefaultOptions()
@@ -59,5 +59,5 @@ Description:
         self.getNetworkApi().updateNetwork(network)
 
 
-if __name__ == '__main__':
+def main():
     UpdateNetworkCli().run()

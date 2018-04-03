@@ -17,7 +17,7 @@
 # pylint: disable=no-member
 
 from tortuga.admin.adminCli import AdminCli
-from tortuga.admin.adminApiFactory import getAdminApi
+from tortuga.wsapi import adminWsApi
 
 
 class AddAdminCli(AdminCli):
@@ -56,7 +56,9 @@ Description:
     system.   This user does not need to match any operating system user.
 """))
 
-        api = getAdminApi(self.getUsername(), self.getPassword())
+        api = adminWsApi.AdminWsApi(username=self.getUsername(),
+                                    password=self.getPassword(),
+                                    baseurl=self.getUrl())
 
         api.addAdmin(
             self.getOptions().adminUsername,
@@ -66,5 +68,5 @@ Description:
             self.getOptions().adminDescription)
 
 
-if __name__ == '__main__':
+def main():
     AddAdminCli().run()

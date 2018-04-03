@@ -18,6 +18,7 @@ import ipaddress
 
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
+from tortuga.wsapi.networkWsApi import NetworkWsApi
 
 
 class NetworkCli(TortugaCli):
@@ -265,14 +266,12 @@ class NetworkCli(TortugaCli):
     def getNetworkApi(self):
         """
         Caching method for getting a networkApi instance.
+
         """
-
         if self._networkApi is None:
-            from tortuga.network.networkApiFactory import getNetworkApi
-
-            self._networkApi = getNetworkApi(
-                self.getUsername(), self.getPassword())
-
+            self._networkApi = NetworkWsApi(self.getUsername(),
+                                            self.getPassword(),
+                                            baseurl=self.getUrl())
         return self._networkApi
 
     def parseNetworkParameter(self, network): \

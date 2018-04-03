@@ -23,6 +23,8 @@ import sys
 import json
 import configparser
 import argparse
+
+from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.resourceAdapterConfiguration.resourceAdapterConfigurationApi \
     import ResourceAdapterConfigurationApi
 from tortuga.exceptions.tortugaException import TortugaException
@@ -32,7 +34,7 @@ from tortuga.exceptions.resourceNotFound import ResourceNotFound
 from tortuga.exceptions.resourceAlreadyExists import ResourceAlreadyExists
 
 
-class AdapterMgmtCLI(object):
+class AdapterMgmtCLI(TortugaCli):
     def __init__(self):
         self.parser = None
         self.subparser_update = None
@@ -512,5 +514,5 @@ def _raise_profile_already_exists(adapter_name, profile_name):
         ' [{1}]'.format(profile_name, adapter_name))
 
 
-if __name__ == '__main__':
+def main():
     AdapterMgmtCLI().run()

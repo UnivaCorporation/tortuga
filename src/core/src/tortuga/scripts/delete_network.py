@@ -28,7 +28,7 @@ class DeleteNetworkCli(NetworkCli):
     """
 
     def __init__(self):
-        NetworkCli.__init__(self)
+        super().__init__()
 
         # The delete command can take only the network option
         self.addOption('--network',
@@ -70,5 +70,5 @@ Description:
                   ' deleted.').format(network))
 
 
-if __name__ == '__main__':
+def main():
     DeleteNetworkCli().run()

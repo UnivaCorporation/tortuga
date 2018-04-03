@@ -115,8 +115,16 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'activate-node=tortuga.scripts.activate_node:main',
+            'adapter-mgmt=tortuga.scripts.adapter_mgmt:main',
+            'add-admin=tortuga.scripts.add_admin:main',
+            'add-admin-to-profile=tortuga.scripts.add_admin_to_profile:main',
+            'add-network=tortuga.scripts.add_network:main',
             'add-nodes=tortuga.scripts.add_nodes:main',
+            'delete-network=tortuga.scripts.delete_network:main',
             'delete-node=tortuga.scripts.delete_node:main',
+            'get-network=tortuga.scripts.get_network:main',
+            'update-network=tortuga.scripts.update_network:main',
         ],
     },
 )

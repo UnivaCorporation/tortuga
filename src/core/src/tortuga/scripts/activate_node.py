@@ -17,13 +17,14 @@
 # pylint: disable=no-member
 
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.node.nodeApiFactory import getNodeApi
 from tortuga.exceptions.tortugaException import TortugaException
+from tortuga.wsapi import nodeWsApi
 
 
 class ActivateNodeCli(TortugaCli):
     """
     Activate node command line interface.
+
     """
     def __init__(self):
         super(ActivateNodeCli, self).__init__()
@@ -36,8 +37,6 @@ class ActivateNodeCli(TortugaCli):
                        help=_('Destination software profile'))
 
     def runCommand(self):
-        """Main entry point"""
-
         self.parseArgs('''
     activate-node --node NODENAME [--software-profile SOFTWAREPROFILE]
 
@@ -46,16 +45,18 @@ Description:
     active software profile.
 ''')
 
-        softwareProfileName = self.getOptions().softwareProfileName
+        software_profile_name = self.getOptions().softwareProfileName
 
         if not self.getOptions().nodeName:
             self.usage('Missing --node option')
 
-        nodeApi = getNodeApi(self.getUsername(), self.getPassword())
+        api = nodeWsApi.NodeWsApi(username=self.getUsername(),
+                                  password=self.getUsername(),
+                                  baseurl=self.getUrl())
 
         try:
-            result = nodeApi.activateNode(
-                self.getOptions().nodeName, softwareProfileName)
+            result = api.activateNode(
+                self.getOptions().nodeName, software_profile_name)
 
             if result['NodeAlreadyActive']:
                 msg = _('The following node(s) are already activated:')
@@ -88,17 +89,17 @@ Description:
 
                 print('\n'.join(result['NodeSoftwareProfileLocked']))
 
-            for nodeName, hardwareProfileName, softwareProfileName in \
+            for nodeName, hardwareProfileName, software_profile_name in \
                     result['ProfileMappingNotAllowed']:
                 print((_('Node [{0}] belongs to hardware profile [{1}], which'
-                        ' is not allowed to use software profile'
-                        ' [{2}]').format(nodeName, hardwareProfileName,
-                                         softwareProfileName)))
+                         ' is not allowed to use software profile'
+                         ' [{2}]').format(nodeName, hardwareProfileName,
+                                          software_profile_name)))
         except TortugaException as ex:
-            print(_("Error: Can't activate node(s) - %s" % (ex)))
+            print(_("Error: Can't activate node(s) - {}".format(ex)))
 
             raise SystemExit(255)
 
 
-if __name__ == '__main__':
+def main():
     ActivateNodeCli().run()

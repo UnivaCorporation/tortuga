@@ -23,8 +23,8 @@ from tortuga.network.networkCli import NetworkCli
 class AddNetworkCli(NetworkCli):
     """
     Add tortuga command line interface.
-    """
 
+    """
     def __init__(self):
         super(AddNetworkCli, self).__init__()
 
@@ -65,5 +65,5 @@ Description:
         self.getNetworkApi().addNetwork(network)
 
 
-if __name__ == '__main__':
+def main():
     AddNetworkCli().run()

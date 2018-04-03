@@ -27,9 +27,6 @@ class HardwareProfileWsApi(TortugaWsApi):
     Hardware profile WS API class.
     """
 
-    def __init__(self, username=None, password=None):
-        TortugaWsApi.__init__(self, username, password)
-
     def getHardwareProfile(self, hardwareProfileName, optionDict=None):
         """
         Get hardware profile by name

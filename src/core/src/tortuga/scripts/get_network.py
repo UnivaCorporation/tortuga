@@ -21,10 +21,10 @@ from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
 class GetNetworkCli(NetworkCli):
     """
     Get tortuga command line interface.
-    """
 
+    """
     def __init__(self):
-        NetworkCli.__init__(self)
+        super().__init__()
 
         # The get command can take only the network option
         self.addOption('--network', dest='network',
@@ -55,5 +55,5 @@ Description:
         print(network.getXmlRep())
 
 
-if __name__ == '__main__':
+def main():
     GetNetworkCli().run()
