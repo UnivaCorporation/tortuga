@@ -68,7 +68,6 @@ class AdminController(TortugaController):
 
     @require()
     @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
     def getAdmin(self, admin_id):
         """ Get an admin by name """
 
@@ -87,7 +86,6 @@ class AdminController(TortugaController):
 
     @require()
     @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
     def getAdminList(self):
         """ Return list of admin users """
 
@@ -140,7 +138,6 @@ class AdminController(TortugaController):
 
     @require()
     @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
     def deleteAdmin(self, admin_id):
         """ Delete an existing admin from the system """
 
