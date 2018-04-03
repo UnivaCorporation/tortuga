@@ -15,17 +15,18 @@
 # pylint: disable=no-member
 
 import cherrypy
-
-from tortuga.hardwareprofile.hardwareProfileManager \
-    import HardwareProfileManager
-from tortuga.exceptions.userNotAuthorized import UserNotAuthorized
-from tortuga.objects.hardwareProfile import HardwareProfile
 from tortuga.exceptions.hardwareProfileNotFound \
     import HardwareProfileNotFound
+from tortuga.exceptions.userNotAuthorized import UserNotAuthorized
+from tortuga.hardwareprofile.hardwareProfileManager \
+    import HardwareProfileManager
+from tortuga.objects.hardwareProfile import HardwareProfile
 from tortuga.objects.osInfo import OsInfo
+from tortuga.objects.tortugaObject import TortugaObjectList
+
+from .authController import require
 from .common import parse_tag_query_string
 from .tortugaController import TortugaController
-from .authController import require
 
 
 class HardwareProfileController(TortugaController):
@@ -34,6 +35,12 @@ class HardwareProfileController(TortugaController):
             'name': 'getHardwareProfiles',
             'path': '/v1/hardwareProfiles',
             'action': 'getHardwareProfiles',
+            'method': ['GET'],
+        },
+        {
+            'name': 'getHardwareProfile',
+            'path': '/v1/hardwareProfiles/:(hwprofile_id)',
+            'action': 'getHardwareProfile',
             'method': ['GET'],
         },
         {
@@ -46,12 +53,6 @@ class HardwareProfileController(TortugaController):
             'name': 'createHardwareProfile',
             'path': '/v1/hardwareProfiles',
             'action': 'createHardwareProfile',
-            'method': ['POST'],
-        },
-        {
-            'name': 'getHardwareProfile',
-            'path': '/v1/hardwareProfiles/:(hardwareProfileName)',
-            'action': 'getHardwareProfile',
             'method': ['POST'],
         },
         {
@@ -110,7 +111,6 @@ class HardwareProfileController(TortugaController):
 
     @require()
     @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
     def getHardwareProfiles(self, **kwargs):
         tagspec = []
 
@@ -118,8 +118,13 @@ class HardwareProfileController(TortugaController):
             tagspec.extend(parse_tag_query_string(kwargs['tag']))
 
         try:
-            hardwareProfiles = HardwareProfileManager().\
-                getHardwareProfileList(tags=tagspec)
+            if 'name' in kwargs and kwargs['name']:
+                hardwareProfiles = TortugaObjectList(
+                    [HardwareProfileManager().getHardwareProfileById(
+                        kwargs['name'])])
+            else:
+                hardwareProfiles = HardwareProfileManager().\
+                    getHardwareProfileList(tags=tagspec)
 
             response = {
                 'hardwareprofiles': hardwareProfiles.getCleanDict(),
@@ -136,44 +141,12 @@ class HardwareProfileController(TortugaController):
 
     @require()
     @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
-    def getHardwareProfileById(self, hardware_profile_id):
-        postdata = cherrypy.request.json
-
-        optionDict = postdata['optionDict'] \
-            if 'optionDict' in postdata else {}
-
+    def getHardwareProfile(self, hwprofile_id):
+        """
+        TODO: implement support for optionDict through query string
+        """
         try:
-            hp = HardwareProfileManager().\
-                getHardwareProfileById(hardware_profile_id, optionDict)
-
-            response = createHwProfileResponse(hp)
-        except HardwareProfileNotFound as ex:
-            self.handleException(ex)
-            code = self.getTortugaStatusCode(ex)
-            response = self.notFoundErrorResponse(str(ex), code)
-        except Exception as ex:
-            self.getLogger().exception(
-                'hardware profile WS API getHardwareProfileById()')
-
-            self.handleException(ex)
-
-            response = self.errorResponse(str(ex))
-
-        return self.formatResponse(response)
-
-    @require()
-    @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
-    def getHardwareProfile(self, hardwareProfileName):
-        postdata = cherrypy.request.json
-
-        optionDict = postdata['optionDict'] \
-            if 'optionDict' in postdata else {}
-
-        try:
-            hp = HardwareProfileManager().getHardwareProfile(
-                hardwareProfileName, optionDict)
+            hp = HardwareProfileManager().getHardwareProfileById(hwprofile_id)
 
             response = createHwProfileResponse(hp)
         except HardwareProfileNotFound as ex:
