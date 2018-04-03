@@ -247,9 +247,16 @@ class AdapterMgmtCLI(object):
     def create_resource_adapter_config(self, args): \
             # pylint: disable=no-self-use
 
+        if not args.setting:
+            sys.stderr.write(
+                'Error: No adapter configuration provided, '
+                'profile not created.\n'
+            )
+            sys.stdout.flush()
+            sys.exit(1)
+
         try:
             cfg = [dict(key=key, value=value) for key, value in args.setting]
-
             self.api.create(args.resource_adapter, args.profile, cfg)
         except TortugaException as exc:
             sys.stderr.write('Error: {0}\n'.format(exc))

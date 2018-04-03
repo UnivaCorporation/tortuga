@@ -103,7 +103,12 @@ puppet_master_fqdn="{{ puppet_master_fqdn }}"
 
 touch /var/lock/subsys/tortuga.initialboot
 
-{% if installer_private_domain == domain %}
+{#
+ #  If the node has a domain name, and that domain name is different than
+ #  that of the installer, then we need to create a hosts record for the
+ #  puppet master.
+ #}
+{% if domain and installer_private_domain != domain %}
 # Add a host alias for the Puppet master using the private IP address for
 # hosts on the private (provisioning) network
 cat >>/etc/hosts <<ENDL
