@@ -80,13 +80,10 @@ class NodeWsApi(TortugaWsApi): \
             raise TortugaException(exception=ex)
 
     def getNode(self, name, optionDict=None):
-        url = 'v1/nodes/%s' % (urllib.parse.quote(name))
+        url = 'v1/nodes?name=%s' % (urllib.parse.quote(name))
 
         try:
-            postdata = json.dumps(optionDict or {})
-
-            _, responseDict = self.sendSessionRequest(
-                url, method='POST', data=postdata)
+            _, responseDict = self.sendSessionRequest(url)
 
             return tortuga.objects.node.Node.getFromDict(
                 responseDict.get('node'))
@@ -96,13 +93,10 @@ class NodeWsApi(TortugaWsApi): \
             raise TortugaException(exception=ex)
 
     def getNodeById(self, nodeId, optionDict=None):
-        url = 'v1/nodes/id/%d' % (int(nodeId))
+        url = 'v1/nodes/%d' % (int(nodeId))
 
         try:
-            postdata = json.dumps(optionDict or {})
-
-            _, responseDict = self.sendSessionRequest(
-                url, method='POST', data=postdata)
+            _, responseDict = self.sendSessionRequest(url)
 
             return tortuga.objects.node.Node.getFromDict(
                 responseDict.get('node'))
