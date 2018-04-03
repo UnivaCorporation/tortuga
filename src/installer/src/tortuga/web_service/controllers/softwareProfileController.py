@@ -26,6 +26,7 @@ from tortuga.exceptions.invalidArgument import InvalidArgument
 from .common import parse_tag_query_string
 from .tortugaController import TortugaController
 from .authController import AuthController, require
+from tortuga.objects.tortugaObject import TortugaObjectList
 
 
 class SoftwareProfileController(TortugaController):
@@ -34,6 +35,12 @@ class SoftwareProfileController(TortugaController):
             'name': 'getSoftwareProfiles',
             'path': '/v1/softwareProfiles',
             'action': 'getSoftwareProfiles',
+            'method': ['GET'],
+        },
+        {
+            'name': 'getSoftwareProfileById',
+            'path': '/v1/softwareProfiles/:(swprofile_id)',
+            'action': 'getSoftwareProfileById',
             'method': ['GET'],
         },
         {
@@ -71,18 +78,6 @@ class SoftwareProfileController(TortugaController):
             'path': '/v1/softwareProfiles/:(softwareProfileId)',
             'action': 'updateSoftwareProfile',
             'method': ['PUT'],
-        },
-        {
-            'name': 'getSoftwareProfile',
-            'path': '/v1/softwareProfiles/:(softwareProfileName)',
-            'action': 'getSoftwareProfile',
-            'method': ['POST'],
-        },
-        {
-            'name': 'getSoftwareProfileById',
-            'path': '/v1/softwareProfiles/id/:(id)',
-            'action': 'getSoftwareProfileById',
-            'method': ['GET'],
         },
         {
             'name': 'getSoftwareProfileProvisioningInfo',
@@ -160,15 +155,22 @@ class SoftwareProfileController(TortugaController):
 
     @require()
     @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
     def getSoftwareProfiles(self, **kwargs):
+        """
+        TODO: implement support for optionDict through query string
+        """
         tagspec = []
 
         if 'tag' in kwargs and kwargs['tag']:
             tagspec.extend(parse_tag_query_string(kwargs['tag']))
 
-        softwareProfiles = self._softwareProfileManager.\
-            getSoftwareProfileList(tags=tagspec)
+        if 'name' in kwargs and kwargs['name']:
+            softwareProfiles = TortugaObjectList(
+                [self._softwareProfileManager.getSoftwareProfile(
+                    kwargs['name'])])
+        else:
+            softwareProfiles = self._softwareProfileManager.\
+                getSoftwareProfileList(tags=tagspec)
 
         response = {
             'softwareprofiles': softwareProfiles.getCleanDict(),
@@ -186,36 +188,6 @@ class SoftwareProfileController(TortugaController):
         response = {
             'softwareprofiles': idleSoftwareProfiles.getCleanDict(),
         }
-
-        return self.formatResponse(response)
-
-    @require()
-    @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
-    def getSoftwareProfileById(self, id_):
-        """Get software profile by id"""
-
-        # self.getLogger().debug('getSoftwareProfileById(id=[%s])' % (id))
-
-        try:
-            sp = self._softwareProfileManager.getSoftwareProfileById(
-                id_, {
-                    'admins': True,
-                    'components': True,
-                    'nodes': True,
-                    'os': True,
-                    'packages': True,
-                    'partitions': True,
-                })
-
-            response = {'softwareprofile': sp.getCleanDict()}
-        except Exception as ex:
-            self.getLogger().exception(
-                'software profile WS API getSoftwareProfileById() failed')
-
-            self.handleException(ex)
-
-            response = self.errorResponse(str(ex))
 
         return self.formatResponse(response)
 
@@ -283,18 +255,24 @@ class SoftwareProfileController(TortugaController):
 
     @require()
     @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
-    def getSoftwareProfile(self, softwareProfileName):
-        """Get software profile by name"""
+    def getSoftwareProfileById(self, swprofile_id, **kwargs):
+        """
+        Get software profile by name
 
-        postdata = cherrypy.request.json
-
-        optionDict = postdata['optionDict'] \
-            if 'optionDict' in postdata else {}
+        TODO: implement support for optionDict through query string
+        """
+        optionDict = {
+            'admins': True,
+            'components': True,
+            'nodes': True,
+            'os': True,
+            'packages': True,
+            'partitions': True,
+        }
 
         try:
-            sp = self._softwareProfileManager.getSoftwareProfile(
-                softwareProfileName, optionDict)
+            sp = self._softwareProfileManager.getSoftwareProfileById(
+                swprofile_id, optionDict)
 
             response = {
                 'softwareprofile': sp.getCleanDict(),
