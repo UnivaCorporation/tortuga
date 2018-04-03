@@ -25,7 +25,6 @@ from tortuga.exceptions.hardwareProfileNotFound \
 from tortuga.objects.osInfo import OsInfo
 from .common import parse_tag_query_string
 from .tortugaController import TortugaController
-from .authController import AuthController
 from .authController import require
 
 
@@ -256,33 +255,28 @@ class HardwareProfileController(TortugaController):
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     def updateHardwareProfile(self, hardwareProfileId):
-        '''
+        """
         Handle PUT to "hardwareprofiles/:(hardwareProfileId)"
-        '''
 
+        """
         response = None
 
         try:
             postdata = cherrypy.request.json
+            hw_profile = HardwareProfile.getFromDict(postdata)
+            hw_profile.setId(hardwareProfileId)
+            hp_mgr = HardwareProfileManager()
+            hp_mgr.updateHardwareProfile(hw_profile)
 
-            hwProfile = HardwareProfile.getFromDict(postdata)
-
-            # Make sure the id is synced
-            hwProfile.setId(hardwareProfileId)
-
-            hpMgr = HardwareProfileManager()
-
-            hpMgr.updateHardwareProfile(hwProfile)
         except HardwareProfileNotFound as ex:
             self.handleException(ex)
             code = self.getTortugaStatusCode(ex)
             response = self.notFoundErrorResponse(str(ex), code)
+
         except Exception as ex:
             self.getLogger().exception(
                 'hardware profile WS API updateHardwareProfile() failed')
-
             self.handleException(ex)
-
             response = self.errorResponse(str(ex))
 
         return self.formatResponse(response)

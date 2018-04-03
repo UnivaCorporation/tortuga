@@ -15,37 +15,37 @@
 # limitations under the License.
 
 from tortuga.kit.kitCli import KitCli
-from tortuga.kit.kitApiFactory import getKitApi
+from tortuga.wsapi.kitWsApi import KitWsApi
 
 
 class DeleteKitCli(KitCli):
     """
     Delete kit command line interface.
+
     """
-
     def __init__(self):
-        KitCli.__init__(self)
+        super().__init__()
 
-        kitAttrGroup = _('Kit Attribute Options')
+        kit_attr_group = _('Kit Attribute Options')
 
         self.addOptionGroup(
-            kitAttrGroup, _('Kit name/version must be specified.'))
+            kit_attr_group, _('Kit name/version must be specified.'))
 
         self.addOptionToGroup(
-            kitAttrGroup, '--name', dest='name', help=_('kit name'))
+            kit_attr_group, '--name', dest='name', help=_('kit name'))
 
         self.addOptionToGroup(
-            kitAttrGroup, '--version', dest='version', help=_('kit version'))
+            kit_attr_group, '--version', dest='version', help=_('kit version'))
 
         self.addOptionToGroup(
-            kitAttrGroup, '--iteration', dest='iteration',
+            kit_attr_group, '--iteration', dest='iteration',
             help=_('kit iteration'))
 
-        optionsAttrGroup = _('Options')
+        options_attr_group = _('Options')
 
-        self.addOptionGroup(optionsAttrGroup, '')
+        self.addOptionGroup(options_attr_group, '')
 
-        self.addOptionToGroup(optionsAttrGroup, '--force',
+        self.addOptionToGroup(options_attr_group, '--force',
                               action='store_true', default=False,
                               help=_('Forcibly remove a kit that may be in'
                                      ' use. Use with care!'))
@@ -68,10 +68,12 @@ Description:
 
         name, version, iteration = self.get_name_version_iteration()
 
-        api = getKitApi(self.getUsername(), self.getPassword())
+        api = KitWsApi(username=self.getUsername(),
+                       password=self.getPassword(),
+                       baseurl=self.getUrl())
 
         api.deleteKit(name, version, iteration, force=self.getOptions().force)
 
 
-if __name__ == '__main__':
+def main():
     DeleteKitCli().run()

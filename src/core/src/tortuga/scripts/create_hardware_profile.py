@@ -16,30 +16,29 @@
 
 # pylint: disable=no-member
 
+import glob
+import json
 import os.path
 from optparse import OptionValueError
-import json
-import glob
 
 from jinja2 import Template
 
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.objects.osInfo import OsInfo
+from tortuga.config.configManager import ConfigManager
+from tortuga.exceptions.configurationError import ConfigurationError
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
-from tortuga.softwareprofile.softwareProfileFactory \
-    import getSoftwareProfileApi
-from tortuga.objects.hardwareProfile import HardwareProfile
-from tortuga.hardwareprofile.hardwareProfileFactory \
-    import getHardwareProfileApi
 from tortuga.exceptions.invalidProfileCreationTemplate \
     import InvalidProfileCreationTemplate
-from tortuga.exceptions.configurationError import ConfigurationError
-from tortuga.config.configManager import ConfigManager
+from tortuga.objects.hardwareProfile import HardwareProfile
+from tortuga.objects.osInfo import OsInfo
+from tortuga.softwareprofile.softwareProfileFactory \
+    import getSoftwareProfileApi
+from tortuga.wsapi.hardwareProfileWsApi import HardwareProfileWsApi
 
 
 class CreateHardwareProfileCli(TortugaCli):
     def __init__(self):
-        TortugaCli.__init__(self)
+        super().__init__()
 
         self._default_tmpl_dir = os.path.join(
             ConfigManager().getRoot(),
@@ -59,44 +58,44 @@ class CreateHardwareProfileCli(TortugaCli):
 
         self.tmplDict = {}
 
-        optionGroupName = _('Information')
-        self.addOptionGroup(optionGroupName, '')
-        self.addOptionToGroup(optionGroupName, '--list-templates',
+        option_group_name = _('Information')
+        self.addOptionGroup(option_group_name, '')
+        self.addOptionToGroup(option_group_name, '--list-templates',
                               action='store_true',
                               dest='bDisplayTemplateList',
                               default=False,
                               help=_('List available hardware profile'
                                      ' templates'))
 
-        optionGroupName = _('Create Hardware Profile Options')
-        self.addOptionGroup(optionGroupName, '')
-        self.addOptionToGroup(optionGroupName, '-x', '--xml-file',
+        option_group_name = _('Create Hardware Profile Options')
+        self.addOptionGroup(option_group_name, '')
+        self.addOptionToGroup(option_group_name, '-x', '--xml-file',
                               dest='templatePath',
                               help=_('Path to hardware profile creation'
                                      ' template'))
 
         self.addOptionToGroup(
-            optionGroupName, '-j', '--json-file', dest='jsonTemplatePath',
+            option_group_name, '-j', '--json-file', dest='jsonTemplatePath',
             help=_('Path to JSON-formatted hardware profile creation'
                    ' template'))
 
-        self.addOptionToGroup(optionGroupName, '--name', type='str',
+        self.addOptionToGroup(option_group_name, '--name', type='str',
                               action='callback', callback=self.optCallback,
                               help=_('Hardware profile name'))
-        self.addOptionToGroup(optionGroupName, '--description',
+        self.addOptionToGroup(option_group_name, '--description',
                               action='callback', callback=self.optCallback,
                               type='str', dest='description',
                               help=_('Description for hardware profile'))
-        self.addOptionToGroup(optionGroupName, '--os', action='callback',
+        self.addOptionToGroup(option_group_name, '--os', action='callback',
                               metavar='OS SPEC', default=self.defaultOs,
                               callback=self.optCallback, type="str", dest='os',
                               help=_('Operating system (default: %default)'))
-        self.addOptionToGroup(optionGroupName, '--idleSoftwareProfile',
+        self.addOptionToGroup(option_group_name, '--idleSoftwareProfile',
                               type='str', dest='idleSoftwareProfile',
                               action='callback', callback=self.optCallback,
                               help=_('Specify idle software profile'))
 
-        self.addOptionToGroup(optionGroupName, '--defaults',
+        self.addOptionToGroup(option_group_name, '--defaults',
                               dest='bUseDefaults', default=False,
                               action='store_true',
                               help=_('Do not use any defaults when'
@@ -155,36 +154,37 @@ Description:
             raise OptionValueError(
                 _('Only one hardware profile template can be specified'))
 
-        templatePath = self.getOptions().templatePath \
+        template_path = self.getOptions().templatePath \
             if self.getOptions().templatePath else \
             self.getOptions().jsonTemplatePath
 
-        bUseDefaultTemplate = False
-        if not templatePath:
-            templatePath = os.path.join(
+        b_use_default_template = False
+        if not template_path:
+            template_path = os.path.join(
                 self._default_tmpl_dir, 'defaultHardwareProfile.tmpl.xml')
 
-            bUseDefaultTemplate = True
+            b_use_default_template = True
 
-        if not os.path.exists(templatePath):
+        if not os.path.exists(template_path):
             raise InvalidCliRequest(
                 _('Cannot read template from %s') % (
                     self.getOptions().templatePath))
 
-        settingsDict = {
+        settings_dict = {
             'bUseDefaults': self.getOptions().bUseDefaults,
             'osInfo': self.osInfo,
         }
 
-        hardwareProfileApi = getHardwareProfileApi(
-            self.getUsername(), self.getPassword())
+        api = HardwareProfileWsApi(username=self.getUsername(),
+                                   password=self.getPassword(),
+                                   baseurl=self.getUrl())
 
         try:
             # Process the hardware profile template
-            with open(templatePath) as fp:
+            with open(template_path) as fp:
                 tmpl = fp.read()
 
-            hwProfileTmpl = Template(tmpl).render(self.tmplDict)
+            hw_profile_tmpl = Template(tmpl).render(self.tmplDict)
         except Exception as ex:
             self.getLogger().error(
                 'Error applying template substitutions')
@@ -199,19 +199,19 @@ Description:
             # id...they would be there if the template was created from a
             # dump of an existing profile
 
-            if bUseDefaultTemplate or self.getOptions().templatePath:
-                hwProfileSpec = HardwareProfile.getFromXml(
-                    hwProfileTmpl, ['id', 'hardwareProfileId'])
+            if b_use_default_template or self.getOptions().templatePath:
+                hw_profile_spec = HardwareProfile.getFromXml(
+                    hw_profile_tmpl, ['id', 'hardwareProfileId'])
             else:
-                hwProfileDict = json.loads(hwProfileTmpl)
+                hw_profile_dict = json.loads(hw_profile_tmpl)
 
-                hwProfileSpec = HardwareProfile.getFromDict(
-                    hwProfileDict['hardwareProfile'])
+                hw_profile_spec = HardwareProfile.getFromDict(
+                    hw_profile_dict['hardwareProfile'])
 
             # Override any preset hardware profile name in the template
             # if specified on the command-line
             if 'name' in self.tmplDict:
-                hwProfileSpec.setName(self.tmplDict['name'])
+                hw_profile_spec.setName(self.tmplDict['name'])
         except ConfigurationError as ex:
             self.getLogger().exception(ex)
 
@@ -226,16 +226,16 @@ Description:
             raise InvalidProfileCreationTemplate(
                 'Invalid hardware profile creation template')
 
-        if hwProfileSpec is None:
+        if hw_profile_spec is None:
             raise InvalidProfileCreationTemplate(
                 'Invalid hardware creation template')
 
-        if not hwProfileSpec.getDescription():
-            hwProfileSpec.setDescription('{0} hardware profile'.format(
-                hwProfileSpec.getName()))
+        if not hw_profile_spec.getDescription():
+            hw_profile_spec.setDescription('{0} hardware profile'.format(
+                hw_profile_spec.getName()))
 
-        hardwareProfileApi.createHardwareProfile(hwProfileSpec, settingsDict)
+        api.createHardwareProfile(hw_profile_spec, settings_dict)
 
 
-if __name__ == '__main__':
+def main():
     CreateHardwareProfileCli().run()

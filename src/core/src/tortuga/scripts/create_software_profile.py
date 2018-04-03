@@ -17,25 +17,24 @@
 # pylint: disable=no-member
 
 import glob
-import os.path
 import json
+import os.path
 from optparse import OptionValueError
 
 from jinja2 import Template
 
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.objects.osInfo import OsInfo
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
-from tortuga.softwareprofile.softwareProfileFactory \
-    import getSoftwareProfileApi
-from tortuga.objects.softwareProfile import SoftwareProfile
 from tortuga.exceptions.invalidProfileCreationTemplate \
     import InvalidProfileCreationTemplate
+from tortuga.objects.osInfo import OsInfo
+from tortuga.objects.softwareProfile import SoftwareProfile
+from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
 
 
 class CreateSoftwareProfileCli(TortugaCli):
     def __init__(self):
-        TortugaCli.__init__(self)
+        super().__init__()
 
         self._default_tmpl_dir = os.path.join(
             self._cm.getRoot(), 'share/templates/software')
@@ -44,9 +43,9 @@ class CreateSoftwareProfileCli(TortugaCli):
 
         self.tmplDict = {}
 
-        optionGroupName = _('Information')
-        self.addOptionGroup(optionGroupName, '')
-        self.addOptionToGroup(optionGroupName, '--list-templates',
+        option_group_name = _('Information')
+        self.addOptionGroup(option_group_name, '')
+        self.addOptionToGroup(option_group_name, '--list-templates',
                               action='store_true',
                               dest='bDisplayTemplateList',
                               default=False,
@@ -55,50 +54,50 @@ class CreateSoftwareProfileCli(TortugaCli):
 
         # Add options group and options specific to creation of a software
         # profile
-        optionGroupName = _('Create Software Profile Options')
-        self.addOptionGroup(optionGroupName, '')
-        self.addOptionToGroup(optionGroupName, '-x', '--xml-file',
+        option_group_name = _('Create Software Profile Options')
+        self.addOptionGroup(option_group_name, '')
+        self.addOptionToGroup(option_group_name, '-x', '--xml-file',
                               dest='templatePath',
                               help=_('Path to software profile creation'
                                      ' template'))
 
         self.addOptionToGroup(
-            optionGroupName, '-j', '--json-file', dest='jsonTemplatePath',
+            option_group_name, '-j', '--json-file', dest='jsonTemplatePath',
             help=_('Path to JSON-formatted software profile creation'
                    ' template'))
 
-        self.addOptionToGroup(optionGroupName, '--name', action='callback',
+        self.addOptionToGroup(option_group_name, '--name', action='callback',
                               callback=self.optCallback, type="str",
                               help=_('Software profile name'))
-        self.addOptionToGroup(optionGroupName, '--description',
+        self.addOptionToGroup(option_group_name, '--description',
                               action='callback', callback=self.optCallback,
                               type="str", dest='description',
                               help=_('Description for software profile'))
-        self.addOptionToGroup(optionGroupName, '--type', action='callback',
+        self.addOptionToGroup(option_group_name, '--type', action='callback',
                               callback=self.optCallback, type='str',
                               dest='profileType',
                               help=_('Software profile type'))
-        self.addOptionToGroup(optionGroupName, '--os', action='callback',
+        self.addOptionToGroup(option_group_name, '--os', action='callback',
                               metavar='OS SPEC',
                               callback=self.optCallback, type="str", dest='os',
                               help=_('Operating system for software profile'
                                      ' nodes'))
 
         self.addOptionToGroup(
-            optionGroupName, '--os-media-required', action='store_true',
+            option_group_name, '--os-media-required', action='store_true',
             dest='bOsMediaRequired', default=True,
             help=_('OS media required for nodes in this software profile'
                    ' (default)')
         )
 
         self.addOptionToGroup(
-            optionGroupName, '--no-os-media-required', action='store_false',
+            option_group_name, '--no-os-media-required', action='store_false',
             dest='bOsMediaRequired', default=True,
             help=_('OS media required for nodes in this software profile')
         )
 
         self.addOptionToGroup(
-            optionGroupName, '--unmanaged', action='store_true',
+            option_group_name, '--unmanaged', action='store_true',
             dest='unmanaged',
             help=_('Create an unmanaged software profile'))
 
@@ -156,34 +155,35 @@ Description:
             raise OptionValueError(
                 _('Only one software profile template can be specified'))
 
-        templatePath = self.getOptions().templatePath \
+        template_path = self.getOptions().templatePath \
             if self.getOptions().templatePath else \
             self.getOptions().jsonTemplatePath
 
-        bUseDefaultTemplate = False
+        b_use_default_template = False
 
-        if not templatePath:
+        if not template_path:
             # Attempt to use default template
-            templatePath = os.path.join(
+            template_path = os.path.join(
                 self._default_tmpl_dir, 'defaultSoftwareProfile.tmpl.xml')
 
-            bUseDefaultTemplate = True
+            b_use_default_template = True
 
-        if not os.path.exists(templatePath):
+        if not os.path.exists(template_path):
             raise InvalidCliRequest(
-                _('Cannot read template from %s') % (templatePath))
+                _('Cannot read template from %s') % (template_path))
 
-        softwareProfileApi = getSoftwareProfileApi(
-            self.getUsername(), self.getPassword())
+        api = SoftwareProfileWsApi(username=self.getUsername(),
+                                   password=self.getPassword(),
+                                   baseurl=self.getUrl())
 
-        # Populate 'settingsDict' from command-line arguments
-        settingsDict = {
+        # Populate 'settings_dict' from command-line arguments
+        settings_dict = {
             'bOsMediaRequired': self.getOptions().bOsMediaRequired,
             'unmanagedProfile': self.getOptions().unmanaged,
         }
 
         try:
-            with open(templatePath) as fp:
+            with open(template_path) as fp:
                 temp_ = fp.read()
 
             # Process the XML template
@@ -197,34 +197,34 @@ Description:
                 'Invalid profile creation template: %s' % (ex))
 
         try:
-            if bUseDefaultTemplate or self.getOptions().templatePath:
+            if b_use_default_template or self.getOptions().templatePath:
                 # We want to ignore all tags with id and software profile
                 # id...they would be there if the template was created from
                 # a dump of an existing profile
 
-                swProfileSpec = SoftwareProfile.getFromXml(
+                sw_profile_spec = SoftwareProfile.getFromXml(
                     tmpl, ['id', 'softwareProfileId'])
             else:
-                swProfileDict = json.loads(tmpl)
+                sw_profile_dict = json.loads(tmpl)
 
-                swProfileSpec = SoftwareProfile.getFromDict(
-                    swProfileDict['softwareProfile'])
+                sw_profile_spec = SoftwareProfile.getFromDict(
+                    sw_profile_dict['softwareProfile'])
         except Exception as ex:
             self.getLogger().debug('Error parsing XML template')
             self.getLogger().exception(ex)
             raise InvalidProfileCreationTemplate(
                 'Invalid profile creation template')
 
-        if not swProfileSpec:
+        if not sw_profile_spec:
             raise InvalidProfileCreationTemplate(
                 'Invalid software creation template')
 
         if self.osInfo:
-            swProfileSpec.setOsInfo(self.osInfo)
+            sw_profile_spec.setOsInfo(self.osInfo)
 
-        softwareProfileApi.createSoftwareProfile(
-            swProfileSpec, settingsDict)
+        api.createSoftwareProfile(
+            sw_profile_spec, settings_dict)
 
 
-if __name__ == '__main__':
+def main():
     CreateSoftwareProfileCli().run()

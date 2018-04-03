@@ -15,12 +15,12 @@
 # limitations under the License.
 
 from tortuga.admin.adminCli import AdminCli
-from tortuga.admin.adminApiFactory import getAdminApi
+from tortuga.wsapi.adminWsApi import AdminWsApi
 
 
 class DeleteAdminCli(AdminCli):
     def __init__(self):
-        AdminCli.__init__(self)
+        super().__init__()
 
         self.addOption('--admin-username', dest='adminUsername',
                        help=_('Username of admin to delete.'))
@@ -39,14 +39,16 @@ Description:
 """))
 
         if not self.getOptions().adminUsername and \
-           not self.getOptions().adminId:
+                not self.getOptions().adminId:
             self.getParser().error(_('Missing Admin Username or id'))
 
-        api = getAdminApi(self.getUsername(), self.getPassword())
+        api = AdminWsApi(username=self.getUsername(),
+                         password=self.getPassword(),
+                         baseurl=self.getUrl())
 
         api.deleteAdmin(
             self.getOptions().adminId or self.getOptions().adminUsername)
 
 
-if __name__ == '__main__':
+def main():
     DeleteAdminCli().run()

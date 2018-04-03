@@ -18,16 +18,15 @@
 
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
-from tortuga.node.nodeApiFactory import getNodeApi
+from tortuga.wsapi.nodeWsApi import NodeWsApi
 
 
 class CheckpointNodeCli(TortugaCli):
     def __init__(self):
-        super(CheckpointNodeCli, self).__init__()
-
-        optionGroupName = _('Checkpoint Node Options')
-        self.addOptionGroup(optionGroupName, '')
-        self.addOptionToGroup(optionGroupName, '--node',
+        super().__init__()
+        option_group_name = _('Checkpoint Node Options')
+        self.addOptionGroup(option_group_name, '')
+        self.addOptionToGroup(option_group_name, '--node',
                               metavar='NAME',
                               dest='nodeName',
                               help=_('Name of node to checkpoint'))
@@ -48,24 +47,19 @@ Description:
         if not self.getOptions().nodeName:
             raise InvalidCliRequest(_('Node name must be specified'))
 
-        nodeName = self.getOptions().nodeName
+        node_name = self.getOptions().nodeName
 
         try:
-            nodeApi = getNodeApi(self.getUsername(), self.getPassword())
+            api = NodeWsApi(username=self.getUsername(),
+                            password=self.getPassword(),
+                            baseurl=self.getUrl())
+            api.checkpointNode(node_name)
+            print(_('Checkpointed node [%s]') % (node_name))
         except Exception as msg:
             raise InvalidCliRequest(
                 _("Can't checkpoint node [{0}] - {1}").format(
-                    nodeName, msg))
-
-        try:
-            nodeApi.checkpointNode(nodeName)
-            print(_('Checkpointed node [%s]') % (nodeName))
-
-        except Exception as msg:
-            raise InvalidCliRequest(
-                _("Can't checkpoint node [{0}] - {1}").format(
-                    nodeName, msg))
+                    node_name, msg))
 
 
-if __name__ == '__main__':
+def main():
     CheckpointNodeCli().run()

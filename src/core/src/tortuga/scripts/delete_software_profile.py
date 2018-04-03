@@ -19,15 +19,15 @@
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
 from tortuga.exceptions import softwareProfileNotFound
+from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
 
 
 class DeleteSoftwareProfileCli(TortugaCli):
     def __init__(self):
-        super(DeleteSoftwareProfileCli, self).__init__()
-
-        optionGroupName = _('Delete Software Profile Options')
-        self.addOptionGroup(optionGroupName, '')
-        self.addOptionToGroup(optionGroupName, '--name',
+        super().__init__()
+        option_group_name = _('Delete Software Profile Options')
+        self.addOptionGroup(option_group_name, '')
+        self.addOptionToGroup(option_group_name, '--name',
                               dest='softwareProfileName',
                               help=_('Name of software profile to delete'))
 
@@ -45,17 +45,16 @@ Description:
             raise InvalidCliRequest(
                 _('Software profile name must be specified'))
 
-        from tortuga.softwareprofile.softwareProfileFactory \
-            import getSoftwareProfileApi
-        softwareProfileApi = getSoftwareProfileApi(self.getUsername(),
-                                                   self.getPassword())
+        api = SoftwareProfileWsApi(username=self.getUsername(),
+                                   password=self.getPassword(),
+                                   baseurl=self.getUrl())
         try:
-            softwareProfileApi.deleteSoftwareProfile(
+            api.deleteSoftwareProfile(
                 self.getOptions().softwareProfileName)
         except softwareProfileNotFound.SoftwareProfileNotFound:
             print(_('Software profile [%s] not found' % (
                 self.getOptions().softwareProfileName)))
 
 
-if __name__ == '__main__':
+def main():
     DeleteSoftwareProfileCli().run()

@@ -17,18 +17,16 @@
 # pylint: disable=no-member
 
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.hardwareprofile.hardwareProfileFactory \
-    import getHardwareProfileApi
-from tortuga.objects.hardwareProfile import HardwareProfile
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
-from tortuga.objects.tortugaObject import TortugaObjectList
+from tortuga.node.nodeApiFactory import getNodeApi
+from tortuga.objects.hardwareProfile import HardwareProfile
 from tortuga.objects.network import Network
 from tortuga.objects.networkDevice import NetworkDevice
-from tortuga.network.networkApiFactory import getNetworkApi
-from tortuga.softwareprofile.softwareProfileFactory \
-    import getSoftwareProfileApi
-from tortuga.db.resourceAdapterDbApi import ResourceAdapterDbApi
-from tortuga.node.nodeApiFactory import getNodeApi
+from tortuga.objects.resourceAdapter import ResourceAdapter
+from tortuga.objects.tortugaObject import TortugaObjectList
+from tortuga.wsapi.hardwareProfileWsApi import HardwareProfileWsApi
+from tortuga.wsapi.networkWsApi import NetworkWsApi
+from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
 
 
 class UpdateHardwareProfileCli(TortugaCli):
@@ -184,7 +182,9 @@ Examples:
 
         hwProfileName = self._options.name
 
-        api = getHardwareProfileApi(self.getUsername(), self.getPassword())
+        api = HardwareProfileWsApi(username=self.getUsername(),
+                                   password=self.getPassword(),
+                                   baseurl=self.getUrl())
 
         if self._options.xmlFile:
             # An XML file was provided as input...start with that...
@@ -243,8 +243,9 @@ Examples:
                   ' --unset-idle-software-profile'))
 
         if self._options.idleProfile is not None:
-            spApi = getSoftwareProfileApi(
-                self.getUsername(), self.getPassword())
+            spApi = SoftwareProfileWsApi(username=self.getUsername(),
+                                         password=self.getPassword(),
+                                         baseurl=self.getUrl())
 
             sp = spApi.getSoftwareProfile(self._options.idleProfile)
 
@@ -260,7 +261,9 @@ Examples:
             hp.setLocalBootParams(self._options.localBootParameters)
 
         if self._options.vcProfile is not None:
-            spApi = getSoftwareProfileApi(self.getUsername, self.getPassword())
+            spApi = SoftwareProfileWsApi(username=self.getUsername,
+                                         password=self.getPassword(),
+                                         baseurl=self.getUrl())
             sp = spApi.getSoftwareProfile(self._options.vcProfile)
 
             hp.setHypervisorSoftwareProfileId(sp.getId())
@@ -275,9 +278,8 @@ Examples:
             hp.setCost(self._options.cost)
 
         if self._options.resourceAdapter:
-            resourceAdapterDbApi = ResourceAdapterDbApi()
-            resourceAdapter = resourceAdapterDbApi.getResourceAdapter(
-                self._options.resourceAdapter)
+            resourceAdapter = ResourceAdapter(
+                name=self._options.resourceAdapter)
             hp.setResourceAdapter(resourceAdapter)
 
         if self._options.deletePNic is not None:
@@ -339,7 +341,9 @@ Examples:
             hp.setNetworks(out)
 
         if self._options.addNetwork:
-            networkApi = getNetworkApi(self.getUsername, self.getPassword())
+            networkApi = NetworkWsApi(username=self.getUsername,
+                                      password=self.getPassword(),
+                                      baseurl=self.getUrl())
             for netstring in self._options.addNetwork:
                 netArgs = netstring.split('/')
                 if len(netArgs) != 3:
@@ -360,5 +364,5 @@ Examples:
         api.updateHardwareProfile(hp)
 
 
-if __name__ == '__main__':
+def main():
     UpdateHardwareProfileCli().run()

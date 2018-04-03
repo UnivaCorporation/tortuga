@@ -17,21 +17,20 @@
 # pylint: disable=no-member
 
 from tortuga.cli import tortugaCli
-from tortuga.softwareprofile import softwareProfileFactory
+from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
 
 
 class CopySoftwareProfileCli(tortugaCli.TortugaCli):
     def __init__(self):
-        super(CopySoftwareProfileCli, self).__init__()
-
-        optionGroupName = _('Copy Software Profile Options')
-        self.addOptionGroup(optionGroupName, '')
-        self.addOptionToGroup(optionGroupName,
+        super().__init__()
+        option_group_name = _('Copy Software Profile Options')
+        self.addOptionGroup(option_group_name, '')
+        self.addOptionToGroup(option_group_name,
                               '--src',
                               dest='srcSoftwareProfileName',
                               metavar='SOFTWAREPROFILENAME',
                               help=_('Name of source software profile'))
-        self.addOptionToGroup(optionGroupName,
+        self.addOptionToGroup(option_group_name,
                               '--dst',
                               dest='dstSoftwareProfileName',
                               metavar='SOFTWAREPROFILENAME',
@@ -55,13 +54,14 @@ Description:
            self.getOptions().dstSoftwareProfileName is None:
             self.usage()
 
-        softwareProfileApi = softwareProfileFactory.getSoftwareProfileApi(
-            self.getUsername(), self.getPassword())
+        api = SoftwareProfileWsApi(username=self.getUsername(),
+                                   password=self.getPassword(),
+                                   baseurl=self.getUrl())
 
-        softwareProfileApi.copySoftwareProfile(
+        api.copySoftwareProfile(
             self.getOptions().srcSoftwareProfileName,
             self.getOptions().dstSoftwareProfileName)
 
 
-if __name__ == '__main__':
+def main():
     CopySoftwareProfileCli().run()

@@ -17,9 +17,8 @@
 # pylint: disable=no-member
 
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.softwareprofile.softwareProfileFactory \
-    import getSoftwareProfileApi
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
+from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
 
 
 class DeleteProfileMappingCli(TortugaCli):
@@ -28,22 +27,22 @@ class DeleteProfileMappingCli(TortugaCli):
     """
 
     def __init__(self):
-        TortugaCli.__init__(self)
+        super().__init__()
 
-        softwareUsesHardwareAttrGroup = \
+        software_uses_hardware_attr_group = \
             _('Software Uses Hardware Attribute Options')
 
         self.addOptionGroup(
-            softwareUsesHardwareAttrGroup,
+            software_uses_hardware_attr_group,
             _('Software and hardware profile ID must be specified.'))
 
         self.addOptionToGroup(
-            softwareUsesHardwareAttrGroup, '--software-profile',
+            software_uses_hardware_attr_group, '--software-profile',
             dest='swprofile', metavar='SOFTWAREPROFILENAME',
             help=_('software profile'))
 
         self.addOptionToGroup(
-            softwareUsesHardwareAttrGroup, '--hardware-profile',
+            software_uses_hardware_attr_group, '--hardware-profile',
             dest='hwprofile', metavar='HARDWAREPROFILENAME',
             help=_('hardware profile'))
 
@@ -58,23 +57,25 @@ Description:
     associated with.
 """))
 
-        swprofileName = self.getOptions().swprofile
+        swprofile_name = self.getOptions().swprofile
 
-        if not swprofileName:
+        if not swprofile_name:
             raise InvalidCliRequest(
                 _('Software profile name must be specified'))
 
-        hwprofileName = self.getOptions().hwprofile
+        hwprofile_name = self.getOptions().hwprofile
 
-        if not hwprofileName:
+        if not hwprofile_name:
             raise InvalidCliRequest(
                 _('Hardware profile name must be specified'))
 
-        api = getSoftwareProfileApi(self.getUsername(), self.getPassword())
+        api = SoftwareProfileWsApi(username=self.getUsername(),
+                                   password=self.getPassword(),
+                                   baseurl=self.getUrl())
 
         api.deleteUsableHardwareProfileFromSoftwareProfile(
-            hwprofileName, swprofileName)
+            hwprofile_name, swprofile_name)
 
 
-if __name__ == '__main__':
+def main():
     DeleteProfileMappingCli().run()

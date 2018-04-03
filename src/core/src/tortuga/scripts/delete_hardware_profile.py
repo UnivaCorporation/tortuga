@@ -18,17 +18,15 @@
 
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
-from tortuga.hardwareprofile.hardwareProfileFactory \
-    import getHardwareProfileApi
+from tortuga.wsapi.hardwareProfileWsApi import HardwareProfileWsApi
 
 
 class DeleteHardwareProfileCli(TortugaCli):
     def __init__(self):
-        super(DeleteHardwareProfileCli, self).__init__()
-
-        optionGroupName = _('Delete Hardware Profile Options')
-        self.addOptionGroup(optionGroupName, '')
-        self.addOptionToGroup(optionGroupName, '--name',
+        super().__init__()
+        option_group_name = _('Delete Hardware Profile Options')
+        self.addOptionGroup(option_group_name, '')
+        self.addOptionToGroup(option_group_name, '--name',
                               dest='hardwareProfileName',
                               help=_('Name of hardware profile to delete'))
 
@@ -46,12 +44,13 @@ Description:
             raise InvalidCliRequest(
                 _('Hardware profile name must be specified'))
 
-        hardwareProfileApi = getHardwareProfileApi(self.getUsername(),
-                                                   self.getPassword())
+        api = HardwareProfileWsApi(username=self.getUsername(),
+                                   password=self.getPassword(),
+                                   baseurl=self.getUrl())
 
-        hardwareProfileApi.deleteHardwareProfile(
+        api.deleteHardwareProfile(
             self.getOptions().hardwareProfileName)
 
 
-if __name__ == '__main__':
+def main():
     DeleteHardwareProfileCli().run()

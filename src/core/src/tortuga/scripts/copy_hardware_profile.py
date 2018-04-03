@@ -17,21 +17,20 @@
 # pylint: disable=no-member
 
 from tortuga.cli import tortugaCli
-from tortuga.hardwareprofile import hardwareProfileFactory
+from tortuga.wsapi.hardwareProfileWsApi import HardwareProfileWsApi
 
 
 class CopyHardwareProfileCli(tortugaCli.TortugaCli):
     def __init__(self):
-        super(CopyHardwareProfileCli, self).__init__()
-
-        optionGroupName = _('Copy Hardware Profile Options')
-        self.addOptionGroup(optionGroupName, '')
-        self.addOptionToGroup(optionGroupName,
+        super().__init__()
+        option_group_name = _('Copy Hardware Profile Options')
+        self.addOptionGroup(option_group_name, '')
+        self.addOptionToGroup(option_group_name,
                               '--src',
                               dest='srcHardwareProfileName',
                               metavar='HARDWAREPROFILENAME',
                               help=_('Name of source hardware profile'))
-        self.addOptionToGroup(optionGroupName,
+        self.addOptionToGroup(option_group_name,
                               '--dst',
                               dest='dstHardwareProfileName',
                               metavar='HARDWAREPROFILENAME',
@@ -46,16 +45,17 @@ Description:
 """))
 
         if self.getOptions().srcHardwareProfileName is None or \
-           self.getOptions().dstHardwareProfileName is None:
+                self.getOptions().dstHardwareProfileName is None:
             self.usage()
 
-        hardwareProfileApi = hardwareProfileFactory.getHardwareProfileApi(
-            self.getUsername(), self.getPassword())
+        api = HardwareProfileWsApi(username=self.getUsername(),
+                                   password=self.getPassword(),
+                                   baseurl=self.getUrl())
 
-        hardwareProfileApi.copyHardwareProfile(
+        api.copyHardwareProfile(
             self.getOptions().srcHardwareProfileName,
             self.getOptions().dstHardwareProfileName)
 
 
-if __name__ == '__main__':
+def main():
     CopyHardwareProfileCli().run()

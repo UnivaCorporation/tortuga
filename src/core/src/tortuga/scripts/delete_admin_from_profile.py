@@ -17,10 +17,8 @@
 # pylint: disable=no-member
 
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.hardwareprofile.hardwareProfileFactory \
-    import getHardwareProfileApi
-from tortuga.softwareprofile.softwareProfileFactory \
-    import getSoftwareProfileApi
+from tortuga.wsapi.hardwareProfileWsApi import HardwareProfileWsApi
+from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
 
 
@@ -30,23 +28,23 @@ class DeleteAdminFromProfileCli(TortugaCli):
     """
 
     def __init__(self):
-        TortugaCli.__init__(self)
+        super().__init__()
 
-        profileAttrGroup = _('Profile Attribute Options')
+        profile_attr_group = _('Profile Attribute Options')
         self.addOptionGroup(
-            profileAttrGroup,
+            profile_attr_group,
             _('Hardware or software profile must be specified.'))
-        self.addOptionToGroup(profileAttrGroup,
+        self.addOptionToGroup(profile_attr_group,
                               '--software-profile', dest='swprofile',
                               help=_('hardware profile name'))
-        self.addOptionToGroup(profileAttrGroup, '--hardware-profile',
+        self.addOptionToGroup(profile_attr_group, '--hardware-profile',
                               dest='hwprofile',
                               help=_('software profile name'))
 
-        profileAttrGroup = _('Admin Attribute Options')
+        profile_attr_group = _('Admin Attribute Options')
         self.addOptionGroup(
-            profileAttrGroup, _('Admin username must be specified.'))
-        self.addOptionToGroup(profileAttrGroup,
+            profile_attr_group, _('Admin username must be specified.'))
+        self.addOptionToGroup(profile_attr_group,
                               '--admin-username', dest='adminUsername',
                               help=_('Admin username'))
 
@@ -74,23 +72,25 @@ Description:
                 _('Either --software-profile or --hardware-profile must'
                   ' be specified.'))
 
-        adminUsername = self.getOptions().adminUsername
-        if adminUsername is None:
+        admin_username = self.getOptions().adminUsername
+        if admin_username is None:
             raise InvalidCliRequest(_('Missing Admin Username'))
 
         if swprofile:
             profile = swprofile
 
-            api = getSoftwareProfileApi(
-                self.getUsername(), self.getPassword())
+            api = SoftwareProfileWsApi(username=self.getUsername(),
+                                       password=self.getPassword(),
+                                       baseurl=self.getUrl())
         else:
             profile = hwprofile
 
-            api = getHardwareProfileApi(
-                self.getUsername(), self.getPassword())
+            api = HardwareProfileWsApi(username=self.getUsername(),
+                                       password=self.getPassword(),
+                                       baseurl=self.getUrl())
 
-        api.deleteAdmin(profile, adminUsername)
+        api.deleteAdmin(profile, admin_username)
 
 
-if __name__ == '__main__':
+def main():
     DeleteAdminFromProfileCli().run()

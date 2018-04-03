@@ -18,13 +18,12 @@
 
 from tortuga.puppet import Puppet
 from tortuga.kit.kitCli import KitCli
-from tortuga.softwareprofile.softwareProfileFactory \
-    import getSoftwareProfileApi
+from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
 
 
 class DisableComponent(KitCli):
     def __init__(self):
-        super(DisableComponent, self).__init__(validArgCount=2)
+        super().__init__(validArgCount=2)
 
         self.addOption('--software-profile', dest='softwareProfileName',
                        help=_('Software profile to disable component on'))
@@ -86,17 +85,16 @@ component-ganglia-gmond-3.0.7
         if self.getNArgs() == 1 and '-' not in self.getArg(0):
             # The first argument is assumed to be the component name.
             compname = self.getArg(0)
-
-            kitName = None
-            kitVersion = None
-            kitIteration = None
+            kit_name = None
+            kit_version = None
+            kit_iteration = None
         else:
             # Get given Kit information
             pkgname = None
             if self.getNArgs() >= 1:
                 pkgname = self.getArg(0)
 
-            kitName, kitVersion, kitIteration = \
+            kit_name, kit_version, kit_iteration = \
                 self.getKitNameVersionIteration(pkgname)
 
             # Get given Component information
@@ -114,26 +112,25 @@ component-ganglia-gmond-3.0.7
 
         if self._options.applyToInstaller:
             from tortuga.node import nodeApiFactory
-            nodeApi = nodeApiFactory.getNodeApi()
+            node_api = nodeApiFactory.getNodeApi()
 
-            node = nodeApi.getInstallerNode(optionDict={
+            node = node_api.getInstallerNode(optionDict={
                 'softwareprofile': True,
             })
 
-            softwareProfileName = node.getSoftwareProfile().getName()
+            software_profile_name = node.getSoftwareProfile().getName()
         else:
-            softwareProfileName = self._options.softwareProfileName
+            software_profile_name = self._options.softwareProfileName
 
-            if not softwareProfileName:
+            if not software_profile_name:
                 self.usage(_('Missing --software-profile option'))
 
-        # c = self.getComponent(kitName, kitVersion, kitIteration, compname)
+        api = SoftwareProfileWsApi(username=self.getUsername(),
+                                   password=self.getPassword(),
+                                   baseurl=self.getUrl())
 
-        api = getSoftwareProfileApi(self.getUsername(), self.getPassword())
-
-        api.disableComponent(
-            softwareProfileName, kitName, kitVersion, kitIteration,
-            compname)
+        api.disableComponent(software_profile_name, kit_name, kit_version,
+                             kit_iteration, compname)
 
         if self.getOptions().sync:
             Puppet().agent()
@@ -141,7 +138,3 @@ component-ganglia-gmond-3.0.7
 
 def main():
     DisableComponent().run()
-
-
-if __name__ == '__main__':
-    main()
