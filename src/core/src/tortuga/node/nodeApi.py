@@ -132,17 +132,6 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def getMyNode(self) -> Node:
-        """ get a node entry of the current node """
-        try:
-            return self._nodeManager.getInstallerNode()
-        except TortugaException:
-            raise
-        except Exception as ex:
-            self.getLogger().exception('Fatal error retrieving current node')
-
-            raise TortugaException(exception=ex)
-
     def getProvisioningInfo(self, nodeName: str):
         """ Get provisioning information for a node """
         try:

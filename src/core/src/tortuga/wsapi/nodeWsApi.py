@@ -141,24 +141,6 @@ class NodeWsApi(TortugaWsApi): \
         except Exception as ex:
             raise TortugaException(exception=ex)
 
-    def getMyNode(self):
-        """
-        This API is called by compute nodes to get the node record
-        associated with host (IP) making the request
-        """
-
-        url = 'v1/identify-node'
-
-        try:
-            _, responseDict = self.sendSessionRequest(url)
-
-            return tortuga.objects.node.Node.getFromDict(
-                responseDict.get('node'))
-        except TortugaException:
-            raise
-        except Exception as ex:
-            raise TortugaException(exception=ex)
-
     def updateNodeStatus(self, name, state=None, bootFrom=None):
         """
         updateNodeStatus() is really a "constrained" (only two fields
