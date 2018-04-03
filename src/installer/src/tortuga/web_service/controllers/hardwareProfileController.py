@@ -15,11 +15,11 @@
 # pylint: disable=no-member
 
 import cherrypy
-from tortuga.exceptions.hardwareProfileNotFound \
-    import HardwareProfileNotFound
+
+from tortuga.exceptions.hardwareProfileNotFound import HardwareProfileNotFound
 from tortuga.exceptions.userNotAuthorized import UserNotAuthorized
-from tortuga.hardwareprofile.hardwareProfileManager \
-    import HardwareProfileManager
+from tortuga.hardwareprofile.hardwareProfileManager import \
+    HardwareProfileManager
 from tortuga.objects.hardwareProfile import HardwareProfile
 from tortuga.objects.osInfo import OsInfo
 from tortuga.objects.tortugaObject import TortugaObjectList
@@ -172,7 +172,7 @@ class HardwareProfileController(TortugaController):
         settingsDict = postdata['settingsDict'] \
             if 'settingsDict' in postdata else {}
 
-        if 'osInfo' in settingsDict:
+        if 'osInfo' in settingsDict and settingsDict['osInfo']:
             settingsDict['osInfo'] = OsInfo.getFromDict(
                 settingsDict['osInfo'])
 
