@@ -113,4 +113,10 @@ setup(
         'build_py': BuildPyCommand,
         'sdist': SdistCommand,
     },
+    entry_points={
+        'console_scripts': [
+            'add-nodes=tortuga.scripts.add_nodes:main',
+            'delete-node=tortuga.scripts.delete_node:main',
+        ],
+    },
 )

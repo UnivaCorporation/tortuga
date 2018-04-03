@@ -17,26 +17,21 @@
 
 # pylint: disable=no-member
 
+import ipaddress
+import itertools
+import optparse
 import os.path
 import sys
-import time
-import itertools
-import ipaddress
-import optparse
 
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.wsapi.addHostWsApi import AddHostWsApi
 from tortuga.exceptions.httpErrorException import HttpErrorException
 from tortuga.exceptions.urlErrorException import UrlErrorException
-from tortuga.db.dbManager import DbManager
-from tortuga.db.nodeRequests import NodeRequests
+from tortuga.wsapi.addHostWsApi import AddHostWsApi
 
 
 class AddNodes(TortugaCli): \
         # pylint: disable=too-few-public-methods
-    def __init__(self):
-        super(AddNodes, self).__init__()
-
+    def parseArgs(self, usage=None):
         mainGroup = _('Main Options')
         self.addOptionGroup(mainGroup, None)
 
@@ -93,11 +88,6 @@ class AddNodes(TortugaCli): \
             type='int')
 
         self.addOptionToGroup(
-            mainGroup, '--wait',
-            action='store_true', default=False,
-            help=_('Wait for operation to complete before exiting.'))
-
-        self.addOptionToGroup(
             mainGroup, '--resource-adapter-configuration', '-A',
             metavar='NAME',
             default='default',
@@ -141,6 +131,8 @@ class AddNodes(TortugaCli): \
             help=_('File containing list of MAC addresses to be added'
                    ' to cluster'))
 
+        super(AddNodes, self).parseArgs(usage=usage)
+
     def runCommand(self):
         self.parseArgs('''
     add-nodes [--idle] [options] [-n COUNT] \
@@ -169,9 +161,10 @@ Description:
                 sys.stderr.write('Ignoring \'--count\' option when importing'
                                  ' from MAC file\n')
 
-        addHostWsApi = AddHostWsApi(
-            username=self.getOptions().username,
-            password=self.getOptions().password)
+        addHostWsApi = AddHostWsApi(username=self.getUsername(),
+                                    password=self.getPassword(),
+                                    baseurl=self.getUrl()
+        )
 
         addNodesRequest = dict(isIdle=self.getOptions().isIdle)
 
@@ -292,17 +285,14 @@ Description:
         try:
             addHostSession = addHostWsApi.addNodes(addNodesRequest)
 
-            if self.getOptions().wait:
-                self.__wait_for_completion(addHostSession)
+            if self.getOptions().quiet:
+                sys.stdout.write('{0}\n'.format(addHostSession))
             else:
-                if self.getOptions().quiet:
-                    sys.stdout.write('{0}\n'.format(addHostSession))
-                else:
-                    # Async (default) invocation; show user output
-                    sys.stdout.write(
-                        'Add host session [{0}] created successfully.\n'
-                        ' Use \'get-node-requests -r {0}\' to query request'
-                        ' status\n'.format(addHostSession))
+                # Async (default) invocation; show user output
+                sys.stdout.write(
+                    'Add host session [{0}] created successfully.\n'
+                    ' Use \'get-node-requests -r {0}\' to query request'
+                    ' status\n'.format(addHostSession))
 
                 sys.stdout.flush()
         except (UrlErrorException, HttpErrorException):
@@ -349,46 +339,6 @@ Description:
 
         return nics
 
-    def __wait_for_completion(self, addHostSession): \
-            # pylint: disable=no-self-use
-
-        session = DbManager().openSession()
-
-        try:
-            running = True
-
-            while running:
-                request = session.query(NodeRequests).filter(
-                    NodeRequests.addHostSession == addHostSession).first()
-
-                if request.state == 'error':
-                    sys.stderr.write(request.message + '\n')
-                    sys.stderr.flush()
-
-                    break
-
-                nIndex = 0
-
-                while True:
-                    status = AddHostWsApi().getStatus(
-                        addHostSession, startMessage=nIndex)
-
-                    for buf in status.getMessageList():
-                        buf.decode()
-
-                        sys.stdout.write(buf + '\n')
-                        sys.stdout.flush()
-
-                        nIndex += 1
-
-                    if not status.getIsRunning():
-                        running = False
-                        break
-
-                    time.sleep(2)
-        finally:
-            DbManager().closeSession()
-
 
 def _split_key_value_pairs(kvpairs):
     result = {}
@@ -406,5 +356,5 @@ def _split_key_value_pairs(kvpairs):
     return result
 
 
-if __name__ == '__main__':
+def main():
     AddNodes().run()

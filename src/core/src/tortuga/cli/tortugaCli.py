@@ -14,18 +14,19 @@
 
 # pylint: disable=no-member,maybe-no-member
 
-import sys
-import os
+import configparser
 import gettext
 import logging
+import os
+import sys
+from optparse import OptionGroup, OptionParser
+
 from tortuga.config.configManager import ConfigManager
-from tortuga.exceptions.tortugaException import TortugaException
-from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.abstractMethod import AbstractMethod
-from optparse import OptionParser
-from optparse import OptionGroup
-from tortuga.utility.authManager import authorizeRoot
+from tortuga.exceptions.invalidArgument import InvalidArgument
+from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.exceptions.userNotAuthorized import UserNotAuthorized
+from tortuga.utility.authManager import authorizeRoot
 
 
 def check_for_root(cls):
@@ -39,7 +40,6 @@ def check_for_root(cls):
     return cls
 
 
-# @check_for_root
 class TortugaCli(object):
     """
     Base tortuga command line interface class.
@@ -54,6 +54,7 @@ class TortugaCli(object):
         self._options = None
         self._args = []
         self._validArgCount = validArgCount
+        self._url = None
         self._username = None
         self._password = None
         self._optionGroupDict = {}
@@ -80,14 +81,16 @@ class TortugaCli(object):
                    ' warning, info, debug'))
 
         self.addOptionToGroup(
+            commonGroup, '--url',
+            help=_('UniCloud web service URL'))
+
+        self.addOptionToGroup(
             commonGroup, '--username', dest='username',
-            help=_('Credential to use when not running as root on the'
-                   ' installer.'))
+            help=_('UniCloud web service user name'))
 
         self.addOptionToGroup(
             commonGroup, '--password', dest='password',
-            help=_('Credential to use when not running as root on the'
-                   ' installer.'))
+            help=_('UniCloud web service password'))
 
     def getLogger(self):
         """ Get logger for this class. """
@@ -184,11 +187,67 @@ class TortugaCli(object):
             logger.addHandler(ch)
 
         # Promote options to attributes
+        url, username, password = self.__get_web_service_options()
 
-        self._username = self._options.username
-        self._password = self._options.password
+        self._url = url
+        self._username = username
+        self._password = password
 
         return self._options, self._args
+
+    def __get_web_service_options(self):
+        """
+        Read UniCloud web service credentials from config file, environment,
+        or command-line. Command-line overrides either config file or
+        environment.
+
+        :return: tuple of (url, username, password)
+        """
+        username = password = url = None
+
+        cfg_file = os.path.join(os.path.expanduser('~'),
+                                '.local',
+                                'unicloud',
+                                'credentials')
+
+        if os.path.exists(cfg_file):
+            cfg = configparser.ConfigParser()
+
+            cfg.read(cfg_file)
+
+            username = cfg.get('default', 'username') \
+                if cfg.has_section('default') and \
+                   cfg.has_option('default', 'username') else None
+
+            password = cfg.get('default', 'password') \
+                if cfg.has_section('default') and \
+                   cfg.has_option('default', 'password') else None
+
+            url = cfg.get('default', 'url') \
+                if cfg.has_section('default') and \
+                   cfg.has_option('default', 'url') else None
+
+        # UNICLOUD_WS_URL
+        if self._options.url:
+            # Command-line "--server" argument overrides env var and
+            # setting contained within '/etc/profile.nii'
+            url = self._options.url
+        elif os.getenv('UNICLOUD_WS_URL'):
+            url = os.getenv('UNICLOUD_WS_URL')
+
+        # UNICLOUD_WS_USERNAME
+        if self._options.username:
+            username = self._options.username
+        elif os.getenv('UNICLOUD_WS_USERNAME'):
+            username = os.getenv('UNICLOUD_WS_USERNAME')
+
+        # UNICLOUD_WS_PASSWORD
+        if self._options.password:
+            password = self._options.password
+        elif os.getenv('UNICLOUD_WS_PASSWORD'):
+            password = os.getenv('UNICLOUD_WS_PASSWORD')
+
+        return url, username, password
 
     def usage(self, s=None):
         '''Print the help provided by optparse'''
@@ -215,6 +274,9 @@ class TortugaCli(object):
     def getArg(self, i):
         '''Returns the i-th command line argument'''
         return self._args[i]
+
+    def getUrl(self):
+        return self._url
 
     def getUsername(self):
         """ Get user name. """

@@ -16,9 +16,10 @@
 
 # pylint: disable=no-member
 
-import sys
 import itertools
 import optparse
+import sys
+
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.wsapi.nodeWsApi import NodeWsApi
 
@@ -40,7 +41,7 @@ class DeleteNodeCli(TortugaCli):
                        default=False,
                        help=optparse.SUPPRESS_HELP)
 
-        self.api = NodeWsApi(self.getUsername(), self.getPassword())
+
 
     def runCommand(self):
 
@@ -56,6 +57,11 @@ Description:
         if not self.getOptions().nodeList and not self.getArgs():
             self.getParser().error(_('Missing --node option'))
 
+        node_api = NodeWsApi(username=self.getUsername(),
+                             password=self.getPassword(),
+                             baseurl=self.getUrl()
+        )
+
         if self.getOptions().nodeList and \
                 self.getOptions().nodeList[0] == '-':
             # Perform bulk deletes, 100 nodes at a time
@@ -66,19 +72,19 @@ Description:
                 nodes.append(line.rstrip())
 
                 if count % 100 == 0:
-                    self.api.deleteNode(','.join(nodes))
+                    node_api.deleteNode(','.join(nodes))
 
                     nodes = []
 
-            self.api.deleteNode(','.join(nodes))
+            node_api.deleteNode(','.join(nodes))
         else:
             nodes = self.getOptions().nodeList
 
             if self.getArgs():
                 nodes += ',' + ','.join(self.getArgs())
 
-            self.api.deleteNode(nodes)
+            node_api.deleteNode(nodes)
 
 
-if __name__ == '__main__':
+def main():
     DeleteNodeCli().run()
