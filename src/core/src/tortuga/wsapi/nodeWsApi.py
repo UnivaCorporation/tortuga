@@ -94,6 +94,20 @@ class NodeWsApi(TortugaWsApi): \
         except Exception as ex:
             raise TortugaException(exception=ex)
 
+    def getInstallerNode(self, optionDict=None): \
+            # pylint: disable=unused-argument
+        url = 'v1/nodes?installer=true'
+
+        try:
+            _, responseDict = self.sendSessionRequest(url)
+
+            return tortuga.objects.node.Node.getFromDict(
+                responseDict['nodes'][0])
+        except TortugaException:
+            raise
+        except Exception as ex:
+            raise TortugaException(exception=ex)
+
     def getNodeById(self, nodeId, optionDict=None):
         url = 'v1/nodes/%d' % (int(nodeId))
 

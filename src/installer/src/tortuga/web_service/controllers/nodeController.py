@@ -22,6 +22,7 @@ from tortuga.db.nodeRequests import NodeRequests
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.objects.tortugaObject import TortugaObjectList
+from tortuga.utility.helper import str2bool
 
 from .authController import require
 from .common import parse_tag_query_string
@@ -167,6 +168,10 @@ class NodeController(TortugaController):
             if 'name' in kwargs and kwargs['name']:
                 nodeList = TortugaObjectList(
                     [app.node_api.getNode(kwargs['name'])])
+            elif 'installer' in kwargs and str2bool(kwargs['installer']):
+                nodeList = TortugaObjectList(
+                    [app.node_api.getInstallerNode()]
+                )
             else:
                 nodeList = app.node_api.getNodeList(tags=tagspec)
 
