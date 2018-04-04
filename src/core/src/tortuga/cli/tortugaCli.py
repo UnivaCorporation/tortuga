@@ -238,7 +238,9 @@ class TortugaCli(object):
         return url, username, password
 
     def usage(self, s=None):
-        '''Print the help provided by optparse'''
+        """
+        Print usage information
+        """
 
         if s:
             sys.stderr.write(_('Error: {0}').format(s) + '\n')
