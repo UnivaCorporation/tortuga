@@ -19,25 +19,20 @@
 import glob
 import json
 import os.path
-from optparse import OptionValueError
 
-import os.path
 from jinja2 import Template
+
 from tortuga.cli.tortugaCli import TortugaCli
+from tortuga.cli.utils import (ParseOperatingSystemArgAction,
+                               ParseProfileTemplateArgsAction)
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
-from tortuga.exceptions.invalidProfileCreationTemplate \
-    import InvalidProfileCreationTemplate
+from tortuga.exceptions.invalidProfileCreationTemplate import \
+    InvalidProfileCreationTemplate
 from tortuga.objects.osInfo import OsInfo
 from tortuga.objects.softwareProfile import SoftwareProfile
+from tortuga.softwareprofile.softwareProfileFactory import \
+    getSoftwareProfileApi
 from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
-from tortuga.cli.utils import ParseOperatingSystemArgAction
-from tortuga.cli.utils import ParseProfileTemplateArgsAction
-from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
-from tortuga.exceptions.invalidProfileCreationTemplate \
-    import InvalidProfileCreationTemplate
-from tortuga.objects.softwareProfile import SoftwareProfile
-from tortuga.softwareprofile.softwareProfileFactory \
-    import getSoftwareProfileApi
 
 
 class CreateSoftwareProfileCli(TortugaCli):
@@ -59,15 +54,17 @@ class CreateSoftwareProfileCli(TortugaCli):
         # Add options group and options specific to creation of a software
         # profile
         option_group_name = _('Create Software Profile Options')
-        self.addOptionGroup(option_group_name, '')
-        self.addOptionToGroup(option_group_name, '-x', '--xml-file',
-                              dest='templatePath',
-                              help=_('Path to software profile creation'
-                                     ' template'))
+        option_group = self.addOptionGroup(option_group_name, '')
 
-        self.addOptionToGroup(
-            option_group_name, '-j', '--json-file', dest='jsonTemplatePath',
-            help=_('Path to JSON-formatted software profile creation'
+        excl_option_group = option_group.add_mutually_exclusive_group()
+
+        excl_option_group.add_argument(
+            '-x', '--xml-file', dest='templatePath',
+            help=_('Path to hardware profile creation template'))
+
+        excl_option_group.add_argument(
+            '-j', '--json-file', dest='jsonTemplatePath',
+            help=_('Path to JSON-formatted hardware profile creation'
                    ' template'))
 
         self.addOptionToGroup(option_group_name, '--name',
@@ -116,28 +113,17 @@ class CreateSoftwareProfileCli(TortugaCli):
 
     def runCommand(self):
         self.parseArgs(_("""
-    create-software-profile --list-templates
+The  create-software-profile tool either lists the paths of available
+templates or creates a software profile from an existing template.
 
-    create-software-profile --xml-file TEMPLATEPATH --name=NAME
-       [--description=DESCRIPTION] [--os=OS] [--type=TYPE] [--unmanaged]
-
-Description:
-    The  create-software-profile  tool either lists the paths of available
-    templates or creates a software profile from  an  existing  template.
-
-    When creating a software profile the description, os, and type speci-
-    fied in the template can be overridden by providing  the  appropriate
-    command line options.
+When creating a software profile the description, os, and type specified in
+the template can be overridden by providing the appropriate
+command line options.
 """))
 
         if self.getArgs().bDisplayTemplateList:
             self.displayTemplateList()
             return
-
-        if self.getArgs().templatePath and \
-                self.getArgs().jsonTemplatePath:
-            raise OptionValueError(
-                _('Only one software profile template can be specified'))
 
         template_path = self.getArgs().templatePath \
             if self.getArgs().templatePath else \
