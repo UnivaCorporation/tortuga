@@ -16,28 +16,23 @@
 
 # pylint: disable=no-member
 
-from tortuga.puppet import Puppet
-from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
-
-from .enable_component import ComponentCli
+from .componentCli import ComponentCli
 
 
 class DisableComponent(ComponentCli):
     def runCommand(self):
-
         self.parseArgs('''
 Disable component on software profile.
 ''')
 
-        api = SoftwareProfileWsApi(username=self.getUsername(),
-                                   password=self.getPassword(),
-                                   baseurl=self.getUrl())
-
-        api.disableComponent(self.softwareProfileName, self.kitName, self.kitVersion,
-                             self.kitIteration, self.compname)
-
-        if self.getArgs().sync:
-            Puppet().agent()
+        self.software_profile_api.disableComponent(
+            self.software_profile_name,
+            self.kit_name,
+            self.kit_version,
+            self.kit_iteration,
+            self.component_name,
+            sync=self.getArgs().sync
+        )
 
 
 def main():

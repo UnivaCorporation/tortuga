@@ -15,18 +15,19 @@
 # pylint: disable=no-member,no-name-in-module
 
 import cherrypy
-
-from tortuga.softwareprofile.softwareProfileManager \
-    import SoftwareProfileManager
-from tortuga.objects.softwareProfile import SoftwareProfile
-from tortuga.softwareprofile.softwareProfileApi import SoftwareProfileApi
+from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.softwareProfileNotFound \
     import SoftwareProfileNotFound
-from tortuga.exceptions.invalidArgument import InvalidArgument
+from tortuga.objects.softwareProfile import SoftwareProfile
+from tortuga.objects.tortugaObject import TortugaObjectList
+from tortuga.softwareprofile.softwareProfileApi import SoftwareProfileApi
+from tortuga.softwareprofile.softwareProfileManager \
+    import SoftwareProfileManager
+from tortuga.utility.helper import str2bool
+
+from .authController import require
 from .common import parse_tag_query_string
 from .tortugaController import TortugaController
-from .authController import AuthController, require
-from tortuga.objects.tortugaObject import TortugaObjectList
 
 
 class SoftwareProfileController(TortugaController):
@@ -459,9 +460,12 @@ class SoftwareProfileController(TortugaController):
             componentName = component['componentName']
             componentVersion = component['componentVersion']
 
+            puppet_sync = str2bool(postdata['sync']) \
+                if 'sync' in postdata else True
+
             self._softwareProfileManager.enableComponent(
                 softwareProfileName, kitName, kitVersion, kitIteration,
-                componentName, comp_version=componentVersion)
+                componentName, comp_version=componentVersion, sync=puppet_sync)
         except Exception as ex:
             self.getLogger().exception(
                 'software profile WS API enableComponent() failed')
@@ -494,9 +498,12 @@ class SoftwareProfileController(TortugaController):
             componentName = component['componentName']
             componentVersion = component['componentVersion']
 
+            puppet_sync = str2bool(postdata['sync']) \
+                if 'sync' in postdata else True
+
             self._softwareProfileManager.disableComponent(
                 softwareProfileName, kitName, kitVersion, kitIteration,
-                componentName, componentVersion)
+                componentName, componentVersion, sync=puppet_sync)
         except Exception as ex:
             self.getLogger().exception(
                 'software profile WS API disableComponent() failed')
