@@ -15,10 +15,10 @@
 # limitations under the License.
 
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.softwareprofile.softwareProfileFactory \
-    import getSoftwareProfileApi
-from tortuga.objects.softwareProfile import SoftwareProfile
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
+
+from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
+from tortuga.objects.softwareProfile import SoftwareProfile
 
 
 class UpdateSoftwareProfileCli(TortugaCli):
@@ -33,9 +33,7 @@ class UpdateSoftwareProfileCli(TortugaCli):
         'partitions': True,
     }
 
-    def __init__(self):
-        TortugaCli.__init__(self)
-
+    def parseArgs(self, usage=None):
         # Simple Options
         self.addOption('--name', dest='name',
                        help=_('Name of software profile'))
@@ -144,71 +142,22 @@ class UpdateSoftwareProfileCli(TortugaCli):
                        help=_('A file pointing to an XML representation of'
                               ' hardware profile'))
 
+        super().parseArgs(usage=usage)
+
     def runCommand(self):
         self.parseArgs(_("""
-    update-software-profile [ --xml-file=XMLFILE | --name=NAME ]
-       [ --new-name=NEWNAME --description=ESCRIPTION --kernel=KERNEL
-       --kernel-parameters=KERNELPARAMETERS   --initrd=INITRD
-       --min-nodes=MIN --add-package=ADDPACKAGE
-       --delete-package=DELETEPACKAGE ]
-
-    update-software-profile --name=NAME --add-partition=PARTITION
-       --device=DEVICE --mount-point=MOUNTPOINT --file-system=FILESYSTEM
-       --size=SIZE --options=OPTIONS [ --preserve | --no-preserve ]
-       [ --boot-loader | --no-boot-loader ] [ --grow | --no-grow ]
-       [ --maxsize=SIZE ]
-
-    update-software-profile --name=NAME --update-partition=PARTITION
-       [ --device=DEVICE --mount-point=MOUNTPOINT --file-system=FILESYSTEM
-       --size=SIZE --options=OPTIONS [ --preserve | --no-preserve ]
-       [ --boot-loader | --no-boot-loader ] [ --grow | --no-grow ]
-       [ --maxsize=SIZE ]
-
-    update-software-profile --name=NAME --delete-partition=PARTITION
-
-Description:
-    The update-software-profile tool updates a  single  existing  software
-    profile  in  the Tortuga system.  Nodes recieve several configuration
-    parameters from the software profile they are associated with.
-
-    The update-software-profile tool is structured to first set up all of
-    their options and then look to see if the --xml-file option is speci-
-    fied. If the --xml-file option is specified a profile object is  cre-
-    ated  from  the  file.  If  the --xml-file  is  not  present the tool
-    fetches the profile specified by the --name option using  the  appro-
-    priate  API.  Now  that a profile instance has been created the addi-
-    tional arguments are processed which causes modification of the  pro-
-    file instance. Finally this instance is sent back to the system using
-    the appropriate API's update method.
-Examples:
-    Update some simple fields:
-
-       update-software-profile --name SwTest
-           --description "Changed for Demo" --kernel overridden
-           --initrd overridden
-
-   Delete a partition:
-
-       update-software-profile --name SwTest --delete-partition root
-           --delete-partition swap --delete-partition boot
-
-   Create an 8000MB partition named 'SwTest' mounted on /boot
-
-       update-software-profile --name SwTest --add-partition boot
-           --device 1.1 --mount-point /boot --file-system ext4
-           --size 8000 --options default --no-preserve --no-boot-loader
-
-   Update a partition:
-
-       update-software-profile --name SwTest --update-partition boot
-           --size 16000
+Updates software profile in the Tortuga system.
 """))
-        swProfileName = self._options.name
 
-        api = getSoftwareProfileApi(self.getUsername(), self.getPassword())
-        if self._options.xmlFile:
+        software_profile_name = self.getArgs().name
+
+        api = SoftwareProfileWsApi(username=self.getUsername(),
+                                   password=self.getPassword(),
+                                   baseurl=self.getUrl())
+        
+        if self.getArgs().xmlFile:
             # An XML file was provided as input...start with that...
-            f = open(self._options.xmlFile, 'r')
+            f = open(self.getArgs().xmlFile, 'r')
             try:
                 xmlString = f.read()
             finally:
@@ -222,31 +171,31 @@ Examples:
             if sp is None:
                 raise InvalidCliRequest(
                     _('The file "%s" does not contain a valid software'
-                      ' profile') % (self._options.xmlFile))
+                      ' profile') % (self.getArgs().xmlFile))
         else:
-            if swProfileName is None:
+            if software_profile_name is None:
                 raise InvalidCliRequest(_('Missing software profile name'))
 
-            sp = api.getSoftwareProfile(swProfileName,
+            sp = api.getSoftwareProfile(software_profile_name,
                                         UpdateSoftwareProfileCli.optionDict)
 
-        if self._options.newName is not None:
-            sp.setName(self._options.newName)
-        if self._options.description is not None:
-            sp.setDescription(self._options.description)
-        if self._options.kernel is not None:
-            sp.setKernel(self._options.kernel)
-        if self._options.kernelParameters is not None:
-            sp.setKernelParams(self._options.kernelParameters)
-        if self._options.initrd is not None:
-            sp.setInitrd(self._options.initrd)
-        if self._options.minNodes is not None:
-            sp.setMinNodes(self._options.minNodes)
-        if self._options.deletePackage is not None:
+        if self.getArgs().newName is not None:
+            sp.setName(self.getArgs().newName)
+        if self.getArgs().description is not None:
+            sp.setDescription(self.getArgs().description)
+        if self.getArgs().kernel is not None:
+            sp.setKernel(self.getArgs().kernel)
+        if self.getArgs().kernelParameters is not None:
+            sp.setKernelParams(self.getArgs().kernelParameters)
+        if self.getArgs().initrd is not None:
+            sp.setInitrd(self.getArgs().initrd)
+        if self.getArgs().minNodes is not None:
+            sp.setMinNodes(self.getArgs().minNodes)
+        if self.getArgs().deletePackage is not None:
             from tortuga.objects.tortugaObject import TortugaObjectList
             out = TortugaObjectList()
             for p in sp.getPackages():
-                for dp in self._options.deletePackage:
+                for dp in self.getArgs().deletePackage:
                     if dp == p.getName():
                         # Skip over this item..its getting deleted
                         break
@@ -254,15 +203,15 @@ Examples:
                     # Not a package we are deleting
                     out.append(p)
             sp.setPackages(out)
-        if self._options.addPackage is not None:
+        if self.getArgs().addPackage is not None:
             from tortuga.objects.package import Package
-            for p in self._options.addPackage:
+            for p in self.getArgs().addPackage:
                 sp.getPackages().append(Package(p))
-        if self._options.deletePartition is not None:
+        if self.getArgs().deletePartition is not None:
             from tortuga.objects.tortugaObject import TortugaObjectList
             out = TortugaObjectList()
             for p in sp.getPartitions():
-                for dp in self._options.deletePartition:
+                for dp in self.getArgs().deletePartition:
                     if dp == p.getName():
                         # Skip over this item..its getting deleted
                         break
@@ -272,107 +221,107 @@ Examples:
             sp.setPartitions(out)
 
         partitionObject = None
-        if self._options.updatePartition:
-            if self._options.addPartition:
+        if self.getArgs().updatePartition:
+            if self.getArgs().addPartition:
                 raise InvalidCliRequest(
                     _('Must provide only one of --update-partition and'
                       ' --add-partition'))
 
             for p in sp.getPartitions():
-                if p.getName() == self._options.updatePartition:
+                if p.getName() == self.getArgs().updatePartition:
                     partitionObject = p
                     break
             else:
                 raise InvalidCliRequest(
                     _('Cannot update non-existent partition "%s"') % (
-                        self._options.updatePartition))
+                        self.getArgs().updatePartition))
 
-        if self._options.addPartition:
+        if self.getArgs().addPartition:
             from tortuga.objects.partition import Partition
             partitionObject = Partition()
-            partitionObject.setName(self._options.addPartition)
+            partitionObject.setName(self.getArgs().addPartition)
             sp.getPartitions().append(partitionObject)
-            if self._options.device is None or \
-                    self._options.fileSystem is None or \
-                    self._options.size is None:
+            if self.getArgs().device is None or \
+                    self.getArgs().fileSystem is None or \
+                    self.getArgs().size is None:
                 raise InvalidCliRequest(
                     _('--device, --file-system, and --size options required'
                       ' with --add-partition'))
 
-        if self._options.grow:
+        if self.getArgs().grow:
             if not partitionObject:
                 raise InvalidCliRequest(
                     _('The --grow/--no-grow options is only allowed with'
                       ' --update-partition or --add-partition'))
 
-            partitionObject.setGrow(self._options.grow)
+            partitionObject.setGrow(self.getArgs().grow)
 
-        if self._options.maxsize:
+        if self.getArgs().maxsize:
             if not partitionObject:
                 raise InvalidCliRequest(
                     _('The --max-size option is only allowed with'
                       ' --update-partition or --add-partition'))
 
-            partitionObject.setMaxSize(self._options.maxsize)
+            partitionObject.setMaxSize(self.getArgs().maxsize)
 
-        if self._options.device is not None:
+        if self.getArgs().device is not None:
             if partitionObject is None:
                 raise InvalidCliRequest(
                     _('The --device option is only allowed with'
                       ' --update-partition or --add-partition'))
 
-            partitionObject.setDevice(self._options.device)
+            partitionObject.setDevice(self.getArgs().device)
 
-        if self._options.mountPoint is not None:
+        if self.getArgs().mountPoint is not None:
             if partitionObject is None:
                 raise InvalidCliRequest(
                     _('--mount-point option only allowed with'
                       ' --update-partition or --add-partition'))
 
-            partitionObject.setMountPoint(self._options.mountPoint)
+            partitionObject.setMountPoint(self.getArgs().mountPoint)
 
-        if self._options.fileSystem is not None:
+        if self.getArgs().fileSystem is not None:
             if partitionObject is None:
                 raise InvalidCliRequest(
                     _('The --file-system option only allowed with'
                       ' --update-partition or --add-partition'))
 
-            partitionObject.setFsType(self._options.fileSystem)
+            partitionObject.setFsType(self.getArgs().fileSystem)
 
-        if self._options.size is not None:
+        if self.getArgs().size is not None:
             if partitionObject is None:
                 raise InvalidCliRequest(
                     _('--size option only allowed with --update-partition or'
                       ' --add-partition'))
 
-            partitionObject.setSize(self._parseDiskSize(self._options.size))
+            partitionObject.setSize(self._parseDiskSize(self.getArgs().size))
 
-        if self._options.options is not None:
+        if self.getArgs().options is not None:
             if partitionObject is None:
                 raise InvalidCliRequest(
                     _('--options option only allowed with --update-partition'
                       ' or --add-partition'))
 
-            partitionObject.setOptions(self._options.options)
+            partitionObject.setOptions(self.getArgs().options)
 
-        if self._options.directAttachment is not None:
+        if self.getArgs().directAttachment is not None:
             if partitionObject is None:
                 raise InvalidCliRequest(
                     _('--direct-attachment option only allowed with'
                       ' --update-partition or --add-partition'))
 
-            partitionObject.setDirectAttachment(self._options.directAttachment)
+            partitionObject.setDirectAttachment(self.getArgs().directAttachment)
 
-        if self._options.indirectAttachment is not None:
+        if self.getArgs().indirectAttachment is not None:
             if partitionObject is None:
                 raise InvalidCliRequest(
                     _('--indirect-attachment option only allowed with'
                       ' --update-partition or --add-partition'))
 
             partitionObject.setIndirectAttachment(
-                self._options.indirectAttachment)
+                self.getArgs().indirectAttachment)
 
-        if self._options.diskSize is not None:
+        if self.getArgs().diskSize is not None:
             if partitionObject is None:
                 raise InvalidCliRequest(
                     _('--disk-size option only allowed with'
@@ -380,20 +329,20 @@ Examples:
 
             try:
                 partitionObject.setDiskSize(
-                    self._parseDiskSize(self._options.diskSize))
+                    self._parseDiskSize(self.getArgs().diskSize))
             except ValueError:
                 raise InvalidCliRequest(_('Invalid --disk-size argument'))
 
-        if self._options.sanVolume is not None:
+        if self.getArgs().sanVolume is not None:
             if partitionObject is None:
                 raise InvalidCliRequest(
                     _('--san-volume option only allowed with'
                       ' --update-partition or --add-partition'))
 
-            partitionObject.setSanVolume(self._options.sanVolume)
+            partitionObject.setSanVolume(self.getArgs().sanVolume)
 
-        if self._options.preserve is None:
-            if self._options.addPartition is not None:
+        if self.getArgs().preserve is None:
+            if self.getArgs().addPartition is not None:
                 raise InvalidCliRequest(
                     _('--preserve or --no-preserve must be specified when'
                       ' adding a new partition.'))
@@ -403,10 +352,10 @@ Examples:
                     _('--preserve and --no-preserve options are only allowed'
                       ' with --update-partition or --add-partition'))
 
-            partitionObject.setPreserve(self._options.preserve)
+            partitionObject.setPreserve(self.getArgs().preserve)
 
-        if self._options.bootLoader is None:
-            if self._options.addPartition is not None:
+        if self.getArgs().bootLoader is None:
+            if self.getArgs().addPartition is not None:
                 raise InvalidCliRequest(
                     _('--boot-loader or --no-boot-loader must be specified'
                       ' when adding a new partition.'))
@@ -416,10 +365,10 @@ Examples:
                     _('--boot-loader and --no-boot-loader options only'
                       ' allowed with --update-partition or --add-partition'))
 
-            partitionObject.setBootLoader(self._options.bootLoader)
+            partitionObject.setBootLoader(self.getArgs().bootLoader)
 
         api.updateSoftwareProfile(sp)
 
 
-if __name__ == '__main__':
+def main():
     UpdateSoftwareProfileCli().run()
