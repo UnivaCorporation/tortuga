@@ -15,7 +15,9 @@
 # pylint: disable=no-member
 
 import json
-import urllib.request, urllib.parse, urllib.error
+import urllib.request
+import urllib.parse
+import urllib.error
 
 from tortuga.objects.tortugaObject import TortugaObjectList
 import tortuga.objects.node

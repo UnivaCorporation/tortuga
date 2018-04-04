@@ -17,17 +17,9 @@
 # pylint: disable=no-member
 
 import sys
-
-from sqlalchemy import or_
-from sqlalchemy.orm import contains_eager
-
+from tortuga.wsapi.nodeWsApi import NodeWsApi
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.db.dbManager import DbManager
-from tortuga.db.hardwareProfiles import HardwareProfiles
-from tortuga.db.nodes import Nodes
-from tortuga.db.softwareProfiles import SoftwareProfiles
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
-from tortuga.node.nodeManager import NodeManager
 from tortuga.cli.utils import FilterTagsAction
 
 
@@ -113,7 +105,7 @@ class GetNodeStatus(TortugaCli): \
         )
 
     def runCommand(self):
-        self.parseArgs('''
+        self.parseArgs("""
     get-node-status [--list] [--active|--idle] [--by-hwprofile]
     get-node-status [options] [--node=NAME]
 
@@ -130,476 +122,35 @@ Description:
 
     --by-hwprofile sorts by hardware profile (default is to sort by
     software profile)
-''')
+""")
 
         options = self.getArgs()
 
         if options.bActiveNodesOnly and options.bIdleNodesOnly:
-            raise InvalidCliRequest(
-                '--active and --idle cannot be specified together')
+            raise InvalidCliRequest('--active and --idle cannot be specified together')
 
         if options.bNotInstalled and options.bInstalled:
-            raise InvalidCliRequest(
-                '--installed and --not-installed cannot be specified together')
+            raise InvalidCliRequest('--installed and --not-installed cannot be specified together')
 
         if options.state and (options.bNotInstalled or options.bInstalled):
             raise InvalidCliRequest(
                 '--state and --installed/--not-installed arguments are'
-                ' mutually excluive')
+                ' mutually excluive'
+            )
 
-        session = DbManager().openSession()
+        api = NodeWsApi(self.getUsername(), self.getPassword())
 
-        try:
-            if options.nodeName:
-                buf = self.__getSingleNodeOutput(
-                    session,
-                    options.nodeName,
-                    bByHardwareProfile=options.bByHardwareProfile,
-                    bActiveNodesOnly=options.bActiveNodesOnly,
-                    bIdleNodesOnly=options.bIdleNodesOnly,
-                    bNotInstalled=options.bNotInstalled,
-                    bInstalled=options.bInstalled,
-                    bShortOutput=options.bShortOutput,
-                    bList=options.bListOutput,
-                    state=options.state,
-                )
-            else:
-                softwareprofiles = options.softwareProfile.split(',') \
-                    if options.softwareProfile else []
-
-                hardwareprofiles = options.hardwareProfile.split(',') \
-                    if options.hardwareProfile else []
-
-                tag_filter = []
-
-                for tag in options.tags or []:
-                    if len(tag) == 2:
-                        tag_filter.append(Nodes.tags.any(name=tag[0],
-                                                         value=tag[1]))
-                    else:
-                        tag_filter.append(Nodes.tags.any(name=tag[0]))
-
-                buf = self.__getAllNodeOutput(
-                    session,
-                    bByHardwareProfile=options.bByHardwareProfile,
-                    bActiveNodesOnly=options.bActiveNodesOnly,
-                    bIdleNodesOnly=options.bIdleNodesOnly,
-                    bNotInstalled=options.bNotInstalled,
-                    bInstalled=options.bInstalled,
-                    softwareprofiles=softwareprofiles,
-                    hardwareprofiles=hardwareprofiles,
-                    bShortOutput=options.bShortOutput,
-                    bList=options.bListOutput,
-                    tags=tag_filter,
-                    state=options.state,
-                )
-        finally:
-            DbManager().closeSession()
+        if options.nodeName:
+            buf = api.getNode(options.nodeName)
+        else:
+            buf = api.getNodeList(options.tags)
 
         if not buf:
             if options.nodeName:
-                sys.stderr.write(
-                    'No nodes matching nodespec [%s]\n' % (options.nodeName))
-
+                print('No nodes matching nodespec [{}]\n'.format(options.nodeName))
             sys.exit(1)
 
         print(buf)
-
-    def _getNodeEntry(self, dbNode, bByHardwareProfile, bShortOutput=None,
-                      bList=None):
-        if bList:
-            return dbNode.name
-        elif bShortOutput:
-            return self._getShortNodeEntry(dbNode, bByHardwareProfile)
-
-        return self._getRegularNodeEntry(dbNode, bByHardwareProfile)
-
-    def _getShortNodeEntry(self, dbNode, bByHardwareProfile): \
-            # pylint: disable=no-self-use,unused-argument
-        return '%s (%s)' % (dbNode.name, dbNode.state)
-
-    def __format_nic(self, dbNic): \
-            # pylint: disable=no-self-use
-        if not dbNic.ip:
-            return None
-
-        outstr = ''
-
-        if dbNic.networkdevice:
-            outstr += dbNic.networkdevice.name + ': '
-
-        bAddSep = False
-
-        if dbNic.ip:
-            outstr += '%s' % (dbNic.ip)
-            bAddSep = True
-        elif dbNic.network and dbNic.network.usingDhcp:
-            outstr += 'DHCP'
-            bAddSep = True
-
-        if dbNic.mac is not None:
-            if bAddSep:
-                outstr += '/'
-
-            outstr += '%s' % (dbNic.mac)
-
-        return outstr
-
-    def _getRegularNodeEntry(self, dbNode, bByHardwareProfile):
-        outstr = '%s' % (dbNode.name)
-
-        # Filter out only those nics that have *at least* an IP address
-        # defined. This accounts for nics that exist as placeholders for
-        # unmanaged nodes.
-        nics = [self.__format_nic(dbNic) for dbNic in dbNode.nics if dbNic.ip]
-
-        if nics:
-            outstr += ' (' + ', '.join(nics) + ')'
-
-        buf = outstr + '\n'
-
-        if not bByHardwareProfile:
-            # All nodes have a hardware profile
-            buf += '    ' + 'Hardware Profile: %s' % (
-                dbNode.hardwareprofile.name) + '\n'
-        else:
-            # ... but not all nodes have a software profile
-            tmpSoftwareProfileName = dbNode.softwareprofile.name \
-                if dbNode.softwareprofile else '(none)'
-
-            buf += '    ' + \
-                'Software Profile: %s' % (tmpSoftwareProfileName) + '\n'
-
-        bootStr = 'Disk' if dbNode.bootFrom else 'Network'
-
-        buf += '    ' + 'Boot: %s\n' % (bootStr)
-
-        idleStr = 'Idle' if dbNode.isIdle else 'Active'
-
-        outstr = 'Status: %s/%s' % (dbNode.state, idleStr)
-
-        if dbNode.lockedState != 'Unlocked':
-            outstr += ', Locked: %s' % (dbNode.lockedState)
-
-        buf += '    ' + outstr
-
-        if dbNode.parentnode:
-            buf += '\n' + '    ' + 'Hypervisor: %s' % (dbNode.parentnode.name)
-
-        buf += '\n'
-
-        return buf
-
-    def _getSoftwareProfileHeader(self, dbSoftwareProfile): \
-            # pylint: disable=no-self-use
-        _swProfileName = dbSoftwareProfile.name \
-            if dbSoftwareProfile else \
-            '** No assigned software profile **'
-
-        return _swProfileName + ' ' + '-' * (76 - len(_swProfileName)) + '\n'
-
-    def _getHardwareProfileHeader(self, dbHardwareProfile): \
-            # pylint: disable=no-self-use
-        return dbHardwareProfile.name + ' ' + '-' * (
-            76 - len(dbHardwareProfile.name)) + '\n'
-
-    def __getSoftwareProfileDump(self, dbSoftwareProfile, dbNodes,
-                                 bShortOutput=None, bList=None):
-        buf = ''
-
-        if not bList:
-            buf += self._getSoftwareProfileHeader(dbSoftwareProfile) + '\n'
-
-        for dbNode in dbNodes:
-            buf += self._getNodeEntry(
-                dbNode, False, bShortOutput=bShortOutput,
-                bList=bList) + '\n'
-
-        if not bShortOutput and not bList:
-            buf = buf.rstrip() + '\n'
-
-        return buf
-
-    def __getHardwareProfileDump(self, dbHardwareProfile, dbNodes,
-                                 bShortOutput=None, bList=None):
-        buf = ''
-
-        if not bList:
-            buf += self._getHardwareProfileHeader(dbHardwareProfile) + '\n'
-
-        for dbNode in dbNodes:
-            buf += self._getNodeEntry(
-                dbNode, True, bShortOutput=bShortOutput, bList=bList) + '\n'
-
-        if not bShortOutput and not bList:
-            buf = buf.rstrip() + '\n'
-
-        return buf
-
-    def __getSingleNodeOutput(self, session, filterName, bByHardwareProfile,
-                              bActiveNodesOnly=None, bIdleNodesOnly=None,
-                              bNotInstalled=None, bInstalled=None,
-                              bShortOutput=None, bList=None,
-                              state=None):
-        # Perform host name only matching. Handle shell-style wildcards
-        filter_spec = NodeManager().build_node_filterspec(filterName)
-
-        node_filter = [Nodes.name.like(filter_spec_item)
-                       for filter_spec_item in filter_spec]
-
-        query = session.query(Nodes).filter(or_(*node_filter))
-
-        filteredQuery2 = self.__filterDbQuery(
-            query,
-            bActiveNodesOnly=bActiveNodesOnly,
-            bIdleNodesOnly=bIdleNodesOnly,
-            bNotInstalled=bNotInstalled,
-            bInstalled=bInstalled,
-            state=state)
-
-        nodeList = filteredQuery2.all()
-        if not nodeList:
-            return None
-
-        if not bByHardwareProfile:
-            buf = self.__getSoftwareProfileDump(
-                nodeList[0].softwareprofile, nodeList,
-                bShortOutput=bShortOutput,
-                bList=bList)
-        else:
-            buf = self.__getHardwareProfileDump(
-                nodeList[0].hardwareprofile, nodeList,
-                bShortOutput=bShortOutput,
-                bList=bList)
-
-        return buf
-
-    def __filterDbQuery(self, query, bActiveNodesOnly=None,
-                        bIdleNodesOnly=None, bNotInstalled=None,
-                        bInstalled=None, state=None): \
-            # pylint: disable=no-self-use
-        if bActiveNodesOnly:
-            filteredQuery = query.filter(Nodes.isIdle == False)  # noqa
-        elif bIdleNodesOnly:
-            filteredQuery = query.filter(Nodes.isIdle == True)  # noqa
-        else:
-            filteredQuery = query
-
-        if bNotInstalled:
-            filteredQuery2 = filteredQuery.filter(
-                Nodes.state != 'Installed')
-        elif bInstalled:
-            filteredQuery2 = filteredQuery.filter(
-                Nodes.state == 'Installed')
-        elif state is not None:
-            filteredQuery2 = filteredQuery.filter(
-                Nodes.state == state)
-        else:
-            filteredQuery2 = filteredQuery
-
-        return filteredQuery2
-
-    def __outputBySoftwareProfile(self, session, filteredQuery2,
-                                  softwareprofiles, ext_filter_spec,
-                                  bShortOutput, bList, tags):
-        buf = ''
-
-        # Preload the 'nodes' relation to allow sorted node list.
-        swProfileList = filteredQuery2.order_by(
-            SoftwareProfiles.name).options(
-                contains_eager(
-                    SoftwareProfiles.nodes)).order_by(Nodes.name).all()
-
-        # Account for nodes which do not have associated software profiles
-        # by adding a None entry to the software profile list. Only
-        # include these nodes if the software profile was not specified.
-        if not softwareprofiles:
-            swProfileList.append(None)
-
-        for _swProfile in swProfileList:
-            if _swProfile:
-                nodeList = _swProfile.nodes
-            else:
-                query2 = session.query(Nodes).filter(
-                    Nodes.softwareprofile == None)  # noqa
-
-                query2 = query2.filter(or_(*tags))
-
-                filteredQuery4 = self.__filterDbQuery(
-                    query2,
-                    bActiveNodesOnly=ext_filter_spec['active_nodes_only'],
-                    bIdleNodesOnly=ext_filter_spec['idle_nodes_only'],
-                    bNotInstalled=ext_filter_spec['not_installed'],
-                    bInstalled=ext_filter_spec['installed'],
-                    state=ext_filter_spec['state'],
-                )
-
-                nodeList = filteredQuery4.order_by(Nodes.name).all()
-
-            if not nodeList:
-                # Do not display software profile "header" if it doesn't
-                # contain any nodes.
-                continue
-
-            buf += self.__getSoftwareProfileDump(
-                _swProfile, nodeList, bShortOutput=bShortOutput,
-                bList=bList)
-
-            if not bList:
-                buf += '\n'
-
-        return buf.rstrip()
-
-    def __outputByHardwareProfile(self, session, filteredQuery2,
-                                  ext_filter_spec, bShortOutput, bList,
-                                  tags): \
-            # pylint: disable=no-self-use,unused-argument
-        buf = ''
-
-        # Preload the 'nodes' relation to allow sorted node list.
-        hwProfileList = filteredQuery2.order_by(
-            HardwareProfiles.name).options(
-                contains_eager(
-                    HardwareProfiles.nodes)).order_by(Nodes.name).all()
-
-        for _hwProfile in hwProfileList:
-            if not _hwProfile.nodes:
-                # Do not display software profile "header" if it doesn't
-                # contain any nodes.
-                continue
-
-            buf += self.__getHardwareProfileDump(
-                _hwProfile, _hwProfile.nodes, bShortOutput=bShortOutput,
-                bList=bList)
-
-            if not bList:
-                buf += '\n'
-
-        return buf.rstrip()
-
-    def __getAllNodeOutputBySoftwareProfile(self, session,
-                                            bActiveNodesOnly=None,
-                                            bIdleNodesOnly=None,
-                                            bNotInstalled=None,
-                                            bInstalled=None,
-                                            softwareprofiles=None,
-                                            hardwareprofiles=None,
-                                            bShortOutput=None,
-                                            bList=None,
-                                            tags=None,
-                                            state=None):
-        # 3 states to the query: active nodes only, idle nodes only,
-        # and all nodes.
-
-        if softwareprofiles:
-            query = session.query(SoftwareProfiles).filter(
-                SoftwareProfiles.name.in_(softwareprofiles)).join(Nodes)
-        elif hardwareprofiles:
-            query = session.query(HardwareProfiles).filter(
-                HardwareProfiles.name.in_(hardwareprofiles)).join(Nodes)
-        else:
-            query = session.query(SoftwareProfiles).join(Nodes)
-
-        if tags:
-            query = query.filter(or_(*tags))
-
-        filteredQuery2 = self.__filterDbQuery(
-            query,
-            bActiveNodesOnly=bActiveNodesOnly,
-            bIdleNodesOnly=bIdleNodesOnly,
-            bNotInstalled=bNotInstalled,
-            bInstalled=bInstalled,
-            state=state)
-
-        ext_filter_spec = {
-            'active_nodes_only': bActiveNodesOnly,
-            'idle_nodes_only': bIdleNodesOnly,
-            'not_installed': bNotInstalled,
-            'installed': bInstalled,
-            'state': state,
-        }
-
-        if not hardwareprofiles:
-            return self.__outputBySoftwareProfile(
-                session, filteredQuery2, softwareprofiles, ext_filter_spec,
-                bShortOutput=bShortOutput, bList=bList, tags=tags)
-
-        return self.__outputByHardwareProfile(
-            session, filteredQuery2, ext_filter_spec,
-            bShortOutput=bShortOutput, bList=bList, tags=tags)
-
-    def __getAllNodeOutputByHardwareProfile(self, session,
-                                            bActiveNodesOnly=None,
-                                            bIdleNodesOnly=None,
-                                            bNotInstalled=None,
-                                            bInstalled=None,
-                                            bShortOutput=None,
-                                            bList=None,
-                                            tags=None,
-                                            state=None):
-        buf = ''
-
-        query = session.query(HardwareProfiles).join(Nodes)
-
-        filteredQuery2 = self.__filterDbQuery(
-            query,
-            bActiveNodesOnly=bActiveNodesOnly,
-            bIdleNodesOnly=bIdleNodesOnly,
-            bNotInstalled=bNotInstalled,
-            bInstalled=bInstalled,
-            state=state,
-        )
-
-        # Preload the 'nodes' relation to allow sorted node list.
-        dbHardwareProfiles = filteredQuery2.order_by(
-            HardwareProfiles.name).options(
-                contains_eager(
-                    HardwareProfiles.nodes)).order_by(Nodes.name).all()
-
-        for dbHardwareProfile in dbHardwareProfiles:
-            buf += self.__getHardwareProfileDump(
-                dbHardwareProfile, dbHardwareProfile.nodes,
-                bShortOutput=bShortOutput, bList=bList)
-
-            if not bList:
-                buf += '\n'
-
-        return buf.rstrip()
-
-    def __getAllNodeOutput(self, session, bByHardwareProfile=False,
-                           bActiveNodesOnly=None, bIdleNodesOnly=None,
-                           bNotInstalled=None, bInstalled=None,
-                           softwareprofiles=None, hardwareprofiles=None,
-                           bShortOutput=None, bList=None, tags=None,
-                           state=None):
-        if not bByHardwareProfile:
-            buf = self.__getAllNodeOutputBySoftwareProfile(
-                session,
-                bActiveNodesOnly,
-                bIdleNodesOnly,
-                bNotInstalled,
-                bInstalled,
-                softwareprofiles=softwareprofiles,
-                hardwareprofiles=hardwareprofiles,
-                bShortOutput=bShortOutput,
-                bList=bList,
-                tags=tags,
-                state=state,
-            )
-        else:
-            buf = self.__getAllNodeOutputByHardwareProfile(
-                session,
-                bActiveNodesOnly,
-                bIdleNodesOnly,
-                bNotInstalled,
-                bInstalled,
-                bShortOutput=bShortOutput,
-                bList=bList,
-                tags=tags,
-                state=state,
-            )
-
-        return buf
 
 
 if __name__ == '__main__':
