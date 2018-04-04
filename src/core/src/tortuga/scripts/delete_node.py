@@ -16,8 +16,8 @@
 
 # pylint: disable=no-member
 
+import argparse
 import itertools
-import optparse
 import sys
 
 from tortuga.cli.tortugaCli import TortugaCli
@@ -39,7 +39,7 @@ class DeleteNodeCli(TortugaCli):
         # don't do anything with it.
         self.addOption('--force', action='store_true',
                        default=False,
-                       help=optparse.SUPPRESS_HELP)
+                       help=argparse.SUPPRESS)
 
 
 
