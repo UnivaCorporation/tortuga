@@ -25,22 +25,17 @@ class ScheduleUpdateCli(TortugaCli):
     Schedule cluster update command line interface.
     """
 
-    def __init__(self):
-        super(ScheduleUpdateCli, self).__init__(validArgCount=8000)
+    def parseArgs(self, usage=None):
+        self.addOption('reason',
+                       help='Optional update reason message')
 
     def runCommand(self):
         """ Run command. """
         self.parseArgs()
 
-        updateReason = None
-
-        if self.getArgs():
-            updateReason = ' '.join(self.getArgs())
-
-        # Always go over the web service for this call.
         api = syncWsApi.SyncWsApi(self.getUsername(), self.getPassword())
-        api.scheduleClusterUpdate(updateReason=updateReason)
+        api.scheduleClusterUpdate(updateReason=self.getArgs().reason)
 
 
-if __name__ == '__main__':
+def main():
     ScheduleUpdateCli().run()

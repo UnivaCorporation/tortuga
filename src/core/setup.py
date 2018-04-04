@@ -155,6 +155,7 @@ setup(
             'shutdown-node=tortuga.scripts.shutdown_node:main',
             'transfer-node=tortuga.scripts.transfer_node:main',
             'revert-node-to-checkpoint=tortuga.scripts.revert_node_to_checkpoint:main',
+            'schedule-update=tortuga.scripts.schedule_update:main',
         ],
     },
 )

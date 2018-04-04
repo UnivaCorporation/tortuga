@@ -107,12 +107,6 @@ class TortugaCli(object):
         commonGroup = _('Common Tortuga Options')
         self.addOptionGroup(commonGroup, None)
 
-        # self.addOptionToGroup(commonGroup, '-h', '--help', action='help',
-        #                       help=_('show this help message and exit'))
-
-        # self.addOptionToGroup(commonGroup, '-?', action='help',
-        #                       help=_('show this help message and exit'))
-
         self.addOptionToGroup(commonGroup, '-V', action='store_true',
                               dest='cmdVersion', default=False,
                               help=_('print version and exit'))
