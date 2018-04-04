@@ -14,17 +14,18 @@
 
 # pylint: disable=no-member,not-callable
 
-import sys
 import http.client
-import cherrypy
 
+import cherrypy
+from tortuga.db.resourceAdaptersDbHandler import ResourceAdaptersDbHandler
+from tortuga.exceptions.invalidArgument import InvalidArgument
+from tortuga.exceptions.resourceAdapterNotFound import ResourceAdapterNotFound
+from tortuga.exceptions.resourceAlreadyExists import ResourceAlreadyExists
+from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.resourceAdapterConfiguration.resourceAdapterConfigurationApi \
     import ResourceAdapterConfigurationApi
-from tortuga.exceptions.resourceAlreadyExists import ResourceAlreadyExists
-from tortuga.exceptions.resourceAdapterNotFound import ResourceAdapterNotFound
-from tortuga.exceptions.tortugaException import TortugaException
-from tortuga.exceptions.invalidArgument import InvalidArgument
-from .authController import AuthController, require
+
+from .authController import require
 from .tortugaController import TortugaController
 
 
@@ -34,6 +35,12 @@ class ResourceAdapterConfigurationController(TortugaController):
 
     """
     actions = [
+        {
+            'name': 'get_resource_adapters',
+            'path': '/v1/resourceadapter/',
+            'action': 'get_resource_adapters',
+            'method': ['GET'],
+        },
         {
             'name': 'create_resource_adapter_configuration',
             'path': '/v1/resourceadapter/:(resadapter_name)/profile/:(name)',
@@ -65,6 +72,25 @@ class ResourceAdapterConfigurationController(TortugaController):
             'method': ['DELETE'],
         },
     ]
+
+    @cherrypy.tools.json_out()
+    def get_resource_adapters(self):
+        try:
+            response = [
+                adapter.name
+                for adapter in
+                ResourceAdaptersDbHandler().getResourceAdapterList(
+                    cherrypy.request.db)
+            ]
+        except Exception:
+            # Unhandled server exception
+            self.getLogger().exception('create() failed')
+
+            response = self.errorResponse(
+                'Internal server error',
+                http_status=http.client.INTERNAL_SERVER_ERROR)
+
+        return self.formatResponse(response)
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()

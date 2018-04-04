@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright 2008-2018 Univa Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,13 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tortuga.db.resourceAdapterDbApi import ResourceAdapterDbApi
+# pylint: disable=no-member
+
+from tortuga.exceptions.tortugaException import TortugaException
+from tortuga.objects.resourceAdapter import ResourceAdapter
+
+from .tortugaWsApi import TortugaWsApi
 
 
-def main():
-    for resourceAdapter in ResourceAdapterDbApi().getResourceAdapterList():
-        print('%s' % (resourceAdapter))
+class ResourceAdapterWsApi(TortugaWsApi):
+    def getResourceAdapterList(self):
+        url = 'v1/resourceadapter/'
 
+        try:
+            _, responseDict = self.sendSessionRequest(url)
 
-if __name__ == '__main__':
-    main()
+            return responseDict
+        except TortugaException:
+            raise
+        except Exception as ex:
+            raise TortugaException(exception=ex)
