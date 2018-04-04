@@ -26,9 +26,8 @@ class ActivateNodeCli(TortugaCli):
     Activate node command line interface.
 
     """
-    def __init__(self):
-        super(ActivateNodeCli, self).__init__()
 
+    def parseArgs(self, usage=None):
         self.addOption('--node',
                        dest='nodeName',
                        help=_('Name of node to activate'))
@@ -36,13 +35,11 @@ class ActivateNodeCli(TortugaCli):
                        dest='softwareProfileName',
                        help=_('Destination software profile'))
 
+        super().parseArgs(usage=usage)
+
     def runCommand(self):
         self.parseArgs('''
-    activate-node --node NODENAME [--software-profile SOFTWAREPROFILE]
-
-Description:
-    The activate-node command transfers the given idle node to the  given
-    active software profile.
+Transfers given idle node to the given active software profile.
 ''')
 
         software_profile_name = self.getArgs().softwareProfileName
