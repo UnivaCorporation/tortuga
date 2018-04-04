@@ -17,7 +17,7 @@
 # pylint: disable=no-member
 
 from tortuga.kit.kitCli import KitCli
-from tortuga.kit.kitApiFactory import getKitApi
+from tortuga.wsapi.kitWsApi import KitWsApi
 
 
 class GetKitListCli(KitCli):
@@ -35,14 +35,12 @@ class GetKitListCli(KitCli):
                               dest='osonly')
 
         self.parseArgs(_("""
-    get-kit-list [options]
-
-Description:
-    The get-kit-list tool returns the list of kits available in the
-    system.
+Returns the list of kits available in the system.
 """))
 
-        api = getKitApi(self.getUsername(), self.getPassword())
+        api = KitWsApi(username=self.getUsername(),
+                       password=self.getPassword(),
+                       baseurl=self.getUrl())
 
         kitList = [
             str(kit) for kit in api.getKitList()
@@ -58,5 +56,5 @@ Description:
         print('\n'.join(kitList))
 
 
-if __name__ == '__main__':
+def main():
     GetKitListCli().run()
