@@ -24,8 +24,8 @@ class RuleCli(TortugaCli):
     """
 
     def getApplicationNameAndRuleName(self):
-        applicationName = self._options.applicationName
-        ruleName = self._options.ruleName
+        applicationName = self.getArgs().applicationName
+        ruleName = self.getArgs().ruleName
 
         if not applicationName:
             raise InvalidCliRequest(_('Missing application name.'))

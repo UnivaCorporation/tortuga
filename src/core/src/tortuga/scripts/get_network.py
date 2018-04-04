@@ -41,7 +41,7 @@ Description:
 
         # Parse --network parameter if it exists
         networkAddress, networkMask = self.parseNetworkParameter(
-            self._options.network)
+            self.getArgs().network)
 
         # If we don't have a network and a netmask its an error
         if networkAddress is not None and networkMask is not None:

@@ -24,8 +24,8 @@ class AdminCli(TortugaCli):
     """
 
     def getAdminUsernameAndPassword(self):
-        adminUsername = self._options.adminUsername
-        adminPassword = self._options.adminPassword
+        adminUsername = self.getArgs().adminUsername
+        adminPassword = self.getArgs().adminPassword
 
         if not adminUsername:
             raise InvalidCliRequest(_('Missing Admin User Name.'))

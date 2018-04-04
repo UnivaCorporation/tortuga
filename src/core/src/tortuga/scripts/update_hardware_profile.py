@@ -180,15 +180,15 @@ Examples:
        update-hardware-profile --name HwTest --add-network 172.19.0.0/255.255.255.0/e1000g0
 """))
 
-        hwProfileName = self._options.name
+        hwProfileName = self.getArgs().name
 
         api = HardwareProfileWsApi(username=self.getUsername(),
                                    password=self.getPassword(),
                                    baseurl=self.getUrl())
 
-        if self._options.xmlFile:
+        if self.getArgs().xmlFile:
             # An XML file was provided as input...start with that...
-            with open(self._options.xmlFile) as f:
+            with open(self.getArgs().xmlFile) as f:
                 xmlString = f.read()
 
             try:
@@ -200,7 +200,7 @@ Examples:
             if hp is None:
                 raise InvalidCliRequest(
                     _('File "%s" does not contain a valid hardware'
-                      ' profile') % (self._options.xmlFile))
+                      ' profile') % (self.getArgs().xmlFile))
         else:
             if hwProfileName is None:
                 raise InvalidCliRequest(_('Missing hardware profile name'))
@@ -208,85 +208,85 @@ Examples:
             hp = api.getHardwareProfile(hwProfileName,
                                         UpdateHardwareProfileCli.optionDict)
 
-        if self._options.newName is not None:
-            hp.setName(self._options.newName)
+        if self.getArgs().newName is not None:
+            hp.setName(self.getArgs().newName)
 
-        if self._options.description is not None:
-            hp.setDescription(self._options.description)
+        if self.getArgs().description is not None:
+            hp.setDescription(self.getArgs().description)
 
-        if self._options.nameFormat is not None:
-            hp.setNameFormat(self._options.nameFormat)
+        if self.getArgs().nameFormat is not None:
+            hp.setNameFormat(self.getArgs().nameFormat)
 
-        if self._options.kernel is not None:
-            hp.setKernel(self._options.kernel)
+        if self.getArgs().kernel is not None:
+            hp.setKernel(self.getArgs().kernel)
 
-        if self._options.kernelParameters is not None:
-            hp.setKernelParams(self._options.kernelParameters)
+        if self.getArgs().kernelParameters is not None:
+            hp.setKernelParams(self.getArgs().kernelParameters)
 
-        if self._options.initrd is not None:
-            hp.setInitrd(self._options.initrd)
+        if self.getArgs().initrd is not None:
+            hp.setInitrd(self.getArgs().initrd)
 
-        if self._options.soAllowed is not None:
-            if self._options.soAllowed.lower() == _('true'):
+        if self.getArgs().soAllowed is not None:
+            if self.getArgs().soAllowed.lower() == _('true'):
                 hp.setSoftwareOverrideAllowed(True)
-            elif self._options.soAllowed.lower() == _('false'):
+            elif self.getArgs().soAllowed.lower() == _('false'):
                 hp.setSoftwareOverrideAllowed(False)
             else:
                 raise InvalidCliRequest(
                     _('--software-override-allowed must be either "true" or'
                       ' "false".'))
 
-        if self._options.idleProfile is not None and \
-           self._options.bUnsetIdleProfile:
+        if self.getArgs().idleProfile is not None and \
+           self.getArgs().bUnsetIdleProfile:
             raise InvalidCliRequest(
                 _('Conflicting options --idle-software-profile and'
                   ' --unset-idle-software-profile'))
 
-        if self._options.idleProfile is not None:
+        if self.getArgs().idleProfile is not None:
             spApi = SoftwareProfileWsApi(username=self.getUsername(),
                                          password=self.getPassword(),
                                          baseurl=self.getUrl())
 
-            sp = spApi.getSoftwareProfile(self._options.idleProfile)
+            sp = spApi.getSoftwareProfile(self.getArgs().idleProfile)
 
             hp.setIdleSoftwareProfileId(sp.getId())
 
-        if self._options.bUnsetIdleProfile:
+        if self.getArgs().bUnsetIdleProfile:
             hp.setIdleSoftwareProfileId(None)
 
-        if self._options.location is not None:
-            hp.setLocation(self._options.location)
+        if self.getArgs().location is not None:
+            hp.setLocation(self.getArgs().location)
 
-        if self._options.localBootParameters is not None:
-            hp.setLocalBootParams(self._options.localBootParameters)
+        if self.getArgs().localBootParameters is not None:
+            hp.setLocalBootParams(self.getArgs().localBootParameters)
 
-        if self._options.vcProfile is not None:
+        if self.getArgs().vcProfile is not None:
             spApi = SoftwareProfileWsApi(username=self.getUsername,
                                          password=self.getPassword(),
                                          baseurl=self.getUrl())
-            sp = spApi.getSoftwareProfile(self._options.vcProfile)
+            sp = spApi.getSoftwareProfile(self.getArgs().vcProfile)
 
             hp.setHypervisorSoftwareProfileId(sp.getId())
 
         if self.getArgs().bClearHypervisorProfile:
             hp.setHypervisorSoftwareProfileId(None)
 
-        if self._options.maxUnits is not None:
-            hp.setMaxUnits(self._options.maxUnits)
+        if self.getArgs().maxUnits is not None:
+            hp.setMaxUnits(self.getArgs().maxUnits)
 
-        if self._options.cost is not None:
-            hp.setCost(self._options.cost)
+        if self.getArgs().cost is not None:
+            hp.setCost(self.getArgs().cost)
 
-        if self._options.resourceAdapter:
+        if self.getArgs().resourceAdapter:
             resourceAdapter = ResourceAdapter(
-                name=self._options.resourceAdapter)
+                name=self.getArgs().resourceAdapter)
             hp.setResourceAdapter(resourceAdapter)
 
-        if self._options.deletePNic is not None:
+        if self.getArgs().deletePNic is not None:
             out = TortugaObjectList()
 
             for nic in hp.getProvisioningNics():
-                for dnic in self._options.deletePNic:
+                for dnic in self.getArgs().deletePNic:
                     if dnic == nic.getIp():
                         # Skip over this item..its getting deleted
                         break
@@ -296,10 +296,10 @@ Examples:
 
             hp.setProvisioningNics(out)
 
-        if self._options.addPNic is not None:
+        if self.getArgs().addPNic is not None:
             nodeApi = getNodeApi(self.getUsername, self.getPassword())
 
-            for nicIp in self._options.addPNic:
+            for nicIp in self.getArgs().addPNic:
                 nicsNode = nodeApi.getNodeByIp(nicIp)
 
                 if nicsNode is not None:
@@ -308,12 +308,12 @@ Examples:
                             hp.getProvisioningNics().append(nic)
                             break
 
-        if self._options.deleteNetwork is not None:
+        if self.getArgs().deleteNetwork is not None:
             # Make sure we actually delete a network
             out = TortugaObjectList()
             out.extend(hp.getNetworks())
 
-            for netstring in self._options.deleteNetwork:
+            for netstring in self.getArgs().deleteNetwork:
                 netArgs = netstring.split('/')
                 if len(netArgs) != 3:
                     raise InvalidCliRequest(
@@ -340,11 +340,11 @@ Examples:
 
             hp.setNetworks(out)
 
-        if self._options.addNetwork:
+        if self.getArgs().addNetwork:
             networkApi = NetworkWsApi(username=self.getUsername,
                                       password=self.getPassword(),
                                       baseurl=self.getUrl())
-            for netstring in self._options.addNetwork:
+            for netstring in self.getArgs().addNetwork:
                 netArgs = netstring.split('/')
                 if len(netArgs) != 3:
                     raise InvalidCliRequest(

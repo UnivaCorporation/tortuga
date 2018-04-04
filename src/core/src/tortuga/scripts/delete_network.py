@@ -47,7 +47,7 @@ Description:
 
         # Parse --network argument if it exists
         networkAddress, networkSubnet = self.parseNetworkParameter(
-            self._options.network)
+            self.getArgs().network)
 
         # If we don't have a network and a netmask its an error
         if networkAddress is not None and networkSubnet is not None:

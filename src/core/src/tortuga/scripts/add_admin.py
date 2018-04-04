@@ -63,7 +63,7 @@ Description:
         api.addAdmin(
             self.getArgs().adminUsername,
             self.getArgs().adminPassword,
-            self._options.isCrypted,
+            self.getArgs().isCrypted,
             self.getArgs().adminRealname,
             self.getArgs().adminDescription)
 
