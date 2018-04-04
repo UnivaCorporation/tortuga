@@ -18,19 +18,19 @@
 
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
-from tortuga.node.nodeApiFactory import getNodeApi
+from tortuga.wsapi.nodeWsApi import NodeWsApi
 
 
 class RevertNodeToCheckpointCli(TortugaCli):
-    def __init__(self):
-        super(RevertNodeToCheckpointCli, self).__init__()
-
+    def parseArgs(self, usage=None):
         optionGroupName = _('Checkpoint Node Options')
         self.addOptionGroup(optionGroupName, '')
         self.addOptionToGroup(optionGroupName, '--node',
                               dest='nodeName',
                               metavar='NAME',
                               help=_('Name of node to revert'))
+
+        super().parseArgs(usage=usage)
 
     def runCommand(self):
         self.parseArgs(_("""
@@ -50,7 +50,9 @@ Description:
         nodeName = self.getArgs().nodeName
 
         try:
-            nodeApi = getNodeApi(self.getUsername(), self.getPassword())
+            nodeApi = NodeWsApi(username=self.getUsername(),
+                                password=self.getPassword(),
+                                baseurl=self.getUrl())
         except Exception as msg:
             raise InvalidCliRequest(
                 _("Can't revert node [{0}] - {1}").format(nodeName, msg))
@@ -62,5 +64,5 @@ Description:
                 _("Can't revert node [{0}] - {1}").format(nodeName, msg))
 
 
-if __name__ == '__main__':
+def main():
     RevertNodeToCheckpointCli().run()

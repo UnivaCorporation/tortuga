@@ -148,6 +148,7 @@ setup(
             'reboot-node=tortuga.scripts.reboot_node:main',
             'shutdown-node=tortuga.scripts.shutdown_node:main',
             'transfer-node=tortuga.scripts.transfer_node:main',
+            'revert-node-to-checkpoint=tortuga.scripts.revert_node_to_checkpoint:main',
         ],
     },
 )
