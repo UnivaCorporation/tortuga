@@ -18,13 +18,11 @@
 
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
-from tortuga.node.nodeApiFactory import getNodeApi
+from tortuga.wsapi.nodeWsApi import NodeWsApi
 
 
 class RebootNodeCli(TortugaCli):
-    def __init__(self):
-        super(RebootNodeCli, self).__init__()
-
+    def parseArgs(self, usage=None):
         optionGroupName = _('Reboot Node Options')
 
         self.addOptionGroup(optionGroupName, '')
@@ -38,20 +36,21 @@ class RebootNodeCli(TortugaCli):
             action='store_true', default=False,
             help=_('Toggle reinstallation of specified nodes'))
 
+        self.parseArgs(usage=usage)
+
     def runCommand(self):
         self.parseArgs(_("""
-    reboot-node --node=NODENAME [--reinstall]
-
-Description:
-    Reboots the given node(s). Reinstall specified nodes if --reinstall
-    flag is specified.
+Reboots specified node(s). Mark nodes for reinstallation if --reinstall
+flag is specified.
 """))
 
         if not self.getArgs().nodeSpec:
             raise InvalidCliRequest(
                 _('--node must be specified'))
 
-        nodeApi = getNodeApi()
+        nodeApi = NodeWsApi(username=self.getUsername(),
+                            password=self.getPassword(),
+                            baseurl=self.getUrl())
 
         # If the node is being reinstalled as a result of the reboot,
         # do not use a soft shutdown.
@@ -66,5 +65,5 @@ Description:
                 _("Can't reboot node(s) - %s") % (msg))
 
 
-if __name__ == '__main__':
+def main():
     RebootNodeCli().run()

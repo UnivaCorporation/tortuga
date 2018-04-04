@@ -145,6 +145,9 @@ setup(
             'get-kit-list=tortuga.scripts.get_kit_list:main',
             'enable-component=tortuga.scripts.enable_component:main',
             'get-component-list=tortuga.scripts.get_component_list:main',
+            'reboot-node=tortuga.scripts.reboot_node:main',
+            'shutdown-node=tortuga.scripts.shutdown_node:main',
+            'transfer-node=tortuga.scripts.transfer_node:main',
         ],
     },
 )

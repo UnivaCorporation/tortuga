@@ -17,7 +17,7 @@
 # pylint: disable=no-member
 
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.node.nodeApiFactory import getNodeApi
+from tortuga.wsapi.nodeWsApi import NodeWsApi
 
 
 class TransferNodeCli(TortugaCli):
@@ -25,9 +25,7 @@ class TransferNodeCli(TortugaCli):
     Transfer node command line interface.
     """
 
-    def __init__(self):
-        super(TransferNodeCli, self).__init__()
-
+    def parseArgs(self, usage=None):
         self.addOption(
             '--node', dest='nodeName',
             help=_('Name of node to transfer'))
@@ -46,17 +44,13 @@ class TransferNodeCli(TortugaCli):
             '--force', dest='force', action='store_true', default=False,
             help=_('Force node transfer regardless of node state'))
 
+        super().parseArgs(usage=usage)
+
     def runCommand(self):
         self.parseArgs('''
-    transfer-node --node=NODENAME --software-profile=SOFTWAREPROFILENAME
-
-    transfer-node --src-software-profile=SRCSOFTWAREPROFILENAME
-       --software-profile=SOFTWAREPROFILENAME [--count=NODECOUNT] [--force]
-
-Description:
-    The transfer-node tool transfer nodes from one  software  profile  to
-    another.   This  operation  may need a reinstall of the node to apply
-    the new software profile.
+Transfer nodes from one software profile to
+another. This operation may need a reinstall of the node to apply
+the new software profile.
 ''')
 
         nodeName = self.getArgs().nodeName
@@ -86,7 +80,9 @@ Description:
             #         _("Must use --src-software-profile option when not"
             #           " using --node option"))
 
-        api = getNodeApi(self.getUsername(), self.getPassword())
+        api = NodeWsApi(username=self.getUsername(),
+                        password=self.getPassword(),
+                        baseurl=self.getUrl())
 
         if nodeName:
             api.transferNode(
@@ -101,7 +97,3 @@ Description:
 
 def main():
     TransferNodeCli().run()
-
-
-if __name__ == '__main__':
-    main()

@@ -18,7 +18,7 @@
 
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
-from tortuga.node.nodeApiFactory import getNodeApi
+from tortuga.wsapi.nodeWsApi import NodeWsApi
 
 
 class ShutdownNodeCli(TortugaCli):
@@ -44,11 +44,14 @@ Description:
 
         try:
             # Perform a "soft" shutdown
-            getNodeApi().shutdownNode(self.getArgs().nodeName, True)
+            NodeWsApi(username=self.getUsername(),
+                      password=self.getPassword(),
+                      baseurl=self.getUrl()).shutdownNode(
+                self.getArgs().nodeName, True)
         except Exception as msg:
             raise InvalidCliRequest(
                 _("Can't shutdown node(s) - %s") % (msg))
 
 
-if __name__ == '__main__':
+def main():
     ShutdownNodeCli().run()
