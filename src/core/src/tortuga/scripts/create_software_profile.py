@@ -18,20 +18,16 @@
 
 import glob
 import json
+
 import os.path
-
 from jinja2 import Template
-
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.cli.utils import (ParseOperatingSystemArgAction,
                                ParseProfileTemplateArgsAction)
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
 from tortuga.exceptions.invalidProfileCreationTemplate import \
     InvalidProfileCreationTemplate
-from tortuga.objects.osInfo import OsInfo
 from tortuga.objects.softwareProfile import SoftwareProfile
-from tortuga.softwareprofile.softwareProfileFactory import \
-    getSoftwareProfileApi
 from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
 
 
