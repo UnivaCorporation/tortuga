@@ -95,6 +95,7 @@ class TortugaCli(object):
         """ Add option group. """
         group = self._parser.add_argument_group(groupName, desc)
         self._optionGroupDict[groupName] = group
+        return group
 
     def parseArgs(self, usage=None):
         """

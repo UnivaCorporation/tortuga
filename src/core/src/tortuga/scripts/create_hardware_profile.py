@@ -18,7 +18,6 @@
 
 import glob
 import json
-from optparse import OptionValueError
 
 import os.path
 from jinja2 import Template
@@ -31,9 +30,7 @@ from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
 from tortuga.exceptions.invalidProfileCreationTemplate \
     import InvalidProfileCreationTemplate
 from tortuga.objects.hardwareProfile import HardwareProfile
-from tortuga.objects.osInfo import OsInfo
 from tortuga.wsapi.hardwareProfileWsApi import HardwareProfileWsApi
-from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
 
 
 class CreateHardwareProfileCli(TortugaCli):
@@ -55,14 +52,17 @@ class CreateHardwareProfileCli(TortugaCli):
                                      ' templates'))
 
         option_group_name = _('Create Hardware Profile Options')
-        self.addOptionGroup(option_group_name, '')
-        self.addOptionToGroup(option_group_name, '-x', '--xml-file',
-                              dest='templatePath',
-                              help=_('Path to hardware profile creation'
-                                     ' template'))
 
-        self.addOptionToGroup(
-            option_group_name, '-j', '--json-file', dest='jsonTemplatePath',
+        option_group = self.addOptionGroup(option_group_name, '')
+
+        excl_option_group = option_group.add_mutually_exclusive_group()
+
+        excl_option_group.add_argument(
+            '-x', '--xml-file', dest='templatePath',
+            help=_('Path to hardware profile creation template'))
+
+        excl_option_group.add_argument(
+            '-j', '--json-file', dest='jsonTemplatePath',
             help=_('Path to JSON-formatted hardware profile creation'
                    ' template'))
 
@@ -101,27 +101,16 @@ class CreateHardwareProfileCli(TortugaCli):
 
     def runCommand(self):
         self.parseArgs(_("""
-    create-hardware-profile --list-templates
-
-    create-hardware-profile --xml-file TEMPLATEPATH --name=NAME
-       [ --description=DESCRIPTION ] [ --os=OS ] [ --idle=SOFTWAREPROFILENAME ]
-
-Description:
-    The  create-hardware-profile  tool either lists the paths of available
-    templates or creates a hardware profile from  an  existing  template.
-    When  creating a hardware profile the description, os, and idle soft-
-    ware profile specified in the template can be overridden by providing
-    the appropriate command line options.
+The create-hardware-profile tool either lists the paths of available
+templates or creates a hardware profile from an existing template.
+When creating a hardware profile the description, operating system, and idle
+software profile specified in the template can be overridden by providing
+the appropriate command line options.
 """))
 
         if self.getArgs().bDisplayTemplateList:
             self.displayTemplateList()
             return
-
-        if self.getArgs().templatePath and \
-                self.getArgs().jsonTemplatePath:
-            raise OptionValueError(
-                _('Only one hardware profile template can be specified'))
 
         template_path = self.getArgs().templatePath \
             if self.getArgs().templatePath else \
