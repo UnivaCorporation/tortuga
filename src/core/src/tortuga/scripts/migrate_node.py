@@ -17,29 +17,29 @@
 
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
-from tortuga.node.nodeApiFactory import getNodeApi
+from tortuga.wsapi.nodeWsApi import NodeWsApi
 
 
 class MigrateNodeCli(TortugaCli):
     def __init__(self):
-        super(MigrateNodeCli, self).__init__()
+        super().__init__()
 
-        optionGroupName = _('Migrate Node Options')
+        option_group_name = _('Migrate Node Options')
 
-        self.addOptionGroup(optionGroupName, '')
+        self.addOptionGroup(option_group_name, '')
 
         self.addOptionToGroup(
-            optionGroupName, '--node',
+            option_group_name, '--node',
             dest='nodeName',
             help=_('Name of node to migrate'))
 
         self.addOptionToGroup(
-            optionGroupName, '--destination',
+            option_group_name, '--destination',
             dest='destinationString',
             help=_('List of nodes which can be the destination'))
 
         self.addOptionToGroup(
-            optionGroupName, '--with-shutdown',
+            option_group_name, '--with-shutdown',
             dest='liveMigrate',
             action='store_false',
             default=True,
@@ -63,29 +63,27 @@ Description:
         if not self.getArgs().destinationString:
             raise InvalidCliRequest(_('Destination must be specified'))
 
-        nodeName = self.getArgs().nodeName
-        destinationString = self.getArgs().destinationString
+        node_name = self.getArgs().nodeName
+        destination_string = self.getArgs().destinationString
 
-        try:
-            nodeApi = getNodeApi(self.getUsername(), self.getPassword())
-        except Exception as msg:
-            raise InvalidCliRequest(
-                _("Can't migrate node [{0}] - {1}").format(nodeName, msg))
+        node_api = NodeWsApi(username=self.getUsername(),
+                             password=self.getPassword(),
+                             baseurl=self.getUrl())
 
         try:
             # Turn user input into a list
-            destinationList = [
-                node for node in destinationString.split(',')]
+            destination_list = [
+                node for node in destination_string.split(',')]
 
-            nodeApi.migrateNode(
-                nodeName, destinationList, self.getArgs().liveMigrate)
+            node_api.migrateNode(
+                node_name, destination_list, self.getArgs().liveMigrate)
 
-            print(_('Migrated node [%s]') % (nodeName))
+            print(_('Migrated node: {}').format(node_name))
 
         except Exception as msg:
             raise InvalidCliRequest(
-                _("Can't migrate node [{0}] - {1}").format(nodeName, msg))
+                _("Can't migrate node [{0}] - {1}").format(node_name, msg))
 
 
-if __name__ == '__main__':
+def main():
     MigrateNodeCli().run()

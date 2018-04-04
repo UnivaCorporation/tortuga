@@ -17,9 +17,8 @@
 # pylint: disable=no-member
 
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.softwareprofile.softwareProfileFactory \
-    import getSoftwareProfileApi
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
+from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
 
 
 class GetSoftwareProfileNodesCli(TortugaCli):
@@ -28,16 +27,16 @@ class GetSoftwareProfileNodesCli(TortugaCli):
     """
 
     def __init__(self):
-        TortugaCli.__init__(self)
+        super().__init__()
 
-        softwareProfileAttrGroup = _('Software Profile Attribute Options')
+        software_profile_attr_group = _('Software Profile Attribute Options')
 
         self.addOptionGroup(
-            softwareProfileAttrGroup,
+            software_profile_attr_group,
             _('Software profile name must be specified.'))
 
         self.addOptionToGroup(
-            softwareProfileAttrGroup,
+            software_profile_attr_group,
             '--software-profile',
             metavar='SOFTWAREPROFILENAME',
             dest='softwareProfile',
@@ -51,18 +50,19 @@ Description:
     The get-software-profile-nodes tool returns the list of nodes that are
     using the specified software profile.
 """))
-        softwareProfileName = self.getArgs().softwareProfile
+        software_profile_name = self.getArgs().softwareProfile
 
-        if not softwareProfileName:
+        if not software_profile_name:
             raise InvalidCliRequest(
                 _('Software profile name must be specified'))
 
-        sPapi = getSoftwareProfileApi(
-            self.getUsername(), self.getPassword())
+        api = SoftwareProfileWsApi(username=self.getUsername(),
+                                   password=self.getPassword(),
+                                   baseurl=self.getUrl())
 
-        for node in sPapi.getNodeList(softwareProfileName):
-            print('%s' % (node))
+        for node in api.getNodeList(software_profile_name):
+            print(str(node))
 
 
-if __name__ == '__main__':
+def main():
     GetSoftwareProfileNodesCli().run()

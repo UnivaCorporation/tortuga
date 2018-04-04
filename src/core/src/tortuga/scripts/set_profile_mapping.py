@@ -17,18 +17,17 @@
 # pylint: disable=no-member
 
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.softwareprofile.softwareProfileFactory \
-    import getSoftwareProfileApi
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
 from tortuga.exceptions.softwareUsesHardwareAlreadyExists \
     import SoftwareUsesHardwareAlreadyExists
+from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
 
 
 class SetProfileMappingCli(TortugaCli):
     """Hardware/software profile mapping CLI"""
 
     def __init__(self):
-        super(SetProfileMappingCli, self).__init__()
+        super().__init__()
 
         option_group = _('Set profile mapping options')
 
@@ -70,7 +69,9 @@ for example.
             raise InvalidCliRequest(
                 _('Hardware profile name must be specified'))
 
-        api = getSoftwareProfileApi(self.getUsername(), self.getPassword())
+        api = SoftwareProfileWsApi(username=self.getUsername(),
+                                   password=self.getPassword(),
+                                   baseurl=self.getUrl())
 
         try:
             api.addUsableHardwareProfileToSoftwareProfile(
@@ -79,5 +80,5 @@ for example.
             pass
 
 
-if __name__ == '__main__':
+def main():
     SetProfileMappingCli().run()

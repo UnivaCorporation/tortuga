@@ -17,8 +17,8 @@
 # pylint: disable=no-member
 
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.node.nodeApiFactory import getNodeApi
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
+from tortuga.wsapi.nodeWsApi import NodeWsApi
 
 
 class IdleNodeCli(TortugaCli):
@@ -27,7 +27,7 @@ class IdleNodeCli(TortugaCli):
     """
 
     def __init__(self):
-        super(IdleNodeCli, self).__init__(validArgCount=8000)
+        super().__init__(validArgCount=8000)
 
         self.addOption('--node', dest='nodeName',
                        help=_('Name of node to idle'))
@@ -48,26 +48,28 @@ Description:
         if not self.getArgs().nodeName:
             self.usage(_('Missing --node option'))
 
-        nodeApi = getNodeApi(self.getUsername(), self.getPassword())
+        node_api = NodeWsApi(username=self.getUsername(),
+                             password=self.getPassword(),
+                             baseurl=self.getUrl())
 
         try:
-            results = nodeApi.idleNode(self.getArgs().nodeName)
+            results = node_api.idleNode(self.getArgs().nodeName)
 
             if results['NodeAlreadyIdle']:
-                print((
-                    _('The following node(s) are already in idle state:')))
-
+                print(
+                    _('The following node(s) are already in idle state:')
+                )
                 print('\n'.join(results['NodeAlreadyIdle']))
 
             if results['NodeSoftwareProfileLocked']:
-                print((_(
-                    'The following node(s) are locked and cannot be'
-                    ' idled:')))
-
+                print(
+                    _('The following node(s) are locked and cannot be idled:')
+                )
                 print('\n'.join(results['NodeSoftwareProfileLocked']))
+
         except Exception as msg:
-            raise InvalidCliRequest(_("Can't idle node(s): %s") % (msg))
+            raise InvalidCliRequest(_("Can't idle node(s): {}").format(msg))
 
 
-if __name__ == '__main__':
+def main():
     IdleNodeCli().run()
