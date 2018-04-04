@@ -44,10 +44,10 @@ Description:
     the given node must support this operation.
 """))
 
-        if not self.getOptions().nodeName:
+        if not self.getArgs().nodeName:
             raise InvalidCliRequest(_('Node name must be specified'))
 
-        node_name = self.getOptions().nodeName
+        node_name = self.getArgs().nodeName
 
         try:
             api = NodeWsApi(username=self.getUsername(),

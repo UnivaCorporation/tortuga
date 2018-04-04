@@ -45,9 +45,9 @@ Description:
     active software profile.
 ''')
 
-        software_profile_name = self.getOptions().softwareProfileName
+        software_profile_name = self.getArgs().softwareProfileName
 
-        if not self.getOptions().nodeName:
+        if not self.getArgs().nodeName:
             self.usage('Missing --node option')
 
         api = nodeWsApi.NodeWsApi(username=self.getUsername(),
@@ -56,7 +56,7 @@ Description:
 
         try:
             result = api.activateNode(
-                self.getOptions().nodeName, software_profile_name)
+                self.getArgs().nodeName, software_profile_name)
 
             if result['NodeAlreadyActive']:
                 msg = _('The following node(s) are already activated:')

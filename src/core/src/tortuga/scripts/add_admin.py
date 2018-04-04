@@ -61,11 +61,11 @@ Description:
                                     baseurl=self.getUrl())
 
         api.addAdmin(
-            self.getOptions().adminUsername,
-            self.getOptions().adminPassword,
+            self.getArgs().adminUsername,
+            self.getArgs().adminPassword,
             self._options.isCrypted,
-            self.getOptions().adminRealname,
-            self.getOptions().adminDescription)
+            self.getArgs().adminRealname,
+            self.getArgs().adminDescription)
 
 
 def main():

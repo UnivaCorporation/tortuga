@@ -14,8 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import argparse
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.softwareprofile.softwareProfileFactory import getSoftwareProfileApi
+from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
+from tortuga.cli.utils import FilterTagsAction
 
 
 class GetSoftwareProfileListCli(TortugaCli):
@@ -24,10 +26,8 @@ class GetSoftwareProfileListCli(TortugaCli):
 
         self.addOption(
             '--tag',
-            action='callback',
-            type='string',
             dest='tags',
-            callback=filter_tags,
+            action=FilterTagsAction,
             help=_('Filter results by specified tag(s) (comma-separated)'),
         )
 
@@ -39,28 +39,13 @@ Description:
     The get-software-profile-list tool returns the list of software
     profiles configured in the system.
 """))
-        api = getSoftwareProfileApi(self.getUsername(), self.getPassword())
+        api = SoftwareProfileWsApi(username=self.getUsername(),
+                                   password=self.getPassword(),
+                                   baseurl=self.getUrl())
 
-        for sp in api.getSoftwareProfileList(tags=self.getOptions().tags):
+        for sp in api.getSoftwareProfileList(tags=self.getArgs().tags):
             print('%s' % (sp))
 
 
-def filter_tags(option, opt, value, parser):
-    tags = []
-
-    vals = value.split('=', 1)
-
-    if len(vals) == 2:
-        tags.append((vals[0], vals[1]))
-    else:
-        tags.append((vals[0],))
-
-    current_tags = getattr(parser.values, option.dest)
-    if current_tags is None:
-        setattr(parser.values, option.dest, tags)
-    else:
-        current_tags.extend(tags)
-
-
-if __name__ == '__main__':
+def main():
     GetSoftwareProfileListCli().run()

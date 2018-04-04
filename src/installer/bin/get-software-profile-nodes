@@ -51,7 +51,7 @@ Description:
     The get-software-profile-nodes tool returns the list of nodes that are
     using the specified software profile.
 """))
-        softwareProfileName = self.getOptions().softwareProfile
+        softwareProfileName = self.getArgs().softwareProfile
 
         if not softwareProfileName:
             raise InvalidCliRequest(

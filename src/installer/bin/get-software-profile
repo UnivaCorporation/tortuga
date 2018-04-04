@@ -43,11 +43,11 @@ class GetSoftwareProfileCli(TortugaCli):
         self.addOptionGroup(softwareProfileAttrGroup, None)
 
         self.addOptionToGroup(
-            softwareProfileAttrGroup, '', '--name', dest='name',
+            softwareProfileAttrGroup, '--name', dest='name',
             help=_('software profile name'))
 
         self.addOptionToGroup(
-            softwareProfileAttrGroup, '', '--nodes', action='store_true',
+            softwareProfileAttrGroup, '--nodes', action='store_true',
             dest='getNodes', default=False, help=_('get list of nodes'))
 
         # --packages argument is deprecated
@@ -56,12 +56,12 @@ class GetSoftwareProfileCli(TortugaCli):
             help=optparse.SUPPRESS_HELP)
 
         self.addOptionToGroup(
-            softwareProfileAttrGroup, '', '--partitions',
+            softwareProfileAttrGroup, '--partitions',
             action='store_true', dest='getPartitions', default=False,
             help=_('get list of partitions'))
 
         self.addOptionToGroup(
-            softwareProfileAttrGroup, '', '--components',
+            softwareProfileAttrGroup, '--components',
             action='store_true', dest='getComponents', default=False,
             help=_('get list of components'))
 
@@ -71,7 +71,7 @@ class GetSoftwareProfileCli(TortugaCli):
             help=optparse.SUPPRESS_HELP)
 
         self.addOptionToGroup(
-            softwareProfileAttrGroup, '', '--admins', action='store_true',
+            softwareProfileAttrGroup, '--admins', action='store_true',
             dest='getAdmins', default=False, help=_('get list of admins'))
 
         outputAttrGroup = _('Output formatting options')
@@ -101,7 +101,7 @@ Description:
     The get-software-profile tool displays information details of  a  spe-
     cific software profile."""))
 
-        if not self.getOptions().name:
+        if not self.getArgs().name:
             self.getParser().error('--software-profile must be specified')
 
         self.swprofileapi = getSoftwareProfileApi(
@@ -112,26 +112,26 @@ Description:
 
         optionDict = {}
 
-        if self.getOptions().getNodes:
+        if self.getArgs().getNodes:
             optionDict['nodes'] = True
 
-        if self.getOptions().getPartitions:
+        if self.getArgs().getPartitions:
             optionDict['partitions'] = True
 
-        if self.getOptions().getComponents:
+        if self.getArgs().getComponents:
             optionDict['components'] = True
 
-        if self.getOptions().getAdmins:
+        if self.getArgs().getAdmins:
             optionDict['admins'] = True
 
         swprofile = self.swprofileapi.getSoftwareProfile(
-            self.getOptions().name, optionDict)
+            self.getArgs().name, optionDict)
 
-        if self.getOptions().json:
+        if self.getArgs().json:
             print((json.dumps({
                 'swprofile': swprofile.getCleanDict(),
             }, sort_keys=True, indent=4, separators=(',', ': '))))
-        elif self.getOptions().xml:
+        elif self.getArgs().xml:
             print(swprofile.getXmlRep())
         else:
             self.__console_output(swprofile)
@@ -160,7 +160,7 @@ Description:
 
         print('  - Type: {0}'.format(buf))
 
-        if self.getOptions().getNodes:
+        if self.getArgs().getNodes:
 
             if swprofile.getNodes():
                 print('  - Node(s):')
@@ -176,7 +176,7 @@ Description:
             else:
                 print('  - Node(s): (none)')
 
-        if self.getOptions().getComponents:
+        if self.getArgs().getComponents:
             if swprofile.getComponents():
                 print('  - Component(s):')
 
@@ -202,7 +202,7 @@ Description:
 
                 print('    - {0}'.format(buf))
 
-                if self.getOptions().getPartitions and \
+                if self.getArgs().getPartitions and \
                         swprofile.getPartitions() and \
                         hwprofile.getResourceAdapter() and \
                         hwprofile.getResourceAdapter().getName() == 'default':
@@ -245,7 +245,7 @@ Description:
         else:
             print('  - Hardware profile(s): (none)')
 
-        if self.getOptions().getAdmins:
+        if self.getArgs().getAdmins:
             if swprofile.getAdmins():
                 print(' ' * 2 + '- Admins:')
 

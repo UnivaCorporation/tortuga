@@ -62,11 +62,11 @@ for example.
     All profiles must be mapped in order to be used for active nodes.
 """))
 
-        if not self.getOptions().swprofile:
+        if not self.getArgs().swprofile:
             raise InvalidCliRequest(
                 _('Software profile name must be specified'))
 
-        if not self.getOptions().hwprofile:
+        if not self.getArgs().hwprofile:
             raise InvalidCliRequest(
                 _('Hardware profile name must be specified'))
 
@@ -74,7 +74,7 @@ for example.
 
         try:
             api.addUsableHardwareProfileToSoftwareProfile(
-                self.getOptions().hwprofile, self.getOptions().swprofile)
+                self.getArgs().hwprofile, self.getArgs().swprofile)
         except SoftwareUsesHardwareAlreadyExists:
             pass
 

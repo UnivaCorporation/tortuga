@@ -46,8 +46,8 @@ Description:
 
         kitList = [
             str(kit) for kit in api.getKitList()
-            if not self.getOptions().osonly or
-            (self.getOptions().osonly and kit.getIsOs())
+            if not self.getArgs().osonly or
+            (self.getArgs().osonly and kit.getIsOs())
         ]
 
         kitList.sort()

@@ -47,12 +47,12 @@ Description:
     The set-idle-state tool configures the "idle" attribute of a software
     profile.
 """))
-        swprofile = self.getOptions().swprofile
+        swprofile = self.getArgs().swprofile
         if not swprofile:
             raise InvalidCliRequest(
                 _('Software profile name must be specified'))
 
-        idleState = self.getOptions().idleState
+        idleState = self.getArgs().idleState
         if not idleState:
             raise InvalidCliRequest(_('Idle state must be specified'))
 

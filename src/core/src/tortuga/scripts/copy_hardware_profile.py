@@ -44,8 +44,8 @@ Description:
     Copy an existing hardware profile.
 """))
 
-        if self.getOptions().srcHardwareProfileName is None or \
-                self.getOptions().dstHardwareProfileName is None:
+        if self.getArgs().srcHardwareProfileName is None or \
+                self.getArgs().dstHardwareProfileName is None:
             self.usage()
 
         api = HardwareProfileWsApi(username=self.getUsername(),
@@ -53,8 +53,8 @@ Description:
                                    baseurl=self.getUrl())
 
         api.copyHardwareProfile(
-            self.getOptions().srcHardwareProfileName,
-            self.getOptions().dstHardwareProfileName)
+            self.getArgs().srcHardwareProfileName,
+            self.getArgs().dstHardwareProfileName)
 
 
 def main():

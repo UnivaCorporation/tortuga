@@ -39,12 +39,12 @@ Description:
     Shuts down the given node.
 """))
 
-        if not self.getOptions().nodeName:
+        if not self.getArgs().nodeName:
             raise InvalidCliRequest(_('Node name must be specified'))
 
         try:
             # Perform a "soft" shutdown
-            getNodeApi().shutdownNode(self.getOptions().nodeName, True)
+            getNodeApi().shutdownNode(self.getArgs().nodeName, True)
         except Exception as msg:
             raise InvalidCliRequest(
                 _("Can't shutdown node(s) - %s") % (msg))

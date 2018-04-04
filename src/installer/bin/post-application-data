@@ -38,10 +38,10 @@ Description:
     The  post-application-data tool posts an XML file to the Tortuga Rule
     Engine web service as input for configured rules.
 """))
-        applicationName = self.getOptions().applicationName
+        applicationName = self.getArgs().applicationName
         if not applicationName:
             raise InvalidCliRequest(_('Missing application name.'))
-        dataFile = self.getOptions().dataFile
+        dataFile = self.getArgs().dataFile
         if not dataFile:
             raise InvalidCliRequest(_('Missing application data file.'))
         if not os.path.exists(dataFile):

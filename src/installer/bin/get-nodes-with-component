@@ -41,7 +41,7 @@ class GetNodesWithComponentCli(TortugaCli):
             help=_('Return nodes only of the csv list of states'))
 
         self.addOptionToGroup(nodeProfileAttrGroup, '--count', dest='count',
-                              type='int',
+                              type=int,
                               help=_('Max number of Nodes to return'))
 
         componentProfileAttrGroup = _('Component Profile Attribute Options')
@@ -77,28 +77,28 @@ Description:
     the given component enabled.  The result set can be filtered by state
     and count.
 """))
-        if not self.getOptions().kitName:
+        if not self.getArgs().kitName:
             raise InvalidCliRequest(_('The --kit-name option must be set.'))
 
-        if not self.getOptions().kitVersion:
+        if not self.getArgs().kitVersion:
             raise InvalidCliRequest(
                 _('The --kit-version option must be set.'))
 
-        if not self.getOptions().kitIteration:
+        if not self.getArgs().kitIteration:
             raise InvalidCliRequest(
                 _('The --kit-iteration option must be set.'))
 
-        if not self.getOptions().componentName:
+        if not self.getArgs().componentName:
             raise InvalidCliRequest(
                 _('The --component-name option must be set.'))
 
-        state = self.getOptions().state
+        state = self.getArgs().state
 
         if state:
             stateList = state.split(',')
 
-        if self.getOptions().count is not None:
-            numNodes = int(self.getOptions().count)
+        if self.getArgs().count is not None:
+            numNodes = int(self.getArgs().count)
             if numNodes == 0:
                 return
         else:
@@ -111,12 +111,12 @@ Description:
         for sp in api.getSoftwareProfileList():
             comps = api.getEnabledComponentList(sp.getName())
             for comp in comps:
-                if comp.getName() == self.getOptions().componentName and \
-                   comp.getKit().getName() == self.getOptions().kitName and \
+                if comp.getName() == self.getArgs().componentName and \
+                   comp.getKit().getName() == self.getArgs().kitName and \
                    comp.getKit().getVersion() == \
-                   self.getOptions().kitVersion and \
+                   self.getArgs().kitVersion and \
                    comp.getKit().getIteration() == \
-                   self.getOptions().kitIteration:
+                   self.getArgs().kitIteration:
                     softwareProfile = api.getSoftwareProfile(
                         sp.getName(), optionDict)
 

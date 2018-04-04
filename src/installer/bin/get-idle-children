@@ -51,7 +51,7 @@ class GetIdleChildrenCli(TortugaCli):
 Description:
     Get the list of idle nodes associated with a given software  profile.
 """))
-        softwareProfileName = self.getOptions().softwareProfileName
+        softwareProfileName = self.getArgs().softwareProfileName
         if not softwareProfileName:
             raise InvalidCliRequest(
                 _('Software profile name must be specified'))

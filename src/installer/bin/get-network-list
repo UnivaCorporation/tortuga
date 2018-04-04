@@ -62,9 +62,9 @@ Description:
         if not networkList:
             sys.exit(1)
 
-        if self.getOptions().xml:
+        if self.getArgs().xml:
             print(networkList.getXmlRep())
-        elif self.getOptions().json:
+        elif self.getArgs().json:
             print(json.dumps(networkList.getCleanDict(),
                              sort_keys=True, indent=4, separators=(',', ': ')))
         else:

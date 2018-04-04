@@ -18,12 +18,13 @@
 
 import glob
 import json
-import os.path
 from optparse import OptionValueError
 
+import os.path
 from jinja2 import Template
-
 from tortuga.cli.tortugaCli import TortugaCli
+from tortuga.cli.utils import ParseOperatingSystemArgAction
+from tortuga.cli.utils import ParseProfileTemplateArgsAction
 from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.configurationError import ConfigurationError
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
@@ -31,9 +32,8 @@ from tortuga.exceptions.invalidProfileCreationTemplate \
     import InvalidProfileCreationTemplate
 from tortuga.objects.hardwareProfile import HardwareProfile
 from tortuga.objects.osInfo import OsInfo
-from tortuga.softwareprofile.softwareProfileFactory \
-    import getSoftwareProfileApi
 from tortuga.wsapi.hardwareProfileWsApi import HardwareProfileWsApi
+from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
 
 
 class CreateHardwareProfileCli(TortugaCli):
@@ -44,23 +44,10 @@ class CreateHardwareProfileCli(TortugaCli):
             ConfigManager().getRoot(),
             'share/templates/hardware')
 
-        # Set up some defaults
-        #   Don't need user info here...this is an open api...
-
-        primaryInstallerSp = \
-            getSoftwareProfileApi().getSoftwareProfileById(1)
-
-        self.osInfo = primaryInstallerSp.getOsInfo()
-
-        self.defaultOs = '%s-%s-%s' % (self.osInfo.getName(),
-                                       self.osInfo.getVersion(),
-                                       self.osInfo.getArch())
-
-        self.tmplDict = {}
-
-        option_group_name = _('Information')
-        self.addOptionGroup(option_group_name, '')
-        self.addOptionToGroup(option_group_name, '--list-templates',
+    def parseArgs(self, usage=None):
+        optionGroupName = _('Information')
+        self.addOptionGroup(optionGroupName, '')
+        self.addOptionToGroup(optionGroupName, '--list-templates',
                               action='store_true',
                               dest='bDisplayTemplateList',
                               default=False,
@@ -79,20 +66,21 @@ class CreateHardwareProfileCli(TortugaCli):
             help=_('Path to JSON-formatted hardware profile creation'
                    ' template'))
 
-        self.addOptionToGroup(option_group_name, '--name', type='str',
-                              action='callback', callback=self.optCallback,
+        self.addOptionToGroup(optionGroupName, '--name',
+                              action=ParseProfileTemplateArgsAction,
                               help=_('Hardware profile name'))
-        self.addOptionToGroup(option_group_name, '--description',
-                              action='callback', callback=self.optCallback,
-                              type='str', dest='description',
+        self.addOptionToGroup(optionGroupName, '--description',
+                              action=ParseProfileTemplateArgsAction,
+                              dest='description',
                               help=_('Description for hardware profile'))
-        self.addOptionToGroup(option_group_name, '--os', action='callback',
-                              metavar='OS SPEC', default=self.defaultOs,
-                              callback=self.optCallback, type="str", dest='os',
-                              help=_('Operating system (default: %default)'))
-        self.addOptionToGroup(option_group_name, '--idleSoftwareProfile',
-                              type='str', dest='idleSoftwareProfile',
-                              action='callback', callback=self.optCallback,
+        self.addOptionToGroup(optionGroupName, '--os',
+                              action=ParseOperatingSystemArgAction,
+                              metavar='OS SPEC',
+                              dest='os',
+                              help=_('Operating system'))
+        self.addOptionToGroup(optionGroupName, '--idleSoftwareProfile',
+                              dest='idleSoftwareProfile',
+                              action=ParseProfileTemplateArgsAction,
                               help=_('Specify idle software profile'))
 
         self.addOptionToGroup(option_group_name, '--defaults',
@@ -101,26 +89,7 @@ class CreateHardwareProfileCli(TortugaCli):
                               help=_('Do not use any defaults when'
                                      ' creating the hardware profile'))
 
-    def optCallback(self, option, opt, value, parser): \
-            # pylint: disable=unused-argument
-        _optname = opt[2:]
-        _value = value
-
-        if _optname == 'os':
-            osValues = _value.split('-', 3)
-            if len(osValues) != 3:
-                raise InvalidCliRequest(
-                    _('Error: Incorrect operating system'
-                      ' specification.\n\n'
-                      '--os argument should be in NAME-VERSION-ARCH'
-                      ' format'))
-            name = osValues[0]
-            version = osValues[1]
-            arch = osValues[2]
-            self.osInfo = OsInfo(name, version, arch)
-            return
-
-        self.tmplDict[_optname] = _value
+        super().parseArgs(usage=usage)
 
     def displayTemplateList(self): \
             # pylint: disable=no-self-use
@@ -145,18 +114,18 @@ Description:
     the appropriate command line options.
 """))
 
-        if self.getOptions().bDisplayTemplateList:
+        if self.getArgs().bDisplayTemplateList:
             self.displayTemplateList()
             return
 
-        if self.getOptions().templatePath and \
-                self.getOptions().jsonTemplatePath:
+        if self.getArgs().templatePath and \
+                self.getArgs().jsonTemplatePath:
             raise OptionValueError(
                 _('Only one hardware profile template can be specified'))
 
-        template_path = self.getOptions().templatePath \
-            if self.getOptions().templatePath else \
-            self.getOptions().jsonTemplatePath
+        template_path = self.getArgs().templatePath \
+            if self.getArgs().templatePath else \
+            self.getArgs().jsonTemplatePath
 
         b_use_default_template = False
         if not template_path:
@@ -168,11 +137,13 @@ Description:
         if not os.path.exists(template_path):
             raise InvalidCliRequest(
                 _('Cannot read template from %s') % (
-                    self.getOptions().templatePath))
+                    self.getArgs().templatePath))
+
+        osInfo = self.getArgs().osInfo if hasattr(self.getArgs(), 'osInfo') else None
 
         settings_dict = {
-            'bUseDefaults': self.getOptions().bUseDefaults,
-            'osInfo': self.osInfo,
+            'bUseDefaults': self.getArgs().bUseDefaults,
+            'osInfo': osInfo,
         }
 
         api = HardwareProfileWsApi(username=self.getUsername(),
@@ -184,7 +155,8 @@ Description:
             with open(template_path) as fp:
                 tmpl = fp.read()
 
-            hw_profile_tmpl = Template(tmpl).render(self.tmplDict)
+            tmplDict = self.getArgs().tmplDict
+            hw_profile_tmpl = Template(tmpl).render(tmplDict)
         except Exception as ex:
             self.getLogger().error(
                 'Error applying template substitutions')
@@ -199,7 +171,7 @@ Description:
             # id...they would be there if the template was created from a
             # dump of an existing profile
 
-            if b_use_default_template or self.getOptions().templatePath:
+            if b_use_default_template or self.getArgs().templatePath:
                 hw_profile_spec = HardwareProfile.getFromXml(
                     hw_profile_tmpl, ['id', 'hardwareProfileId'])
             else:
@@ -210,8 +182,8 @@ Description:
 
             # Override any preset hardware profile name in the template
             # if specified on the command-line
-            if 'name' in self.tmplDict:
-                hw_profile_spec.setName(self.tmplDict['name'])
+            if 'name' in tmplDict:
+                hw_profile_spec.setName(tmplDict['name'])
         except ConfigurationError as ex:
             self.getLogger().exception(ex)
 

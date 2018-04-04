@@ -52,15 +52,15 @@ Description:
     The get-admin tool returns a single admin user from the Tortuga system.
 """))
 
-        if not self.getOptions().admin_username:
+        if not self.getArgs().admin_username:
             self.getParser().error('--admin-username must be specified')
 
         admin = getAdminApi(self.getUsername(), self.getPassword()).\
-            getAdmin(self.getOptions().admin_username)
+            getAdmin(self.getArgs().admin_username)
 
-        if self.getOptions().xml:
+        if self.getArgs().xml:
             print(admin.getXmlRep())
-        elif self.getOptions().json:
+        elif self.getArgs().json:
             print(json.dumps({
                 'admin': admin.getCleanDict(),
             }, sort_keys=True, indent=4, separators=(',', ': ')))

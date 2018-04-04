@@ -47,7 +47,7 @@ Description:
     flag is specified.
 """))
 
-        if not self.getOptions().nodeSpec:
+        if not self.getArgs().nodeSpec:
             raise InvalidCliRequest(
                 _('--node must be specified'))
 
@@ -55,12 +55,12 @@ Description:
 
         # If the node is being reinstalled as a result of the reboot,
         # do not use a soft shutdown.
-        bSoftReboot = not self.getOptions().bReinstall
+        bSoftReboot = not self.getArgs().bReinstall
 
         try:
             nodeApi.rebootNode(
-                self.getOptions().nodeSpec, bSoftReboot,
-                bReinstall=self.getOptions().bReinstall)
+                self.getArgs().nodeSpec, bSoftReboot,
+                bReinstall=self.getArgs().bReinstall)
         except Exception as msg:
             raise InvalidCliRequest(
                 _("Can't reboot node(s) - %s") % (msg))

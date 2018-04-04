@@ -41,7 +41,7 @@ Description:
     ware profile for it be successfully removed.
 """))
 
-        if not self.getOptions().softwareProfileName:
+        if not self.getArgs().softwareProfileName:
             raise InvalidCliRequest(
                 _('Software profile name must be specified'))
 
@@ -50,10 +50,10 @@ Description:
                                    baseurl=self.getUrl())
         try:
             api.deleteSoftwareProfile(
-                self.getOptions().softwareProfileName)
+                self.getArgs().softwareProfileName)
         except softwareProfileNotFound.SoftwareProfileNotFound:
             print(_('Software profile [%s] not found' % (
-                self.getOptions().softwareProfileName)))
+                self.getArgs().softwareProfileName)))
 
 
 def main():

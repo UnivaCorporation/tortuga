@@ -60,7 +60,7 @@ class GetComponentList(TortugaCli):
     def __get_software_profile(self):
         # Determine software profile name based on command-line option(s)
 
-        if self.getOptions().applyToInstaller:
+        if self.getArgs().applyToInstaller:
             # Get software profile name from installer node
             node = nodeApiFactory.getNodeApi().getInstallerNode(
                 optionDict={
@@ -70,7 +70,7 @@ class GetComponentList(TortugaCli):
 
             return node.getSoftwareProfile().getName()
 
-        return self.getOptions().softwareprofile
+        return self.getArgs().softwareprofile
 
     def runCommand(self):
         self.parseArgs(_("""
@@ -88,8 +88,8 @@ Description:
 """))
 
         # Check for conflicting options
-        if self.getOptions().softwareprofile and self.getOptions().os or \
-                self.getOptions().applyToInstaller and self.getOptions().os:
+        if self.getArgs().softwareprofile and self.getArgs().os or \
+                self.getArgs().applyToInstaller and self.getArgs().os:
             self.getParser().error('Options -p, --software-profile and --os'
                                    ' are mutually exclusive')
 
@@ -104,9 +104,9 @@ Description:
 
             return
 
-        if self.getOptions().os:
+        if self.getArgs().os:
             try:
-                name, version, arch = self.getOptions().os.split('-', 3)
+                name, version, arch = self.getArgs().os.split('-', 3)
             except ValueError:
                 self.getParser().error(
                     'Malformed argument to --os. Must be in form of'

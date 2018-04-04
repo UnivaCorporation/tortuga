@@ -21,8 +21,8 @@ import json
 import os.path
 from optparse import OptionValueError
 
+import os.path
 from jinja2 import Template
-
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
 from tortuga.exceptions.invalidProfileCreationTemplate \
@@ -30,6 +30,14 @@ from tortuga.exceptions.invalidProfileCreationTemplate \
 from tortuga.objects.osInfo import OsInfo
 from tortuga.objects.softwareProfile import SoftwareProfile
 from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
+from tortuga.cli.utils import ParseOperatingSystemArgAction
+from tortuga.cli.utils import ParseProfileTemplateArgsAction
+from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
+from tortuga.exceptions.invalidProfileCreationTemplate \
+    import InvalidProfileCreationTemplate
+from tortuga.objects.softwareProfile import SoftwareProfile
+from tortuga.softwareprofile.softwareProfileFactory \
+    import getSoftwareProfileApi
 
 
 class CreateSoftwareProfileCli(TortugaCli):
@@ -38,10 +46,6 @@ class CreateSoftwareProfileCli(TortugaCli):
 
         self._default_tmpl_dir = os.path.join(
             self._cm.getRoot(), 'share/templates/software')
-
-        self.osInfo = None
-
-        self.tmplDict = {}
 
         option_group_name = _('Information')
         self.addOptionGroup(option_group_name, '')
@@ -66,20 +70,21 @@ class CreateSoftwareProfileCli(TortugaCli):
             help=_('Path to JSON-formatted software profile creation'
                    ' template'))
 
-        self.addOptionToGroup(option_group_name, '--name', action='callback',
-                              callback=self.optCallback, type="str",
+        self.addOptionToGroup(option_group_name, '--name',
+                              action=ParseProfileTemplateArgsAction,
                               help=_('Software profile name'))
         self.addOptionToGroup(option_group_name, '--description',
-                              action='callback', callback=self.optCallback,
-                              type="str", dest='description',
+                              action=ParseProfileTemplateArgsAction,
+                              dest='description',
                               help=_('Description for software profile'))
-        self.addOptionToGroup(option_group_name, '--type', action='callback',
-                              callback=self.optCallback, type='str',
+        self.addOptionToGroup(option_group_name, '--type',
+                              action=ParseProfileTemplateArgsAction,
                               dest='profileType',
                               help=_('Software profile type'))
-        self.addOptionToGroup(option_group_name, '--os', action='callback',
+        self.addOptionToGroup(option_group_name, '--os',
+                              action=ParseOperatingSystemArgAction,
                               metavar='OS SPEC',
-                              callback=self.optCallback, type="str", dest='os',
+                              dest='os',
                               help=_('Operating system for software profile'
                                      ' nodes'))
 
@@ -109,27 +114,6 @@ class CreateSoftwareProfileCli(TortugaCli):
         if templateFiles:
             print('\n'.join(templateFiles))
 
-    def optCallback(self, option, opt, value, parser): \
-            # pylint: disable=unused-argument
-        _optname = opt[2:]
-
-        if _optname == 'os':
-            osValues = value.split('-', 3)
-
-            if len(osValues) != 3:
-                raise InvalidCliRequest(
-                    _('Error: Incorrect operating system specification.'
-                      '\n\n--os argument should be in'
-                      ' OSNAME-OSVERSION-OSARCH format'))
-
-            name = osValues[0]
-            version = osValues[1]
-            arch = osValues[2]
-
-            self.osInfo = OsInfo(name, version, arch)
-
-        self.tmplDict[_optname] = value
-
     def runCommand(self):
         self.parseArgs(_("""
     create-software-profile --list-templates
@@ -146,18 +130,18 @@ Description:
     command line options.
 """))
 
-        if self.getOptions().bDisplayTemplateList:
+        if self.getArgs().bDisplayTemplateList:
             self.displayTemplateList()
             return
 
-        if self.getOptions().templatePath and \
-                self.getOptions().jsonTemplatePath:
+        if self.getArgs().templatePath and \
+                self.getArgs().jsonTemplatePath:
             raise OptionValueError(
                 _('Only one software profile template can be specified'))
 
-        template_path = self.getOptions().templatePath \
-            if self.getOptions().templatePath else \
-            self.getOptions().jsonTemplatePath
+        template_path = self.getArgs().templatePath \
+            if self.getArgs().templatePath else \
+            self.getArgs().jsonTemplatePath
 
         b_use_default_template = False
 
@@ -178,8 +162,8 @@ Description:
 
         # Populate 'settings_dict' from command-line arguments
         settings_dict = {
-            'bOsMediaRequired': self.getOptions().bOsMediaRequired,
-            'unmanagedProfile': self.getOptions().unmanaged,
+            'bOsMediaRequired': self.getArgs().bOsMediaRequired,
+            'unmanagedProfile': self.getArgs().unmanaged,
         }
 
         try:
@@ -187,7 +171,7 @@ Description:
                 temp_ = fp.read()
 
             # Process the XML template
-            tmpl = Template(temp_).render(self.tmplDict)
+            tmpl = Template(temp_).render(self.getArgs().tmplDict)
         except Exception as ex:
             self.getLogger().debug('Error applying template substitutions')
 
@@ -197,7 +181,7 @@ Description:
                 'Invalid profile creation template: %s' % (ex))
 
         try:
-            if b_use_default_template or self.getOptions().templatePath:
+            if b_use_default_template or self.getArgs().templatePath:
                 # We want to ignore all tags with id and software profile
                 # id...they would be there if the template was created from
                 # a dump of an existing profile
@@ -219,8 +203,8 @@ Description:
             raise InvalidProfileCreationTemplate(
                 'Invalid software creation template')
 
-        if self.osInfo:
-            sw_profile_spec.setOsInfo(self.osInfo)
+        if hasattr(self.getArgs(), 'osInfo'):
+            sw_profile_spec.setOsInfo(self.getArgs().osInfo)
 
         api.createSoftwareProfile(
             sw_profile_spec, settings_dict)

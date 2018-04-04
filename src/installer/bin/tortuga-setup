@@ -99,24 +99,24 @@ Description:
 
         self._logger.info('command-line args: %s' % (' '.join(sys.argv[1:])))
 
-        if self.getOptions().responseFile:
-            if not os.path.exists(self.getOptions().responseFile):
+        if self.getArgs().responseFile:
+            if not os.path.exists(self.getArgs().responseFile):
                 raise InvalidCliRequest(
                     'Response file [%s] does not exist' % (
-                        self.getOptions().responseFile))
+                        self.getArgs().responseFile))
 
         tortuga_cfg = {}
 
-        if self.getOptions().responseFile:
-            tortuga_cfg['inifile'] = self.getOptions().responseFile
+        if self.getArgs().responseFile:
+            tortuga_cfg['inifile'] = self.getArgs().responseFile
 
-        tortuga_cfg['acceptEula'] = self.getOptions().acceptEula
-        tortuga_cfg['force'] = self.getOptions().force
-        tortuga_cfg['defaults'] = self.getOptions().defaults
-        tortuga_cfg['consoleLogLevel'] = self.getOptions().consoleLogLevel
+        tortuga_cfg['acceptEula'] = self.getArgs().acceptEula
+        tortuga_cfg['force'] = self.getArgs().force
+        tortuga_cfg['defaults'] = self.getArgs().defaults
+        tortuga_cfg['consoleLogLevel'] = self.getArgs().consoleLogLevel
 
-        if self.getOptions().skip_kits:
-            tortuga_cfg['skip_kits'] = self.getOptions().skip_kits
+        if self.getArgs().skip_kits:
+            tortuga_cfg['skip_kits'] = self.getArgs().skip_kits
 
         try:
             tortugaDeployer.TortugaDeployer(

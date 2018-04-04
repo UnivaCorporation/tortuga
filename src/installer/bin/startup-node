@@ -51,21 +51,21 @@ Description:
     The startup-node tool starts a node.
 """))
 
-        if not self.getOptions().nodeName:
+        if not self.getArgs().nodeName:
             raise InvalidCliRequest(_('Node name must be specified'))
 
-        bootMethod = self.getOptions().bootMethod \
-            if self.getOptions().bootMethod else 'n'
+        bootMethod = self.getArgs().bootMethod \
+            if self.getArgs().bootMethod else 'n'
 
         # Turn user input into a list
         destinationList = [
             node.strip()
-            for node in self.getOptions().destinationString.split(',')
-        ] if self.getOptions().destinationString else []
+            for node in self.getArgs().destinationString.split(',')
+        ] if self.getArgs().destinationString else []
 
         try:
             getNodeApi().startupNode(
-                self.getOptions().nodeName, destinationList, bootMethod)
+                self.getArgs().nodeName, destinationList, bootMethod)
         except Exception as msg:
             raise InvalidCliRequest(
                 _("Unable to start node(s) - %s") % (msg))

@@ -65,8 +65,8 @@ class GetComponentNodeListCli(TortugaCli):
                 nodes = []
 
                 for component in swProfile.components:
-                    if not self.getOptions().kitName or \
-                            component.kit.name == self.getOptions().kitName:
+                    if not self.getArgs().kitName or \
+                            component.kit.name == self.getArgs().kitName:
                         if compName and component.name == compName:
                             nodes = [node.name for node in swProfile.nodes]
                             break

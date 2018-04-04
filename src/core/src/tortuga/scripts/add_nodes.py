@@ -19,7 +19,7 @@
 
 import ipaddress
 import itertools
-import optparse
+import argparse
 import os.path
 import sys
 
@@ -65,7 +65,7 @@ class AddNodes(TortugaCli): \
         self.addOptionToGroup(
             mainGroup, '--rack',
             dest='rackNumber',
-            type='int',
+            type=int,
             help=_('Value for "#RR" in hardware profile name format.'))
 
         self.addOptionToGroup(
@@ -78,14 +78,14 @@ class AddNodes(TortugaCli): \
         self.addOptionToGroup(
             mainGroup, '--node-count',
             dest='nodeCount',
-            help=optparse.SUPPRESS_HELP,
-            type='int')
+            help=argparse.SUPPRESS,
+            type=int)
 
         self.addOptionToGroup(
             mainGroup, '-n', '--count',
             dest='nodeCount', metavar='COUNT',
             help=_('Specify number of nodes to add.'),
-            type='int')
+            type=int)
 
         self.addOptionToGroup(
             mainGroup, '--resource-adapter-configuration', '-A',
@@ -134,30 +134,11 @@ class AddNodes(TortugaCli): \
         super(AddNodes, self).parseArgs(usage=usage)
 
     def runCommand(self):
-        self.parseArgs('''
-    add-nodes [--idle] [options] [-n COUNT] \
---software-profile NAME --hardware-profile NAME
-
-    add-nodes [options] [-n COUNT] \
-[--software-profile NAME] --hardware-profile NAME
-
-    add-nodes --mac-file FILE ---software-profile NAME \
---hardware-profile NAME
-
-Description:
-
-    Add specified number of nodes to the Tortuga cluster in the given
-    hardware and software profile.
-
-    The "--idle" argument adds "idle" nodes, which are node placeholders
-    until activated.
-
-    The add-nodes command associates the new nodes with the
-    software profile given by the required --software-profile option.''')
+        self.parseArgs()
 
         # Validate options
-        if self.getOptions().macImportFile:
-            if self.getOptions().nodeCount:
+        if self.getArgs().macImportFile:
+            if self.getArgs().nodeCount:
                 sys.stderr.write('Ignoring \'--count\' option when importing'
                                  ' from MAC file\n')
 
@@ -166,55 +147,55 @@ Description:
                                     baseurl=self.getUrl()
         )
 
-        addNodesRequest = dict(isIdle=self.getOptions().isIdle)
+        addNodesRequest = dict(isIdle=self.getArgs().isIdle)
 
-        if self.getOptions().hardwareProfileName:
+        if self.getArgs().hardwareProfileName:
             addNodesRequest['hardwareProfile'] = \
-                self.getOptions().hardwareProfileName
+                self.getArgs().hardwareProfileName
 
         # Parse extra arguments
         extra_args = dict()
 
-        for extra_arg in self.getOptions().extra_args or []:
+        for extra_arg in self.getArgs().extra_args or []:
             key, value = extra_arg.split('=', 1) \
                 if '=' in extra_arg else (extra_arg, None)
 
             extra_args[key] = value
 
-        if self.getOptions().extra_args and extra_args:
+        if self.getArgs().extra_args and extra_args:
             addNodesRequest['extra_args'] = extra_args
 
-        if not self.getOptions().macImportFile and \
-                self.getOptions().nodeCount is not None:
+        if not self.getArgs().macImportFile and \
+                self.getArgs().nodeCount is not None:
             # Only set the node count if not importing from a file
-            addNodesRequest['count'] = self.getOptions().nodeCount
+            addNodesRequest['count'] = self.getArgs().nodeCount
 
-        if self.getOptions().rackNumber is not None:
-            addNodesRequest['rack'] = self.getOptions().rackNumber
+        if self.getArgs().rackNumber is not None:
+            addNodesRequest['rack'] = self.getArgs().rackNumber
 
-        if self.getOptions().softwareProfileName:
+        if self.getArgs().softwareProfileName:
             addNodesRequest['softwareProfile'] = \
-                self.getOptions().softwareProfileName
+                self.getArgs().softwareProfileName
 
-        if not self.getOptions().hardwareProfileName and \
-                not self.getOptions().softwareProfileName:
+        if not self.getArgs().hardwareProfileName and \
+                not self.getArgs().softwareProfileName:
             self.getParser().error('--software-profile or --hardware-profile and --software-profile must be specified')
 
-        if self.getOptions().tags:
+        if self.getArgs().tags:
             addNodesRequest['tags'] = _split_key_value_pairs(
-                self.getOptions().tags)
+                self.getArgs().tags)
 
         nodeDetails = []
 
-        if self.getOptions().macAddr or self.getOptions().ipAddress or \
-                self.getOptions().hostName:
-            if self.getOptions().nodeCount is not None:
-                addNodesRequest['count'] = self.getOptions().nodeCount
+        if self.getArgs().macAddr or self.getArgs().ipAddress or \
+                self.getArgs().hostName:
+            if self.getArgs().nodeCount is not None:
+                addNodesRequest['count'] = self.getArgs().nodeCount
 
             nics = self.__extract_nics(
-                self.getOptions().ipAddress,
-                self.getOptions().macAddr.lower()
-                if self.getOptions().macAddr else None)
+                self.getArgs().ipAddress,
+                self.getArgs().macAddr.lower()
+                if self.getArgs().macAddr else None)
 
             nodeDetail = {}
 
@@ -223,23 +204,23 @@ Description:
 
                 addNodesRequest['count'] = 1
 
-            if self.getOptions().hostName:
-                nodeDetail['name'] = self.getOptions().hostName
+            if self.getArgs().hostName:
+                nodeDetail['name'] = self.getArgs().hostName
 
                 addNodesRequest['count'] = 1
 
             nodeDetails.append(nodeDetail)
         else:
-            if self.getOptions().macImportFile:
-                if not os.path.exists(self.getOptions().macImportFile):
+            if self.getArgs().macImportFile:
+                if not os.path.exists(self.getArgs().macImportFile):
                     sys.stderr.write(
                         _('Error: file [%s] not found') % (
-                            self.getOptions().macImportFile) + '\n')
+                            self.getArgs().macImportFile) + '\n')
 
                     raise SystemExit(1)
 
                 # Parse input file
-                with open(self.getOptions().macImportFile) as fd:
+                with open(self.getArgs().macImportFile) as fd:
                     for line in fd.readlines():
                         if not line == '' and not line[0] == '#':
                             itemList = line.rstrip().split()
@@ -278,14 +259,14 @@ Description:
             if 'count' not in addNodesRequest:
                 addNodesRequest['count'] = len(nodeDetails)
 
-        if self.getOptions().resource_adapter_configuration:
+        if self.getArgs().resource_adapter_configuration:
             addNodesRequest['resource_adapter_configuration'] = \
-                self.getOptions().resource_adapter_configuration
+                self.getArgs().resource_adapter_configuration
 
         try:
             addHostSession = addHostWsApi.addNodes(addNodesRequest)
 
-            if self.getOptions().quiet:
+            if self.getArgs().quiet:
                 sys.stdout.write('{0}\n'.format(addHostSession))
             else:
                 # Async (default) invocation; show user output

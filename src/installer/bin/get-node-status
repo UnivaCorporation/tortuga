@@ -28,6 +28,7 @@ from tortuga.db.nodes import Nodes
 from tortuga.db.softwareProfiles import SoftwareProfiles
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
 from tortuga.node.nodeManager import NodeManager
+from tortuga.cli.utils import FilterTagsAction
 
 
 class GetNodeStatus(TortugaCli): \
@@ -106,10 +107,8 @@ class GetNodeStatus(TortugaCli): \
 
         self.addOption(
             '--tag',
-            action='callback',
-            type='string',
+            action=FilterTagsAction,
             dest='tags',
-            callback=filter_tags,
             help=_('Filter results by specified tag(s) (comma-separated)'),
         )
 
@@ -133,7 +132,7 @@ Description:
     software profile)
 ''')
 
-        options = self.getOptions()
+        options = self.getArgs()
 
         if options.bActiveNodesOnly and options.bIdleNodesOnly:
             raise InvalidCliRequest(
@@ -601,24 +600,6 @@ Description:
             )
 
         return buf
-
-
-def filter_tags(option, opt, value, parser): \
-        # pylint: disable=unused-argument
-    tags = []
-
-    vals = value.split('=', 1)
-
-    if len(vals) == 2:
-        tags.append((vals[0], vals[1]))
-    else:
-        tags.append((vals[0],))
-
-    current_tags = getattr(parser.values, option.dest)
-    if current_tags is None:
-        setattr(parser.values, option.dest, tags)
-    else:
-        current_tags.extend(tags)
 
 
 if __name__ == '__main__':

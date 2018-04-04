@@ -59,8 +59,8 @@ Description:
     an existing adminstrative user and a hardware or software profile.
 """))
 
-        swprofile = self.getOptions().swprofile
-        hwprofile = self.getOptions().hwprofile
+        swprofile = self.getArgs().swprofile
+        hwprofile = self.getArgs().hwprofile
 
         if swprofile and hwprofile:
             raise InvalidCliRequest(
@@ -72,7 +72,7 @@ Description:
                 _('Either --software-profile or --hardware-profile must'
                   ' be specified.'))
 
-        admin_username = self.getOptions().adminUsername
+        admin_username = self.getArgs().adminUsername
         if admin_username is None:
             raise InvalidCliRequest(_('Missing Admin Username'))
 

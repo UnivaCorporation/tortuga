@@ -57,14 +57,14 @@ Description:
     the given node must support this operation.
 """))
 
-        if not self.getOptions().nodeName:
+        if not self.getArgs().nodeName:
             raise InvalidCliRequest(_('Node name must be specified'))
 
-        if not self.getOptions().destinationString:
+        if not self.getArgs().destinationString:
             raise InvalidCliRequest(_('Destination must be specified'))
 
-        nodeName = self.getOptions().nodeName
-        destinationString = self.getOptions().destinationString
+        nodeName = self.getArgs().nodeName
+        destinationString = self.getArgs().destinationString
 
         try:
             nodeApi = getNodeApi(self.getUsername(), self.getPassword())
@@ -78,7 +78,7 @@ Description:
                 node for node in destinationString.split(',')]
 
             nodeApi.migrateNode(
-                nodeName, destinationList, self.getOptions().liveMigrate)
+                nodeName, destinationList, self.getArgs().liveMigrate)
 
             print(_('Migrated node [%s]') % (nodeName))
 

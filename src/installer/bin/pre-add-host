@@ -50,14 +50,14 @@ class PreAddHostCli(TortugaCli):
 pre-add-host --hardware-profile=HARDWAREPROFILE
              --software-profile=SOFTWAREPROFILE --hostname <NAME> --ip <IP>
 """))
-        if self.getOptions().softwareProfile:
+        if self.getArgs().softwareProfile:
             # Check for valid software profile - will throw exception and exit
             # if it doesn't exist
 
             swpApi = getSoftwareProfileApi(self.getUsername(),
                                            self.getPassword())
 
-            swpApi.getSoftwareProfile(self.getOptions().softwareProfile)
+            swpApi.getSoftwareProfile(self.getArgs().softwareProfile)
 
         # Restore default signal masks/handlers so subprocesses don't inherit
         # unexpected signal masks
@@ -81,10 +81,10 @@ pre-add-host --hardware-profile=HARDWAREPROFILE
                 raise
 
         KitActionsManager().pre_add_host(
-            self.getOptions().hardwareProfile,
-            self.getOptions().softwareProfile,
-            self.getOptions().hostname,
-            self.getOptions().ip)
+            self.getArgs().hardwareProfile,
+            self.getArgs().softwareProfile,
+            self.getArgs().hostname,
+            self.getArgs().ip)
 
 
 if __name__ == '__main__':

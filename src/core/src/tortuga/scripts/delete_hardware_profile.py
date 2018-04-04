@@ -40,7 +40,7 @@ Description:
     ware profile for it be successfully removed.
 """))
 
-        if not self.getOptions().hardwareProfileName:
+        if not self.getArgs().hardwareProfileName:
             raise InvalidCliRequest(
                 _('Hardware profile name must be specified'))
 
@@ -49,7 +49,7 @@ Description:
                                    baseurl=self.getUrl())
 
         api.deleteHardwareProfile(
-            self.getOptions().hardwareProfileName)
+            self.getArgs().hardwareProfileName)
 
 
 def main():

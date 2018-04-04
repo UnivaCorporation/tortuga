@@ -46,17 +46,17 @@ class UpdateVolumeCli(TortugaCli):
 Description:
     The update-volume tool updates an existing volume in the storage system.
 """))
-        if not self.getOptions().volume:
+        if not self.getArgs().volume:
             raise InvalidCliRequest(_('Volume must be specified'))
-        if self.getOptions().shared and self.getOptions().noShared:
+        if self.getArgs().shared and self.getArgs().noShared:
             raise InvalidCliRequest(
                 _('The shared and no-shared options cannot be used together'))
-        if not self.getOptions().shared and not self.getOptions().noShared:
+        if not self.getArgs().shared and not self.getArgs().noShared:
             raise InvalidCliRequest(_('A shared option must be specified'))
         api = getSanApi(self.getUsername(), self.getPassword())
 
         api.updateVolume(
-            volume=self.getOptions().volume, shared=self.getOptions().shared)
+            volume=self.getArgs().volume, shared=self.getArgs().shared)
 
 
 if __name__ == '__main__':

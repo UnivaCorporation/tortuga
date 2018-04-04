@@ -144,7 +144,7 @@ class UpdateHardwareProfileCli(TortugaCli):
                               ' hardware profile.'))
 
         self.addOption(
-            '', '--cost', dest='cost', type='int',
+            '--cost', dest='cost', type=int,
             help=_('Set the \'cost\' of this hardware profile'))
 
     def runCommand(self):
@@ -268,7 +268,7 @@ Examples:
 
             hp.setHypervisorSoftwareProfileId(sp.getId())
 
-        if self.getOptions().bClearHypervisorProfile:
+        if self.getArgs().bClearHypervisorProfile:
             hp.setHypervisorSoftwareProfileId(None)
 
         if self._options.maxUnits is not None:

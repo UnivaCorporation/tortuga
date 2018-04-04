@@ -38,8 +38,8 @@ Description:
     tem user.
 """))
 
-        if not self.getOptions().adminUsername and \
-                not self.getOptions().adminId:
+        if not self.getArgs().adminUsername and \
+                not self.getArgs().adminId:
             self.getParser().error(_('Missing Admin Username or id'))
 
         api = AdminWsApi(username=self.getUsername(),
@@ -47,7 +47,7 @@ Description:
                          baseurl=self.getUrl())
 
         api.deleteAdmin(
-            self.getOptions().adminId or self.getOptions().adminUsername)
+            self.getArgs().adminId or self.getArgs().adminUsername)
 
 
 def main():

@@ -40,7 +40,7 @@ Description:
     profiles in the system."""))
         api = getHardwareProfileApi(self.getUsername(), self.getPassword())
 
-        for hp in api.getHardwareProfileList(tags=self.getOptions().tags):
+        for hp in api.getHardwareProfileList(tags=self.getArgs().tags):
             print('%s' % (hp))
 
 

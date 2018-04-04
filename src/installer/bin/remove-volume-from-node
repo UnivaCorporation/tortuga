@@ -44,8 +44,8 @@ Description:
     supports dynamic addition and deletion of storage volumes.
 """))
 
-        node = self.getOptions().node
-        volume = self.getOptions().volume
+        node = self.getArgs().node
+        volume = self.getArgs().volume
 
         if not node:
             raise InvalidCliRequest(_('Node must be specified'))

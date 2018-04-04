@@ -41,11 +41,11 @@ class GetProvisioningNicsApp(TortugaCli):
     def runCommand(self):
         self.parseArgs('''%prog''')
 
-        if self.getOptions().hardwareProfile:
+        if self.getArgs().hardwareProfile:
             hwProfileApi = hardwareProfileFactory.getHardwareProfileApi()
 
             hwProfile = hwProfileApi.getHardwareProfile(
-                self.getOptions().hardwareProfile, {
+                self.getArgs().hardwareProfile, {
                     'hardwareprofilenetworks': True
                 })
 
@@ -65,7 +65,7 @@ class GetProvisioningNicsApp(TortugaCli):
                 }
             }
 
-            if self.getOptions().bVerbose:
+            if self.getArgs().bVerbose:
                 print(yaml.safe_dump(dataDict))
             else:
                 print(yaml.safe_dump(nic.getNetworkDevice().getName()))
@@ -83,7 +83,7 @@ class GetProvisioningNicsApp(TortugaCli):
 
                 dataDict[deviceName] = {}
 
-                if self.getOptions().bVerbose:
+                if self.getArgs().bVerbose:
                     dataDict[deviceName] = {
                         'ip': nic.getIp(),
                         'network': {
@@ -92,7 +92,7 @@ class GetProvisioningNicsApp(TortugaCli):
                         }
                     }
 
-            if self.getOptions().bVerbose:
+            if self.getArgs().bVerbose:
                 print(yaml.safe_dump(dataDict))
             else:
                 print(yaml.safe_dump(list(dataDict.keys())))

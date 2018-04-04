@@ -206,7 +206,7 @@ def main():
                        "is also required for SSL operation."))
     p.add_option('-l', '--listen', default='0.0.0.0',
                  help='IP address to listen on (default: %default)')
-    p.add_option('-p', '--port', type='int', default=wsPort,
+    p.add_option('-p', '--port', type=int, default=wsPort,
                  help="Port to listen on (default: %default)")
 
     options, args = p.parse_args()

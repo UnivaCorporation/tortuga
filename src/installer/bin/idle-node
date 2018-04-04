@@ -45,13 +45,13 @@ Description:
         # and we maintain backwards compatability for it.
         # The "nodeName..." arguments were added later.
 
-        if not self.getOptions().nodeName:
+        if not self.getArgs().nodeName:
             self.usage(_('Missing --node option'))
 
         nodeApi = getNodeApi(self.getUsername(), self.getPassword())
 
         try:
-            results = nodeApi.idleNode(self.getOptions().nodeName)
+            results = nodeApi.idleNode(self.getArgs().nodeName)
 
             if results['NodeAlreadyIdle']:
                 print((

@@ -72,7 +72,7 @@ Description:
                        password=self.getPassword(),
                        baseurl=self.getUrl())
 
-        api.deleteKit(name, version, iteration, force=self.getOptions().force)
+        api.deleteKit(name, version, iteration, force=self.getArgs().force)
 
 
 def main():

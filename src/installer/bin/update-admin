@@ -62,12 +62,12 @@ Description:
         #     raise InvalidCliRequest(_('Missing Admin Id'))
 
         admin = Admin()
-        admin.setUsername(self.getOptions().adminUsername)
-        admin.setPassword(self.getOptions().adminPassword)
-        admin.setRealname(self.getOptions().adminRealname)
-        admin.setDescription(self.getOptions().adminDescription)
+        admin.setUsername(self.getArgs().adminUsername)
+        admin.setPassword(self.getArgs().adminPassword)
+        admin.setRealname(self.getArgs().adminRealname)
+        admin.setDescription(self.getArgs().adminDescription)
 
-        admin.setId(self.getOptions().adminId)
+        admin.setId(self.getArgs().adminId)
 
         api = getAdminApi(self.getUsername(), self.getPassword())
 

@@ -29,17 +29,17 @@ class TransferNodeCli(TortugaCli):
         super(TransferNodeCli, self).__init__()
 
         self.addOption(
-            '', '--node', dest='nodeName',
+            '--node', dest='nodeName',
             help=_('Name of node to transfer'))
         self.addOption(
-            '', '--count', dest='nodeCount',
-            help=_('Number of nodes to transfer'), type='int')
+            '--count', dest='nodeCount',
+            help=_('Number of nodes to transfer'), type=int)
         self.addOption(
-            '', '--src-software-profile',
+            '--src-software-profile',
             dest='srcSoftwareProfileName',
             help=_('Source software profile to transfer nodes from'))
         self.addOption(
-            '', '--software-profile', dest='softwareProfileName',
+            '--software-profile', dest='softwareProfileName',
             help=_('Destination software profile to transfer node to'))
 
         self.addOption(
@@ -59,10 +59,10 @@ Description:
     the new software profile.
 ''')
 
-        nodeName = self.getOptions().nodeName
-        nodeCount = self.getOptions().nodeCount
-        dstSoftwareProfileName = self.getOptions().softwareProfileName
-        srcSoftwareProfileName = self.getOptions().srcSoftwareProfileName
+        nodeName = self.getArgs().nodeName
+        nodeCount = self.getArgs().nodeCount
+        dstSoftwareProfileName = self.getArgs().softwareProfileName
+        srcSoftwareProfileName = self.getArgs().srcSoftwareProfileName
 
         if not dstSoftwareProfileName:
             self.usage(_('Missing --software-profile option'))
@@ -91,12 +91,12 @@ Description:
         if nodeName:
             api.transferNode(
                 nodeName, dstSoftwareProfileName,
-                bForce=self.getOptions().force)
+                bForce=self.getArgs().force)
         else:
             # Transfer 1 or more nodes from a source software profile
             api.transferNodes(
                 srcSoftwareProfileName, dstSoftwareProfileName, nodeCount,
-                bForce=self.getOptions().force)
+                bForce=self.getArgs().force)
 
 
 def main():

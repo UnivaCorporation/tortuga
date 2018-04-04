@@ -51,15 +51,15 @@ class RegisterComponentCli(TortugaCli):
     def runCommand(self):
         self.parseArgs()
 
-        if not self.getOptions().component or not self.getOptions().os:
+        if not self.getArgs().component or not self.getArgs().os:
             self.getParser().error(
                 'At least --component and --os options must be specified')
 
         # Find the specified component, ignoring the version
-        component_name = self.getOptions().component.split('-', 1)[0]
+        component_name = self.getArgs().component.split('-', 1)[0]
 
-        kit_name = self.getOptions().kit.split('-', 3)[0] \
-            if self.getOptions().kit else None
+        kit_name = self.getArgs().kit.split('-', 3)[0] \
+            if self.getArgs().kit else None
 
         kits = [kit for kit in kitApiFactory.getKitApi().getKitList()
                 if not kit_name or (kit_name and kit_name == kit.getName())]
@@ -78,7 +78,7 @@ class RegisterComponentCli(TortugaCli):
 
         try:
             os_family_name, os_family_version, os_family_arch = \
-                self.getOptions().os.split('-', 3)
+                self.getArgs().os.split('-', 3)
         except ValueError:
             self.getParser().error(
                 'Malformed --os argument. Must be in form NAME-VERSION-ARCH')

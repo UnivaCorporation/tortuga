@@ -79,30 +79,30 @@ Description:
 
 """))
 
-        if not self.getOptions().name:
+        if not self.getArgs().name:
             self.getParser().error(_('--hardware-profile must be specified'))
 
         api = getHardwareProfileApi(self.getUsername(), self.getPassword())
 
         optionDict = {}
 
-        if self.getOptions().getNodes:
+        if self.getArgs().getNodes:
             optionDict['nodes'] = True
 
-        if self.getOptions().getNetworks:
+        if self.getArgs().getNetworks:
             optionDict['hardwareprofilenetworks'] = True
 
-        if self.getOptions().getAdmins:
+        if self.getArgs().getAdmins:
             optionDict['admins'] = True
 
         optionDict['resourceadapter'] = True
 
         hardwareProfile = api.getHardwareProfile(
-            self.getOptions().name, optionDict)
+            self.getArgs().name, optionDict)
 
-        if self.getOptions().xml:
+        if self.getArgs().xml:
             print(hardwareProfile.getXmlRep())
-        elif self.getOptions().json:
+        elif self.getArgs().json:
             print(json.dumps({
                 'hardwareProfile': hardwareProfile.getCleanDict(),
             }, sort_keys=True, indent=4, separators=(',', ': ')))
@@ -117,7 +117,7 @@ Description:
         print(' ' * 2 + '- Install type: {0}'.format(
             hwprofile.getInstallType()))
 
-        if self.getOptions().getNetworks:
+        if self.getArgs().getNetworks:
             if hwprofile.getProvisioningNics():
                 print(' ' * 2 + '- Provisioning networks:')
 
@@ -130,7 +130,7 @@ Description:
                 print(' ' * 2 + '- Provisioning networks: (none)')
 
 
-        if self.getOptions().getNodes:
+        if self.getArgs().getNodes:
             if hwprofile.getNodes():
                 print(' ' * 2 + '- Node(s):')
 
@@ -152,7 +152,7 @@ Description:
                        hwprofile.getResourceAdapter().getName(),
                        hwprofile.getLocation(), hwprofile.getCost())))
 
-        if self.getOptions().getAdmins:
+        if self.getArgs().getAdmins:
             if hwprofile.getAdmins():
                 print(' ' * 2 + '- Admins:')
 

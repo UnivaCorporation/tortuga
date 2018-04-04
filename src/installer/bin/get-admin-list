@@ -39,7 +39,7 @@ Description:
         for admin_entry in api.getAdminList():
             result = '{0}'.format(admin_entry.getUsername())
 
-            if self.getOptions().verbose:
+            if self.getArgs().verbose:
                 if admin_entry.getRealname() and \
                         admin_entry.getUsername() != admin_entry.getRealname():
                     result += ' ({0})'.format(admin_entry.getRealname())

@@ -54,7 +54,7 @@ Description:
     The delete-node tool removes node(s) from the system.
 ''')
 
-        if not self.getOptions().nodeList and not self.getArgs():
+        if not self.getArgs().nodeList and not self.getArgs():
             self.getParser().error(_('Missing --node option'))
 
         node_api = NodeWsApi(username=self.getUsername(),
@@ -62,8 +62,8 @@ Description:
                              baseurl=self.getUrl()
         )
 
-        if self.getOptions().nodeList and \
-                self.getOptions().nodeList[0] == '-':
+        if self.getArgs().nodeList and \
+                self.getArgs().nodeList[0] == '-':
             # Perform bulk deletes, 100 nodes at a time
 
             nodes = []
@@ -78,7 +78,7 @@ Description:
 
             node_api.deleteNode(','.join(nodes))
         else:
-            nodes = self.getOptions().nodeList
+            nodes = self.getArgs().nodeList
 
             if self.getArgs():
                 nodes += ',' + ','.join(self.getArgs())

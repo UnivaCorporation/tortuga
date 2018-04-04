@@ -57,13 +57,13 @@ Description:
     associated with.
 """))
 
-        swprofile_name = self.getOptions().swprofile
+        swprofile_name = self.getArgs().swprofile
 
         if not swprofile_name:
             raise InvalidCliRequest(
                 _('Software profile name must be specified'))
 
-        hwprofile_name = self.getOptions().hwprofile
+        hwprofile_name = self.getArgs().hwprofile
 
         if not hwprofile_name:
             raise InvalidCliRequest(

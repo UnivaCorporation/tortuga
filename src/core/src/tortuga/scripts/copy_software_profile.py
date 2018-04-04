@@ -50,8 +50,8 @@ Description:
     and enabled using enable-component
 """))
 
-        if self.getOptions().srcSoftwareProfileName is None or \
-           self.getOptions().dstSoftwareProfileName is None:
+        if self.getArgs().srcSoftwareProfileName is None or \
+           self.getArgs().dstSoftwareProfileName is None:
             self.usage()
 
         api = SoftwareProfileWsApi(username=self.getUsername(),
@@ -59,8 +59,8 @@ Description:
                                    baseurl=self.getUrl())
 
         api.copySoftwareProfile(
-            self.getOptions().srcSoftwareProfileName,
-            self.getOptions().dstSoftwareProfileName)
+            self.getArgs().srcSoftwareProfileName,
+            self.getArgs().dstSoftwareProfileName)
 
 
 def main():

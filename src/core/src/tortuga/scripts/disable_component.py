@@ -29,7 +29,7 @@ class DisableComponent(KitCli):
                        help=_('Software profile to disable component on'))
 
         self.addOption(
-            '-p', '',
+            '-p',
             dest='applyToInstaller', action='store_true',
             default=False,
             help=_('Shortcut for \'--software-profile Installer\'')
@@ -132,7 +132,7 @@ component-ganglia-gmond-3.0.7
         api.disableComponent(software_profile_name, kit_name, kit_version,
                              kit_iteration, compname)
 
-        if self.getOptions().sync:
+        if self.getArgs().sync:
             Puppet().agent()
 
 

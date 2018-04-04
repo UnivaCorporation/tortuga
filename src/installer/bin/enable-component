@@ -31,7 +31,7 @@ class EnableComponent(KitCli):
                        help=_('Software profile to enable component on'))
 
         self.addOption(
-            '-p', '',
+            '-p',
             dest='applyToInstaller', action='store_true',
             default=False,
             help=_('Shortcut for \'--software-profile Installer\'')
@@ -87,9 +87,9 @@ component-ganglia-gmond-3.0.7
             # The first argument is assumed to be the component name.
             compname = self.getArg(0)
 
-            kitName = self.getOptions().kitName
-            kitVersion = self.getOptions().kitVersion
-            kitIteration = self.getOptions().kitIteration
+            kitName = self.getArgs().kitName
+            kitVersion = self.getArgs().kitVersion
+            kitIteration = self.getArgs().kitIteration
         else:
             # Get given Kit information
             pkgname = None
@@ -119,7 +119,7 @@ component-ganglia-gmond-3.0.7
         api.enableComponent(
             softwareProfileName, kitName, kitVersion, kitIteration, compname)
 
-        if self.getOptions().sync:
+        if self.getArgs().sync:
             Puppet().agent()
 
     def __get_software_profile_name(self):

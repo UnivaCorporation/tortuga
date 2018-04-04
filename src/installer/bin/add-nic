@@ -48,50 +48,50 @@ class AddNicCli(TortugaCli):
 
         self.addOptionToGroup(
             optionsGroupName,
-            '', '--autodetect',
+            '--autodetect',
             action='store_true', default=False,
             dest='autodetect',
             help='Auto-detect unmanaged network interfaces')
 
         self.addOptionToGroup(
             optionsGroupName,
-            '', '--nic',
+            '--nic',
             dest='nic',
             help='Add provisioning NIC to installer')
 
         self.addOptionToGroup(
             optionsGroupName,
-            '', '--network',
+            '--network',
             dest='network',
             help='Network address (if autodetect does not work)')
 
         self.addOptionToGroup(
             optionsGroupName,
-            '', '--netmask',
+            '--netmask',
             dest='netmask',
             help='Netmask (if autodetect does not work)')
 
         self.addOptionToGroup(
             optionsGroupName,
-            '', '--ip-address',
+            '--ip-address',
             dest='ipaddress',
             help='IP address of network interface')
 
         self.addOptionToGroup(
             optionsGroupName,
-            '', '--mac-addr',
+            '--mac-addr',
             dest='macaddress',
             help='MAC address of network interface')
 
         self.addOptionToGroup(
             optionsGroupName,
-            '', '--no-sync',
+            '--no-sync',
             dest='bSync', default=True, action='store_false',
             help='Do not automatically synchronize configuration changes')
 
         self.addOptionToGroup(
             optionsGroupName,
-            '', '--force', dest='bForce', default=False,
+            '--force', dest='bForce', default=False,
             action='store_true',
             help='Skip network interface validation')
 
@@ -102,12 +102,12 @@ class AddNicCli(TortugaCli):
     def runCommand(self):
         self.parseArgs(_('''add-nic <--nic=NIC>|<--autodetect>'''))
 
-        if self.getOptions().autodetect:
+        if self.getArgs().autodetect:
             self._findUnmanagedNics()
-        elif self.getOptions().nic:
+        elif self.getArgs().nic:
             # Attempt to automatically determine the parameters for the
             # specified NIC and associate with installer
-            self._addNic(self.getOptions().nic)
+            self._addNic(self.getArgs().nic)
         else:
             self.getParser().error('Missing required --nic or --autodetect'
                                    ' argument')
@@ -231,7 +231,7 @@ class AddNicCli(TortugaCli):
                 # carry on...
                 pass
             else:
-                if not self.getOptions().bForce and \
+                if not self.getArgs().bForce and \
                         result.decode().rstrip() == nicName:
                     print('Device [%s] is the default gateway.' % (nicName))
                     print('\nUse --force to override this warning.')
@@ -260,34 +260,34 @@ class AddNicCli(TortugaCli):
 
         if not 'ipaddress_%s' % (facterNicName) in d or \
            not d['ipaddress_%s' % (facterNicName)]:
-            if not self.getOptions().ipaddress:
+            if not self.getArgs().ipaddress:
                 raise InvalidCliRequest(
                     'Unable to determine IP address, use command-line'
                     ' override')
 
-            ipaddress = self.getOptions().ipaddress
+            ipaddress = self.getArgs().ipaddress
         else:
             ipaddress = d['ipaddress_%s' % (facterNicName)]
 
         if not 'netmask_%s' % (facterNicName) in d or \
            not d['netmask_%s' % (facterNicName)]:
-            if not self.getOptions().netmask:
+            if not self.getArgs().netmask:
                 raise InvalidCliRequest(
                     'Unable to determine netmask, use command-line'
                     ' override')
 
-            netmask = self.getOptions().netmask
+            netmask = self.getArgs().netmask
         else:
             netmask = d['netmask_%s' % (facterNicName)]
 
         if not 'network_%s' % (facterNicName) in d or \
            not d['network_%s' % (facterNicName)]:
-            if not self.getOptions().network:
+            if not self.getArgs().network:
                 raise InvalidCliRequest(
                     'Unable to determine network, use command-line'
                     ' override')
 
-            network = self.getOptions().network
+            network = self.getArgs().network
         else:
             network = d['network_%s' % (facterNicName)]
 
@@ -379,7 +379,7 @@ class AddNicCli(TortugaCli):
 
         self._dbm.closeSession()
 
-        if bUpdated and self.getOptions().bSync:
+        if bUpdated and self.getArgs().bSync:
             print('Applying changes to Tortuga...')
 
             cmd = ('/opt/puppetlabs/bin/puppet agent --onetime'

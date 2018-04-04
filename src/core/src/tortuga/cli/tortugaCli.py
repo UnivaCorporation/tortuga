@@ -14,16 +14,15 @@
 
 # pylint: disable=no-member,maybe-no-member
 
+import argparse
 import configparser
 import gettext
 import logging
 import os
 import sys
-from optparse import OptionGroup, OptionParser
 
 from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.abstractMethod import AbstractMethod
-from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.exceptions.userNotAuthorized import UserNotAuthorized
 from tortuga.utility.authManager import authorizeRoot
@@ -50,8 +49,7 @@ class TortugaCli(object):
             'tortuga.cli.%s' % (self.__class__.__name__))
         self._logger.addHandler(logging.NullHandler())
 
-        self._parser = OptionParser(add_help_option=False)
-        self._options = None
+        self._parser = argparse.ArgumentParser()
         self._args = []
         self._validArgCount = validArgCount
         self._url = None
@@ -61,36 +59,6 @@ class TortugaCli(object):
         self._cm = ConfigManager()
 
         self.__initializeLocale()
-
-        commonGroup = _('Common Tortuga Options')
-        self.addOptionGroup(commonGroup, None)
-
-        self.addOptionToGroup(commonGroup, '-h', '--help', action='help',
-                              help=_('show this help message and exit'))
-
-        self.addOptionToGroup(commonGroup, '-?', '', action='help',
-                              help=_('show this help message and exit'))
-
-        self.addOptionToGroup(commonGroup, '-V', '', action='store_true',
-                              dest='cmdVersion', default=False,
-                              help=_('print version and exit'))
-
-        self.addOptionToGroup(
-            commonGroup, '-d', '--debug', dest='consoleLogLevel',
-            help=_('set debug level; valid values are: critical, error,'
-                   ' warning, info, debug'))
-
-        self.addOptionToGroup(
-            commonGroup, '--url',
-            help=_('UniCloud web service URL'))
-
-        self.addOptionToGroup(
-            commonGroup, '--username', dest='username',
-            help=_('UniCloud web service user name'))
-
-        self.addOptionToGroup(
-            commonGroup, '--password', dest='password',
-            help=_('UniCloud web service password'))
 
     def getLogger(self):
         """ Get logger for this class. """
@@ -113,7 +81,7 @@ class TortugaCli(object):
 
     def addOption(self, *args, **kwargs):
         """ Add option. """
-        self._parser.add_option(*args, **kwargs)
+        self._parser.add_argument(*args, **kwargs)
 
     def addOptionToGroup(self, groupName, *args, **kwargs):
         """
@@ -121,12 +89,11 @@ class TortugaCli(object):
         Group should be created using addOptionGroup().
         """
         group = self._optionGroupDict.get(groupName)
-        group.add_option(*args, **kwargs)
+        group.add_argument(*args, **kwargs)
 
     def addOptionGroup(self, groupName, desc):
         """ Add option group. """
-        group = OptionGroup(self._parser, groupName, desc)
-        self._parser.add_option_group(group)
+        group = self._parser.add_argument_group(groupName, desc)
         self._optionGroupDict[groupName] = group
 
     def parseArgs(self, usage=None):
@@ -136,27 +103,47 @@ class TortugaCli(object):
         Raises:
             InvalidArgument
         """
+        commonGroup = _('Common Tortuga Options')
+        self.addOptionGroup(commonGroup, None)
+
+        # self.addOptionToGroup(commonGroup, '-h', '--help', action='help',
+        #                       help=_('show this help message and exit'))
+
+        # self.addOptionToGroup(commonGroup, '-?', action='help',
+        #                       help=_('show this help message and exit'))
+
+        self.addOptionToGroup(commonGroup, '-V', action='store_true',
+                              dest='cmdVersion', default=False,
+                              help=_('print version and exit'))
+
+        self.addOptionToGroup(
+            commonGroup, '-d', '--debug', dest='consoleLogLevel',
+            help=_('set debug level; valid values are: critical, error,'
+                   ' warning, info, debug'))
+
+        self.addOptionToGroup(
+            commonGroup, '--url',
+            help=_('UniCloud web service URL'))
+
+        self.addOptionToGroup(
+            commonGroup, '--username', dest='username',
+            help=_('UniCloud web service user name'))
+
+        self.addOptionToGroup(
+            commonGroup, '--password', dest='password',
+            help=_('UniCloud web service password'))
 
         if usage:
-            self._parser.usage = usage
+            self._parser.description = usage
 
         try:
-            self._options, self._args = self._parser.parse_args()
+            self._args = self._parser.parse_args()
         except SystemExit as rc:
             sys.stdout.flush()
             sys.stderr.flush()
             sys.exit(int(str(rc)))
 
-        if self._validArgCount < len(self._args):
-            # Postitional args are not enabled and we have some
-            msg = _("Invalid Argument(s):")
-            for arg in self._args[self._validArgCount:]:
-                msg += " " + arg
-
-            raise InvalidArgument(msg)
-
-        optDict = self._options.__dict__
-        if optDict.get('cmdVersion'):
+        if self._args.cmdVersion:
             print(_('{0} version: {1}'.format(
                 os.path.basename(sys.argv[0]),
                 self._cm.getTortugaRelease())))
@@ -164,7 +151,7 @@ class TortugaCli(object):
             sys.exit(0)
 
         # Log level.
-        consoleLogLevel = optDict.get('consoleLogLevel', None)
+        consoleLogLevel = self._args.consoleLogLevel
         if consoleLogLevel:
             # logManager.setConsoleLogLevel(consoleLogLevel)
 
@@ -193,7 +180,7 @@ class TortugaCli(object):
         self._username = username
         self._password = password
 
-        return self._options, self._args
+        return self._args
 
     def __get_web_service_options(self):
         """
@@ -228,22 +215,22 @@ class TortugaCli(object):
                    cfg.has_option('default', 'url') else None
 
         # UNICLOUD_WS_URL
-        if self._options.url:
+        if self._args.url:
             # Command-line "--server" argument overrides env var and
             # setting contained within '/etc/profile.nii'
-            url = self._options.url
+            url = self._args.url
         elif os.getenv('UNICLOUD_WS_URL'):
             url = os.getenv('UNICLOUD_WS_URL')
 
         # UNICLOUD_WS_USERNAME
-        if self._options.username:
-            username = self._options.username
+        if self._args.username:
+            username = self._args.username
         elif os.getenv('UNICLOUD_WS_USERNAME'):
             username = os.getenv('UNICLOUD_WS_USERNAME')
 
         # UNICLOUD_WS_PASSWORD
-        if self._options.password:
-            password = self._options.password
+        if self._args.password:
+            password = self._args.password
         elif os.getenv('UNICLOUD_WS_PASSWORD'):
             password = os.getenv('UNICLOUD_WS_PASSWORD')
 
@@ -259,21 +246,9 @@ class TortugaCli(object):
 
         sys.exit(1)
 
-    def getOptions(self):
-        '''Returns the command line options'''
-        return self._options
-
-    def getNArgs(self):
-        '''Returns the number of command line arguments'''
-        return len(self._args)
-
     def getArgs(self):
         '''Returns the command line argument list'''
         return self._args
-
-    def getArg(self, i):
-        '''Returns the i-th command line argument'''
-        return self._args[i]
 
     def getUrl(self):
         return self._url

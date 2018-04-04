@@ -64,14 +64,14 @@ Description:
     URI can be a file name or fully-qualified URL.
 """))
         api = getKitApi(self.getUsername(), self.getPassword())
-        self.installKitHelper(api, accept_eula=self.getOptions().acceptEula)
+        self.installKitHelper(api, accept_eula=self.getArgs().acceptEula)
 
     def installKitHelper(self, api, key=None, accept_eula=False):
         if self.getArgs():
             return api.installKitPackage(self.getArg(0), key)
 
-        if self.getOptions().packageUrl:
-            return api.installKitPackage(self.getOptions().packageUrl, key)
+        if self.getArgs().packageUrl:
+            return api.installKitPackage(self.getArgs().packageUrl, key)
 
         name, version, iteration = self.get_name_version_iteration()
 

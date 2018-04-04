@@ -32,24 +32,24 @@ class RemoteRepoDeleteApp(TortugaCli):
 
         self.parseArgs()
 
-        if self.getOptions().repoId and self.getOptions().url:
+        if self.getArgs().repoId and self.getArgs().url:
             raise InvalidArgument(
                 '--repo-id must not be specified with --url')
 
-        if not self.getOptions().repoId and not self.getOptions().url:
+        if not self.getArgs().repoId and not self.getArgs().url:
             raise InvalidArgument(
                 'One of --repo-id or --url must be specified')
 
         session = DbManager().openSession()
 
-        if self.getOptions().url:
+        if self.getArgs().url:
             dbKitSource = session.query(KitSources).filter(
-                KitSources.url == self.getOptions().url).one()
+                KitSources.url == self.getArgs().url).one()
         else:
             dbKitSource = session.query(KitSources).filter(
-                KitSources.id == self.getOptions().repoId).one()
+                KitSources.id == self.getArgs().repoId).one()
 
-        if not self.getOptions().force and dbKitSource.softwareprofiles:
+        if not self.getArgs().force and dbKitSource.softwareprofiles:
             print((
                 'Kit source [%s] (%s) in use by software profile(s):'
                 '\n\n%s' % (

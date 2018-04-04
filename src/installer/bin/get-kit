@@ -89,10 +89,10 @@ Description:
         try:
             kit = api.getKit(name, version, iteration)
 
-            if not self.getOptions().bQuiet:
-                if self.getOptions().xml:
+            if not self.getArgs().bQuiet:
+                if self.getArgs().xml:
                     print('%s' % (kit.getXmlRep()))
-                elif self.getOptions().json:
+                elif self.getArgs().json:
                     print((json.dumps({
                         'kit': kit.getCleanDict(),
                     }, sort_keys=True, indent=4, separators=(',', ': '))))
@@ -101,7 +101,7 @@ Description:
 
             sys.exit(0)
         except KitNotFound:
-            if self.getOptions().bQuiet:
+            if self.getArgs().bQuiet:
                 sys.exit(1)
 
             # Push the "kit not found" exception up the stack
