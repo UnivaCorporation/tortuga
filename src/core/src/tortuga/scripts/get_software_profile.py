@@ -16,7 +16,7 @@
 
 # pylint: disable=no-member
 
-import optparse
+import argparse
 import json
 
 from tortuga.cli.tortugaCli import TortugaCli
@@ -53,7 +53,7 @@ class GetSoftwareProfileCli(TortugaCli):
         # --packages argument is deprecated
         self.addOptionToGroup(
             softwareProfileAttrGroup, '--packages', action='store_true',
-            help=optparse.SUPPRESS_HELP)
+            help=argparse.SUPPRESS)
 
         self.addOptionToGroup(
             softwareProfileAttrGroup, '--partitions',
@@ -68,7 +68,7 @@ class GetSoftwareProfileCli(TortugaCli):
         # --os argument is deprecated
         self.addOptionToGroup(
             softwareProfileAttrGroup, '--os', action='store_true',
-            help=optparse.SUPPRESS_HELP)
+            help=argparse.SUPPRESS)
 
         self.addOptionToGroup(
             softwareProfileAttrGroup, '--admins', action='store_true',

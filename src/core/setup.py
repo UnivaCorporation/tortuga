@@ -141,6 +141,7 @@ setup(
             'get-software-profile-list=tortuga.scripts.get_software_profile_list:main',
             'get-hardware-profile-list=tortuga.scripts.get_hardware_profile_list:main',
             'get-hardware-profile=tortuga.scripts.get_hardware_profile:main',
+            'get-software-profile=tortuga.scripts.get_software_profile:main',
         ],
     },
 )
