@@ -19,14 +19,14 @@
 import sys
 import yaml
 
-from tortuga.node import nodeApiFactory
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.hardwareprofile import hardwareProfileFactory
+from tortuga.wsapi.hardwareProfileWsApi import HardwareProfileWsApi
+from tortuga.wsapi.nodeWsApi import NodeWsApi
 
 
 class GetProvisioningNicsApp(TortugaCli):
     def __init__(self):
-        TortugaCli.__init__(self)
+        super().__init__()
 
         self.addOption('--hardware-profile', dest='hardwareProfile',
                        help=('Return provisioning NIC for specified'
@@ -42,21 +42,23 @@ class GetProvisioningNicsApp(TortugaCli):
         self.parseArgs('''%prog''')
 
         if self.getArgs().hardwareProfile:
-            hwProfileApi = hardwareProfileFactory.getHardwareProfileApi()
+            hw_profile_api = HardwareProfileWsApi(username=self.getUsername(),
+                                                  password=self.getPassword(),
+                                                  baseurl=self.getUrl())
 
-            hwProfile = hwProfileApi.getHardwareProfile(
+            hw_profile = hw_profile_api.getHardwareProfile(
                 self.getArgs().hardwareProfile, {
                     'hardwareprofilenetworks': True
                 })
 
-            if not hwProfile.getProvisioningNics():
+            if not hw_profile.getProvisioningNics():
                 print(yaml.dump({}))
 
                 sys.exit(0)
 
-            nic = hwProfile.getProvisioningNics()[0]
+            nic = hw_profile.getProvisioningNics()[0]
 
-            dataDict = {
+            data_dict = {
                 'device': nic.getNetworkDevice().getName(),
                 'ip': nic.getIp(),
                 'network': {
@@ -66,25 +68,27 @@ class GetProvisioningNicsApp(TortugaCli):
             }
 
             if self.getArgs().bVerbose:
-                print(yaml.safe_dump(dataDict))
+                print(yaml.safe_dump(data_dict))
             else:
                 print(yaml.safe_dump(nic.getNetworkDevice().getName()))
         else:
             # Display list of provisioning NICs on installer
-            nodeApi = nodeApiFactory.getNodeApi()
+            node_api = NodeWsApi(username=self.getUsername(),
+                                 password=self.getPassword(),
+                                 baseurl=self.getUrl())
 
-            dataDict = {}
+            data_dict = {}
 
-            for nic in nodeApi.getInstallerNode().getNics():
+            for nic in node_api.getInstallerNode().getNics():
                 if nic.getNetwork().getType() != 'provision':
                     continue
 
-                deviceName = nic.getNetworkDevice().getName()
+                device_name = nic.getNetworkDevice().getName()
 
-                dataDict[deviceName] = {}
+                data_dict[device_name] = {}
 
                 if self.getArgs().bVerbose:
-                    dataDict[deviceName] = {
+                    data_dict[device_name] = {
                         'ip': nic.getIp(),
                         'network': {
                             'address': nic.getNetwork().getAddress(),
@@ -93,9 +97,9 @@ class GetProvisioningNicsApp(TortugaCli):
                     }
 
             if self.getArgs().bVerbose:
-                print(yaml.safe_dump(dataDict))
+                print(yaml.safe_dump(data_dict))
             else:
-                print(yaml.safe_dump(list(dataDict.keys())))
+                print(yaml.safe_dump(list(data_dict.keys())))
 
 
 if __name__ == '__main__':

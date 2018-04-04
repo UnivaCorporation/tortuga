@@ -17,14 +17,14 @@
 # pylint: disable=no-member
 
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.softwareprofile.softwareProfileFactory import getSoftwareProfileApi
+from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
 
 
 class GetIdleSoftwareProfileListCli(TortugaCli):
     """
     Get software profile command line interface.
-    """
 
+    """
     def runCommand(self):
         self.parseArgs(_("""
     get-idle-software-profile-list [options]
@@ -36,11 +36,14 @@ Description:
     hardware profile to be reprovisioned.  For a non-BMC or virtual machine
     an idle profile typically contains the base Tortuga components.
 """))
-        api = getSoftwareProfileApi(self.getUsername(), self.getPassword())
+        api = SoftwareProfileWsApi(username=self.getUsername(),
+                                   password=self.getPassword(),
+                                   baseurl=self.getUrl())
 
-        for softwareProfile in api.getIdleSoftwareProfileList():
-            print(softwareProfile.getName())
+        for software_profile in api.getSoftwareProfileList():
+            if software_profile.getIsIdle():
+                print(software_profile.getName())
 
 
-if __name__ == '__main__':
+def main():
     GetIdleSoftwareProfileListCli().run()

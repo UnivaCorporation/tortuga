@@ -16,28 +16,30 @@
 
 import json
 from tortuga.admin.adminCli import AdminCli
-from tortuga.admin.adminApiFactory import getAdminApi
+from tortuga.wsapi.adminWsApi import AdminWsApi
 
 
 class GetAdminCli(AdminCli):
-    """Get admin command line interface."""
+    """
+    Get admin command line interface.
 
+    """
     def parseArgs(self, usage=None):
         self.addOption('--admin-username',
                        help=_('Username of admin to get.'))
 
-        outputAttrGroup = _('Output formatting options')
+        output_attr_group = _('Output formatting options')
 
-        self.addOptionGroup(outputAttrGroup, None)
+        self.addOptionGroup(output_attr_group, None)
 
         self.addOptionToGroup(
-            outputAttrGroup, '--json',
+            output_attr_group, '--json',
             action='store_true', default=False,
             help=_('JSON formatted output')
         )
 
         self.addOptionToGroup(
-            outputAttrGroup, '--xml',
+            output_attr_group, '--xml',
             action='store_true', default=False,
             help=_('XML formatted output')
         )
@@ -55,8 +57,10 @@ Description:
         if not self.getArgs().admin_username:
             self.getParser().error('--admin-username must be specified')
 
-        admin = getAdminApi(self.getUsername(), self.getPassword()).\
-            getAdmin(self.getArgs().admin_username)
+        api = AdminWsApi(username=self.getUsername(),
+                         password=self.getPassword(),
+                         baseurl=self.getUrl())
+        admin = api.getAdmin(self.getArgs().admin_username)
 
         if self.getArgs().xml:
             print(admin.getXmlRep())
@@ -73,5 +77,5 @@ Description:
             print(' ' * 2 + '- Description: {0}'.format(admin.getDescription()))
 
 
-if __name__ == '__main__':
+def main():
     GetAdminCli().run()

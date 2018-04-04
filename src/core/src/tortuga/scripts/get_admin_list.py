@@ -15,12 +15,12 @@
 # limitations under the License.
 
 from tortuga.admin.adminCli import AdminCli
-from tortuga.admin.adminApiFactory import getAdminApi
+from tortuga.wsapi.adminWsApi import AdminWsApi
 
 
 class GetAdminListCli(AdminCli):
     def __init__(self):
-        super(GetAdminListCli, self).__init__()
+        super().__init__()
 
         self.addOption('-v', '--verbose',
                        action='store_true', default=False,
@@ -34,7 +34,9 @@ Description:
     Returns list of administrators in the Tortuga system.
 """))
 
-        api = getAdminApi(self.getUsername(), self.getPassword())
+        api = AdminWsApi(username=self.getUsername(),
+                         password=self.getPassword(),
+                         baseurl=self.getUrl())
 
         for admin_entry in api.getAdminList():
             result = '{0}'.format(admin_entry.getUsername())
@@ -51,5 +53,5 @@ Description:
             print(result)
 
 
-if __name__ == '__main__':
+def main():
     GetAdminListCli().run()

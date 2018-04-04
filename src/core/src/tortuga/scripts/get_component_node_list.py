@@ -26,11 +26,9 @@ Description:
 """
 
 import yaml
-import socket
 
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
-from tortuga.db.dbManager import DbManager
+from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
 
 
 class GetComponentNodeListCli(TortugaCli):
@@ -49,34 +47,27 @@ class GetComponentNodeListCli(TortugaCli):
 
     def runCommand(self):
         self.parseArgs()
+        comp_name = self.getArgs()[0] if self.getArgs() else None
 
-        installer_fqdn = socket.getfqdn()
+        api = SoftwareProfileWsApi(username=self.getUsername(),
+                                   password=self.getPassword(),
+                                   baseurl=self.getUrl())
 
-        compName = self.getArgs()[0] if self.getArgs() else None
+        results = {}
+        for sw_profile in api.getSoftwareProfileList():
+            nodes = []
 
-        session = DbManager().openSession()
+            for component in sw_profile.components:
+                if not self.getArgs().kitName or \
+                        component.kit.name == self.getArgs().kitName:
+                    if comp_name and component.name == comp_name:
+                        nodes = [node.name for node in sw_profile.nodes]
+                        break
 
-        try:
-            swProfileApi = SoftwareProfilesDbHandler()
+            results[sw_profile.name] = nodes
 
-            results = {}
-
-            for swProfile in swProfileApi.getSoftwareProfileList(session):
-                nodes = []
-
-                for component in swProfile.components:
-                    if not self.getArgs().kitName or \
-                            component.kit.name == self.getArgs().kitName:
-                        if compName and component.name == compName:
-                            nodes = [node.name for node in swProfile.nodes]
-                            break
-
-                results[swProfile.name] = nodes
-
-            print(yaml.safe_dump(results), end=' ')
-        finally:
-            DbManager().closeSession()
+        print(yaml.safe_dump(results), end=' ')
 
 
-if __name__ == '__main__':
+def main():
     GetComponentNodeListCli().run()

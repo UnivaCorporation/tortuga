@@ -20,49 +20,51 @@ import sys
 import json
 
 from tortuga.kit.kitCli import KitCli
-from tortuga.kit.kitApiFactory import getKitApi
 from tortuga.exceptions.kitNotFound import KitNotFound
+from tortuga.wsapi.kitWsApi import KitWsApi
 
 
 class GetKitCli(KitCli):
-    """Get kit command line interface."""
+    """
+    Get kit command line interface.
 
+    """
     def parseArgs(self, usage=None):
-        kitAttrGroup = _('Kit Attribute Options')
+        kit_attr_group = _('Kit Attribute Options')
 
-        self.addOptionGroup(kitAttrGroup,
+        self.addOptionGroup(kit_attr_group,
                             _('Kit name/version must be specified.'))
 
-        self.addOptionToGroup(kitAttrGroup,
+        self.addOptionToGroup(kit_attr_group,
                               '--name', dest='name', help=_('kit name'))
 
-        self.addOptionToGroup(kitAttrGroup, '--version',
+        self.addOptionToGroup(kit_attr_group, '--version',
                               dest='version', help=_('kit version'))
 
-        self.addOptionToGroup(kitAttrGroup, '--iteration',
+        self.addOptionToGroup(kit_attr_group, '--iteration',
                               dest='iteration', default=None,
                               help=_('kit iteration'))
 
-        cmdOptionsGroup = ('Command Options')
+        cmd_options_group = _('Command Options')
 
-        self.addOptionGroup(cmdOptionsGroup, '')
-        self.addOptionToGroup(cmdOptionsGroup, '--quiet',
+        self.addOptionGroup(cmd_options_group, '')
+        self.addOptionToGroup(cmd_options_group, '--quiet',
                               action='store_true', dest='bQuiet',
                               help=_('Return success (0) if kit exists,'
                                      ' otherwise 1.'))
 
-        outputAttrGroup = _('Output formatting options')
+        output_attr_group = _('Output formatting options')
 
-        self.addOptionGroup(outputAttrGroup, None)
+        self.addOptionGroup(output_attr_group, None)
 
         self.addOptionToGroup(
-            outputAttrGroup, '--json',
+            output_attr_group, '--json',
             action='store_true', default=False,
             help=_('JSON formatted output')
         )
 
         self.addOptionToGroup(
-            outputAttrGroup, '--xml',
+            output_attr_group, '--xml',
             action='store_true', default=False,
             help=_('XML formatted output')
         )
@@ -84,7 +86,9 @@ Description:
 
         name, version, iteration = self.get_name_version_iteration()
 
-        api = getKitApi(self.getUsername(), self.getPassword())
+        api = KitWsApi(username=self.getUsername(),
+                       password=self.getPassword(),
+                       baseurl=self.getUrl())
 
         try:
             kit = api.getKit(name, version, iteration)
@@ -97,7 +101,7 @@ Description:
                         'kit': kit.getCleanDict(),
                     }, sort_keys=True, indent=4, separators=(',', ': '))))
                 else:
-                    self.__console_output(kit)
+                    self._console_output(kit)
 
             sys.exit(0)
         except KitNotFound:
@@ -107,7 +111,7 @@ Description:
             # Push the "kit not found" exception up the stack
             raise
 
-    def __console_output(self, kit):
+    def _console_output(self, kit):
         print('{0}-{1}-{2}'.format(kit.getName(),
                                    kit.getVersion(),
                                    kit.getIteration()))
@@ -140,5 +144,5 @@ Description:
                     ', '.join([str(item) for item in compatible_os])))
 
 
-if __name__ == '__main__':
+def main():
     GetKitCli().run()

@@ -25,22 +25,22 @@ from tortuga.network.networkCli import NetworkCli
 class GetNetworkListCli(NetworkCli):
     """
     Get list tortuga command line interface.
-    """
 
+    """
     def parseArgs(self, usage=None):
 
-        outputAttrGroup = _('Output formatting options')
+        output_attr_group = _('Output formatting options')
 
-        self.addOptionGroup(outputAttrGroup, None)
+        self.addOptionGroup(output_attr_group, None)
 
         self.addOptionToGroup(
-            outputAttrGroup, '--json',
+            output_attr_group, '--json',
             action='store_true', default=False,
             help=_('JSON formatted output')
         )
 
         self.addOptionToGroup(
-            outputAttrGroup, '--xml',
+            output_attr_group, '--xml',
             action='store_true', default=False,
             help=_('XML formatted output')
         )
@@ -57,20 +57,20 @@ Description:
     cal network configuration of your cluster.
 """))
 
-        networkList = self.getNetworkApi().getNetworkList()
+        network_list = self.getNetworkApi().getNetworkList()
 
-        if not networkList:
+        if not network_list:
             sys.exit(1)
 
         if self.getArgs().xml:
-            print(networkList.getXmlRep())
+            print(network_list.getXmlRep())
         elif self.getArgs().json:
-            print(json.dumps(networkList.getCleanDict(),
+            print(json.dumps(network_list.getCleanDict(),
                              sort_keys=True, indent=4, separators=(',', ': ')))
         else:
-            self.__console_output(networkList)
+            self._console_output(network_list)
 
-    def __console_output(self, networks):
+    def _console_output(self, networks):
         for network in networks:
             print('- Network: {0}/{1}'.format(network.getAddress(),
                                               network.getNetmask()))
@@ -89,5 +89,5 @@ Description:
                 print(' ' * 2 + '- Gateway: {0}'.format(network.getGateway()))
 
 
-if __name__ == '__main__':
+def main():
     GetNetworkListCli().run()
