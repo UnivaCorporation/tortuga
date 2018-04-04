@@ -106,6 +106,7 @@ setup(
     install_requires=[
         'marshmallow',
         'pip2pi',
+        'passlib',
     ],
     zip_safe=False,
     namespace_packages=['tortuga'],

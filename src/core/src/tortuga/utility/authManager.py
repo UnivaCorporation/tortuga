@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import os
-import crypt
+from passlib.hash import des_crypt
 from tortuga.exceptions.userNotAuthorized import UserNotAuthorized
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.config.configManager import ConfigManager
@@ -39,8 +39,11 @@ class AuthManager(TortugaObjectManager, Singleton):
 
     def cryptPassword(self, cleartext, salt="$1$"): \
             # pylint: disable=no-self-use
-        """ Return crypted password.... """
-        return crypt.crypt(cleartext, salt)
+        """
+        Return crypted password
+        """
+
+        return des_crypt(cleartext, salt)
 
     def reloadPrincipals(self):
         """ This is used to reload the principals in auth manager """
@@ -69,7 +72,7 @@ class AuthManager(TortugaObjectManager, Singleton):
     def getPrincipal(self, username, password):
         """ Get a principal based on a username and password """
         principal = self.__principals.get(username)
-        if principal and principal.getPassword() == crypt.crypt(
+        if principal and principal.getPassword() == des_crypt(
                 password, principal.getPassword()):
             return principal
 
