@@ -139,6 +139,7 @@ setup(
             'update-hardware-profile=tortuga.scripts.update_hardware_profile:main',
             'update-network=tortuga.scripts.update_network:main',
             'get-software-profile-list=tortuga.scripts.get_software_profile_list:main',
+            'get-hardware-profile-list=tortuga.scripts.get_hardware_profile_list:main',
         ],
     },
 )

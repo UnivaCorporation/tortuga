@@ -15,7 +15,8 @@
 # limitations under the License.
 
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.hardwareprofile.hardwareProfileFactory import getHardwareProfileApi
+from tortuga.wsapi.hardwareProfileWsApi import HardwareProfileWsApi
+from tortuga.cli.utils import FilterTagsAction
 
 
 class GetHardwareProfileListCli(TortugaCli):
@@ -24,10 +25,8 @@ class GetHardwareProfileListCli(TortugaCli):
 
         self.addOption(
             '--tag',
-            action='callback',
-            type='string',
+            action=FilterTagsAction,
             dest='tags',
-            callback=filter_tags,
             help=_('Filter results by specified tag(s) (comma-separated)'),
         )
 
@@ -38,28 +37,13 @@ class GetHardwareProfileListCli(TortugaCli):
 Description:
     The get-hardware-profile-list tool returns the list of hardware
     profiles in the system."""))
-        api = getHardwareProfileApi(self.getUsername(), self.getPassword())
+        api = HardwareProfileWsApi(username=self.getUsername(),
+                                   password=self.getPassword(),
+                                   baseurl=self.getUrl())
 
         for hp in api.getHardwareProfileList(tags=self.getArgs().tags):
             print('%s' % (hp))
 
 
-def filter_tags(option, opt, value, parser):
-    tags = []
-
-    vals = value.split('=', 1)
-
-    if len(vals) == 2:
-        tags.append((vals[0], vals[1]))
-    else:
-        tags.append((vals[0],))
-
-    current_tags = getattr(parser.values, option.dest)
-    if current_tags is None:
-        setattr(parser.values, option.dest, tags)
-    else:
-        current_tags.extend(tags)
-
-
-if __name__ == '__main__':
+def main():
     GetHardwareProfileListCli().run()
