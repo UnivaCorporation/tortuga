@@ -54,7 +54,7 @@ class ResourceAdapterConfigurationWsApi(TortugaWsApi):
             raise TortugaException(exception=ex)
 
     def get_profile_names(self, resadapter_name):
-        url = '/v1/resourceadapter/{0}/profile/'.format(resadapter_name)
+        url = 'v1/resourceadapter/{0}/profile/'.format(resadapter_name)
 
         try:
             _, responseDict = self.sendSessionRequest(url, method='GET')

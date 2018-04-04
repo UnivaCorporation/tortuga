@@ -14,84 +14,53 @@
 
 # pylint: disable=no-member
 
-from tortuga.db.dbManager import DbManager
 from tortuga.db.resourceAdapterCredentialsDbHandler \
     import ResourceAdapterCredentialsDbHandler
 
 
 class ResourceAdapterConfigurationManager(object):
-    def create(self, resadapter_name, name, configuration): \
+    def create(self, session, resadapter_name, name, configuration): \
             # pylint: disable=no-self-use
         """
         Raises:
             ResourceAlreadyExists
         """
+        ResourceAdapterCredentialsDbHandler().create(
+            session, resadapter_name, name, configuration)
 
-        session = DbManager().openSession()
+        session.commit()
 
-        try:
-            ResourceAdapterCredentialsDbHandler().create(
-                session, resadapter_name, name, configuration)
-
-            session.commit()
-        finally:
-            DbManager().closeSession()
-
-    def get(self, resadapter_name, name): \
+    def get(self, session, resadapter_name, name): \
             # pylint: disable=no-self-use
         """
         Raises:
             resourceNotFound
         """
+        return ResourceAdapterCredentialsDbHandler().get(
+            session, resadapter_name, name)
 
-        session = DbManager().openSession()
-
-        try:
-            return ResourceAdapterCredentialsDbHandler().get(
-                session, resadapter_name, name)
-        finally:
-            DbManager().closeSession()
-
-    def get_profile_names(self, resadapter_name): \
+    def get_profile_names(self, session, resadapter_name): \
             # pylint: disable=no-self-use
         """
         Raises:
             resourceNotFound
         """
+        return ResourceAdapterCredentialsDbHandler().get_profile_names(
+            session, resadapter_name)
 
-        session = DbManager().openSession()
-
-        try:
-            return ResourceAdapterCredentialsDbHandler().get_profile_names(
-                session, resadapter_name)
-        finally:
-            DbManager().closeSession()
-
-    def delete(self, resadapter_name, name): \
+    def delete(self, session, resadapter_name, name): \
             # pylint: disable=no-self-use
-        session = DbManager().openSession()
+        ResourceAdapterCredentialsDbHandler().delete(
+            session, resadapter_name, name)
 
-        try:
-            ResourceAdapterCredentialsDbHandler().delete(
-                session, resadapter_name, name)
-
-            session.commit()
-        finally:
-            DbManager().closeSession()
-
-    def update(self, resadapter_name, name, configuration): \
+    def update(self, session, resadapter_name, name, configuration): \
             # pylint: disable=no-self-use
         """
         Raises:
             ResourceNotFound
         """
 
-        session = DbManager().openSession()
+        ResourceAdapterCredentialsDbHandler().update(
+            session, resadapter_name, name, configuration)
 
-        try:
-            ResourceAdapterCredentialsDbHandler().update(
-                session, resadapter_name, name, configuration)
-
-            session.commit()
-        finally:
-            DbManager().closeSession()
+        session.commit()

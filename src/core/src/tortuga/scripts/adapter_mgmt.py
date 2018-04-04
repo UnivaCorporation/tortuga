@@ -25,8 +25,8 @@ import configparser
 import argparse
 
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.resourceAdapterConfiguration.resourceAdapterConfigurationApi \
-    import ResourceAdapterConfigurationApi
+from tortuga.wsapi.resourceAdapterConfigurationWsApi \
+    import ResourceAdapterConfigurationWsApi
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.exceptions.resourceAdapterNotFound \
     import ResourceAdapterNotFound
@@ -36,15 +36,12 @@ from tortuga.exceptions.resourceAlreadyExists import ResourceAlreadyExists
 
 class AdapterMgmtCLI(TortugaCli):
     def __init__(self):
-        self.parser = None
+        super().__init__()
+
         self.subparser_update = None
+        self.api = None
 
-        self.api = ResourceAdapterConfigurationApi()
-
-    def run(self):
-        self.parser = argparse.ArgumentParser(
-            description='Manage Tortuga resource adapter configuration')
-
+    def parseArgs(self, usage=None):
         common_args = argparse.ArgumentParser(add_help=False)
         common_args.add_argument('--verbose', action='store_true',
                                  help='Enable verbose output')
@@ -63,7 +60,7 @@ class AdapterMgmtCLI(TortugaCli):
             help='key=value pair. Multiple --setting arguments may be'
                  ' specified.')
 
-        subparsers = self.parser.add_subparsers(
+        subparsers = self.getParser().add_subparsers(
             title='subcommands',
             description='valid subcommands',
             help='additional help',
@@ -161,7 +158,18 @@ class AdapterMgmtCLI(TortugaCli):
             '--delete-setting', '-d', metavar="KEY", type=cfgkey,
             action='append', help='Delete specified setting from profile')
 
-        args = self.parser.parse_args()
+        super().parseArgs(usage=usage)
+
+    def runCommand(self):
+        self.parseArgs(usage='Manage Tortuga resource adapter configuration')
+
+        args = self.getParser().parse_args()
+
+        self.api = ResourceAdapterConfigurationWsApi(
+            username=self.getUsername(),
+            password=self.getPassword(),
+            baseurl=self.getUrl(),
+        )
 
         if not hasattr(
                 self,
@@ -175,8 +183,7 @@ class AdapterMgmtCLI(TortugaCli):
 
         handler(args)
 
-    def list_resource_adapter_config(self, args): \
-            # pylint: disable=no-self-use
+    def list_resource_adapter_config(self, args):
         try:
             cfg = self.api.get_profile_names(args.resource_adapter)
 
@@ -192,9 +199,7 @@ class AdapterMgmtCLI(TortugaCli):
             sys.stderr.flush()
             sys.exit(1)
 
-    def show_resource_adapter_config(self, args): \
-            # pylint: disable=no-self-use
-
+    def show_resource_adapter_config(self, args):
         try:
             cfg = self.api.get(args.resource_adapter, args.profile)
 
@@ -246,9 +251,7 @@ class AdapterMgmtCLI(TortugaCli):
             sys.stderr.flush()
             sys.exit(1)
 
-    def create_resource_adapter_config(self, args): \
-            # pylint: disable=no-self-use
-
+    def create_resource_adapter_config(self, args):
         if not args.setting:
             sys.stderr.write(
                 'Error: No adapter configuration provided, '
@@ -265,9 +268,7 @@ class AdapterMgmtCLI(TortugaCli):
             sys.stderr.flush()
             sys.exit(1)
 
-    def copy_resource_adapter_config(self, args): \
-            # pylint: disable=no-self-use
-
+    def copy_resource_adapter_config(self, args):
         try:
             src_cfg = self.api.get(args.resource_adapter, args.src)
 
@@ -278,9 +279,7 @@ class AdapterMgmtCLI(TortugaCli):
             sys.stderr.flush()
             sys.exit(1)
 
-    def delete_resource_adapter_config(self, args): \
-            # pylint: disable=no-self-use
-
+    def delete_resource_adapter_config(self, args):
         try:
             if not args.force:
                 sys.stdout.write(
@@ -301,9 +300,7 @@ class AdapterMgmtCLI(TortugaCli):
             sys.stderr.flush()
             sys.exit(1)
 
-    def update_resource_adapter_config(self, args): \
-            # pylint: disable=no-self-use
-
+    def update_resource_adapter_config(self, args):
         if args.setting is None and args.delete_setting is None:
             self.subparser_update.error(
                 'arguments --setting/-s and/or'
@@ -344,9 +341,7 @@ class AdapterMgmtCLI(TortugaCli):
             sys.stderr.flush()
             sys.exit(1)
 
-    def import_resource_adapter_config(self, args): \
-            # pylint: disable=no-self-use
-
+    def import_resource_adapter_config(self, args):
         if args.json_file:
             self.__import_json_file(args)
         elif args.adapter_config:

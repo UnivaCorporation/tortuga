@@ -20,38 +20,39 @@ from .resourceAdapterConfigurationManager \
 
 
 class ResourceAdapterConfigurationApi(TortugaApi):
-    def create(self, resadapter_name, name, configuration):
+    def create(self, session, resadapter_name, name, configuration):
         self.getLogger().debug(
-            '[{0}] create(resadapter_name=[{1}], name=[{2}],'
-            ' configuration=[...])'.format(
-                self.__class__.__name__, resadapter_name, name))
+            'create(resadapter_name=[{}], name=[{}],'
+            ' configuration=[...])'.format(resadapter_name, name))
 
         ResourceAdapterConfigurationManager().create(
-            resadapter_name, name, configuration)
+            session, resadapter_name, name, configuration)
 
-    def get(self, resadapter_name, name):
+    def get(self, session, resadapter_name, name):
         self.getLogger().debug(
-            '[{0}] get(resadapter_name=[{1}], name=[{2}])'.format(
-                self.__class__.__name__, resadapter_name, name))
+            'get(resadapter_name=[{}], name=[{}])'.format(
+                resadapter_name, name))
 
-        return ResourceAdapterConfigurationManager().get(resadapter_name, name)
+        return ResourceAdapterConfigurationManager().get(
+            session, resadapter_name, name)
 
-    def get_profile_names(self, adapter_name):
+    def get_profile_names(self, session, adapter_name):
+        self.getLogger().debug('get_profile_names()')
         return ResourceAdapterConfigurationManager().get_profile_names(
-            adapter_name)
+            session, adapter_name)
 
-    def delete(self, resadapter_name, name):
+    def delete(self, session, resadapter_name, name):
         self.getLogger().debug(
-            '[{0}] delete(resadapter_name=[{1}], name=[{2}])'.format(
-                self.__class__.__name__, resadapter_name, name))
+            'delete(resadapter_name=[{}], name=[{}])'.format(
+                resadapter_name, name))
 
-        ResourceAdapterConfigurationManager().delete(resadapter_name, name)
+        ResourceAdapterConfigurationManager().delete(
+            session, resadapter_name, name)
 
     def update(self, resadapter_name, name, configuration):
         self.getLogger().debug(
-            '[{0}] update(resadapter_name=[{1}], name=[{2}],'
-            ' configuration=[...])'.format(
-                self.__class__.__name__, resadapter_name, name))
+            'update(resadapter_name=[{}], name=[{}],'
+            ' configuration=[...])'.format(resadapter_name, name))
 
         ResourceAdapterConfigurationManager().update(
-            resadapter_name, name, configuration)
+            session, resadapter_name, name, configuration)
