@@ -265,7 +265,7 @@ class SoftwareProfileWsApi(TortugaWsApi):
             raise TortugaException(exception=ex)
 
     def disableComponent(self, softwareProfileName, kitName, kitVersion,
-                         kitIteration, componentName, componentVersion):
+                         kitIteration, componentName, componentVersion=None):
         """
         Disable a component on a given software profile
 

@@ -17,120 +17,24 @@
 # pylint: disable=no-member
 
 from tortuga.puppet import Puppet
-from tortuga.kit.kitCli import KitCli
 from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
 
+from .enable_component import ComponentCli
 
-class DisableComponent(KitCli):
-    def __init__(self):
-        super().__init__(validArgCount=2)
 
-        self.addOption('--software-profile', dest='softwareProfileName',
-                       help=_('Software profile to disable component on'))
-
-        self.addOption(
-            '-p',
-            dest='applyToInstaller', action='store_true',
-            default=False,
-            help=_('Shortcut for \'--software-profile Installer\'')
-        )
-
-        self.addOption('--kit-name', dest='kitName',
-                       help=_('kit name'))
-        self.addOption('--kit-version', dest='kitVersion',
-                       help=_('kit version'))
-        self.addOption('--kit-iteration', dest='kitIteration',
-                       help=_('kit iteration'))
-        self.addOption('--comp-name', dest='compName',
-                       help=_('component name'))
-        self.addOption('--comp-version', dest='compVersion',
-                       help=_('component version'))
-        self.addOption('--no-sync', dest='sync', action='store_false',
-                       default=True, help=_('component version'))
-
+class DisableComponent(ComponentCli):
     def runCommand(self):
 
         self.parseArgs('''
-     disable-component --software-profile=SWPROFILENAME --kit-name=KITNAME
-       --kit-version=KITVER   --kit-iteration=KITITER   --comp-name=COMPNAME
-       --comp-version=COMPVER
-
-    disable-component  --software-profile=SWPROFILENAME
-         KITNAME-KITVER-KITITER COMPNAME-COMPVER
-
-    Disable component on software profile of installer:
-
-    disable-component -p --kit-name=KITNAME --kit-version=KITVER
-       --kit-iteration=KITITER --comp-name=COMPNAME --comp-version=COMPVER
-
-    disable-component -p KITNAME-KITVER-KITITER COMPNAME-COMPVER
-
-Description:
-    The disable-component tool is used to remove an association between a
-    component  and  a  software profile.  After running disable-component
-    and puppet agent, the components software should be removed  from the
-    machines belonging to the specified software profile.
-
-Examples:
-    These two examples are equivalent:
-
-    disable-component --software-profile DefaultCompute ganglia-3.0.7-1 \
-component-ganglia-gmond-3.0.7
-
-    disable-component --software-profile DefaultCompute --kit-name ganglia \
---kit-version 3.0.7 --kit-iteration 1 --comp-name component-ganglia-gmond \
---comp-version 3.0.7
+Disable component on software profile.
 ''')
-
-        if self.getNArgs() == 1 and '-' not in self.getArg(0):
-            # The first argument is assumed to be the component name.
-            compname = self.getArg(0)
-            kit_name = None
-            kit_version = None
-            kit_iteration = None
-        else:
-            # Get given Kit information
-            pkgname = None
-            if self.getNArgs() >= 1:
-                pkgname = self.getArg(0)
-
-            kit_name, kit_version, kit_iteration = \
-                self.getKitNameVersionIteration(pkgname)
-
-            # Get given Component information
-
-            compname = None
-            if self.getNArgs() >= 2:
-                compspec = self.getArg(1)
-
-                if '-' in compspec:
-                    compname, _ = compspec.rsplit('-', 1)
-                else:
-                    compname = compspec
-
-        # Get the given softwareProfile information
-
-        if self._options.applyToInstaller:
-            from tortuga.node import nodeApiFactory
-            node_api = nodeApiFactory.getNodeApi()
-
-            node = node_api.getInstallerNode(optionDict={
-                'softwareprofile': True,
-            })
-
-            software_profile_name = node.getSoftwareProfile().getName()
-        else:
-            software_profile_name = self._options.softwareProfileName
-
-            if not software_profile_name:
-                self.usage(_('Missing --software-profile option'))
 
         api = SoftwareProfileWsApi(username=self.getUsername(),
                                    password=self.getPassword(),
                                    baseurl=self.getUrl())
 
-        api.disableComponent(software_profile_name, kit_name, kit_version,
-                             kit_iteration, compname)
+        api.disableComponent(self.softwareProfileName, self.kitName, self.kitVersion,
+                             self.kitIteration, self.compname)
 
         if self.getArgs().sync:
             Puppet().agent()

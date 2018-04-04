@@ -17,9 +17,9 @@
 # pylint: disable=no-member
 
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.kit.kitApiFactory import getKitApi
-from tortuga.softwareprofile import softwareProfileFactory
-from tortuga.node import nodeApiFactory
+from tortuga.wsapi.kitWsApi import KitWsApi
+from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
+from tortuga.wsapi.nodeWsApi import NodeWsApi
 from tortuga.helper.osHelper import getOsInfo
 
 
@@ -29,40 +29,39 @@ def displayComponent(c, kit):
 
 
 class GetComponentList(TortugaCli):
-    def __init__(self):
-        super(GetComponentList, self).__init__()
-
+    def parseArgs(self, usage=None):
         optGroup = 'Options'
 
-        self.addOptionGroup(optGroup, '')
+        group = self.addOptionGroup(optGroup, '')
 
-        self.addOptionToGroup(
-            optGroup, '--software-profile',
-            dest='softwareprofile',
-            metavar='SOFTWAREPROFILENAME',
-            default=None,
+        excl_option_group = group.add_mutually_exclusive_group()
+
+        excl_option_group.add_argument(
+            '--software-profile', dest='softwareprofile',
             help=(_('Display list of components enabled in software'
                     ' profile.')))
 
-        self.addOptionToGroup(
-            optGroup,
+        excl_option_group.add_argument(
             '-p',
             dest='applyToInstaller', action='store_true',
             default=False,
             help=_('Display components enabled on installer only')
         )
 
-        self.addOptionToGroup(optGroup, '--os', dest='os', type='str',
-                              metavar='NAME-VERSION-ARCH',
-                              help=_('Display components suitable for'
-                                     ' specified OS only'))
+        excl_option_group.add_argument(
+            '--os', dest='os',
+            metavar='NAME-VERSION-ARCH',
+            help=_('Display components suitable for'
+                   ' specified OS only'))
+
+        super().parseArgs(usage=usage)
 
     def __get_software_profile(self):
         # Determine software profile name based on command-line option(s)
 
         if self.getArgs().applyToInstaller:
             # Get software profile name from installer node
-            node = nodeApiFactory.getNodeApi().getInstallerNode(
+            node = NodeWsApi(username=self.getUsername(), password=self.getPassword(), baseurl=self.getUrl()).getInstallerNode(
                 optionDict={
                     'softwareprofile': True,
                 }
@@ -74,32 +73,19 @@ class GetComponentList(TortugaCli):
 
     def runCommand(self):
         self.parseArgs(_("""
-    get-component-list [--software-profile=SOFTWAREPROFILENAME | -p] | [--os=NAME-VERSION-ARCH]
-
-Description:
-    The get-component list tool returns the list of components  available
-    for  software  profiles in the system.  The option '--software-profile'
-    instructs the tool to return the list  of  enabled  components  in  a
-    given software profile.  The option '-p' displays components enabled only
-    on the installer.
-
-    When '--os' option is provided, only components suitable for the specified
-    operating system will be displayed.
+Display list of components available for software profiles in the system.
 """))
-
-        # Check for conflicting options
-        if self.getArgs().softwareprofile and self.getArgs().os or \
-                self.getArgs().applyToInstaller and self.getArgs().os:
-            self.getParser().error('Options -p, --software-profile and --os'
-                                   ' are mutually exclusive')
 
         softwareProfileName = self.__get_software_profile()
 
         if softwareProfileName:
             # Display all components enabled for software profile
 
-            for c in softwareProfileFactory.getSoftwareProfileApi().\
-                    getEnabledComponentList(softwareProfileName):
+            for c in SoftwareProfileWsApi(username=self.getUsername(),
+                                          password=self.getPassword(),
+                                          baseurl=self.getUrl()
+                                          ).getEnabledComponentList(
+                    softwareProfileName):
                 displayComponent(c, c.getKit())
 
             return
@@ -117,17 +103,19 @@ Description:
             osinfo = None
 
         # Display all components
-        for kit in getKitApi(
-                self.getUsername(), self.getPassword()).getKitList():
+        for kit in KitWsApi(
+                username=self.getUsername(),
+                password=self.getPassword(),
+                baseurl=self.getUrl()).getKitList():
             for c in kit.getComponentList():
                 if osinfo and osinfo not in c.getOsInfoList() and \
                         osinfo.getOsFamilyInfo() not in c.getOsFamilyInfoList():
-                    # If osinfo is defined, exclude those components that
-                    # cannot be enabled on the specified operating system.
+                    # Exclude those components that cannot be enabled on the
+                    # specified operating system.
                     continue
 
                 displayComponent(c, kit)
 
 
-if __name__ == "__main__":
+def main():
     GetComponentList().run()
