@@ -157,6 +157,7 @@ setup(
             'revert-node-to-checkpoint=tortuga.scripts.revert_node_to_checkpoint:main',
             'schedule-update=tortuga.scripts.schedule_update:main',
             'update-software-profile=tortuga.scripts.update_software_profile:main',
+            'update-admin=tortuga.scripts.update_admin:main',
         ],
     },
 )

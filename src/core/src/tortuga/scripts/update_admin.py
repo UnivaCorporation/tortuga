@@ -15,15 +15,12 @@
 # limitations under the License.
 
 from tortuga.admin.adminCli import AdminCli
-from tortuga.admin.adminApiFactory import getAdminApi
 from tortuga.objects.admin import Admin
-# from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
+from tortuga.wsapi.adminWsApi import AdminWsApi
 
 
 class UpdateAdminCli(AdminCli):
-    def __init__(self):
-        AdminCli.__init__(self)
-
+    def parseArgs(self, usage=None):
         self.addOption('--admin-username', dest='adminUsername',
                        help=_('Username of admin.'))
 
@@ -43,23 +40,12 @@ class UpdateAdminCli(AdminCli):
         self.addOption('--admin-description', dest='adminDescription',
                        help=_('Description of admin.'))
 
+        super().parseArgs(usage=usage)
+
     def runCommand(self):
         self.parseArgs(_("""
-    update-admin --admin-username=ADMINUSERNAME
-       --admin-password=ADMINPASSWORD --admin-id=ADMINID [ --uncrypted ]
-       --admin-realname=ADMINREALNAME
-       --admin-description=ADMINDESCRIPTION
-
-Description:
-    The  update-admin  tool  updates  a single administrative user to the
-    Tortuga system.  This user does not need to match any operating sys-
-    tem  user.   When  updating  a  user the password and username can be
-    changed.
+Updates a administrative user settings in the Tortuga system.
 """))
-
-        # adminId = self._options.adminId
-        # if adminId is None:
-        #     raise InvalidCliRequest(_('Missing Admin Id'))
 
         admin = Admin()
         admin.setUsername(self.getArgs().adminUsername)
@@ -69,10 +55,12 @@ Description:
 
         admin.setId(self.getArgs().adminId)
 
-        api = getAdminApi(self.getUsername(), self.getPassword())
+        api = AdminWsApi(username=self.getUsername(),
+                         password=self.getPassword(),
+                         baseurl=self.getUrl())
 
-        api.updateAdmin(admin, self._options.isCrypted)
+        api.updateAdmin(admin, self.getArgs().isCrypted)
 
 
-if __name__ == '__main__':
+def main():
     UpdateAdminCli().run()
