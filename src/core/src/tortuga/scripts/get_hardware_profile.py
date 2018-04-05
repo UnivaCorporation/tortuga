@@ -19,9 +19,8 @@
 import json
 
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.hardwareprofile.hardwareProfileFactory \
-    import getHardwareProfileApi
-from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
+from tortuga.wsapi.hardwareProfileWsApi \
+    import HardwareProfileWsApi
 
 
 class GetHardwareProfileCli(TortugaCli):
@@ -82,7 +81,9 @@ Description:
         if not self.getArgs().name:
             self.getParser().error(_('--hardware-profile must be specified'))
 
-        api = getHardwareProfileApi(self.getUsername(), self.getPassword())
+        api = HardwareProfileWsApi(username=self.getUsername(),
+                                   password=self.getPassword(),
+                                   baseurl=self.getUrl())
 
         optionDict = {}
 
@@ -129,7 +130,6 @@ Description:
             else:
                 print(' ' * 2 + '- Provisioning networks: (none)')
 
-
         if self.getArgs().getNodes:
             if hwprofile.getNodes():
                 print(' ' * 2 + '- Node(s):')
@@ -170,5 +170,9 @@ Description:
             print(' ' * 2 + '- Tags: (none)')
 
 
-if __name__ == '__main__':
+def main():
     GetHardwareProfileCli().run()
+
+
+if __name__ == '__main__':
+    main()

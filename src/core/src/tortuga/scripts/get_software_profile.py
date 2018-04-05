@@ -20,10 +20,8 @@ import argparse
 import json
 
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.softwareprofile.softwareProfileFactory \
-    import getSoftwareProfileApi
-from tortuga.hardwareprofile.hardwareProfileFactory \
-    import getHardwareProfileApi
+from tortuga.wsapi.hardwareProfileWsApi import HardwareProfileWsApi
+from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
 
 
 class GetSoftwareProfileCli(TortugaCli):
@@ -104,11 +102,15 @@ Description:
         if not self.getArgs().name:
             self.getParser().error('--software-profile must be specified')
 
-        self.swprofileapi = getSoftwareProfileApi(
-            self.getUsername(), self.getPassword())
+        self.swprofileapi = SoftwareProfileWsApi(
+            username=self.getUsername(),
+            password=self.getPassword(),
+            baseurl=self.getUrl())
 
-        self.hwprofileapi = getHardwareProfileApi(
-            self.getUsername(), self.getPassword())
+        self.hwprofileapi = HardwareProfileWsApi(
+            username=self.getUsername(),
+            password=self.getPassword(),
+            baseurl=self.getUrl())
 
         optionDict = {}
 
@@ -262,5 +264,9 @@ Description:
             print('  - Tags: (none)')
 
 
-if __name__ == '__main__':
+def main():
     GetSoftwareProfileCli().run()
+
+
+if __name__ == '__main__':
+    main()
