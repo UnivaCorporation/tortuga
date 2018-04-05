@@ -30,9 +30,14 @@ class InstallKitCli(KitCli):
             kitPkgGroup, _('If kit package URL is provided, kit'
                            ' /name/version/iteration are not used.'))
 
+        # self.addOptionToGroup(
+        #     kitPkgGroup, '--package', dest='packageUrl',
+        #     help=_('kit package URL'))
+
         self.addOptionToGroup(
-            kitPkgGroup, '--package', dest='packageUrl',
-            help=_('kit package URL'))
+            kitPkgGroup, 'package_uri',
+            help=_('kit package URI (can be a file name or fully-qualified URL)'),
+        )
 
         self.addOptionToGroup(
             kitPkgGroup, '--i-accept-the-eula', dest='acceptEula',
@@ -56,22 +61,16 @@ class InstallKitCli(KitCli):
             help=_('kit iteration'))
 
     def runCommand(self):
-        (options, args) = self.parseArgs(_("""
-    install-kit [--i-accept-the-eula] URI
+        self.parseArgs(_('Adds new application kit to Tortuga'))
 
-Description:
-    The  install-kit  tool  adds  a  new application kit to Tortuga.
-    URI can be a file name or fully-qualified URL.
-"""))
         api = getKitApi(self.getUsername(), self.getPassword())
+
         self.installKitHelper(api, accept_eula=self.getArgs().acceptEula)
 
-    def installKitHelper(self, api, key=None, accept_eula=False):
-        if self.getArgs():
-            return api.installKitPackage(self.getArg(0), key)
-
-        if self.getArgs().packageUrl:
-            return api.installKitPackage(self.getArgs().packageUrl, key)
+    def installKitHelper(self, api, key=None, accept_eula=False): \
+            # pylint: disable=unused-argument
+        if self.getArgs().package_uri:
+            return api.installKitPackage(self.getArgs().package_uri, key)
 
         name, version, iteration = self.get_name_version_iteration()
 
