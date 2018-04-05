@@ -26,7 +26,7 @@ from tortuga.exceptions.httpErrorException import HttpErrorException
 from tortuga.web_client import exceptionMapper
 
 
-class SessionManager(object):
+class SessionManager:
     """
     Class for session management.
     """
@@ -38,8 +38,8 @@ class SessionManager(object):
         self._logger = logging.getLogger(
             'tortuga.web_client.%s' % (self.__class__.__name__))
         self._logger.addHandler(logging.NullHandler())
-        self._username = ""
-        self._password = ""
+        self._username = None
+        self._password = None
 
     def setHost(self, host):
         """ Set host. """
@@ -99,7 +99,7 @@ class SessionManager(object):
         return response, responseDict
 
     def sendRequest(self, url, method='GET',
-                    contentType='application/json', data='',
+                    contentType='application/json', data=None,
                     acceptType='application/json'):
         """
         Send HTTP request without cookies
@@ -124,6 +124,7 @@ class SessionManager(object):
         request.add_header('Content-Length', str(contentLength))
 
         if method != 'GET':
+            # do not send 'Content-Type' header for GET requests
             request.add_header('Content-Type', contentType)
 
         if acceptType:
@@ -150,6 +151,9 @@ class SessionManager(object):
             return self._response_handler(response)
         except urllib.error.HTTPError as ex:
             if ex.code == http.client.UNAUTHORIZED and self._host is not None:
+                if u.path.endswith('/auth/login'):
+                    raise HttpErrorException('Authentication error')
+
                 self.establishSession(
                     self._host, self._username, self._password)
 
