@@ -33,11 +33,6 @@ class UcParam(TortugaCli):
         super().__init__()
         self._api = None
 
-        self.getParser().add_argument('--debug', action='store_true',
-                                      help='Enable debug logging')
-        self.getParser().add_argument('--verbose', action='store_true',
-                                      help='Enable verbose logging')
-
         subparsers = self.getParser().add_subparsers()
 
         # Initialize 'get' subparser

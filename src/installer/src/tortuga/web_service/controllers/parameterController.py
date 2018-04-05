@@ -42,7 +42,7 @@ class ParameterController(TortugaController):
         },
         {
             'name': 'createParameter',
-            'path': '/v1/parameters/',
+            'path': '/v1/parameters',
             'action': 'createParameter',
             'method': ['POST']
         },
@@ -129,6 +129,7 @@ class ParameterController(TortugaController):
                 raise ParameterAlreadyExists()
 
             app.parameter_api.upsertParameter(parameter)
+
             response = None
 
         except Exception as ex:
@@ -137,7 +138,6 @@ class ParameterController(TortugaController):
             response = self.errorResponse(str(ex))
 
         return self.formatResponse(response)
-
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
