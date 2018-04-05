@@ -17,6 +17,7 @@
 # pylint: disable=no-member
 
 import sys
+from typing import Any, Optional, Dict, List
 from tortuga.wsapi.nodeWsApi import NodeWsApi
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
@@ -141,16 +142,45 @@ Description:
         api = NodeWsApi(self.getUsername(), self.getPassword())
 
         if options.nodeName:
-            buf = api.getNode(options.nodeName)
+            nodes: List[Dict[str, Any]] = [api.getNodeDetails(options.nodeName)]
         else:
-            buf = api.getNodeList(options.tags)
+            nodes: List[Dict[str, Any]] = api.getNodeList(options.tags)
 
-        if not buf:
+        output: Optional[str] = self.__make_output(nodes)
+
+        if not output:
             if options.nodeName:
                 print('No nodes matching nodespec [{}]\n'.format(options.nodeName))
             sys.exit(1)
 
-        print(buf)
+        print(output)
+
+    def __make_output(self, nodes: List[Dict[str, Any]]) -> Optional[str]:
+        """
+        Take a list of node names
+        and return a formatted string
+        to print.
+
+        :param nodes: List String
+        :return: String
+        """
+        output: str = ''
+
+        for node in nodes:
+            output += """
+{}
+    Hardware Profile: {}
+    Boot: {}
+    Status: {}/{}, Locked: {}
+            """.format(
+                node['name'],
+                node['hardwareprofile']['name'],
+                node['bootFrom'],  # TODO enumerate value.
+                node['state'], node[''],  # TODO get 'Active' state.
+                node['lockedState']
+            )
+
+        return output
 
 
 if __name__ == '__main__':

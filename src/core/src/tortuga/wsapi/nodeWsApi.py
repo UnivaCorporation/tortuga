@@ -107,7 +107,7 @@ class NodeWsApi(TortugaWsApi): \
 
         try:
             response: dict = self.sendSessionRequest(url)[1]
-            return response
+            return response.get('node')
 
         except TortugaException:
             raise
@@ -137,7 +137,7 @@ class NodeWsApi(TortugaWsApi): \
 
         try:
             response: dict = self.sendSessionRequest(url)[1]
-            return response['nodes']
+            return response.get('nodes')
 
         except TortugaException:
             raise
