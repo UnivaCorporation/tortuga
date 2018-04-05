@@ -16,59 +16,34 @@
 
 # pylint: disable=no-member
 
-'''
-
-NAME
-    genconfig - generate configuration file
-
-SYNOPSIS
-    genconfig cname
-
-DESCRIPTION
-    The genconfig command generates the configuration
-    file for the given component onto the standard output.
-
-'''
-
 import sys
 
 from tortuga.cli.tortugaCli import TortugaCli
 
 
 class GenconfigAppClass(TortugaCli):
-    def __init__(self):
-        # 'validArgCount' should probably be infinite but 4 seems to
-        # cover all the current conditions.
-        TortugaCli.__init__(self, validArgCount=4)
+    def parseArgs(self, usage=None):
+        self.addOption('cname')
+
+        super().parseArgs(usage=usage)
 
     def runCommand(self):
-        self.parseArgs(_('''\
-genconfig <component name> [args...]
-
-For example,
-
-    "ganglia component-ganglia-gmetad"
-
-generates gmetad.conf on the standard output.
-'''))
-
-        args = self.getArgs()
-
-        # First argument is component name
-        cname = args[0]
+        self.parseArgs()
 
         from tortuga.kit.actions.manager import KitActionsManager
         kitmgr = KitActionsManager()
 
-        component = kitmgr.load_component(cname)
+        component = kitmgr.load_component(self.getArgs().cname)
 
         nodegroup = 'installer'
 
         if '_configure' not in dir(component):
-            print(_('This component does not have configuration'), file=sys.stderr)
+            print(_('This component does not have configuration'),
+                  file=sys.stderr)
+
             sys.exit(0)
 
-        component._configure(nodegroup, sys.stdout, args[1:])
+        component._configure(nodegroup, sys.stdout)
 
 
 if __name__ == '__main__':
