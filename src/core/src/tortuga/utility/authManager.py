@@ -37,13 +37,13 @@ class AuthManager(TortugaObjectManager, Singleton):
 
         self.__loadPrincipals()
 
-    def cryptPassword(self, cleartext, salt="$1$"): \
+    def cryptPassword(self, cleartext): \
             # pylint: disable=no-self-use
         """
         Return crypted password
         """
 
-        return des_crypt(cleartext, salt)
+        return des_crypt.hash(cleartext)
 
     def reloadPrincipals(self):
         """ This is used to reload the principals in auth manager """
@@ -72,8 +72,9 @@ class AuthManager(TortugaObjectManager, Singleton):
     def getPrincipal(self, username, password):
         """ Get a principal based on a username and password """
         principal = self.__principals.get(username)
-        if principal and principal.getPassword() == des_crypt(
-                password, principal.getPassword()):
-            return principal
+        if principal:
+            hash = des_crypt.hash(password)
+            if des_crypt.verify(password, hash):
+                return principal
 
         return None
