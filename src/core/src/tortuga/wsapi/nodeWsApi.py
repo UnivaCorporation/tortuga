@@ -18,12 +18,13 @@ import json
 import urllib.request
 import urllib.parse
 import urllib.error
-
-from tortuga.objects.tortugaObject import TortugaObjectList
 import tortuga.objects.node
-from tortuga.exceptions.tortugaException import TortugaException
 import tortuga.objects.provisioningInfo
+
+from typing import Optional, Dict, List
 from .tortugaWsApi import TortugaWsApi
+from tortuga.objects.tortugaObject import TortugaObjectList
+from tortuga.exceptions.tortugaException import TortugaException
 
 
 class NodeWsApi(TortugaWsApi): \
@@ -89,6 +90,55 @@ class NodeWsApi(TortugaWsApi): \
 
             return tortuga.objects.node.Node.getFromDict(
                 responseDict.get('node'))
+        except TortugaException:
+            raise
+        except Exception as ex:
+            raise TortugaException(exception=ex)
+
+    def getNodeDetails(self, name: str, options: Optional[dict] = None) -> Dict[str, str]:
+        """
+        Get node details dictionary.
+
+        :param name: String
+        :param options: Dictionary
+        :return: Dictionary
+        """
+        url: str = 'v1/nodes/{}'.format(urllib.parse.quote(name))
+
+        try:
+            response: dict = self.sendSessionRequest(url)[1]
+            return response
+
+        except TortugaException:
+            raise
+        except Exception as e:
+            raise TortugaException(exception=e)
+
+    def getNodeListDetails(self, tags: Dict[str, str] = None) -> List[Dict[str, str]]:
+        """
+        Get node details dictionary.
+
+        :param tags: String
+        :return: List Dictionary
+        """
+        url: str = 'v1/nodes'
+
+        if tags:
+            params: list = []
+
+            for key, value in tags.items():
+                if value is None:
+                    params.append(urllib.parse.urlencode({'tag': key}))
+                else:
+                    params.append(urllib.parse.urlencode({'tag': '{0}={1}'.format(key, value)}))
+
+            if params:
+                url += '?' + '&'.join(params)
+
+        try:
+            response: dict = self.sendSessionRequest(url)[1]
+            return response['nodes']
+
         except TortugaException:
             raise
         except Exception as ex:
