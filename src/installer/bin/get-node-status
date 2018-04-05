@@ -17,7 +17,7 @@
 # pylint: disable=no-member
 
 import sys
-from typing import Any, Optional, Dict, List
+from typing import Any, Optional, Union, Dict, List
 from tortuga.wsapi.nodeWsApi import NodeWsApi
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
@@ -28,6 +28,16 @@ class GetNodeStatus(TortugaCli): \
         # pylint: disable=too-few-public-methods
     def __init__(self):
         super(GetNodeStatus, self).__init__()
+
+        self.__active_map: Dict[bool, str] = {
+            False: 'Active',
+            True: 'Inactive'
+        }
+
+        self.__boot_map: Dict[int, str] = {
+            0: 'Disk',
+            1: 'Network'
+        }
 
         self.addOption(
             '-n', '--node',
@@ -70,7 +80,8 @@ class GetNodeStatus(TortugaCli): \
 
         self.addOption(
             '--state',
-            help=_('Filter nodes in specified state'))
+            help=_('Filter nodes in specified state')
+        )
 
         self.addOption(
             '--software-profile',
@@ -144,18 +155,68 @@ Description:
         if options.nodeName:
             nodes: List[Dict[str, Any]] = [api.getNodeDetails(options.nodeName)]
         else:
-            nodes: List[Dict[str, Any]] = api.getNodeList(options.tags)
+            nodes: List[Dict[str, Any]] = api.getNodeListDetails(options.tags)
 
-        output: Optional[str] = self.__make_output(nodes)
-
-        if not output:
+        if not nodes or nodes == [None]:
             if options.nodeName:
                 print('No nodes matching nodespec [{}]\n'.format(options.nodeName))
             sys.exit(1)
 
+        if options.bActiveNodesOnly:
+            self.__filter_nodes(nodes, 'isIdle', False)
+
+        if options.bIdleNodesOnly:
+            self.__filter_nodes(nodes, 'isIdle', True)
+
+        if options.bInstalled:
+            self.__filter_nodes(nodes, 'state', 'Installed')
+
+        if options.bNotInstalled:
+            self.__filter_nodes(nodes, 'state', 'Installed', True)
+
+        if options.state:
+            self.__filter_nodes(nodes, 'state', options.state)
+
+        if options.softwareProfile:
+            self.__filter_nodes(nodes, ['softwareprofile', 'name'], options.softwareProfile)
+
+        if options.hardwareProfile:
+            self.__filter_nodes(nodes, ['hardwareprofile', 'name'], options.hardwareProfile)
+
+        if options.bShortOutput:
+            output: Optional[str] = self.__make_short_output(nodes)
+        elif options.bListOutput:
+            output: Optional[str] = self.__make_list_output(nodes)
+        else:
+            output: Optional[str] = self.__make_full_output(nodes)
+
         print(output)
 
-    def __make_output(self, nodes: List[Dict[str, Any]]) -> Optional[str]:
+    @staticmethod
+    def __filter_nodes(nodes: List[Dict[str, Any]], filter_key: Union[List[str], str], filter_value: Any,
+                       if_not: bool = False) -> None:
+        """
+        Filter from nodes list (list
+        is mutated, thus not returned).
+
+        :param nodes: List
+        :param filter_key: List or String
+        :param filter_value: Object
+        :param if_not: Boolean
+        :return: None
+        """
+        for node in nodes:
+            if type(filter_key) is str:
+                result: bool = node[filter_key] == filter_value
+            else:
+                result: bool = node[filter_key[0]][filter_key[1]] == filter_value
+
+            if not result == if_not:  # Switches based on `if_not`.
+                continue
+            else:
+                nodes.remove(node)
+
+    def __make_full_output(self, nodes: List[Dict[str, Any]]) -> Optional[str]:
         """
         Take a list of node names
         and return a formatted string
@@ -172,15 +233,49 @@ Description:
     Hardware Profile: {}
     Boot: {}
     Status: {}/{}, Locked: {}
+
+
             """.format(
                 node['name'],
                 node['hardwareprofile']['name'],
-                node['bootFrom'],  # TODO enumerate value.
-                node['state'], node[''],  # TODO get 'Active' state.
+                self.__boot_map[node['bootFrom']],
+                node['state'], self.__active_map[node['isIdle']],
                 node['lockedState']
             )
 
         return output
+
+    def __make_short_output(self, nodes: List[Dict[str, Any]]) -> Optional[str]:
+        """
+        Take a list of node names
+        and return a formatted string
+        to print.
+
+        :param nodes: List String
+        :return: String
+        """
+        lines: list = []
+
+        for node in nodes:
+            lines.append('{} ({})'.format(node['name'], node['state']))
+
+        return '\n'.join(lines)
+
+    def __make_list_output(self, nodes: List[Dict[str, Any]]) -> Optional[str]:
+        """
+        Take a list of node names
+        and return a formatted string
+        to print.
+
+        :param nodes: List String
+        :return: String
+        """
+        names: list = []
+
+        for node in nodes:
+            names.append(node['name'])
+
+        return '\n'.join(names)
 
 
 if __name__ == '__main__':

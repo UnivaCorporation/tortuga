@@ -103,7 +103,7 @@ class NodeWsApi(TortugaWsApi): \
         :param options: Dictionary
         :return: Dictionary
         """
-        url: str = 'v1/nodes/{}'.format(urllib.parse.quote(name))
+        url: str = 'v1/nodes?name={}'.format(urllib.parse.quote(name))
 
         try:
             response: dict = self.sendSessionRequest(url)[1]
