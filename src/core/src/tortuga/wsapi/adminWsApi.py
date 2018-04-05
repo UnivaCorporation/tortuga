@@ -119,7 +119,7 @@ class AdminWsApi(TortugaWsApi):
             d['description'] = description
 
         try:
-            self.sendSessionRequest(url, method='POST', data=json.dumps(d))
+            self.sendSessionRequest(url, method='POST', data=json.dumps(dict(admin=d)))
         except TortugaException:
             raise
         except Exception as ex:
