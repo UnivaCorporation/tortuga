@@ -36,7 +36,7 @@ class HardwareProfileWsApi(TortugaWsApi):
         try:
             _, responseDict = self.sendSessionRequest(url)
 
-            return HardwareProfile.getListFromDict(responseDict)
+            return HardwareProfile.getListFromDict(responseDict)[0]
         except TortugaException as ex:
             raise
         except Exception as ex:

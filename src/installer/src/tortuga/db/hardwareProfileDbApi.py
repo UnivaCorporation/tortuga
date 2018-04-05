@@ -536,8 +536,7 @@ class HardwareProfileDbApi(TortugaDbApi):
             if hardwareProfile.getLocation() == 'remote':
                 dbHardwareProfile.installType = 'bootstrap'
             else:
-                raise ConfigurationError(
-                    'Hardware profile must have valid install type.')
+                dbHardwareProfile.installType = 'package'
         else:
             dbHardwareProfile.installType = hardwareProfile.\
                 getInstallType()

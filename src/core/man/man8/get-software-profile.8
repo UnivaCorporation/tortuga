@@ -12,28 +12,31 @@
 .\" See the License for the specific language governing permissions and
 .\" limitations under the License.
 
-.TH "get-hardware-profile" "8" "6.3" "Univa" "Tortuga"
+.TH "get-software-profile" "8" "6.3" "Univa" "Tortuga"
 .SH "NAME"
 .LP
-get-hardware-profile - Display details of a hardware profile.
+get-software-profile - Display details of a software profile.
 .SH "SYNTAX"
 .LP
-\fBget-hardware-profile --name=\fINAME\fB [--nodes] [--networks] [--admins]
+\fBget-software-profile --name=\fINAME\fB [--nodes] [--partitions] [--components] [--os] [--admins]
 .SH "DESCRIPTION"
 .LP
-The get-hardware-profile tool displays information details of a specific hardware profile.
+The get-software-profile tool displays information details of a specific software profile.
 .LP
 .SH "OPTIONS"
 .LP
 .TP
 \fB--name=\fINAME
-Name of hardware profile to query
+Software profile name to query
 .TP
 \fB--nodes
 Include list of nodes
 .TP
-\fB--networks
-Include list of networks
+\fB--partitions
+Include list of partitions
+.TP
+\fB--components
+Include enabled components
 .TP
 \fB--admins
 Include list of admins
@@ -41,14 +44,11 @@ Include list of admins
 .SH "Output formatting options"
 .LP
 .TP
-\fB--xml\fR
-XML formatted output
-.TP
 \fB--json\fR
 JSON formatted output
 .LP
 .SH "Common Tortuga Options"
-.LP
+.TP
 .TP
 \fB-h, --help
 show this help message and exit.
@@ -62,20 +62,23 @@ print version and exit.
 \fB-d \fPCONSOLELOGLEVEL\fB, --debug=\fPCONSOLELOGLEVEL
 set debug level; valid values are: critical, error, warning, info, debug
 .TP
+\fB--url=\fPURL
+Tortuga web service URL
+.TP
 \fB--username=\fPUSERNAME
-Credential to use when not running as root on the Installer.
+Tortuga web service username
 .TP
 \fB--password=\fPPASSWORD
-Credential to use when not running as root on the Installer.
+Tortuga web server password
+.LP
 .SH "EXAMPLES"
 .LP
-Display hardware profile LocalIron and include nodes in output:
+Display software profile \fBDefaultCompute\fR
 
-\fBget-hardware-profile --name LocalIron --nodes\fR
+   \fBget-software-profile --name DefaultCompute\fR
 .SH "AUTHORS"
 .LP
 Univa Support <support@univa.com>
 .SH "SEE ALSO"
 .LP
-create-hardware-profile(8)
-
+get-software-profile-list(8)

@@ -23,8 +23,7 @@ import argparse
 import os.path
 from jinja2 import Template
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.cli.utils import (ParseOperatingSystemArgAction,
-                               ParseProfileTemplateArgsAction)
+from tortuga.cli.utils import ParseOperatingSystemArgAction
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
 from tortuga.exceptions.invalidProfileCreationTemplate import \
     InvalidProfileCreationTemplate
@@ -49,16 +48,13 @@ class CreateSoftwareProfileCli(TortugaCli):
                                      ' creation template'))
 
         self.addOptionToGroup(option_group_name, '--name',
-                              action=ParseProfileTemplateArgsAction,
                               help=_('Software profile name'))
 
         self.addOptionToGroup(option_group_name, '--description',
-                              action=ParseProfileTemplateArgsAction,
                               dest='description',
                               help=_('Description for software profile'))
 
         self.addOptionToGroup(option_group_name, '--type',
-                              action=ParseProfileTemplateArgsAction,
                               dest='profileType',
                               help=_('Software profile type'))
 
@@ -116,8 +112,16 @@ command line options.
         else:
             tmpl_dict = {}
 
-        if hasattr(self.getArgs(), 'tmplDict'):
-            tmpl_dict = {**tmpl_dict, **getattr(self.getArgs(), 'tmplDict')}
+        if self.getArgs().name:
+            tmpl_dict['name'] = self.getArgs().name
+
+        if self.getArgs().description:
+            tmpl_dict['description'] = self.getArgs().description
+
+        if self.getArgs().profileType:
+            tmpl_dict['type'] = self.getArgs().profileType
+        elif 'type' not in tmpl_dict:
+            tmpl_dict['type'] = 'compute'
 
         if hasattr(self.getArgs(), 'osInfo'):
             tmpl_dict['os'] = {
@@ -125,9 +129,6 @@ command line options.
                 'version': getattr(self.getArgs(), 'osInfo').getVersion(),
                 'arch': getattr(self.getArgs(), 'osInfo').getArch(),
             }
-
-        if 'type' not in tmpl_dict:
-            tmpl_dict['type'] = 'compute'
 
         sw_profile_spec = SoftwareProfile.getFromDict(tmpl_dict)
 

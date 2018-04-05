@@ -85,19 +85,13 @@ class GetSoftwareProfileCli(TortugaCli):
         self.addOptionToGroup(
             outputAttrGroup, '--xml',
             action='store_true', default=False,
-            help=_('XML formatted output')
+            help=argparse.SUPPRESS
         )
 
         super(GetSoftwareProfileCli, self).parseArgs(usage=usage)
 
     def runCommand(self):
-        self.parseArgs(_("""
-    get-software-profile --name=NAME [--nodes --packages
-       --partitions --components --os --admins]
-
-Description:
-    The get-software-profile tool displays information details of  a  spe-
-    cific software profile."""))
+        self.parseArgs(usage=_('Displays software profile details'))
 
         if not self.getArgs().name:
             self.getParser().error('--software-profile must be specified')

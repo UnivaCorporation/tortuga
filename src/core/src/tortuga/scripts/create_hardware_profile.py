@@ -16,16 +16,12 @@
 
 # pylint: disable=no-member
 
-import glob
+import argparse
 import json
 
 import os.path
-from jinja2 import Template
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.cli.utils import ParseOperatingSystemArgAction
-from tortuga.cli.utils import ParseProfileTemplateArgsAction
-from tortuga.config.configManager import ConfigManager
-from tortuga.exceptions.configurationError import ConfigurationError
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
 from tortuga.exceptions.invalidProfileCreationTemplate \
     import InvalidProfileCreationTemplate
@@ -34,54 +30,39 @@ from tortuga.wsapi.hardwareProfileWsApi import HardwareProfileWsApi
 
 
 class CreateHardwareProfileCli(TortugaCli):
-    def __init__(self):
-        super().__init__()
-
-        self._default_tmpl_dir = os.path.join(
-            ConfigManager().getRoot(),
-            'share/templates/hardware')
-
     def parseArgs(self, usage=None):
-        optionGroupName = _('Information')
-        self.addOptionGroup(optionGroupName, '')
-        self.addOptionToGroup(optionGroupName, '--list-templates',
-                              action='store_true',
-                              dest='bDisplayTemplateList',
-                              default=False,
-                              help=_('List available hardware profile'
-                                     ' templates'))
-
         option_group_name = _('Create Hardware Profile Options')
 
-        option_group = self.addOptionGroup(option_group_name, '')
+        self.addOptionGroup(option_group_name, '')
 
-        excl_option_group = option_group.add_mutually_exclusive_group()
+        self.addOptionToGroup(option_group_name, '-j', '--json-file',
+                              dest='jsonTemplatePath', help=argparse.SUPPRESS)
 
-        excl_option_group.add_argument(
-            '-x', '--xml-file', dest='templatePath',
-            help=_('Path to hardware profile creation template'))
+        self.addOptionToGroup(option_group_name, '-t', '--template',
+                              dest='jsonTemplatePath',
+                              help=_('Path to JSON-formatted hardware profile'
+                                     ' creation template'))
 
-        excl_option_group.add_argument(
-            '-j', '--json-file', dest='jsonTemplatePath',
-            help=_('Path to JSON-formatted hardware profile creation'
-                   ' template'))
-
-        self.addOptionToGroup(optionGroupName, '--name',
-                              action=ParseProfileTemplateArgsAction,
+        self.addOptionToGroup(option_group_name, '--name',
                               help=_('Hardware profile name'))
-        self.addOptionToGroup(optionGroupName, '--description',
-                              action=ParseProfileTemplateArgsAction,
+
+        self.addOptionToGroup(option_group_name, '--description',
                               dest='description',
-                              help=_('Description for hardware profile'))
-        self.addOptionToGroup(optionGroupName, '--os',
+                              help=_('Hardware profile description'))
+
+        self.addOptionToGroup(option_group_name, '--os',
                               action=ParseOperatingSystemArgAction,
                               metavar='OS SPEC',
                               dest='os',
-                              help=_('Operating system'))
-        self.addOptionToGroup(optionGroupName, '--idleSoftwareProfile',
+                              help=_('Hardware profile operating system'))
+
+        self.addOptionToGroup(option_group_name, '--idleSoftwareProfile',
                               dest='idleSoftwareProfile',
-                              action=ParseProfileTemplateArgsAction,
-                              help=_('Specify idle software profile'))
+                              help=_('Hardware profile idle software profile'))
+
+        self.addOptionToGroup(option_group_name, '--name-format',
+                              dest='nameFormat',
+                              help=_('Host name format'))
 
         self.addOptionToGroup(option_group_name, '--defaults',
                               dest='bUseDefaults', default=False,
@@ -90,14 +71,6 @@ class CreateHardwareProfileCli(TortugaCli):
                                      ' creating the hardware profile'))
 
         super().parseArgs(usage=usage)
-
-    def displayTemplateList(self): \
-            # pylint: disable=no-self-use
-        templateFiles = glob.glob(
-            os.path.join(self._default_tmpl_dir, '*.xml'))
-
-        if templateFiles:
-            print('\n'.join(templateFiles))
 
     def runCommand(self):
         self.parseArgs(_("""
@@ -108,92 +81,55 @@ software profile specified in the template can be overridden by providing
 the appropriate command line options.
 """))
 
-        if self.getArgs().bDisplayTemplateList:
-            self.displayTemplateList()
-            return
+        if self.getArgs().jsonTemplatePath:
+            # load from template
+            if self.getArgs().jsonTemplatePath and \
+                    not os.path.exists(self.getArgs().jsonTemplatePath):
+                raise InvalidCliRequest(
+                    _('Cannot read template from %s') % (
+                        self.getArgs().jsonTemplatePath))
 
-        template_path = self.getArgs().templatePath \
-            if self.getArgs().templatePath else \
-            self.getArgs().jsonTemplatePath
+            try:
+                with open(self.getArgs().jsonTemplatePath) as fp:
+                    tmpl_dict = json.load(fp)
+            except Exception as exc:
+                raise InvalidProfileCreationTemplate(
+                    'Invalid profile creation template: {}'.format(exc))
+        else:
+            # build up dict from scratch
+            tmpl_dict = {
+                'name': self.getArgs().name,
+            }
 
-        b_use_default_template = False
-        if not template_path:
-            template_path = os.path.join(
-                self._default_tmpl_dir, 'defaultHardwareProfile.tmpl.xml')
+            if self.getArgs().description:
+                tmpl_dict['description'] = self.getArgs().description
 
-            b_use_default_template = True
+        if hasattr(self.getArgs(), 'osInfo'):
+            tmpl_dict['os'] = {
+                'name': getattr(self.getArgs(), 'osInfo').getName(),
+                'version': getattr(self.getArgs(), 'osInfo').getVersion(),
+                'arch': getattr(self.getArgs(), 'osInfo').getArch(),
+            }
 
-        if not os.path.exists(template_path):
-            raise InvalidCliRequest(
-                _('Cannot read template from %s') % (
-                    self.getArgs().templatePath))
+        if self.getArgs().idleSoftwareProfile:
+            tmpl_dict['idleSoftwareProfile'] = {
+                'name': self.getArgs().idleSoftwareProfile,
+            }
 
-        osInfo = self.getArgs().osInfo if hasattr(self.getArgs(), 'osInfo') else None
+        if self.getArgs().nameFormat:
+            tmpl_dict['nameFormat'] = self.getArgs().nameFormat
 
         settings_dict = {
             'bUseDefaults': self.getArgs().bUseDefaults,
-            'osInfo': osInfo,
+            'osInfo': getattr(self.getArgs(), 'osInfo') \
+                if hasattr(self.getArgs(), 'osInfo') else None,
         }
+
+        hw_profile_spec = HardwareProfile.getFromDict(tmpl_dict)
 
         api = HardwareProfileWsApi(username=self.getUsername(),
                                    password=self.getPassword(),
                                    baseurl=self.getUrl())
-
-        try:
-            # Process the hardware profile template
-            with open(template_path) as fp:
-                tmpl = fp.read()
-
-            tmplDict = self.getArgs().tmplDict
-            hw_profile_tmpl = Template(tmpl).render(tmplDict)
-        except Exception as ex:
-            self.getLogger().error(
-                'Error applying template substitutions')
-
-            self.getLogger().exception(ex)
-
-            raise InvalidProfileCreationTemplate(
-                'Invalid hardware profile creation template: %s' % (ex))
-
-        try:
-            # We want to ignore all elements with id and hardware profile
-            # id...they would be there if the template was created from a
-            # dump of an existing profile
-
-            if b_use_default_template or self.getArgs().templatePath:
-                hw_profile_spec = HardwareProfile.getFromXml(
-                    hw_profile_tmpl, ['id', 'hardwareProfileId'])
-            else:
-                hw_profile_dict = json.loads(hw_profile_tmpl)
-
-                hw_profile_spec = HardwareProfile.getFromDict(
-                    hw_profile_dict['hardwareProfile'])
-
-            # Override any preset hardware profile name in the template
-            # if specified on the command-line
-            if 'name' in tmplDict:
-                hw_profile_spec.setName(tmplDict['name'])
-        except ConfigurationError as ex:
-            self.getLogger().exception(ex)
-
-            raise InvalidProfileCreationTemplate(
-                'Invalid hardware profile creation template: %s' % (ex))
-        except Exception as ex:
-            self.getLogger().debug(
-                'Error parsing hardware profile template')
-
-            self.getLogger().exception(ex)
-
-            raise InvalidProfileCreationTemplate(
-                'Invalid hardware profile creation template')
-
-        if hw_profile_spec is None:
-            raise InvalidProfileCreationTemplate(
-                'Invalid hardware creation template')
-
-        if not hw_profile_spec.getDescription():
-            hw_profile_spec.setDescription('{0} hardware profile'.format(
-                hw_profile_spec.getName()))
 
         api.createHardwareProfile(hw_profile_spec, settings_dict)
 

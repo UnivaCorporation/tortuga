@@ -37,18 +37,6 @@ class ParseOperatingSystemArgAction(argparse.Action):
         setattr(namespace, 'osInfo', OsInfo(name, version, arch))
 
 
-class ParseProfileTemplateArgsAction(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string=None):
-        key = option_string[2:]
-
-        if not hasattr(namespace, 'tmplDict'):
-            setattr(namespace, 'tmplDict', {key: values})
-            return
-
-        tmplDict = getattr(namespace, 'tmplDict')
-        tmplDict[key] = values
-
-
 class FilterTagsAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         tags = []

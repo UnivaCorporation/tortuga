@@ -16,6 +16,7 @@
 
 # pylint: disable=no-member
 
+import argparse
 import json
 
 from tortuga.cli.tortugaCli import TortugaCli
@@ -63,20 +64,13 @@ class GetHardwareProfileCli(TortugaCli):
         self.addOptionToGroup(
             outputAttrGroup, '--xml',
             action='store_true', default=False,
-            help=_('XML formatted output')
+            help=argparse.SUPPRESS
         )
 
         super(GetHardwareProfileCli, self).parseArgs(usage=usage)
 
     def runCommand(self):
-        self.parseArgs(_("""
-   get-hardware-profile --name=NAME [--nodes] [--networks] [--admins]
-
-Description:
-    The get-hardware-profile tool displays information details of  a  spe-
-    cific hardware profile.
-
-"""))
+        self.parseArgs(usage=_('Display hardware profile details'))
 
         if not self.getArgs().name:
             self.getParser().error(_('--hardware-profile must be specified'))

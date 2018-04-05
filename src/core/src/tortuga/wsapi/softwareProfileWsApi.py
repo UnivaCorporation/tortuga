@@ -47,7 +47,7 @@ class SoftwareProfileWsApi(TortugaWsApi):
         try:
             _, responseDict = self.sendSessionRequest(url)
 
-            return SoftwareProfile.getListFromDict(responseDict)
+            return SoftwareProfile.getListFromDict(responseDict)[0]
         except TortugaException:
             raise
         except Exception as ex:
