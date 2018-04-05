@@ -24,12 +24,15 @@ class GetSoftwareProfileListCli(TortugaCli):
     def __init__(self):
         super(GetSoftwareProfileListCli, self).__init__()
 
+    def parseArgs(self, usage=None):
         self.addOption(
             '--tag',
             dest='tags',
             action=FilterTagsAction,
             help=_('Filter results by specified tag(s) (comma-separated)'),
         )
+
+        super().parseArgs(usage=usage)
 
     def runCommand(self):
         self.parseArgs(_("""
@@ -49,3 +52,7 @@ Description:
 
 def main():
     GetSoftwareProfileListCli().run()
+
+
+if __name__ == '__main__':
+    main()
