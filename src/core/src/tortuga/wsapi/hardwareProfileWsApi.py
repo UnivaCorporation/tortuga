@@ -102,7 +102,8 @@ class HardwareProfileWsApi(TortugaWsApi):
         except Exception as ex:
             raise TortugaException(exception=ex)
 
-    def getHardwareProfileList(self, optionDict=None, tags=None):
+    def getHardwareProfileList(self, optionDict=None, tags=None): \
+            # pylint: disable=unused-argument
         """
         Get list of hardware profiles by calling WS API
         """
@@ -110,12 +111,8 @@ class HardwareProfileWsApi(TortugaWsApi):
         url = 'v1/hardwareProfiles'
 
         # TODO: add support for building query string with 'tags'
-
-        postdata = json.dumps(optionDict or {})
-
         try:
-            (response, responseDict) = self.sendSessionRequest(
-                url, data=postdata)
+            _, responseDict = self.sendSessionRequest(url)
 
             return HardwareProfile.getListFromDict(responseDict)
         except Exception as ex:
