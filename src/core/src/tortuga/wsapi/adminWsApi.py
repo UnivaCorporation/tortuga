@@ -107,21 +107,23 @@ class AdminWsApi(TortugaWsApi):
 
         url = 'v1/admin'
 
-        d = {
-            'username': username,
-            'password': password,
+        postdata = {
             'isCrypted': isCrypted,
+            'admin': {
+                'username': username,
+                'password': password,
+            }
         }
 
         if realname is not None:
-            d['realname'] = realname
+            postdata['admin']['realname'] = realname
 
         if description is not None:
-            d['description'] = description
+            postdata['admin']['description'] = description
 
         try:
-            self.sendSessionRequest(url, method='POST',
-                                    data=json.dumps(dict(admin=d)))
+            self.sendSessionRequest(
+                url, method='POST', data=json.dumps(postdata))
         except TortugaException:
             raise
         except Exception as ex:
