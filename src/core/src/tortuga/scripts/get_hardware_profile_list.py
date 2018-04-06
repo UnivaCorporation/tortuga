@@ -20,9 +20,7 @@ from tortuga.cli.utils import FilterTagsAction
 
 
 class GetHardwareProfileListCli(TortugaCli):
-    def __init__(self):
-        super(GetHardwareProfileListCli, self).__init__()
-
+    def parseArgs(self, usage=None):
         self.addOption(
             '--tag',
             action=FilterTagsAction,
@@ -30,13 +28,12 @@ class GetHardwareProfileListCli(TortugaCli):
             help=_('Filter results by specified tag(s) (comma-separated)'),
         )
 
-    def runCommand(self):
-        self.parseArgs(_("""
-    get-hardware-profile-list [options]
+        super().parseArgs(usage=usage)
 
-Description:
-    The get-hardware-profile-list tool returns the list of hardware
-    profiles in the system."""))
+    def runCommand(self):
+        self.parseArgs(_('Returns the list of hardware profiles in the'
+                         ' system'))
+
         api = HardwareProfileWsApi(username=self.getUsername(),
                                    password=self.getPassword(),
                                    baseurl=self.getUrl())
