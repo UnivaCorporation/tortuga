@@ -120,12 +120,8 @@ class SessionManager:
                                                                    data)
         )
 
-        request = urllib.request.Request(url, data=data.encode())
-        request.get_method = lambda: method
-
-        contentLength = len(data) if data else 0
-
-        request.add_header('Content-Length', str(contentLength))
+        request = urllib.request.Request(
+            url, data=data.encode() if data else None, method=method)
 
         if method != 'GET':
             # do not send 'Content-Type' header for GET requests
