@@ -104,7 +104,7 @@ class TortugaWsApi:
         return self._cm
 
     def sendSessionRequest(self, url, method='GET',
-                           contentType='application/json', data='',
+                           contentType='application/json', data=None,
                            acceptType='application/json'):
         """
         Send authorized session request
@@ -132,9 +132,11 @@ class TortugaWsApi:
             url, method, contentType, data, acceptType=acceptType)
 
     def sendRequest(self, url, method='GET',
-                    contentType='application/json', data='',
+                    contentType='application/json', data=None,
                     acceptType='application/json'):
-        """ Send unauthorized request. """
+        """
+        Send unauthorized request
+        """
 
         sm = self._getSessionManager()
 
