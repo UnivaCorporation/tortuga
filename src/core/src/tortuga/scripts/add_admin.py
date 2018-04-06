@@ -25,9 +25,7 @@ class AddAdminCli(AdminCli):
     Add admin command line interface.
     """
 
-    def __init__(self):
-        AdminCli.__init__(self)
-
+    def parseArgs(self, usage=None):
         self.addOption('--admin-username', dest='adminUsername',
                        help=_('Username of new admin.'))
 
@@ -44,17 +42,12 @@ class AddAdminCli(AdminCli):
                        help=_('Is the password crypted'), default=False,
                        action='store_true')
 
-    def runCommand(self):
-        self.parseArgs(_("""
-    add-admin  --admin-username=ADMINUSERNAME
-       --admin-password=ADMINPASSWORD [ --crypted ]
-       --admin-realname=ADMINREALNAME
-       --admin-description=ADMINDESCRIPTION
+        super().parseArgs(usage=usage)
 
-Description:
-    The add-admin tool adds a single administrative user to  the  Tortuga
-    system.   This user does not need to match any operating system user.
-"""))
+    def runCommand(self):
+        self.parseArgs(_('Add administrative users to the Tortuga system.'
+                         ' This user does not need to match any operating'
+                         ' system user'))
 
         api = adminWsApi.AdminWsApi(username=self.getUsername(),
                                     password=self.getPassword(),
