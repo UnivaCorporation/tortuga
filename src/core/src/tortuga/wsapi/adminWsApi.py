@@ -30,7 +30,7 @@ class AdminWsApi(TortugaWsApi):
         """Get admin information
 
             Returns:
-                rule
+                admin
             Throws:
                 UserNotAuthorized
                 AdminNotFound
@@ -52,7 +52,7 @@ class AdminWsApi(TortugaWsApi):
         """Get admin information
 
             Returns:
-                rule
+                admin
             Throws:
                 UserNotAuthorized
                 AdminNotFound
@@ -74,7 +74,7 @@ class AdminWsApi(TortugaWsApi):
         """Get admin list.
 
             Returns:
-                [rules]
+                [admins]
             Throws:
                 UserNotAuthorized
                 TortugaException
@@ -94,7 +94,7 @@ class AdminWsApi(TortugaWsApi):
     def addAdmin(self, username, password, isCrypted=False, realname=None,
                  description=None): \
             # pylint: disable=too-many-arguments
-        """Add an admin using rule name/password.
+        """Add an admin using name/password.
 
         Raises:
             UserNotAuthorized
