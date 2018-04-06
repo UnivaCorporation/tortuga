@@ -348,15 +348,12 @@ class SoftwareProfileController(TortugaController):
 
     @require()
     @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
     def addUsableHardwareProfileToSoftwareProfile(self,
                                                   softwareProfileName,
                                                   hardwareProfileName):
-        """ Add hardware profile to software profile. """
-
-        # self.getLogger().debug(
-        #     'Adding hardware profile [%s] to software profile [%s]' % (
-        #         hardwareProfileName, softwareProfileName))
+        """
+        Add hardware profile to software profile
+        """
 
         response = None
 
