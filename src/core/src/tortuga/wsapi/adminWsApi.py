@@ -94,7 +94,8 @@ class AdminWsApi(TortugaWsApi):
     def addAdmin(self, username, password, isCrypted=False, realname=None,
                  description=None): \
             # pylint: disable=too-many-arguments
-        """Add an admin using name/password.
+        """
+        Add an admin using rule name/password.
 
         Raises:
             UserNotAuthorized
@@ -119,7 +120,8 @@ class AdminWsApi(TortugaWsApi):
             d['description'] = description
 
         try:
-            self.sendSessionRequest(url, method='POST', data=json.dumps(dict(admin=d)))
+            self.sendSessionRequest(url, method='POST',
+                                    data=json.dumps(dict(admin=d)))
         except TortugaException:
             raise
         except Exception as ex:
