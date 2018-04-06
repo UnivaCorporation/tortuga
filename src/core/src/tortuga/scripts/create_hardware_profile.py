@@ -118,6 +118,8 @@ the appropriate command line options.
 
         if self.getArgs().nameFormat:
             tmpl_dict['nameFormat'] = self.getArgs().nameFormat
+        elif 'nameFormat' not in tmpl_dict:
+            tmpl_dict['nameFormat'] = 'compute-#NN'
 
         settings_dict = {
             'bUseDefaults': self.getArgs().bUseDefaults,
