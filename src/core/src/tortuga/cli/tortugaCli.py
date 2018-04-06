@@ -20,9 +20,9 @@ import gettext
 import logging
 import os
 import sys
+from abc import ABCMeta, abstractmethod
 
 from tortuga.config.configManager import ConfigManager
-from tortuga.exceptions.abstractMethod import AbstractMethod
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.exceptions.userNotAuthorized import UserNotAuthorized
 from tortuga.utility.authManager import authorizeRoot
@@ -39,7 +39,7 @@ def check_for_root(cls):
     return cls
 
 
-class TortugaCli(object):
+class TortugaCli(metaclass=ABCMeta):
     """
     Base tortuga command line interface class.
     """
@@ -258,12 +258,12 @@ class TortugaCli(object):
         """ Get password. """
         return self._password
 
+    @abstractmethod
     def runCommand(self): \
             # pylint: disable=no-self-use
-        """ This method must be implemented by the derived class. """
-
-        raise AbstractMethod(
-            _('runCommand() has to be overriden in the derived class.'))
+        """
+        This method must be implemented by the derived class.
+        """
 
     def run(self):
         """
@@ -279,49 +279,6 @@ class TortugaCli(object):
         except Exception as ex:
             print('%s' % (ex))
             raise SystemExit(-1)
-
-    def getParam(self, xtype, options, oname, config, section, cname,
-                 default=None):
-        '''
-        Get the value of a configurable parameter.
-        First look at command line options. Return it if there.
-        Then look in the configFile. Return it if there.
-        Otherwise return the default.
-        '''
-
-        value = self.__getParam2(
-            options, oname, config, section, cname, default)
-
-        if xtype == int:
-            if not value:
-                value = 0
-            elif type(value) != int:
-                value = int(value)
-
-        elif xtype == bool:
-            if type(value) == str:
-                value = value.lower() == 'true'
-            elif type(value) == int:
-                value = bool(value)
-
-        return value
-
-    def __getParam2(self, options, oname, config, section, cname, default): \
-            # pylint: disable=no-self-use
-        # Command line option takes precedence
-
-        if options and oname in options.__dict__ and \
-                options.__dict__[oname] is not None:
-            return options.__dict__[oname]
-
-        # Config file is next
-
-        if config and config.has_section(section) and \
-                config.has_option(section, cname):
-            return config.get(section, cname)
-
-        # Last resort
-        return default
 
     def _parseDiskSize(self, diskSizeParam): \
             # pylint: disable=no-self-use
