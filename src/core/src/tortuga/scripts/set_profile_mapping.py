@@ -49,16 +49,9 @@ class SetProfileMappingCli(TortugaCli):
 
     def runCommand(self):
         self.parseArgs(_("""
-   set-profile-mapping --software-profile=NAME --hardware-profile=NAME
-
-Description:
-    Map software profile to hardware profile.
-
-    Multiple software profiles can be mapped to a single hardware profile to
+Multiple software profiles can be mapped to a single hardware profile to
 accomodate a consistent software stack across mulitple resource adapters,
-for example.
-
-    All profiles must be mapped in order to be used for active nodes.
+for example. All profiles must be mapped in order to be used for active nodes.
 """))
 
         if not self.getArgs().swprofile:
