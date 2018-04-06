@@ -13,22 +13,21 @@
 # limitations under the License.
 
 import sys
-import argparse
 from tortuga.db.dbManager import DbManager
-from tortuga.db.nodesDbHandler import NodesDbHandler
-from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
-from tortuga.db.hardwareProfilesDbHandler import HardwareProfilesDbHandler
 from tortuga.db.tags import Tags
 from tortuga.db.tagsDbHandler import TagsDbHandler
 from tortuga.cli.tortugaCli import TortugaCli
+from tortuga.wsapi.hardwareProfileWsApi import HardwareProfileWsApi
+from tortuga.wsapi.nodeWsApi import NodeWsApi
+from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
 
 
 class UctagCli(TortugaCli):
-    def runCommand(self):
-        parser = argparse.ArgumentParser()
+    def __init__(self):
+        super().__init__()
 
-        subparsers = parser.add_subparsers(help='sub-command help',
-                                           dest='subparser_name')
+        subparsers = self.getParser().add_subparsers(help='sub-command help',
+                                                     dest='subparser_name')
 
         add_subparser = subparsers.add_parser('add')
         add_subparser.add_argument('--node', dest='nodespec')
@@ -58,8 +57,9 @@ class UctagCli(TortugaCli):
         list_subparser.add_argument('--hardware-profiles', action='store_true')
         list_subparser.set_defaults(func=self.list_tag)
 
-        args = parser.parse_args()
-
+    def runCommand(self):
+        self.parseArgs()
+        args = self.getArgs()
         args.func(args)
 
     def add_tag(self, args):
@@ -80,36 +80,37 @@ class UctagCli(TortugaCli):
             hardwareprofiles = []
 
             if args.nodespec:
+                node_api = NodeWsApi(username=self.getUsername(),
+                                     password=self.getPassword(),
+                                     baseurl=self.getUrl())
                 nodespec = args.nodespec.replace('*', '%')
-
-                nodes = NodesDbHandler().getNodesByNameFilter(
-                    session, nodespec)
-
+                nodes = node_api.getNode(nodespec)
                 if not nodes:
                     sys.stderr.write(
                         'No nodes matching nodespec [{0}]\n'.format(
                             args.nodespec))
 
                     sys.stderr.flush()
-
                     sys.exit(1)
 
             if args.software_profile:
-                softwareprofile_names = args.software_profile.split(',')
-
-                for softwareprofile_name in softwareprofile_names:
-                    softwareprofile = SoftwareProfilesDbHandler().\
-                        getSoftwareProfile(session, softwareprofile_name)
-
+                sw_profile_api = SoftwareProfileWsApi(
+                    username=self.getUsername(),
+                    password=self.getPassword(),
+                    baseurl=self.getUrl())
+                for softwareprofile_name in args.software_profile.split(','):
+                    softwareprofile = sw_profile_api.getSoftwareProfile(
+                        softwareprofile_name)
                     softwareprofiles.append(softwareprofile)
 
             if args.hardware_profile:
-                hardwareprofile_names = args.hardware_profile.split(',')
-
-                for hardwareprofile_name in hardwareprofile_names:
-                    hardwareprofile = HardwareProfilesDbHandler().\
-                        getHardwareProfile(session, hardwareprofile_name)
-
+                hw_profile_api = HardwareProfileWsApi(
+                    username=self.getUsername(),
+                    password=self.getPassword(),
+                    baseurl=self.getUrl())
+                for hardwareprofile_name in args.hardware_profile.split(','):
+                    hardwareprofile = hw_profile_api.getHardwareProfile(
+                        hardwareprofile_name)
                     hardwareprofiles.append(hardwareprofile)
 
             # Create list of 'Tags' database objects
@@ -204,12 +205,12 @@ class UctagCli(TortugaCli):
                     print('Hardware profiles: ' + ' '.join([hardwareprofile for hardwareprofile in tag_obj.hardwareprofiles]))
 
                 print('Do you wish to delete this tag [N/y/a/?]? ')
-                input = input('')
+                input_ = input('')
 
-                if not input or input.lower().startswith('n'):
+                if not input_ or input_.lower().startswith('n'):
                     continue
 
-                if input.lower().startswith('a'):
+                if input_.lower().startswith('a'):
                     sys.stderr.write('Operation aborted by user.\n')
                     sys.stderr.flush()
 
@@ -250,6 +251,6 @@ def key_value_pair(arg):
     return key, value
 
 
-if __name__ == '__main__':
+def main():
     UctagCli().run()
 

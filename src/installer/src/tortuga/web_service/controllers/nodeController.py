@@ -167,7 +167,8 @@ class NodeController(TortugaController):
         try:
             if 'name' in kwargs and kwargs['name']:
                 nodeList = TortugaObjectList(
-                    [app.node_api.getNode(kwargs['name'])])
+                    [app.node_api.getNodesByNameFilter(kwargs['name'])]
+                )
             elif 'installer' in kwargs and str2bool(kwargs['installer']):
                 nodeList = TortugaObjectList(
                     [app.node_api.getInstallerNode()]
