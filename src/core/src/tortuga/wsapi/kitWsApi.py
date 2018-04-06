@@ -142,7 +142,7 @@ class KitWsApi(TortugaWsApi):
         """
 
         url = 'v1/kit_packages/%s/%s' % (
-            base64.b64encode(packageUrl), key)
+            base64.b64encode(packageUrl.encode()), key)
 
         try:
             _, responseDict = self.sendSessionRequest(url, method='POST')
