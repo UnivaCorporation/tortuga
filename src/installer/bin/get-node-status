@@ -255,7 +255,7 @@ Description:
 {}
     Hardware Profile: {}
     Boot: {}
-    Status: {}/{}, Locked: {}""".format(
+    Status: {}/{}, Locked: {}\n""".format(
                     profile,
                     node['name'],
                     node['hardwareprofile']['name'],
