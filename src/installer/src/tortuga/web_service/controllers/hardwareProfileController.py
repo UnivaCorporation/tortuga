@@ -161,7 +161,9 @@ class HardwareProfileController(TortugaController):
     @cherrypy.tools.json_in()
     @require()
     def createHardwareProfile(self):
-        """Create hardware profile"""
+        """
+        Create hardware profile
+        """
 
         response = None
 
