@@ -115,6 +115,13 @@ class AddHostServerLocal(TortugaApi):
         # representing remote nodes.
         bValidateIp &= dbHardwareProfile.location != 'remote'
 
+        if dbHardwareProfile.location != 'remote' and \
+                not dbHardwareProfile.hardwareprofilenetworks:
+            raise NetworkNotFound(
+                'Hardware profile [{}] does not have a provisioning'
+                ' network'.format(dbHardwareProfile.name))
+
+
         try:
             if not dbNode.name:
                 # Generate unique name for new node
