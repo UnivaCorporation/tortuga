@@ -38,6 +38,7 @@ DEFAULT_INCLUDE_FILES = [
     'tortuga_kits',
     'bin',
     'doc',
+    'examples',
     'README.*'
 ]
 
