@@ -15,16 +15,17 @@
 # pylint: disable=no-member
 
 import json
-import urllib.request
-import urllib.parse
 import urllib.error
+import urllib.parse
+import urllib.request
+from typing import Dict, List, Optional, Union
+
 import tortuga.objects.node
 import tortuga.objects.provisioningInfo
-
-from typing import Optional, Dict, List
-from .tortugaWsApi import TortugaWsApi
-from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.exceptions.tortugaException import TortugaException
+from tortuga.objects.tortugaObject import TortugaObjectList
+
+from .tortugaWsApi import TortugaWsApi
 
 
 class NodeWsApi(TortugaWsApi): \
@@ -82,7 +83,9 @@ class NodeWsApi(TortugaWsApi): \
         except Exception as ex:
             raise TortugaException(exception=ex)
 
-    def getNode(self, name, optionDict=None):
+    def getNode(self, name,
+                optionDict: Optional[Union[dict, None]] = None): \
+            # pylint: disable=unused-argument
         url = 'v1/nodes?name=%s' % (urllib.parse.quote(name))
 
         try:
@@ -95,7 +98,9 @@ class NodeWsApi(TortugaWsApi): \
         except Exception as ex:
             raise TortugaException(exception=ex)
 
-    def getNodeDetails(self, name: str, options: Optional[dict] = None) -> Dict[str, str]:
+    def getNodeDetails(self, name: str,
+                       options: Optional[dict] = None) -> Dict[str, str]: \
+            # pylint: disable=unused-argument
         """
         Get node details dictionary.
 
@@ -114,7 +119,8 @@ class NodeWsApi(TortugaWsApi): \
         except Exception as e:
             raise TortugaException(exception=e)
 
-    def getNodeListDetails(self, tags: Dict[str, str] = None) -> List[Dict[str, str]]:
+    def getNodeListDetails(self,
+                           tags: Dict[str, str] = None) -> List[Dict[str, str]]:
         """
         Get node details dictionary.
 
@@ -146,6 +152,11 @@ class NodeWsApi(TortugaWsApi): \
 
     def getInstallerNode(self, optionDict=None): \
             # pylint: disable=unused-argument
+        """
+        Helper method to get installer node without having to do
+        multiple REST API calls
+        """
+
         url = 'v1/nodes?installer=true'
 
         try:
@@ -158,7 +169,9 @@ class NodeWsApi(TortugaWsApi): \
         except Exception as ex:
             raise TortugaException(exception=ex)
 
-    def getNodeById(self, nodeId, optionDict=None):
+    def getNodeById(self, nodeId: int,
+                    optionDict: Optional[Union[dict, None]] = None): \
+            # pylint: disable=unused-argument
         url = 'v1/nodes/%d' % (int(nodeId))
 
         try:
@@ -189,7 +202,7 @@ class NodeWsApi(TortugaWsApi): \
         associated with an IP
         """
 
-        url = 'v1/nics/%s/node' % (ip)
+        url = 'v1/nics/%s/node' % (urllib.parse.quote_plus(ip))
 
         try:
             _, responseDict = self.sendSessionRequest(url)
@@ -201,13 +214,15 @@ class NodeWsApi(TortugaWsApi): \
         except Exception as ex:
             raise TortugaException(exception=ex)
 
-    def updateNodeStatus(self, name, state=None, bootFrom=None):
+    def updateNodeStatus(self, name: str,
+                         state: Optional[Union[str, None]] = None,
+                         bootFrom: Optional[Union[int, None]] = None):
         """
         updateNodeStatus() is really a "constrained" (only two fields
         supported) updateNode() request
         """
 
-        url = 'v1/nodes/%s' % (name)
+        url = 'v1/nodes/%s' % (urllib.parse.quote_plus(name))
 
         postdata = {}
 
@@ -225,7 +240,7 @@ class NodeWsApi(TortugaWsApi): \
         except Exception as ex:
             raise TortugaException(exception=ex)
 
-    def getProvisioningInfo(self, nodeName):
+    def getProvisioningInfo(self, nodeName: str):
         """
         Get the provisioning information for a given provisioned address
 
@@ -236,7 +251,8 @@ class NodeWsApi(TortugaWsApi): \
                 DbError
         """
 
-        url = 'v1/nodes/%s/provisioningInfo' % (nodeName)
+        url = 'v1/nodes/%s/provisioningInfo' % (
+            urllib.parse.quote_plus(nodeName))
 
         try:
             _, responseDict = self.sendSessionRequest(url)
@@ -257,15 +273,17 @@ class NodeWsApi(TortugaWsApi): \
             raise TortugaException(exception=ex)
 
     def setParentNode(self, nodeName, parentNodeName):
-        url = 'v1/nodes/%s/parentNode' % (nodeName)
+        """
+        Set parent node of specified node
+        """
 
-        postdata = json.dumps({
-            'parentNodeName': parentNodeName,
-        })
+        url = 'v1/nodes/%s/parentNode' % (
+            urllib.parse.quote_plus(nodeName))
 
         try:
             response, _ = self.sendSessionRequest(
-                url, method='POST', data=postdata)
+                url, method='POST',
+                data=json.dumps(dict(parentNodeName=parentNodeName)))
 
             return response
         except TortugaException:
@@ -274,9 +292,11 @@ class NodeWsApi(TortugaWsApi): \
             raise TortugaException(exception=ex)
 
     def idleNode(self, nodespec):
-        """idle node"""
+        """
+        idle node
+        """
 
-        url = 'v1/nodes/%s/idle' % (nodespec)
+        url = 'v1/nodes/%s/idle' % (urllib.parse.quote_plus(nodespec))
 
         try:
             _, responseDict = self.sendSessionRequest(url)
@@ -288,7 +308,9 @@ class NodeWsApi(TortugaWsApi): \
             raise TortugaException(exception=ex)
 
     def activateNode(self, nodeName, softwareProfileName):
-        """activate node"""
+        """
+        activate node
+        """
 
         url = 'v1/nodes/%s/activate' % (nodeName)
 
@@ -307,8 +329,12 @@ class NodeWsApi(TortugaWsApi): \
         except Exception as ex:
             raise TortugaException(exception=ex)
 
-    def startupNode(self, nodespec, remainingNodeList=None, bootMethod='n'):
-        """startup node"""
+    def startupNode(self, nodespec: str,
+                    remainingNodeList: Optional[Union[List[str], None]] = None,
+                    bootMethod: str = 'n'):
+        """
+        startup node
+        """
 
         # Turn 'nodeList' into something that can be passed in
         nodeString = '+'.join(remainingNodeList) if remainingNodeList else '+'
@@ -323,10 +349,14 @@ class NodeWsApi(TortugaWsApi): \
         except Exception as ex:
             raise TortugaException(exception=ex)
 
-    def shutdownNode(self, nodespec, bSoftShutdown=False):
-        """shutdown node"""
+    def shutdownNode(self, nodespec,
+                     bSoftShutdown: Optional[bool] = False): \
+            # pylint: disable=unused-argument
+        """
+        shutdown node
+        """
 
-        url = 'v1/nodes/%s/shutdown' % (nodespec)
+        url = 'v1/nodes/%s/shutdown' % (urllib.parse.quote_plus(nodespec))
 
         try:
             self.sendSessionRequest(url)
@@ -335,10 +365,14 @@ class NodeWsApi(TortugaWsApi): \
         except Exception as ex:
             raise TortugaException(exception=ex)
 
-    def rebootNode(self, nodespec, bSoftReset=True, bReinstall=False):
-        """reboot node"""
+    def rebootNode(self, nodespec, bSoftReset: Optional[bool] = True,
+                   bReinstall: Optional[bool] = False): \
+            # pylint: disable=unused-argument
+        """
+        reboot node
+        """
 
-        url = 'v1/nodes/%s/reboot' % (nodespec)
+        url = 'v1/nodes/%s/reboot' % (urllib.parse.quote_plus(nodespec))
 
         try:
             self.sendSessionRequest(url)
@@ -348,9 +382,11 @@ class NodeWsApi(TortugaWsApi): \
             raise TortugaException(exception=ex)
 
     def evacuateChildren(self, nodeName):
-        """evacuate any children of this node"""
+        """
+        evacuate any children of this node
+        """
 
-        url = 'v1/nodes/%s/evacuate' % (nodeName)
+        url = 'v1/nodes/%s/evacuate' % (urllib.parse.quote_plus(nodeName))
 
         try:
             self.sendSessionRequest(url)
@@ -359,10 +395,12 @@ class NodeWsApi(TortugaWsApi): \
         except Exception as ex:
             raise TortugaException(exception=ex)
 
-    def getChildrenList(self, nodeName):
-        """return the list of children currently on this node"""
+    def getChildrenList(self, nodeName: str):
+        """
+        return the list of children currently on this node
+        """
 
-        url = 'v1/nodes/%s/children' % (nodeName)
+        url = 'v1/nodes/%s/children' % (urllib.parse.quote_plus(nodeName))
 
         try:
             _, responseDict = self.sendSessionRequest(url)
@@ -388,9 +426,11 @@ class NodeWsApi(TortugaWsApi): \
             raise TortugaException(exception=ex)
 
     def checkpointNode(self, nodeName):
-        """checkpoint node"""
+        """
+        checkpoint node
+        """
 
-        url = 'v1/nodes/%s/checkpoint' % (nodeName)
+        url = 'v1/nodes/%s/checkpoint' % (urllib.parse.quote_plus(nodeName))
 
         try:
             self.sendSessionRequest(url)
@@ -400,9 +440,11 @@ class NodeWsApi(TortugaWsApi): \
             raise TortugaException(exception=ex)
 
     def revertNodeToCheckpoint(self, nodeName):
-        """revert node to checkpoint"""
+        """
+        revert node to checkpoint
+        """
 
-        url = 'v1/nodes/%s/revert' % (nodeName)
+        url = 'v1/nodes/%s/revert' % (urllib.parse.quote_plus(nodeName))
 
         try:
             self.sendSessionRequest(url)
@@ -411,14 +453,19 @@ class NodeWsApi(TortugaWsApi): \
         except Exception as ex:
             raise TortugaException(exception=ex)
 
-    def migrateNode(self, nodeName, remainingNodeList, liveMigrate):
-        """migrate node"""
+    def migrateNode(self, nodeName,
+                    remainingNodeList: Optional[Union[List[str], None]],
+                    liveMigrate: bool):
+        """
+        migrate node
+        """
 
         # Turn remainingNodeList into something that can be passed in
         remainingNodeString = str.join('+', remainingNodeList)
 
         url = 'v1/nodes/%s/migrate/%s/type/%s' % (
-            nodeName, remainingNodeString, liveMigrate)
+            urllib.parse.quote_plus(nodeName), remainingNodeString,
+            liveMigrate)
 
         try:
             self.sendSessionRequest(url)
