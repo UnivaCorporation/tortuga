@@ -246,11 +246,11 @@ Description:
         :param grouped: List Dictionary
         :return: String
         """
-        output: str = ''
+        output: List[str] = []
 
         for profile in grouped.keys():
             for node in grouped[profile]:
-                output += """{} -------------------------------------------------------------------
+                output.append("""{} -------------------------------------------------------------------
  
 {}
     Hardware Profile: {}
@@ -262,9 +262,9 @@ Description:
                     self.__boot_map[node['bootFrom']],
                     node['state'], self.__active_map[node['isIdle']],
                     node['lockedState']
-                )
+                ))
 
-        return output
+        return '\n'.join(output)
 
     def __make_short_output(self, grouped: Dict[str, List[Dict[str, Any]]]) -> Optional[str]:
         """
@@ -275,7 +275,7 @@ Description:
         :param grouped: Dictionary List
         :return: String
         """
-        lines: list = []
+        lines: List[str] = []
 
         for profile in grouped.keys():
             lines.append('{} -------------------------------------------------------------------'.format(profile))
@@ -294,7 +294,7 @@ Description:
         :param nodes: List String
         :return: String
         """
-        names: list = []
+        names: List[str] = []
 
         for node in nodes:
             names.append(node['name'])
