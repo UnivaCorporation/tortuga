@@ -15,11 +15,13 @@
 # pylint: disable=no-member
 
 import cherrypy
-from tortuga.objects.admin import Admin
 
+from tortuga.objects.admin import Admin
+from tortuga.utility.helper import str2bool
+
+from .. import app
 from .authController import require
 from .tortugaController import TortugaController
-from .. import app
 
 
 class AdminController(TortugaController):
@@ -119,8 +121,7 @@ class AdminController(TortugaController):
 
         adminRequestObject = Admin.getFromDict(postdata['admin'])
 
-        isCrypted = postdata['isCrypted'][0].lower() == 't' \
-            if 'isCrypted' in postdata else False
+        isCrypted = str2bool(postdata['isCrypted'])
 
         try:
             app.admin_api.addAdmin(
