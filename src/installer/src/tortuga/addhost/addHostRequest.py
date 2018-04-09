@@ -38,6 +38,8 @@ def process_addhost_request(addHostSession):
 
         addHostRequest = dict(list(json.loads(req.request).items()))
 
+        addHostRequest['addHostSession'] = addHostSession
+
         with AddHostSessionContextManager(req.addHostSession) as ahm:
             try:
                 logger.debug(
