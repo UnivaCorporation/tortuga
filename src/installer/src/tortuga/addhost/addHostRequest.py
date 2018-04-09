@@ -44,7 +44,7 @@ def process_addhost_request(addHostSession):
                     'process_addhost_request(): Processing add host'
                     ' request [%s]' % (req.addHostSession))
 
-                ahm.addHosts(session, req.addHostSession, addHostRequest)
+                ahm.addHosts(session, addHostRequest)
 
                 # Delete session log
                 ahm.delete_session(req.addHostSession)
