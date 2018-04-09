@@ -114,11 +114,12 @@ class SessionManager:
         if not u.scheme and not u.netloc:
             url = '%s/%s' % (self._host, url)
 
-        self._logger.debug(
-            'sendRequest(): url=[{}] method=[{}] data=[{}]'.format(url,
-                                                                   method,
-                                                                   data)
-        )
+        # uncomment for debugging only
+        # self._logger.debug(
+        #     'sendRequest(): url=[{}] method=[{}] data=[{}]'.format(url,
+        #                                                            method,
+        #                                                            data)
+        # )
 
         request = urllib.request.Request(
             url, data=data.encode() if data else None, method=method)
