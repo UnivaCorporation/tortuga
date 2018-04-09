@@ -14,6 +14,9 @@
 
 # pylint: disable=no-name-in-module,no-member
 
+from typing import Union, Optional
+
+from tortuga.objects.hardwareProfile import HardwareProfile
 from tortuga.utility import authManager, validation
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.objects.networkDevice import NetworkDevice
@@ -133,7 +136,8 @@ class HardwareProfileManager(TortugaObjectManager, Singleton):
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
 
-    def createHardwareProfile(self, hwProfileSpec, settingsDict=None):
+    def createHardwareProfile(self, hwProfileSpec: HardwareProfile,
+                              settingsDict: Optional[Union[dict, None]] = None):
         settingsDict = settingsDict or {}
 
         bUseDefaults = settingsDict['bUseDefaults'] \

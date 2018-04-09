@@ -15,6 +15,7 @@
 # pylint: disable=no-member
 
 import json
+from typing import Optional, Union
 
 from tortuga.exceptions.tortugaException import TortugaException
 import tortuga.objects.provisioningInfo
@@ -217,7 +218,8 @@ class HardwareProfileWsApi(TortugaWsApi):
         except Exception as ex:
             raise TortugaException(exception=ex)
 
-    def createHardwareProfile(self, hwProfile, settingsDict=None):
+    def createHardwareProfile(self, hwProfile: HardwareProfile,
+                              settingsDict: Optional[Union[dict, None]] = None):
         """
         Create hardware profile from template
 
