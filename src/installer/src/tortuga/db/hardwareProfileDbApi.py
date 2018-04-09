@@ -16,40 +16,37 @@
 # pylint: disable=maybe-no-member,not-callable
 
 from typing import Optional, Union
+
 import sqlalchemy.exc
 
-from tortuga.db.dbManager import DbManager
-
-from tortuga.db.tortugaDbApi import TortugaDbApi
-from tortuga.db.hardwareProfilesDbHandler import HardwareProfilesDbHandler
-from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
-from tortuga.db.nodesDbHandler import NodesDbHandler
-from tortuga.db.adminsDbHandler import AdminsDbHandler
-from tortuga.db.nicsDbHandler import NicsDbHandler
-from tortuga.db.hardwareProfiles import HardwareProfiles
-from tortuga.db.hardwareProfileNetworks import HardwareProfileNetworks
-from tortuga.db.resourceAdaptersDbHandler import ResourceAdaptersDbHandler
-
-from tortuga.objects.hardwareProfile import HardwareProfile
-from tortuga.objects.tortugaObject import TortugaObjectList
-from tortuga.objects.node import Node
 import tortuga.objects.nic
-
-from tortuga.exceptions.tortugaException import TortugaException
-from tortuga.exceptions.hardwareProfileAlreadyExists \
-    import HardwareProfileAlreadyExists
-from tortuga.exceptions.hardwareProfileNotFound \
-    import HardwareProfileNotFound
+from tortuga.config.configManager import ConfigManager
+from tortuga.db.adminsDbHandler import AdminsDbHandler
+from tortuga.db.dbManager import DbManager
+from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
+from tortuga.db.hardwareProfileNetworks import HardwareProfileNetworks
+from tortuga.db.hardwareProfiles import HardwareProfiles
+from tortuga.db.hardwareProfilesDbHandler import HardwareProfilesDbHandler
+from tortuga.db.networkDevices import NetworkDevices
+from tortuga.db.networkDevicesDbHandler import NetworkDevicesDbHandler
+from tortuga.db.networksDbHandler import NetworksDbHandler
+from tortuga.db.nicsDbHandler import NicsDbHandler
+from tortuga.db.nodesDbHandler import NodesDbHandler
+from tortuga.db.resourceAdaptersDbHandler import ResourceAdaptersDbHandler
+from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
+from tortuga.db.tortugaDbApi import TortugaDbApi
+from tortuga.exceptions.adminAlreadyExists import AdminAlreadyExists
+from tortuga.exceptions.adminNotFound import AdminNotFound
+from tortuga.exceptions.configurationError import ConfigurationError
+from tortuga.exceptions.hardwareProfileAlreadyExists import \
+    HardwareProfileAlreadyExists
+from tortuga.exceptions.hardwareProfileNotFound import HardwareProfileNotFound
 from tortuga.exceptions.networkNotFound import NetworkNotFound
 from tortuga.exceptions.nicNotFound import NicNotFound
-from tortuga.exceptions.adminNotFound import AdminNotFound
-from tortuga.exceptions.adminAlreadyExists import AdminAlreadyExists
-from tortuga.exceptions.configurationError import ConfigurationError
-from tortuga.db.networksDbHandler import NetworksDbHandler
-from tortuga.db.networkDevicesDbHandler import NetworkDevicesDbHandler
-from tortuga.db.networkDevices import NetworkDevices
-from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
-from tortuga.config.configManager import ConfigManager
+from tortuga.exceptions.tortugaException import TortugaException
+from tortuga.objects.hardwareProfile import HardwareProfile
+from tortuga.objects.node import Node
+from tortuga.objects.tortugaObject import TortugaObjectList
 
 
 class HardwareProfileDbApi(TortugaDbApi):
@@ -503,6 +500,7 @@ class HardwareProfileDbApi(TortugaDbApi):
 
         Raises:
             NicNotFound
+            ResourceAdapterNotFound
         """
 
         # Preload provisioning nics and networks
@@ -562,14 +560,12 @@ class HardwareProfileDbApi(TortugaDbApi):
         dbHardwareProfile.cost = hardwareProfile.getCost()
 
         # Add resource adapter
-        resourceAdapter = hardwareProfile.getResourceAdapter()
-        if resourceAdapter:
-            dbHardwareProfile.resourceAdapter = self.\
-                _resourceAdaptersDbHandler.getResourceAdapter(
-                    session, resourceAdapter.getName())
+        resource_adapter_name = hardwareProfile.getResourceAdapter() \
+            if hardwareProfile.getResourceAdapter() else 'default'
 
-            dbHardwareProfile.resourceAdapterId = dbHardwareProfile.\
-                resourceAdapter.id
+        dbHardwareProfile.resourceadapter = \
+            self._resourceAdaptersDbHandler.getResourceAdapter(
+                session, resource_adapter_name)
 
         # Add networks
         networks = []
