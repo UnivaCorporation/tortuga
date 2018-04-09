@@ -140,8 +140,8 @@ class HardwareProfileManager(TortugaObjectManager, Singleton):
                               settingsDict: Optional[Union[dict, None]] = None):
         settingsDict = settingsDict or {}
 
-        bUseDefaults = settingsDict['bUseDefaults'] \
-            if 'bUseDefaults' in settingsDict else False
+        bUseDefaults = settingsDict['defaults'] \
+            if 'defaults' in settingsDict else False
 
         osInfo = settingsDict['osInfo'] \
             if settingsDict and 'osInfo' in settingsDict else None

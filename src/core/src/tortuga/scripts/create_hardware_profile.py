@@ -122,7 +122,7 @@ the appropriate command line options.
             tmpl_dict['nameFormat'] = 'compute-#NN'
 
         settings_dict = {
-            'bUseDefaults': self.getArgs().bUseDefaults,
+            'defaults': self.getArgs().bUseDefaults,
             'osInfo': getattr(self.getArgs(), 'osInfo') \
                 if hasattr(self.getArgs(), 'osInfo') else None,
         }
