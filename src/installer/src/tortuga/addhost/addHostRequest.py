@@ -36,7 +36,7 @@ def process_addhost_request(addHostSession):
             # session was deleted prior to being processed; nothing to do...
             return
 
-        addHostRequest = dict(list(json.loads(req.request).items()))
+        addHostRequest = json.loads(req.request)
 
         addHostRequest['addHostSession'] = addHostSession
 
