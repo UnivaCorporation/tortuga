@@ -591,14 +591,14 @@ class HardwareProfileDbApi(TortugaDbApi):
                 dbNetworkDevice.name = network.getNetworkDevice().getName()
 
             # Now check if we have this one already...
-            for dbHardwareProfileNetwork in dbHardwareProfile.\
-                    hardwareprofilenetworks:
-                if dbHardwareProfileNetwork.\
-                    networkDeviceId == dbNetworkDevice.id and \
+            for dbHardwareProfileNetwork in \
+                    dbHardwareProfile.hardwareprofilenetworks:
+                if dbHardwareProfileNetwork.networkDeviceId == dbNetworkDevice.id and \
                         dbHardwareProfileNetwork.networkId == dbNetwork.id:
                     break
             else:
                 dbHardwareProfileNetwork = HardwareProfileNetworks()
+                dbHardwareProfileNetwork.hardwareprofile = dbHardwareProfile
 
                 if dbNetwork.id is not None:
                     dbHardwareProfileNetwork.networkId = dbNetwork.id
