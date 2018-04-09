@@ -21,7 +21,7 @@ import random
 import re
 import string
 import threading
-from typing import NoReturn, List, Optional
+from typing import NoReturn, List, Optional, Union
 
 from sqlalchemy.orm.session import Session
 
@@ -98,9 +98,9 @@ class AddHostServerLocal(TortugaApi):
     def initializeNode(self, session: Session, dbNode: Nodes,
                        dbHardwareProfile: HardwareProfiles,
                        dbSoftwareProfile, nic_defs: List[dict],
-                       bValidateIp: bool = True,
-                       bGenerateIp: bool = True,
-                       dns_zone: Optional[str] = None) -> NoReturn: \
+                       bValidateIp: Optional[bool] = True,
+                       bGenerateIp: Optional[bool] = True,
+                       dns_zone: Optional[Union[str, None]] = None) -> NoReturn: \
             # pylint: disable=unused-argument
         '''
         Assigns hostname and IP address, and inserts new record into
