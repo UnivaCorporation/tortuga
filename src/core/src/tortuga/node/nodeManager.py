@@ -121,7 +121,7 @@ class NodeManager(TortugaObjectManager): \
             dns_zone=dns_zone)
 
         # Set hardware profile of new node
-        node.hardwareProfileId = dbHardwareProfile.id
+        node.hardwareprofile = dbHardwareProfile
 
         # Set software profile of new node; if the software profile is None,
         # attempt to set the software profile to the idle software profile
