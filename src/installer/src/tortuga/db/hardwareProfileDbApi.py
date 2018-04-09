@@ -18,6 +18,7 @@
 from typing import Optional, Union
 
 import sqlalchemy.exc
+from sqlalchemy.orm.session import Session
 
 import tortuga.objects.nic
 from tortuga.config.configManager import ConfigManager
@@ -492,8 +493,8 @@ class HardwareProfileDbApi(TortugaDbApi):
             # pylint: disable=no-self-use
         return session.query(NetworkDevices).all()
 
-    def __populateHardwareProfile(self, session, hardwareProfile,
-                                  dbHardwareProfile=None):
+    def __populateHardwareProfile(self, session: Session, hardwareProfile: HardwareProfiles,
+                                  dbHardwareProfile: Optional[Union[HardwareProfiles, None]] = None) -> HardwareProfiles:
         """
         Helper function for creating / updating HardwareProfiles. If
         'dbHardwareProfile' is specified, this is an update (vs. add) operation
