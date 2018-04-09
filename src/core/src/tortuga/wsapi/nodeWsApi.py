@@ -28,9 +28,7 @@ from tortuga.objects.tortugaObject import TortugaObjectList
 from .tortugaWsApi import TortugaWsApi
 
 
-class NodeWsApi(TortugaWsApi): \
-        # pylint: disable=too-many-public-methods
-
+class NodeWsApi(TortugaWsApi):
     """
     Node WS API class.
     """
@@ -93,58 +91,6 @@ class NodeWsApi(TortugaWsApi): \
 
             return tortuga.objects.node.Node.getFromDict(
                 responseDict.get('node'))
-        except TortugaException:
-            raise
-        except Exception as ex:
-            raise TortugaException(exception=ex)
-
-    def getNodeDetails(self, name: str,
-                       options: Optional[dict] = None) -> Dict[str, str]: \
-            # pylint: disable=unused-argument
-        """
-        Get node details dictionary.
-
-        :param name: String
-        :param options: Dictionary
-        :return: Dictionary
-        """
-        url: str = 'v1/nodes?name={}'.format(urllib.parse.quote(name))
-
-        try:
-            response: dict = self.sendSessionRequest(url)[1]
-            return response.get('node')
-
-        except TortugaException:
-            raise
-        except Exception as e:
-            raise TortugaException(exception=e)
-
-    def getNodeListDetails(self,
-                           tags: Dict[str, str] = None) -> List[Dict[str, str]]:
-        """
-        Get node details dictionary.
-
-        :param tags: String
-        :return: List Dictionary
-        """
-        url: str = 'v1/nodes'
-
-        if tags:
-            params: list = []
-
-            for key, value in tags.items():
-                if value is None:
-                    params.append(urllib.parse.urlencode({'tag': key}))
-                else:
-                    params.append(urllib.parse.urlencode({'tag': '{0}={1}'.format(key, value)}))
-
-            if params:
-                url += '?' + '&'.join(params)
-
-        try:
-            response: dict = self.sendSessionRequest(url)[1]
-            return response.get('nodes')
-
         except TortugaException:
             raise
         except Exception as ex:
