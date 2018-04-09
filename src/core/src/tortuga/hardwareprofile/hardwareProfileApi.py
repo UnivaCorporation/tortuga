@@ -197,7 +197,7 @@ class HardwareProfileApi(TortugaApi):
         """
         try:
             HardwareProfileManager().createHardwareProfile(
-                hwProfileSpec, settingsDict=settingsDict or {})
+                hwProfileSpec, settingsDict=settingsDict)
         except TortugaException as ex:
             raise
         except Exception as ex:
