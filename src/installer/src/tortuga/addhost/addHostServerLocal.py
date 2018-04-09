@@ -102,14 +102,14 @@ class AddHostServerLocal(TortugaApi):
                        bGenerateIp: Optional[bool] = True,
                        dns_zone: Optional[Union[str, None]] = None) -> NoReturn: \
             # pylint: disable=unused-argument
-        '''
+        """
         Assigns hostname and IP address, and inserts new record into
         Node table.
 
         Raises:
             InvalidArgument
             NodeAlreadyExists
-        '''
+        """
 
         # Do not attempt to validate IP addresses for hardware profiles
         # representing remote nodes.
