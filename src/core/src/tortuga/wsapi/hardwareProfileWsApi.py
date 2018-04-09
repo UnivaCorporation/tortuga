@@ -233,7 +233,7 @@ class HardwareProfileWsApi(TortugaWsApi):
 
         postdata = {
             'hardwareProfile': hwProfile.getCleanDict(),
-            'settingsDict': settingsDict or {},
+            'settingsDict': settingsDict,
         }
 
         try:
