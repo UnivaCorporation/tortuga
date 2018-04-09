@@ -148,8 +148,7 @@ class HardwareProfileManager(TortugaObjectManager, Singleton):
 
         validation.validateProfileName(hwProfileSpec.getName())
 
-        if hwProfileSpec.getDescription() is None or \
-                hwProfileSpec.getDescription() == '**DEFAULT**':
+        if hwProfileSpec.getDescription() is None:
             hwProfileSpec.setDescription(
                 '%s Nodes' % (hwProfileSpec.getName()))
 

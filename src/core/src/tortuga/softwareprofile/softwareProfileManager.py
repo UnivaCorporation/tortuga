@@ -230,8 +230,7 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
         validation.validateProfileName(swProfileSpec.getName())
 
         # Insert default description for software profile
-        if not swProfileSpec.getDescription() or \
-                swProfileSpec.getDescription() == '**DEFAULT**':
+        if swProfileSpec.getDescription() is None:
             swProfileSpec.setDescription(
                 '%s Nodes' % (swProfileSpec.getName()))
 
