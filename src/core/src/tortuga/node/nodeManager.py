@@ -97,17 +97,6 @@ class NodeManager(TortugaObjectManager): \
                 dbSoftwareProfile.name if dbSoftwareProfile else '(none)',
                 validateIp, bGenerateIp))
 
-        # This is where the Nodes() object is first created.
-        node = Nodes()
-
-        # Set the default node state
-        node.state = 'Discovered'
-
-        if 'rack' in addNodeRequest:
-            node.rack = addNodeRequest['rack']
-
-        node.addHostSession = addNodeRequest['addHostSession']
-
         hostname = addNodeRequest['name'] \
             if 'name' in addNodeRequest else None
 
@@ -115,7 +104,12 @@ class NodeManager(TortugaObjectManager): \
         # hardware profile in which host names are generated)
         self.__validateHostName(hostname, dbHardwareProfile.nameFormat)
 
-        node.name = hostname
+        node = Nodes(name=hostname)
+
+        if 'rack' in addNodeRequest:
+            node.rack = addNodeRequest['rack']
+
+        node.addHostSession = addNodeRequest['addHostSession']
 
         # Complete initialization of new node record
         nic_defs = addNodeRequest['nics'] \
