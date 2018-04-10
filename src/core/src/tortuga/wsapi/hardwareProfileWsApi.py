@@ -28,11 +28,17 @@ class HardwareProfileWsApi(TortugaWsApi):
     Hardware profile WS API class.
     """
 
-    def getHardwareProfile(self, hardwareProfileName, optionDict=None):
+    def getHardwareProfile(self, hardwareProfileName: str,
+                           optionDict: Optional[Union[dict, None]] = None):
         """
         Get hardware profile by name
         """
         url = 'v1/hardwareProfiles?name=%s' % (hardwareProfileName)
+
+        for key, value in optionDict.items():
+            if not value:
+                continue
+            url += '&include={}'.format(key)
 
         try:
             _, responseDict = self.sendSessionRequest(url)
@@ -43,7 +49,8 @@ class HardwareProfileWsApi(TortugaWsApi):
         except Exception as ex:
             raise TortugaException(exception=ex)
 
-    def getHardwareProfileById(self, id_, optionDict=None):
+    def getHardwareProfileById(self, id_,
+                               optionDict: Optional[Union[dict, None]] = None):
         """
         Get hardware profile by name
         """
@@ -103,7 +110,9 @@ class HardwareProfileWsApi(TortugaWsApi):
         except Exception as ex:
             raise TortugaException(exception=ex)
 
-    def getHardwareProfileList(self, optionDict=None, tags=None): \
+    def getHardwareProfileList(self,
+                               optionDict: Optional[Union[dict, None]] = None,
+                               tags=None): \
             # pylint: disable=unused-argument
         """
         Get list of hardware profiles by calling WS API
@@ -237,7 +246,7 @@ class HardwareProfileWsApi(TortugaWsApi):
         }
 
         try:
-            (response, responseDict) = self.sendSessionRequest(
+            response, _ = self.sendSessionRequest(
                 url, method='POST', data=json.dumps(postdata))
 
             return response

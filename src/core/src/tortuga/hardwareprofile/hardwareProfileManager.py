@@ -139,13 +139,12 @@ class HardwareProfileManager(TortugaObjectManager, Singleton):
 
     def createHardwareProfile(self, hwProfileSpec: HardwareProfile,
                               settingsDict: Optional[Union[dict, None]] = None):
-        settingsDict = settingsDict or {}
-
         bUseDefaults = settingsDict['defaults'] \
-            if 'defaults' in settingsDict else False
+            if settingsDict and 'defaults' in settingsDict else False
 
         osInfo = settingsDict['osInfo'] \
-            if settingsDict and 'osInfo' in settingsDict else None
+            if settingsDict and \
+            settingsDict and 'osInfo' in settingsDict else None
 
         validation.validateProfileName(hwProfileSpec.getName())
 
