@@ -148,37 +148,7 @@ class UpdateHardwareProfileCli(TortugaCli):
             help=_('Set the \'cost\' of this hardware profile'))
 
     def runCommand(self):
-        self.parseArgs(_("""
-    update-hardware-profile [OPTION] --xml-file <XMLFILE>
-    update-hardware-profile [OPTION] --name <NAME>
-
-Description:
-    The  update-hardware-profile tool updates an existing hardware profile.
-
-    The hardware profile can be updated from command-line arguments or
-    from a properly formed XML file.
-
-Examples:
-    Basic Update
-
-       update-hardware-profile --name HwTest --name-format compute-hwtest-#NN --location remote
-
-    Delete a provisioning NIC
-
-       update-hardware-profile --name HwTest --delete-provisioning-nic 172.19.0.1
-
-    Add a provisioning NIC
-
-       update-hardware-profile --name HwTest --add-provisioning-nic 172.19.0.1
-
-    Delete a network
-
-       update-hardware-profile --name HwTest --delete-network 172.19.0.0/255.255.255.0/e1000g0
-
-    Add a network
-
-       update-hardware-profile --name HwTest --add-network 172.19.0.0/255.255.255.0/e1000g0
-"""))
+        self.parseArgs(_('Update hardware profile configuration'))
 
         hwProfileName = self.getArgs().name
 
