@@ -38,6 +38,7 @@ class UpdateHardwareProfileCli(TortugaCli):
     # Skip nodes and admins for update operations
     optionDict = {
         'hardwareprofilenetworks': True,
+        'resourceadapter': True,
     }
 
     def __init__(self):
