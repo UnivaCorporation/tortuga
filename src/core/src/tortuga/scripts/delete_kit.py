@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import argparse
 from tortuga.kit.kitCli import KitCli
 from tortuga.wsapi.kitWsApi import KitWsApi
 
@@ -23,9 +24,8 @@ class DeleteKitCli(KitCli):
     Delete kit command line interface.
 
     """
-    def __init__(self):
-        super().__init__()
 
+    def parseArgs(self, usage=None):
         kit_attr_group = _('Kit Attribute Options')
 
         self.addOptionGroup(
@@ -41,6 +41,9 @@ class DeleteKitCli(KitCli):
             kit_attr_group, '--iteration', dest='iteration',
             help=_('kit iteration'))
 
+        self.addOptionToGroup(
+            kit_attr_group, 'kitspec', help=argparse.SUPPRESS, nargs='?')
+
         options_attr_group = _('Options')
 
         self.addOptionGroup(options_attr_group, '')
@@ -50,20 +53,11 @@ class DeleteKitCli(KitCli):
                               help=_('Forcibly remove a kit that may be in'
                                      ' use. Use with care!'))
 
+        super().parseArgs(usage=usage)
+
     def runCommand(self):
         self.parseArgs(_("""
-    delete-kit --name=NAME [--version=VERSION --iteration=ITERATION]
-
-Description:
-    The  delete-kit tool deletes an installed operating system or application
-    kit from Tortuga.
-
-    All components from a kit must be disabled before the kit can be suc-
-    cessfully deleted.
-
-    If '--force' is specified, the kit can be removed even if it is currently
-    in use (ie. operating system kit associated with a software profile). Use
-    '--force' with care!
+Delete installed operating system or application kit from Tortuga.
 """))
 
         name, version, iteration = self.get_name_version_iteration()
