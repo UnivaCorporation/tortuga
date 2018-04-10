@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import copy
 import json
 from logging import getLogger
 import os
@@ -38,7 +39,6 @@ DEFAULT_INCLUDE_FILES = [
     'tortuga_kits',
     'bin',
     'doc',
-    'examples',
     'README.*'
 ]
 
@@ -68,6 +68,12 @@ class KitBuilder(object):
             self._kit_meta['name'],
             self._kit_meta['version'].replace('.', '_')
         )
+
+        self._include_files = copy.copy(DEFAULT_INCLUDE_FILES)
+        self._include_files.extend(self._kit_meta.get('include_files', []))
+
+        self._exclude_files = copy.copy(DEFAULT_EXCLUDE_FILES)
+        self._exclude_files.extend(self._kit_meta.get('exclude_files', []))
 
         self._src_makefile_found = False
         self._discover_src_makefile()
@@ -179,7 +185,7 @@ class KitBuilder(object):
         except CommandFailed as e:
             raise KitBuildError(str(e))
 
-    def _copy_file(self, src_path, dst_path, excludes=DEFAULT_EXCLUDE_FILES):
+    def _copy_file(self, src_path, dst_path, excludes=None):
         """
         Copies a file.
 
@@ -191,6 +197,8 @@ class KitBuilder(object):
         """
         logger.info('{} -> {}'.format(src_path, dst_path))
 
+        if excludes is None:
+            excludes = self._exclude_files
         exclude_params = ''
         if excludes:
             for exclude in excludes:
@@ -257,7 +265,7 @@ class KitBuilder(object):
         # Copy default kit files
         #
         logger.info('Copying kit files...')
-        for file_name in DEFAULT_INCLUDE_FILES:
+        for file_name in self._include_files:
             if os.path.exists(file_name):
                 self._copy_file(file_name, kit_build_dir)
 

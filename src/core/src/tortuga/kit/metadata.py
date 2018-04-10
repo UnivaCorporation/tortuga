@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import List
+
 from marshmallow import Schema, fields
 
 
@@ -27,3 +29,5 @@ class KitMetadataSchema(Schema):
     version: str = fields.String(required=True)
     iteration: str = fields.String(required=True)
     description: str = fields.String(required=False)
+    include_files: List[str] = fields.List(fields.String(), required=False)
+    exclude_files: List[str] = fields.List(fields.String(), required=False)
