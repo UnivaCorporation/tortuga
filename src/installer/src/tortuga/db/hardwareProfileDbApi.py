@@ -561,7 +561,8 @@ class HardwareProfileDbApi(TortugaDbApi):
         dbHardwareProfile.cost = hardwareProfile.getCost()
 
         # Add resource adapter
-        resource_adapter_name = hardwareProfile.getResourceAdapter() \
+        resource_adapter_name = \
+            hardwareProfile.getResourceAdapter().getName() \
             if hardwareProfile.getResourceAdapter() else 'default'
 
         dbHardwareProfile.resourceadapter = \
