@@ -59,7 +59,8 @@ class TortugaDbApi(object):
             try:
                 self.loadRelation(dbObject, k)
             except InvalidDbRelation:
-                self.getLogger().exception()
+                self.getLogger().exception(
+                    'Relation [{}] not valid'.format(k))
                 raise
 
     def getTortugaObjectList(self, cls, dbList): \
