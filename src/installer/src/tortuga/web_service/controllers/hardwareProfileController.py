@@ -115,10 +115,13 @@ class HardwareProfileController(TortugaController):
             if 'name' in kwargs and kwargs['name']:
                 hardwareProfiles = TortugaObjectList(
                     [HardwareProfileManager().getHardwareProfile(
-                        kwargs['name'])])
+                        kwargs['name'], optionDict={
+                            'resourceadapter': True
+                        })])
             else:
-                hardwareProfiles = HardwareProfileManager().\
-                    getHardwareProfileList(tags=tagspec)
+                hardwareProfiles = \
+                    HardwareProfileManager().getHardwareProfileList(
+                        tags=tagspec)
 
             response = {
                 'hardwareprofiles': hardwareProfiles.getCleanDict(),

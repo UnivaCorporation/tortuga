@@ -64,8 +64,9 @@ class HardwareProfileManager(TortugaObjectManager, Singleton):
         return self._hpDbApi.setIdleSoftwareProfile(
             hardwareProfileName, softwareProfileName)
 
-    def getHardwareProfile(self, name, optionDict=None):
-        return self._hpDbApi.getHardwareProfile(name, optionDict or {})
+    def getHardwareProfile(self, name: str,
+                           optionDict: Optional[Union[dict, None]] = None):
+        return self._hpDbApi.getHardwareProfile(name, optionDict)
 
     def getHardwareProfileById(self, id_, optionDict=None):
         return self._hpDbApi.getHardwareProfileById(id_, optionDict or {})
