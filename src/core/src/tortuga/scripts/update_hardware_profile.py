@@ -138,12 +138,6 @@ class UpdateHardwareProfileCli(TortugaCli):
                        dest='deleteNetwork', action='append',
                        help=_('Network to delete from hardware profile.'))
 
-        # Or an xml file can be passed in
-        self.addOption('--xml-file',
-                       dest='xmlFile',
-                       help=_('XML file containing representation of a'
-                              ' hardware profile.'))
-
         self.addOption(
             '--cost', dest='cost', type=int,
             help=_('Set the \'cost\' of this hardware profile'))
@@ -151,33 +145,20 @@ class UpdateHardwareProfileCli(TortugaCli):
     def runCommand(self):
         self.parseArgs(_('Update hardware profile configuration'))
 
-        hwProfileName = self.getArgs().name
-
         api = HardwareProfileWsApi(username=self.getUsername(),
                                    password=self.getPassword(),
                                    baseurl=self.getUrl())
 
-        if self.getArgs().xmlFile:
-            # An XML file was provided as input...start with that...
-            with open(self.getArgs().xmlFile) as f:
-                xmlString = f.read()
+        spApi = SoftwareProfileWsApi(username=self.getUsername(),
+                                     password=self.getPassword(),
+                                     baseurl=self.getUrl())
 
-            try:
-                hp = HardwareProfile.getFromXml(xmlString)
-            except Exception as ex:
-                hp = None
-                self.getLogger().debug('Error parsing xml %s' % ex)
+        networkApi = NetworkWsApi(username=self.getUsername,
+                                  password=self.getPassword(),
+                                  baseurl=self.getUrl())
 
-            if hp is None:
-                raise InvalidCliRequest(
-                    _('File "%s" does not contain a valid hardware'
-                      ' profile') % (self.getArgs().xmlFile))
-        else:
-            if hwProfileName is None:
-                raise InvalidCliRequest(_('Missing hardware profile name'))
-
-            hp = api.getHardwareProfile(hwProfileName,
-                                        UpdateHardwareProfileCli.optionDict)
+        hp = api.getHardwareProfile(self.getArgs().name,
+                                    UpdateHardwareProfileCli.optionDict)
 
         if self.getArgs().newName is not None:
             hp.setName(self.getArgs().newName)
@@ -214,10 +195,6 @@ class UpdateHardwareProfileCli(TortugaCli):
                   ' --unset-idle-software-profile'))
 
         if self.getArgs().idleProfile is not None:
-            spApi = SoftwareProfileWsApi(username=self.getUsername(),
-                                         password=self.getPassword(),
-                                         baseurl=self.getUrl())
-
             sp = spApi.getSoftwareProfile(self.getArgs().idleProfile)
 
             hp.setIdleSoftwareProfileId(sp.getId())
@@ -232,9 +209,6 @@ class UpdateHardwareProfileCli(TortugaCli):
             hp.setLocalBootParams(self.getArgs().localBootParameters)
 
         if self.getArgs().vcProfile is not None:
-            spApi = SoftwareProfileWsApi(username=self.getUsername,
-                                         password=self.getPassword(),
-                                         baseurl=self.getUrl())
             sp = spApi.getSoftwareProfile(self.getArgs().vcProfile)
 
             hp.setHypervisorSoftwareProfileId(sp.getId())
@@ -312,9 +286,6 @@ class UpdateHardwareProfileCli(TortugaCli):
             hp.setNetworks(out)
 
         if self.getArgs().addNetwork:
-            networkApi = NetworkWsApi(username=self.getUsername,
-                                      password=self.getPassword(),
-                                      baseurl=self.getUrl())
             for netstring in self.getArgs().addNetwork:
                 netArgs = netstring.split('/')
                 if len(netArgs) != 3:
