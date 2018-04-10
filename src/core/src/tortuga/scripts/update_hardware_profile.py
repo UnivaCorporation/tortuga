@@ -46,7 +46,7 @@ class UpdateHardwareProfileCli(TortugaCli):
 
         # Simple Options
         self.addOption('--name',
-                       dest='name',
+                       dest='name', required=True,
                        help=_('Name of hardware profile.'))
 
         self.addOption('--new-name',
