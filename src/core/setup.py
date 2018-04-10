@@ -149,6 +149,7 @@ setup(
             'get-network=tortuga.scripts.get_network:main',
             'get-network-list=tortuga.scripts.get_network_list:main',
             'get-provisioning-networks=tortuga.scripts.get_provisioning_networks:main',
+            'get-resource-adapter-list=tortuga.scripts.get_resource_adapter_list:main',
             'get-software-profile=tortuga.scripts.get_software_profile:main',
             'get-software-profile-list=tortuga.scripts.get_software_profile_list:main',
             'get-software-profile-nodes=tortuga.scripts.get_software_profile_nodes:main',

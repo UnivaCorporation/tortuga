@@ -169,3 +169,13 @@ def tarball(options):
         sh('tar cjf %s %s/' % (tarball, tarballRootDir))
 
     sh('ls -l dist/%s' % (tarballFileName))
+
+
+@task
+def clean(options):
+    for kit in distKits:
+        cmd = 'build-kit clean'
+        sh('cd src/kits/{} && {}'.format(kit, cmd))
+
+    for dir_name in ['build', 'dist', 'install']:
+        sh('find . -type d -name {} -exec rm -r {{}} +'.format(dir_name))
