@@ -73,13 +73,7 @@ class CreateHardwareProfileCli(TortugaCli):
         super().parseArgs(usage=usage)
 
     def runCommand(self):
-        self.parseArgs(_("""
-The create-hardware-profile tool either lists the paths of available
-templates or creates a hardware profile from an existing template.
-When creating a hardware profile the description, operating system, and idle
-software profile specified in the template can be overridden by providing
-the appropriate command line options.
-"""))
+        self.parseArgs()
 
         if self.getArgs().jsonTemplatePath:
             # load from template
