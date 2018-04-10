@@ -17,14 +17,17 @@
 import http.client
 
 import cherrypy
+
 from tortuga.db.resourceAdaptersDbHandler import ResourceAdaptersDbHandler
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.resourceAdapterNotFound import ResourceAdapterNotFound
 from tortuga.exceptions.resourceAlreadyExists import ResourceAlreadyExists
+from tortuga.exceptions.resourceNotFound import ResourceNotFound
 from tortuga.exceptions.tortugaException import TortugaException
-from tortuga.resourceAdapterConfiguration.resourceAdapterConfigurationApi \
-    import ResourceAdapterConfigurationApi
-
+from tortuga.resourceAdapter.resourceAdapterFactory import \
+    getResourceAdapterClass
+from tortuga.resourceAdapterConfiguration.api import \
+    ResourceAdapterConfigurationApi
 from .authController import require
 from .tortugaController import TortugaController
 
@@ -51,6 +54,12 @@ class ResourceAdapterConfigurationController(TortugaController):
             'name': 'get_resource_adapter_configuration',
             'path': '/v1/resourceadapter/:(resadapter_name)/profile/:(name)',
             'action': 'get',
+            'method': ['GET'],
+        },
+        {
+            'name': 'get_resource_adapter_configuration_variables',
+            'path': '/v1/resourceadapter/:(resadapter_name)/settings',
+            'action': 'get_variables',
             'method': ['GET'],
         },
         {
@@ -243,6 +252,28 @@ class ResourceAdapterConfigurationController(TortugaController):
             # Unhandled server exception
             self.getLogger().exception('delete() failed')
 
+            response = self.errorResponse(
+                'Internal server error',
+                http_status=http.client.INTERNAL_SERVER_ERROR)
+
+        return self.formatResponse(response)
+
+    @cherrypy.tools.json_out()
+    @require()
+    def get_variables(self, resadapter_name):
+        try:
+            ra = getResourceAdapterClass(resadapter_name)
+            response = {}
+            for k, v in ra.config.items():
+                schema = v.schema()
+                response[k] = schema.dump(v).data
+
+        except ResourceNotFound as ex:
+            self.handleException(ex)
+            response = self.notFoundErrorResponse(ex)
+
+        except Exception:
+            self.getLogger().exception('get_variables() failed')
             response = self.errorResponse(
                 'Internal server error',
                 http_status=http.client.INTERNAL_SERVER_ERROR)
