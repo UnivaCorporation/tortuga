@@ -82,8 +82,9 @@ class HardwareProfileDbApi(TortugaDbApi):
         session = DbManager().openSession()
 
         try:
-            dbHardwareProfile = self._hardwareProfilesDbHandler.\
-                getHardwareProfile(session, name)
+            dbHardwareProfile = \
+                self._hardwareProfilesDbHandler.getHardwareProfile(
+                    session, name)
 
             self.loadRelations(dbHardwareProfile, optionDict)
             self.loadRelations(dbHardwareProfile, dict(tags=True))

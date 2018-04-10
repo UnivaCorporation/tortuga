@@ -90,6 +90,9 @@ class GetHardwareProfileCli(TortugaCli):
         if self.getArgs().getAdmins:
             optionDict['admins'] = True
 
+        if self.getArgs().getNetworks:
+            optionDict['nics'] = True
+
         optionDict['resourceadapter'] = True
 
         hardwareProfile = api.getHardwareProfile(

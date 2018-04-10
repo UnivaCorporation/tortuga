@@ -18,8 +18,7 @@
 
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
-from tortuga.node.nodeApiFactory import getNodeApi
-from tortuga.objects.hardwareProfile import HardwareProfile
+from tortuga.wsapi.nodeWsApi import NodeWsApi
 from tortuga.objects.network import Network
 from tortuga.objects.networkDevice import NetworkDevice
 from tortuga.objects.resourceAdapter import ResourceAdapter
@@ -41,9 +40,7 @@ class UpdateHardwareProfileCli(TortugaCli):
         'resourceadapter': True,
     }
 
-    def __init__(self):
-        TortugaCli.__init__(self)
-
+    def parseArgs(self, usage=None):
         # Simple Options
         self.addOption('--name',
                        dest='name', required=True,
@@ -109,11 +106,6 @@ class UpdateHardwareProfileCli(TortugaCli):
                        help=_('Unset the current hypervisor software'
                               'profile'))
 
-        self.addOption('--max-units',
-                       dest='maxUnits',
-                       help=_('Maximum number of compute units for node'
-                              ' memeber.'))
-
         self.addOption('--resource-adapter',
                        dest='resourceAdapter',
                        help=_('Tortuga resource adapter.'))
@@ -140,10 +132,12 @@ class UpdateHardwareProfileCli(TortugaCli):
 
         self.addOption(
             '--cost', dest='cost', type=int,
-            help=_('Set the \'cost\' of this hardware profile'))
+            help=_('Set relative \'cost\' of hardware profile'))
+
+        super().parseArgs(usage=usage)
 
     def runCommand(self):
-        self.parseArgs(_('Update hardware profile configuration'))
+        self.parseArgs()
 
         api = HardwareProfileWsApi(username=self.getUsername(),
                                    password=self.getPassword(),
@@ -153,9 +147,13 @@ class UpdateHardwareProfileCli(TortugaCli):
                                      password=self.getPassword(),
                                      baseurl=self.getUrl())
 
-        networkApi = NetworkWsApi(username=self.getUsername,
+        networkApi = NetworkWsApi(username=self.getUsername(),
                                   password=self.getPassword(),
                                   baseurl=self.getUrl())
+
+        nodeApi = NodeWsApi(username=self.getUsername(),
+                            password=self.getPassword(),
+                            baseurl=self.getUrl())
 
         hp = api.getHardwareProfile(self.getArgs().name,
                                     UpdateHardwareProfileCli.optionDict)
@@ -216,9 +214,6 @@ class UpdateHardwareProfileCli(TortugaCli):
         if self.getArgs().bClearHypervisorProfile:
             hp.setHypervisorSoftwareProfileId(None)
 
-        if self.getArgs().maxUnits is not None:
-            hp.setMaxUnits(self.getArgs().maxUnits)
-
         if self.getArgs().cost is not None:
             hp.setCost(self.getArgs().cost)
 
@@ -242,8 +237,6 @@ class UpdateHardwareProfileCli(TortugaCli):
             hp.setProvisioningNics(out)
 
         if self.getArgs().addPNic is not None:
-            nodeApi = getNodeApi(self.getUsername, self.getPassword())
-
             for nicIp in self.getArgs().addPNic:
                 nicsNode = nodeApi.getNodeByIp(nicIp)
 
@@ -294,7 +287,10 @@ class UpdateHardwareProfileCli(TortugaCli):
                           ' ("address/mask/device")'))
 
                 anet, amask, adev = netArgs
+
+                # check for network existence
                 networkApi.getNetwork(anet, amask)
+
                 network = Network()
                 networkDevice = NetworkDevice()
                 networkDevice.setName(adev)

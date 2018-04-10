@@ -21,6 +21,7 @@ from tortuga.exceptions.networkNotFound import NetworkNotFound
 from tortuga.utility.helper import str2bool
 from .tortugaController import TortugaController
 from .authController import require, AuthController
+from tortuga.objects.tortugaObject import TortugaObjectList
 from .. import app
 
 
@@ -38,7 +39,7 @@ class NetworkController(TortugaController):
         },
         {
             'name': 'getNetwork',
-            'path': '/v1/networks/:(address)/:(netmask)',
+            'path': '/v1/networks/:(network_id)',
             'action': 'getNetwork',
             'method': ['GET'],
         },
@@ -63,15 +64,19 @@ class NetworkController(TortugaController):
     ]
 
     @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
     @require()
-    def getNetworkList(self):
-        """Return list of all available networks"""
-
-        # self.getLogger().debug('Retrieving network list')
+    def getNetworkList(self, **kwargs):
+        """
+        Return list of all available networks
+        """
 
         try:
-            networkList = app.network_api.getNetworkList()
+            if 'address' in kwargs and 'netmask' in kwargs:
+                networkList = TortugaObjectList(
+                    [app.network_api.getNetwork(
+                        kwargs['address'], kwargs['netmask'])])
+            else:
+                networkList = app.network_api.getNetworkList()
 
             response = {'networks': networkList.getCleanDict()}
         except Exception as ex:
