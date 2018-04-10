@@ -237,7 +237,7 @@ Description:
 
         return grouped
 
-    def __make_full_output(self, grouped: Dict[str, List[Dict[str, Any]]]) -> Optional[str]:
+    def __make_full_output(self, grouped: Dict[str, List[Dict[str, Any]]]) -> str:
         """
         Take a list of node names
         and return a formatted string
@@ -250,23 +250,23 @@ Description:
 
         for profile in grouped.keys():
             for node in grouped[profile]:
-                output.append("""{} -------------------------------------------------------------------
- 
-{}
-    Hardware Profile: {}
-    Boot: {}
-    Status: {}/{}, Locked: {}\n""".format(
-                    profile,
-                    node['name'],
-                    node['hardwareprofile']['name'],
-                    self.__boot_map[node['bootFrom']],
-                    node['state'], self.__active_map[node['isIdle']],
-                    node['lockedState']
+                output.append('{} -------------------------------------------------------------------'.format(profile))
+                output.append('')
+                if node.get('nics'):
+                    output.append('{} ({})'.format(node['name'], node['nics'][0].getIp()))
+                else:
+                    output.append(node['name'])
+                output.append('    Hardware Profile: {}'.format(node['hardwareprofile']['name']))
+                output.append('    Boot: {}'.format(self.__boot_map[node['bootFrom']]))
+                output.append('    Status: {}/{}, Locked: {}'.format(
+                    node['state'], self.__active_map[node['isIdle']], node['lockedState']
                 ))
+                output.append('')
 
         return '\n'.join(output)
 
-    def __make_short_output(self, grouped: Dict[str, List[Dict[str, Any]]]) -> Optional[str]:
+    @staticmethod
+    def __make_short_output(grouped: Dict[str, List[Dict[str, Any]]]) -> str:
         """
         Take a list of node names
         and return a formatted string
@@ -285,7 +285,8 @@ Description:
 
         return '\n'.join(lines)
 
-    def __make_list_output(self, nodes: List[Dict[str, Any]]) -> Optional[str]:
+    @staticmethod
+    def __make_list_output(nodes: List[Dict[str, Any]]) -> str:
         """
         Take a list of node names
         and return a formatted string
