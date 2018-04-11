@@ -15,14 +15,15 @@
 # pylint: disable=no-member,no-name-in-module
 
 import cherrypy
+
 from tortuga.exceptions.invalidArgument import InvalidArgument
-from tortuga.exceptions.softwareProfileNotFound \
-    import SoftwareProfileNotFound
+from tortuga.exceptions.softwareProfileNotFound import SoftwareProfileNotFound
 from tortuga.objects.softwareProfile import SoftwareProfile
 from tortuga.objects.tortugaObject import TortugaObjectList
+from tortuga.schema import SoftwareProfileSchema
 from tortuga.softwareprofile.softwareProfileApi import SoftwareProfileApi
-from tortuga.softwareprofile.softwareProfileManager \
-    import SoftwareProfileManager
+from tortuga.softwareprofile.softwareProfileManager import \
+    SoftwareProfileManager
 from tortuga.utility.helper import str2bool
 
 from .authController import require
@@ -173,8 +174,19 @@ class SoftwareProfileController(TortugaController):
             softwareProfiles = self._softwareProfileManager.\
                 getSoftwareProfileList(tags=tagspec)
 
+        # return a simplified software profile list without explicitly
+        # dumping relationships
         response = {
-            'softwareprofiles': softwareProfiles.getCleanDict(),
+            'softwareprofiles': SoftwareProfileSchema(
+                exclude=(
+                    'admins',
+                    'packages',
+                    'children',
+                    'hwprofileswithidle',
+                    'components',
+                    'nodes',
+                    'partitions')
+                ).dump(result, many=True).data
         }
 
         return self.formatResponse(response)

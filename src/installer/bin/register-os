@@ -23,10 +23,10 @@ import sqlalchemy.orm.exc
 from sqlalchemy import and_
 
 from tortuga.db.dbManager import DbManager
-from tortuga.db.operatingSystems import OperatingSystems
-from tortuga.db.operatingSystemsFamilies import OperatingSystemsFamilies
-from tortuga.db.kits import Kits
-from tortuga.db.components import Components
+from tortuga.db.models.operatingSystem import OperatingSystem
+from tortuga.db.models.operatingSystemFamily import OperatingSystemFamily
+from tortuga.db.models.kit import Kit
+from tortuga.db.models.component import Component
 from tortuga.config.configManager import ConfigManager
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.helper import osHelper
@@ -56,9 +56,9 @@ class RegisterOs(TortugaCli):
             os_exists = None
 
             try:
-                operating_system = session.query(OperatingSystems).filter(
-                    and_(OperatingSystems.name == osinfo.getName(),
-                         OperatingSystems.version == osinfo.getVersion()
+                operating_system = session.query(OperatingSystem).filter(
+                    and_(OperatingSystem.name == osinfo.getName(),
+                         OperatingSystem.version == osinfo.getVersion()
                          )).one()
 
                 # print '[debug] found operating system: %s' % (
@@ -72,10 +72,10 @@ class RegisterOs(TortugaCli):
                 # print ('[debug] creating OperatingSystems entry for'
                 #        ' \'coreos\'')
 
-                operating_system = OperatingSystems(
+                operating_system = OperatingSystem(
                     osinfo.getName(), osinfo.getVersion(), osinfo.getArch())
 
-                operating_system.family = OperatingSystemsFamilies(
+                operating_system.family = OperatingSystemFamily(
                     osinfo.getName(), osinfo.getVersion(), osinfo.getArch())
 
                 session.add(operating_system)
@@ -84,22 +84,22 @@ class RegisterOs(TortugaCli):
             os_kit_exists = None
 
             try:
-                os_kit = session.query(Kits).filter(
-                    sqlalchemy.and_(Kits.name == operating_system.name,
-                                    Kits.version == operating_system.version,
-                                    Kits.isOs == True)).one()  # noqa
+                os_kit = session.query(Kit).filter(
+                    sqlalchemy.and_(Kit.name == operating_system.name,
+                                    Kit.version == operating_system.version,
+                                    Kit.isOs == True)).one()  # noqa
 
                 os_kit_exists = True
             except sqlalchemy.orm.exc.NoResultFound:
                 os_kit_exists = False
 
             if not os_kit_exists:
-                os_kit = Kits(name=osinfo.getName(),
-                              version=osinfo.getVersion(),
-                              iteration='0',
-                              isOs=True)
+                os_kit = Kit(name=osinfo.getName(),
+                             version=osinfo.getVersion(),
+                             iteration='0',
+                             isOs=True)
 
-                os_component = Components()
+                os_component = Component()
                 os_component.name = '%s-%s-%s' % (
                     osinfo.getName(),
                     operating_system.version,

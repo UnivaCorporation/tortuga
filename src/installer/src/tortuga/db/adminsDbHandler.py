@@ -16,7 +16,7 @@
 
 from sqlalchemy.orm.exc import NoResultFound
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
-from tortuga.db.admins import Admins
+from tortuga.db.models.admin import Admin
 from tortuga.exceptions.adminAlreadyExists import AdminAlreadyExists
 from tortuga.exceptions.adminNotFound import AdminNotFound
 from tortuga.exceptions.deleteAdminFailed import DeleteAdminFailed
@@ -36,7 +36,7 @@ class AdminsDbHandler(TortugaDbObjectHandler):
 
         try:
             return session.query(
-                Admins).filter(Admins.username == name).one()
+                Admin).filter(Admin.username == name).one()
         except NoResultFound:
             raise AdminNotFound('Admin user [%s] not found' % (name))
 
@@ -48,7 +48,7 @@ class AdminsDbHandler(TortugaDbObjectHandler):
             AdminNotFound
         """
 
-        dbAdmin = session.query(Admins).get(admin_id)
+        dbAdmin = session.query(Admin).get(admin_id)
 
         if not dbAdmin:
             raise AdminNotFound('Admin ID [%s] not found' % (admin_id))
@@ -60,7 +60,7 @@ class AdminsDbHandler(TortugaDbObjectHandler):
         Get list of admins from the db.
         """
 
-        return session.query(Admins).all()
+        return session.query(Admin).all()
 
     def addAdmin(self, session, name, password, realname=None,
                  description=None):
@@ -80,9 +80,10 @@ class AdminsDbHandler(TortugaDbObjectHandler):
         except AdminNotFound:
             pass
 
-        dbAdmin = Admins(
-            username=name, password=password, realname=realname,
-            description=description)
+        dbAdmin = Admin(username=name,
+                        password=password,
+                        realname=realname,
+                        description=description)
 
         session.add(dbAdmin)
 

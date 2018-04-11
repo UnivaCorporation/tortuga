@@ -15,40 +15,36 @@
 # pylint: disable=not-callable,multiple-statements,no-member
 
 from typing import Optional, Union
-from tortuga.db.dbManager import DbManager
-
-from tortuga.db.tortugaDbApi import TortugaDbApi
-from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
-from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
-from tortuga.db.nodesDbHandler import NodesDbHandler
-from tortuga.db.adminsDbHandler import AdminsDbHandler
-from tortuga.db.operatingSystemsDbHandler import OperatingSystemsDbHandler
-from tortuga.db.packages import Packages
-from tortuga.db.partitions import Partitions
-from tortuga.db.softwareProfiles import SoftwareProfiles
-from tortuga.db.componentsDbHandler import ComponentsDbHandler
-
-from tortuga.objects.softwareProfile import SoftwareProfile
-from tortuga.objects.tortugaObject import TortugaObjectList
-from tortuga.objects.node import Node
-
-from tortuga.objects.package import Package
-from tortuga.objects.partition import Partition
-from tortuga.objects.component import Component
-
-from tortuga.exceptions.tortugaException import TortugaException
-from tortuga.exceptions.softwareProfileAlreadyExists \
-    import SoftwareProfileAlreadyExists
-from tortuga.exceptions.softwareProfileNotFound \
-    import SoftwareProfileNotFound
-from tortuga.exceptions.updateSoftwareProfileFailed \
-    import UpdateSoftwareProfileFailed
-from tortuga.exceptions.invalidPartitionScheme \
-    import InvalidPartitionScheme
-from tortuga.exceptions.adminNotFound import AdminNotFound
-from tortuga.exceptions.adminAlreadyExists import AdminAlreadyExists
 
 from sqlalchemy import func
+
+from tortuga.db.adminsDbHandler import AdminsDbHandler
+from tortuga.db.componentsDbHandler import ComponentsDbHandler
+from tortuga.db.dbManager import DbManager
+from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
+from tortuga.db.models.package import Package as PackageModel
+from tortuga.db.models.partition import Partition as PartitionModel
+from tortuga.db.models.softwareProfile import \
+    SoftwareProfile as SoftwareProfileModel
+from tortuga.db.nodesDbHandler import NodesDbHandler
+from tortuga.db.operatingSystemsDbHandler import OperatingSystemsDbHandler
+from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
+from tortuga.db.tortugaDbApi import TortugaDbApi
+from tortuga.exceptions.adminAlreadyExists import AdminAlreadyExists
+from tortuga.exceptions.adminNotFound import AdminNotFound
+from tortuga.exceptions.invalidPartitionScheme import InvalidPartitionScheme
+from tortuga.exceptions.softwareProfileAlreadyExists import \
+    SoftwareProfileAlreadyExists
+from tortuga.exceptions.softwareProfileNotFound import SoftwareProfileNotFound
+from tortuga.exceptions.tortugaException import TortugaException
+from tortuga.exceptions.updateSoftwareProfileFailed import \
+    UpdateSoftwareProfileFailed
+from tortuga.objects.component import Component
+from tortuga.objects.node import Node
+from tortuga.objects.package import Package
+from tortuga.objects.partition import Partition
+from tortuga.objects.softwareProfile import SoftwareProfile
+from tortuga.objects.tortugaObject import TortugaObjectList
 
 
 class SoftwareProfileDbApi(TortugaDbApi):
@@ -258,7 +254,7 @@ class SoftwareProfileDbApi(TortugaDbApi):
             dbSoftwareProfile = self.__populateSoftwareProfile(
                 _session, softwareProfile)
 
-            _session.query(func.max(SoftwareProfiles.id)).one()
+            _session.query(func.max(SoftwareProfileModel.id)).one()
 
             softwareProfile.setId(dbSoftwareProfile.id)
 
@@ -835,7 +831,7 @@ class SoftwareProfileDbApi(TortugaDbApi):
                 'Software profile must have valid operating system')
 
         if dbSoftwareProfile is None:
-            dbSoftwareProfile = SoftwareProfiles()
+            dbSoftwareProfile = SoftwareProfileModel()
 
         dbOs = self._osDbHandler.addOsIfNotFound(session, osInfo)
 
@@ -853,7 +849,7 @@ class SoftwareProfileDbApi(TortugaDbApi):
         packages = {}
         for package in softwareProfile.getPackages():
             # This is a new package
-            dbPackage = Packages()
+            dbPackage = PackageModel()
 
             dbPackage.name = package.getName()
             if packages.get(dbPackage.name) is not None:
@@ -867,7 +863,7 @@ class SoftwareProfileDbApi(TortugaDbApi):
         partitions = {}
         for partition in softwareProfile.getPartitions():
             # This is a new partition
-            dbPartition = Partitions()
+            dbPartition = PartitionModel()
 
             dbPartition.name = partition.getName()
             dbPartition.device = partition.getDevice()
