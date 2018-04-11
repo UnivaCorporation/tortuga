@@ -44,7 +44,7 @@ class AddHostManager(TortugaObjectManager, Singleton):
         self._sessions = {}
         self._nodeDbApi = NodeDbApi()
 
-    def addHosts(self, session, addHostSession, addHostRequest):
+    def addHosts(self, session, addHostRequest):
         """
         Raises:
             HardwareProfileNotFound
@@ -80,7 +80,8 @@ class AddHostManager(TortugaObjectManager, Singleton):
         ResourceAdapterClass = resourceAdapterFactory.getResourceAdapterClass(
             dbHardwareProfile.resourceadapter.name)
 
-        resourceAdapter = ResourceAdapterClass(addHostSession=addHostSession)
+        resourceAdapter = ResourceAdapterClass(
+            addHostSession=addHostRequest['addHostSession'])
 
         # Call the start() method of the resource adapter
         newNodes = resourceAdapter.start(
@@ -110,7 +111,7 @@ class AddHostManager(TortugaObjectManager, Singleton):
 
                 self.postAddHost(
                     dbHardwareProfile.name, softwareProfileName,
-                    addHostSession)
+                    addHostRequest['addHostSession'])
 
                 resourceAdapter.hookAction('start', newNodeNames)
 

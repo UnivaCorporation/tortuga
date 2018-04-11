@@ -41,7 +41,7 @@ Description:
     If a node name is passed only the volumes attached to that node are displayed.
 """))
 
-        nodeName = self.getOptions().node
+        nodeName = self.getArgs().node
 
         if nodeName is not None:
             api = getNodeApi(self.getUsername(), self.getPassword())

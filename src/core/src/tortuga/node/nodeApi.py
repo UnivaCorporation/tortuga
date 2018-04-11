@@ -14,16 +14,18 @@
 
 # pylint: disable=no-member,too-many-public-methods
 
-from typing import Optional, NoReturn, List, Union
+from typing import List, NoReturn, Optional, Union
 
 from sqlalchemy.orm.session import Session
+
 from tortuga.db.hardwareProfiles import HardwareProfiles
 from tortuga.db.nodes import Nodes
 from tortuga.db.softwareProfiles import SoftwareProfiles
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.node.nodeManager import NodeManager
-from tortuga.utility.tortugaApi import TortugaApi
 from tortuga.objects.node import Node
+from tortuga.objects.tortugaObject import TortugaObjectList
+from tortuga.utility.tortugaApi import TortugaApi
 
 
 class NodeApi(TortugaApi):
@@ -98,9 +100,12 @@ class NodeApi(TortugaApi):
 
     def getNodeById(self, nodeId: int,
                     optionDict: Optional[Union[dict, None]] = None) -> Node:
-        """Get a node by id"""
+        """
+        Get a node by id
+        """
+
         try:
-            return self._nodeManager.getNodeById(nodeId, optionDict)
+            return self._nodeManager.getNodeById(nodeId, optionDict=optionDict)
         except TortugaException:
             raise
         except Exception as ex:
@@ -129,17 +134,6 @@ class NodeApi(TortugaApi):
         except Exception as ex:
             self.getLogger().exception(
                 'Fatal error deleting nodespec [{}]'.format(nodespec))
-
-            raise TortugaException(exception=ex)
-
-    def getMyNode(self) -> Node:
-        """ get a node entry of the current node """
-        try:
-            return self._nodeManager.getInstallerNode()
-        except TortugaException:
-            raise
-        except Exception as ex:
-            self.getLogger().exception('Fatal error retrieving current node')
 
             raise TortugaException(exception=ex)
 
@@ -402,5 +396,32 @@ class NodeApi(TortugaApi):
         except Exception as ex:
             self.getLogger().exception(
                 'Fatal error retrieving nodes in state [{}]'.format(state))
+
+            raise TortugaException(exception=ex)
+
+    def getNodesByNameFilter(self, nodespec: str,
+                             optionDict: Optional[Union[dict, None]] = None) -> TortugaObjectList:
+        try:
+            return self._nodeManager.getNodesByNameFilter(
+                nodespec, optionDict=optionDict)
+        except TortugaException:
+            raise
+        except Exception as ex:
+            self.getLogger().exception(
+                'Fatal error retrieving nodes by nodespec [{}]'.format(
+                    nodespec))
+
+            raise TortugaException(exception=ex)
+
+    def getNodesByAddHostSession(self, addHostSession):
+        try:
+            return self._nodeManager.getNodesByAddHostSession(
+                nodespec, optionDict=optionDict)
+        except TortugaException:
+            raise
+        except Exception as ex:
+            self.getLogger().exception(
+                'Fatal error retrieving nodes by add host session [{}]'.format(
+                    addHostSession))
 
             raise TortugaException(exception=ex)

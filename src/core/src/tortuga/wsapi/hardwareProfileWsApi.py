@@ -15,6 +15,7 @@
 # pylint: disable=no-member
 
 import json
+from typing import Optional, Union
 
 from tortuga.exceptions.tortugaException import TortugaException
 import tortuga.objects.provisioningInfo
@@ -27,41 +28,36 @@ class HardwareProfileWsApi(TortugaWsApi):
     Hardware profile WS API class.
     """
 
-    def __init__(self, username=None, password=None):
-        TortugaWsApi.__init__(self, username, password)
-
-    def getHardwareProfile(self, hardwareProfileName, optionDict=None):
+    def getHardwareProfile(self, hardwareProfileName: str,
+                           optionDict: Optional[Union[dict, None]] = None):
         """
         Get hardware profile by name
         """
+        url = 'v1/hardwareProfiles?name=%s' % (hardwareProfileName)
 
-        url = 'v1/hardwareProfiles/%s' % (hardwareProfileName)
-
-        postdata = json.dumps(optionDict or {})
+        for key, value in optionDict.items():
+            if not value:
+                continue
+            url += '&include={}'.format(key)
 
         try:
-            (response, responseDict) = self.sendSessionRequest(
-                url, method='POST', data=postdata)
+            _, responseDict = self.sendSessionRequest(url)
 
-            return HardwareProfile.getFromDict(
-                responseDict.get('hardwareprofile'))
+            return HardwareProfile.getListFromDict(responseDict)[0]
         except TortugaException as ex:
             raise
         except Exception as ex:
             raise TortugaException(exception=ex)
 
-    def getHardwareProfileById(self, id_, optionDict=None):
+    def getHardwareProfileById(self, id_,
+                               optionDict: Optional[Union[dict, None]] = None):
         """
         Get hardware profile by name
         """
-
-        postdata = json.dumps(optionDict or {})
-
-        url = 'v1/hardwareProfiles/id/%s' % (id_)
+        url = 'v1/hardwareProfiles/%d' % (id_)
 
         try:
-            (response, responseDict) = self.sendSessionRequest(
-                url, method='POST', data=postdata)
+            _, responseDict = self.sendSessionRequest(url)
 
             return HardwareProfile.getFromDict(
                 responseDict.get('hardwareprofile'))
@@ -114,7 +110,10 @@ class HardwareProfileWsApi(TortugaWsApi):
         except Exception as ex:
             raise TortugaException(exception=ex)
 
-    def getHardwareProfileList(self, optionDict=None, tags=None):
+    def getHardwareProfileList(self,
+                               optionDict: Optional[Union[dict, None]] = None,
+                               tags=None): \
+            # pylint: disable=unused-argument
         """
         Get list of hardware profiles by calling WS API
         """
@@ -122,12 +121,8 @@ class HardwareProfileWsApi(TortugaWsApi):
         url = 'v1/hardwareProfiles'
 
         # TODO: add support for building query string with 'tags'
-
-        postdata = json.dumps(optionDict or {})
-
         try:
-            (response, responseDict) = self.sendSessionRequest(
-                url, data=postdata)
+            _, responseDict = self.sendSessionRequest(url)
 
             return HardwareProfile.getListFromDict(responseDict)
         except Exception as ex:
@@ -232,7 +227,8 @@ class HardwareProfileWsApi(TortugaWsApi):
         except Exception as ex:
             raise TortugaException(exception=ex)
 
-    def createHardwareProfile(self, hwProfile, settingsDict=None):
+    def createHardwareProfile(self, hwProfile: HardwareProfile,
+                              settingsDict: Optional[Union[dict, None]] = None):
         """
         Create hardware profile from template
 
@@ -246,11 +242,11 @@ class HardwareProfileWsApi(TortugaWsApi):
 
         postdata = {
             'hardwareProfile': hwProfile.getCleanDict(),
-            'settingsDict': settingsDict or {},
+            'settingsDict': settingsDict,
         }
 
         try:
-            (response, responseDict) = self.sendSessionRequest(
+            response, _ = self.sendSessionRequest(
                 url, method='POST', data=json.dumps(postdata))
 
             return response

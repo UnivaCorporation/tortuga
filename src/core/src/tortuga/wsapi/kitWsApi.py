@@ -14,14 +14,15 @@
 
 # pylint: disable=no-member
 
-import json
 import base64
+import json
+from typing import List, Optional, Union, NoReturn
 
+from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.objects.eula import Eula
 from tortuga.objects.kit import Kit
-from tortuga.exceptions.tortugaException import TortugaException
+
 from .tortugaWsApi import TortugaWsApi
-from typing import List
 
 
 class KitWsApi(TortugaWsApi):
@@ -142,7 +143,7 @@ class KitWsApi(TortugaWsApi):
         """
 
         url = 'v1/kit_packages/%s/%s' % (
-            base64.b64encode(packageUrl), key)
+            base64.b64encode(packageUrl.encode()), key)
 
         try:
             _, responseDict = self.sendSessionRequest(url, method='POST')
@@ -206,7 +207,10 @@ class KitWsApi(TortugaWsApi):
         except Exception as ex:
             raise TortugaException(exception=ex)
 
-    def deleteKit(self, name, version, iteration=None, force=False) -> None:
+    def deleteKit(self, name: str, version: str,
+                  iteration: Optional[Union[str, None]] = None,
+                  force: Optional[bool] = False) -> NoReturn: \
+            # pylint: disable=unused-argument
         """
         Delete kit using kit name/version/iteration.
 
@@ -219,15 +223,12 @@ class KitWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        db_version = '%s-%s' % (version, iteration)
-
-        if not iteration:
-            db_version = str(version)
+        db_version = '%s-%s' % (version, iteration) if iteration else version
 
         url = 'v1/kits/%s/%s' % (name, db_version)
 
         try:
-            _, response_dict = self.sendSessionRequest(url, method='DELETE')
+            self.sendSessionRequest(url, method='DELETE')
         except TortugaException:
             raise
         except Exception as ex:

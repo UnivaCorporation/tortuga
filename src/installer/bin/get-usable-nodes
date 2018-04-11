@@ -50,13 +50,13 @@ Description:
     able to use the specified software profile.
 """))
 
-        if not self.getOptions().softwareProfile:
+        if not self.getArgs().softwareProfile:
             self.usage(_('Missing --software-profile option'))
 
         print('\n'.join(
             [node.getName()
              for node in SoftwareProfileDbApi().getUsableNodes(
-                 self.getOptions().softwareProfile)]))
+                 self.getArgs().softwareProfile)]))
 
 
 if __name__ == '__main__':

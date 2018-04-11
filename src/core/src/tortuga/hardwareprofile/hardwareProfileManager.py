@@ -14,6 +14,9 @@
 
 # pylint: disable=no-name-in-module,no-member
 
+from typing import Union, Optional
+
+from tortuga.objects.hardwareProfile import HardwareProfile
 from tortuga.utility import authManager, validation
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.objects.networkDevice import NetworkDevice
@@ -61,8 +64,9 @@ class HardwareProfileManager(TortugaObjectManager, Singleton):
         return self._hpDbApi.setIdleSoftwareProfile(
             hardwareProfileName, softwareProfileName)
 
-    def getHardwareProfile(self, name, optionDict=None):
-        return self._hpDbApi.getHardwareProfile(name, optionDict or {})
+    def getHardwareProfile(self, name: str,
+                           optionDict: Optional[Union[dict, None]] = None):
+        return self._hpDbApi.getHardwareProfile(name, optionDict)
 
     def getHardwareProfileById(self, id_, optionDict=None):
         return self._hpDbApi.getHardwareProfileById(id_, optionDict or {})
@@ -133,19 +137,18 @@ class HardwareProfileManager(TortugaObjectManager, Singleton):
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
 
-    def createHardwareProfile(self, hwProfileSpec, settingsDict=None):
-        settingsDict = settingsDict or {}
-
-        bUseDefaults = settingsDict['bUseDefaults'] \
-            if 'bUseDefaults' in settingsDict else False
+    def createHardwareProfile(self, hwProfileSpec: HardwareProfile,
+                              settingsDict: Optional[Union[dict, None]] = None):
+        bUseDefaults = settingsDict['defaults'] \
+            if settingsDict and 'defaults' in settingsDict else False
 
         osInfo = settingsDict['osInfo'] \
-            if settingsDict and 'osInfo' in settingsDict else None
+            if settingsDict and \
+            settingsDict and 'osInfo' in settingsDict else None
 
         validation.validateProfileName(hwProfileSpec.getName())
 
-        if hwProfileSpec.getDescription() is None or \
-                hwProfileSpec.getDescription() == '**DEFAULT**':
+        if hwProfileSpec.getDescription() is None:
             hwProfileSpec.setDescription(
                 '%s Nodes' % (hwProfileSpec.getName()))
 

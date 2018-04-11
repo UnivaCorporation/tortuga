@@ -15,17 +15,21 @@
 # pylint: disable=no-member
 
 import datetime
+
 import cherrypy
 
-from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.addhost.addHostManager import AddHostManager
 from tortuga.db.nodeRequests import NodeRequests
+from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.nodeNotFound import NodeNotFound
-from ..threadManager import threadManager
-from .common import parse_tag_query_string
-from .authController import AuthController, require
-from .tortugaController import TortugaController
+from tortuga.objects.tortugaObject import TortugaObjectList
+from tortuga.utility.helper import str2bool
+
 from .. import app
+from ..threadManager import threadManager
+from .authController import require
+from .common import make_options_from_query_string, parse_tag_query_string
+from .tortugaController import TortugaController
 
 
 class NodeController(TortugaController):
@@ -35,9 +39,9 @@ class NodeController(TortugaController):
     """
     actions = [
         {
-            'name': 'userNodes',
+            'name': 'getNodeList',
             'path': '/v1/nodes',
-            'action': 'nodeListRequest',
+            'action': 'getNodes',
             'method': ['GET']
         },
         {
@@ -47,16 +51,10 @@ class NodeController(TortugaController):
             'method': ['GET']
         },
         {
-            'name': 'userNode',
-            'path': '/v1/nodes/:name',
-            'action': 'nodeRequest',
-            'method': ['GET', 'POST']
-        },
-        {
             'name': 'getNodeById',
-            'path': '/v1/nodes/id/:(id)',
+            'path': '/v1/nodes/:(node_id)',
             'action': 'getNodeById',
-            'method': ['POST']
+            'method': ['GET']
         },
         {
             'name': 'getNodeByIpRequest',
@@ -150,13 +148,21 @@ class NodeController(TortugaController):
             'action': 'getNodeByIpRequest',
             'method': ['GET']
         },
+        {
+            'name': 'getNodeRequests',
+            'path': '/v1/nodes/requests/',
+            'action': 'getNodeRequests',
+            'method': ['GET'],
+        }
     ]
 
     @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
     @require()
-    def nodeListRequest(self, **kwargs):
-        """Return list of all available nodes"""
+    def getNodes(self, **kwargs):
+        """
+        Return list of all available nodes
+
+        """
 
         tagspec = []
 
@@ -164,7 +170,23 @@ class NodeController(TortugaController):
             tagspec.extend(parse_tag_query_string(kwargs['tag']))
 
         try:
-            nodeList = app.node_api.getNodeList(tags=tagspec)
+            if 'name' in kwargs and kwargs['name']:
+                options = make_options_from_query_string(
+                    kwargs['include']
+                    if 'include' in kwargs else None,
+                        ['softwareprofile', 'hardwareprofile'])
+
+                nodeList = app.node_api.getNodesByNameFilter(
+                    kwargs['name'], optionDict=options)
+            elif 'installer' in kwargs and str2bool(kwargs['installer']):
+                nodeList = TortugaObjectList(
+                    [app.node_api.getInstallerNode()]
+                )
+            elif 'ip' in kwargs:
+                nodeList = TortugaObjectList(
+                    [app.node_api.getNodeByIp(kwargs['ip'])])
+            else:
+                nodeList = app.node_api.getNodeList(tags=tagspec)
 
             response = {
                 'nodes': nodeList.getCleanDict(),
@@ -177,13 +199,19 @@ class NodeController(TortugaController):
         return self.formatResponse(response)
 
     @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
     @require()
-    def nodeRequest(self, name):
-        """Return node information"""
+    def getNodeById(self, node_id: str, **kwargs):
+        """
+        Return node information
 
+        """
         try:
-            node = app.node_api.getNode(name)
+            options = make_options_from_query_string(
+                kwargs['include']
+                if 'include' in kwargs else None,
+                ['softwareprofile', 'hardwareprofile'])
+
+            node = app.node_api.getNodeById(node_id, optionDict=options)
 
             response = {
                 'node': node.getCleanDict(),
@@ -194,55 +222,6 @@ class NodeController(TortugaController):
             response = self.notFoundErrorResponse(str(ex), code)
         except Exception as ex:
             self.getLogger().exception('node WS API nodeRequest() failed')
-            self.handleException(ex)
-            response = self.errorResponse(str(ex))
-
-        return self.formatResponse(response)
-
-    @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
-    @require()
-    def getNodeById(self, node_id):
-        postdata = cherrypy.request.json
-
-        optionDict = postdata['optionDict'] \
-            if 'optionDict' in postdata else {}
-
-        try:
-            nodeApi = app.node_api
-
-            node = nodeApi.getNodeById(node_id, optionDict=optionDict)
-
-            response = {
-                'node': node.getCleanDict(),
-            }
-        except Exception as ex:
-            self.getLogger().exception('node WS API getNodeById() failed')
-            self.handleException(ex)
-            response = self.errorResponse(str(ex))
-
-        return self.formatResponse(response)
-
-    @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
-    @require()
-    def getNodeByIpRequest(self):
-        ip = cherrypy.request.remote.ip
-
-        try:
-            if ip == '127.0.0.1' or ip == '::1':
-                node = app.node_api.getInstallerNode()
-            else:
-                node = app.node_api.getNodeByIp(ip)
-
-            response = {'node': node.getCleanDict()}
-        except NodeNotFound as ex:
-            self.handleException(ex)
-            code = self.getTortugaStatusCode(ex)
-            response = self.notFoundErrorResponse(str(ex), code)
-        except Exception as ex:
-            self.getLogger().exception(
-                'node WS API getNodeByIpRequest() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 

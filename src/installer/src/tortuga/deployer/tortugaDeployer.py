@@ -1004,7 +1004,8 @@ class TortugaDeployer(object): \
             SoftwareProfileApi().enableComponent(
                 installerNode.getSoftwareProfile().getName(),
                 k.getName(), k.getVersion(), k.getIteration(),
-                component.getName(), component.getVersion())
+                component.getName(), component.getVersion(),
+                sync=False)
 
     def promptForAdminCredentials(self):
         # Get admin username and password for use with web service

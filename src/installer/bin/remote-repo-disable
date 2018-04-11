@@ -27,7 +27,7 @@ from tortuga.db.kitSources import KitSources
 class RemoteRepoDisableApp(TortugaCli):
     def runCommand(self):
         self.addOption('--software-profile', dest='softwareProfile')
-        self.addOption('--repo-id', type='int', dest='repoId')
+        self.addOption('--repo-id', type=int, dest='repoId')
 
         self.parseArgs()
 
@@ -35,11 +35,11 @@ class RemoteRepoDisableApp(TortugaCli):
 
         try:
             dbKitSource = session.query(KitSources).filter(
-                KitSources.id == self.getOptions().repoId).one()
+                KitSources.id == self.getArgs().repoId).one()
 
             dbSoftwareProfile = session.query(SoftwareProfiles).filter(
                 SoftwareProfiles.name ==
-                self.getOptions().softwareProfile).one()
+                self.getArgs().softwareProfile).one()
 
             if dbKitSource not in dbSoftwareProfile.kitsources:
                 print('Error: repo source not enabled on software profile')

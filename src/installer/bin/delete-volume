@@ -34,11 +34,11 @@ class DeleteVolumeCli(TortugaCli):
 Description:
     The delete-volume tool removes a storage volume from the system.
 """))
-        if not self.getOptions().volume:
+        if not self.getArgs().volume:
             raise InvalidCliRequest(_('Volume must be specified'))
         api = getSanApi(self.getUsername(), self.getPassword())
 
-        api.deleteVolume(self.getOptions().volume)
+        api.deleteVolume(self.getArgs().volume)
 
 
 if __name__ == '__main__':

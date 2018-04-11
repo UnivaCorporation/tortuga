@@ -30,7 +30,7 @@ class AdminWsApi(TortugaWsApi):
         """Get admin information
 
             Returns:
-                rule
+                admin
             Throws:
                 UserNotAuthorized
                 AdminNotFound
@@ -52,7 +52,7 @@ class AdminWsApi(TortugaWsApi):
         """Get admin information
 
             Returns:
-                rule
+                admin
             Throws:
                 UserNotAuthorized
                 AdminNotFound
@@ -74,7 +74,7 @@ class AdminWsApi(TortugaWsApi):
         """Get admin list.
 
             Returns:
-                [rules]
+                [admins]
             Throws:
                 UserNotAuthorized
                 TortugaException
@@ -94,7 +94,8 @@ class AdminWsApi(TortugaWsApi):
     def addAdmin(self, username, password, isCrypted=False, realname=None,
                  description=None): \
             # pylint: disable=too-many-arguments
-        """Add an admin using rule name/password.
+        """
+        Add an admin using rule name/password.
 
         Raises:
             UserNotAuthorized
@@ -106,20 +107,23 @@ class AdminWsApi(TortugaWsApi):
 
         url = 'v1/admin'
 
-        d = {
-            'username': username,
-            'password': password,
+        postdata = {
             'isCrypted': isCrypted,
+            'admin': {
+                'username': username,
+                'password': password,
+            }
         }
 
         if realname is not None:
-            d['realname'] = realname
+            postdata['admin']['realname'] = realname
 
         if description is not None:
-            d['description'] = description
+            postdata['admin']['description'] = description
 
         try:
-            self.sendSessionRequest(url, method='POST', data=json.dumps(d))
+            self.sendSessionRequest(
+                url, method='POST', data=json.dumps(postdata))
         except TortugaException:
             raise
         except Exception as ex:

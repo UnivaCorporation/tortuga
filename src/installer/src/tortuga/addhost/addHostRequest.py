@@ -36,7 +36,9 @@ def process_addhost_request(addHostSession):
             # session was deleted prior to being processed; nothing to do...
             return
 
-        addHostRequest = dict(list(json.loads(req.request).items()))
+        addHostRequest = json.loads(req.request)
+
+        addHostRequest['addHostSession'] = addHostSession
 
         with AddHostSessionContextManager(req.addHostSession) as ahm:
             try:
@@ -44,7 +46,7 @@ def process_addhost_request(addHostSession):
                     'process_addhost_request(): Processing add host'
                     ' request [%s]' % (req.addHostSession))
 
-                ahm.addHosts(session, req.addHostSession, addHostRequest)
+                ahm.addHosts(session, addHostRequest)
 
                 # Delete session log
                 ahm.delete_session(req.addHostSession)

@@ -14,19 +14,19 @@
 
 # pylint: disable=no-member
 
-from typing import Optional, Union
 import socket
+from typing import Optional, Union
 
-from tortuga.db.tortugaDbApi import TortugaDbApi
-from tortuga.db.nodesDbHandler import NodesDbHandler
+from tortuga.db.dbManager import DbManager
 from tortuga.db.globalParameterDbApi import GlobalParameterDbApi
-from tortuga.objects.tortugaObject import TortugaObjectList
+from tortuga.db.nodesDbHandler import NodesDbHandler
+from tortuga.db.tortugaDbApi import TortugaDbApi
+from tortuga.exceptions.nodeNotFound import NodeNotFound
+from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.objects.node import Node
 from tortuga.objects.parameter import Parameter
-from tortuga.exceptions.tortugaException import TortugaException
-from tortuga.db.dbManager import DbManager
 from tortuga.objects.provisioningInfo import ProvisioningInfo
-from tortuga.exceptions.nodeNotFound import NodeNotFound
+from tortuga.objects.tortugaObject import TortugaObjectList
 
 
 class NodeDbApi(TortugaDbApi):
@@ -78,39 +78,32 @@ class NodeDbApi(TortugaDbApi):
         Get node(s) from db based their addhost session
         """
 
-        session = DbManager().openSession()
+        with DbManager().session() as session:
+            try:
+                return self.__convert_nodes_to_TortugaObjectList(
+                    self._nodesDbHandler.getNodesByAddHostSession(
+                        session, ahSession))
+            except TortugaException as ex:
+                raise
+            except Exception as ex:
+                self.getLogger().exception('%s' % ex)
+                raise
+            finally:
+                DbManager().closeSession()
 
-        try:
-            return self.__convert_nodes_to_TortugaObjectList(
-                self._nodesDbHandler.getNodesByAddHostSession(
-                    session, ahSession))
-        except TortugaException as ex:
-            raise
-        except Exception as ex:
-            self.getLogger().exception('%s' % ex)
-            raise
-        finally:
-            DbManager().closeSession()
-
-    def getNodesByNameFilter(self, _filter):
+    def getNodesByNameFilter(self, nodespec, optionDict: Optional[Union[dict, None]] = None):
         """
         Get node(s) from db based on the name filter
         """
+        result = []
 
-        session = DbManager().openSession()
+        with DbManager().session() as session:
+            for node in self.__expand_nodespec(session, nodespec):
+                self.loadRelations(node, optionDict)
 
-        try:
-            dbNodes = self._nodesDbHandler.getNodesByNameFilter(
-                session, _filter)
+                result.append(Node.getFromDbDict(node.__dict__))
 
-            return self.getTortugaObjectList(Node, dbNodes)
-        except TortugaException as ex:
-            raise
-        except Exception as ex:
-            self.getLogger().exception('%s' % ex)
-            raise
-        finally:
-            DbManager().closeSession()
+        return TortugaObjectList(result)
 
     def getNodeById(self, nodeId: int, optionDict: Optional[Union[dict, None]] = None):
 

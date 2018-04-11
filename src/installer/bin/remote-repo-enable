@@ -28,14 +28,14 @@ from tortuga.exceptions.invalidArgument import InvalidArgument
 class RemoteRepoEnableApp(TortugaCli):
     def runCommand(self):
         self.addOption('--software-profile', dest='softwareProfile')
-        self.addOption('--repo-id', type='int', dest='repoId')
+        self.addOption('--repo-id', type=int, dest='repoId')
 
         self.parseArgs()
 
-        if not self.getOptions().softwareProfile:
+        if not self.getArgs().softwareProfile:
             raise InvalidArgument('Missing --software-profile argument')
 
-        if not self.getOptions().repoId:
+        if not self.getArgs().repoId:
             raise InvalidArgument('Missing --repo-id argument')
 
         # Find matching kit source
@@ -43,12 +43,12 @@ class RemoteRepoEnableApp(TortugaCli):
 
         try:
             dbKitSource = session.query(KitSources).filter(
-                KitSources.id == self.getOptions().repoId).one()
+                KitSources.id == self.getArgs().repoId).one()
 
             # Find matching software profile
             dbSoftwareProfile = session.query(SoftwareProfiles).filter(
                 SoftwareProfiles.name ==
-                self.getOptions().softwareProfile).one()
+                self.getArgs().softwareProfile).one()
 
             if dbKitSource in dbSoftwareProfile.kitsources:
                 print((
@@ -68,7 +68,7 @@ class RemoteRepoEnableApp(TortugaCli):
                     'Components from kit [%s] not enabled on'
                     ' software profile [%s]' % (
                         dbKitSource.kit.name,
-                        self.getOptions().softwareProfile)))
+                        self.getArgs().softwareProfile)))
 
                 sys.exit(1)
 

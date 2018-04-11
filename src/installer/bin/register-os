@@ -136,7 +136,7 @@ enabled=true
     def runCommand(self):
         self.parseArgs()
 
-        os_name, os_version, os_arch = self.getOptions().os.rsplit('-', 2)
+        os_name, os_version, os_arch = self.getArgs().os.rsplit('-', 2)
 
         # print os_name, os_version, os_arch
 
@@ -148,9 +148,9 @@ enabled=true
 
             osinfo = OsInfo(os_name, os_version, os_arch)
 
-        if self.getOptions().os_family:
+        if self.getArgs().os_family:
             os_family_name, os_family_version, os_family_arch = \
-                self.getOptions().os_family.rsplit('-', 2)
+                self.getArgs().os_family.rsplit('-', 2)
         else:
             os_family_name = os_name
             os_family_version = os_version

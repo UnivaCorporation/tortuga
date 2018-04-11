@@ -13,13 +13,14 @@
 # limitations under the License.
 
 import os
-import crypt
+
+from passlib.hash import pbkdf2_sha256
+from tortuga.admin.adminApiFactory import getAdminApi
+from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.userNotAuthorized import UserNotAuthorized
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
-from tortuga.config.configManager import ConfigManager
-from tortuga.utility.authPrincipal import AuthPrincipal
-from tortuga.admin.adminApiFactory import getAdminApi
 from tortuga.types import Singleton
+from tortuga.utility.authPrincipal import AuthPrincipal
 
 
 def authorizeRoot():
@@ -37,20 +38,29 @@ class AuthManager(TortugaObjectManager, Singleton):
 
         self.__loadPrincipals()
 
-    def cryptPassword(self, cleartext, salt="$1$"): \
+    def cryptPassword(self, cleartext): \
             # pylint: disable=no-self-use
-        """ Return crypted password.... """
-        return crypt.crypt(cleartext, salt)
+        """
+        Return crypted password
+        """
+
+        return pbkdf2_sha256.hash(cleartext)
 
     def reloadPrincipals(self):
-        """ This is used to reload the principals in auth manager """
+        """
+        This is used to reload the principals in auth manager
+        """
+
         self.__principals.clear()
 
         self.__loadPrincipals()
 
     def __loadPrincipals(self):
-        """ Load principals for config manager and datastore """
-        # Create builtin cfm principal
+        """
+        Load principals for config manager and datastore
+        """
+
+        # Create built-in cfm principal
         cfmUser = AuthPrincipal(
             self._configManager.getCfmUser(),
             self.cryptPassword(self._configManager.getCfmPassword()),
@@ -67,10 +77,15 @@ class AuthManager(TortugaObjectManager, Singleton):
                     attributeDict={'id': admin.getId()})
 
     def getPrincipal(self, username, password):
-        """ Get a principal based on a username and password """
+        """
+        Get a principal based on a username and password
+        """
+
         principal = self.__principals.get(username)
-        if principal and principal.getPassword() == crypt.crypt(
-                password, principal.getPassword()):
+        if not principal:
+            return None
+
+        if pbkdf2_sha256.verify(password, principal.getPassword()):
             return principal
 
         return None

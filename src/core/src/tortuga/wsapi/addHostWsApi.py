@@ -18,7 +18,7 @@ import json
 
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.objects.addHostStatus import AddHostStatus
-from tortuga.config.configManager import ConfigManager
+
 from .tortugaWsApi import TortugaWsApi
 
 
@@ -26,19 +26,6 @@ class AddHostWsApi(TortugaWsApi):
     """
     AddHost WS API class.
     """
-
-    def __init__(self, username=None, password=None):
-        TortugaWsApi.__init__(self, username, password)
-
-        cm = ConfigManager()
-        self.serverHostname = cm.getInstaller()
-        self.serverPort = cm.getAdminPort()
-        self.serverScheme = cm.getAdminScheme()
-
-    def _buildUrl(self, url):
-        return "%s://%s:%s/%s" % (
-            self.serverScheme, self.serverHostname, self.serverPort, url)
-
     def addNodes(self, addNodesRequest):
         """
         Main entry point into adding nodes.
@@ -52,7 +39,7 @@ class AddHostWsApi(TortugaWsApi):
 
         try:
             _, responseDict = self.sendSessionRequest(
-                url=self._buildUrl('v1/nodes'),
+                url='v1/nodes',
                 method='POST',
                 data=json.dumps({'node': addNodesRequest}))
 
@@ -75,7 +62,7 @@ class AddHostWsApi(TortugaWsApi):
             TortugaException
         """
 
-        url = self._buildUrl('v1/addhost/%s/status' % (session))
+        url = 'v1/addhost/%s/status' % (session)
 
         # Add query parameters
         url += '?startMessage={0}&getNodes={1}'.format(

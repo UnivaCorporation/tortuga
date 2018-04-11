@@ -48,10 +48,10 @@ class GenerateNiiProfileCli(TortugaCli):
     def runCommand(self):
         self.parseArgs()
 
-        if not self.getOptions().installer:
+        if not self.getArgs().installer:
             raise InvalidCliRequest('Missing --installer option')
 
-        installer = self.getOptions().installer
+        installer = self.getArgs().installer
 
         cm = ConfigManager()
 
@@ -67,19 +67,19 @@ class GenerateNiiProfileCli(TortugaCli):
         api = getNodeApi(self.getUsername(), self.getPassword())
 
         fileContent = api.getProvisioningInfo(
-            self.getOptions().nodeName).getXmlRep()
+            self.getArgs().nodeName).getXmlRep()
 
         # Load generated XML and update installer host name value
         dom = ET.fromstring(fileContent)
 
         # Override the installer host name with that provided on command-line
-        if self.getOptions().installer:
+        if self.getArgs().installer:
             for elem in dom.findall('./globalparameter'):
                 if elem.get('name') == 'Installer':
                     elem.set('value', instHostName)
 
         # Generate file.
-        rootMountPoint = self.getOptions().rootMountPoint
+        rootMountPoint = self.getArgs().rootMountPoint
         niiProfileFile = ConfigManager().getProfileNiiFile()
         if rootMountPoint != '/':
             niiProfileFile = rootMountPoint + niiProfileFile

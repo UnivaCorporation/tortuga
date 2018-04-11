@@ -54,7 +54,7 @@ class DeleteNicApp(TortugaCli):
     def runCommand(self):
         self.parseArgs()
 
-        if not self.getOptions().nic:
+        if not self.getArgs().nic:
             print('Error: missing --nic argument.')
 
             sys.exit(1)
@@ -67,18 +67,18 @@ class DeleteNicApp(TortugaCli):
 
         # Validate device name
         NetworkDevicesDbHandler().getNetworkDevice(
-            session, self.getOptions().nic)
+            session, self.getArgs().nic)
 
         # Ensure it is a provisioning NIC that is being deleted
         dbInstallerNic = None
 
         for dbInstallerNic in dbNode.hardwareprofile.nics:
-            if dbInstallerNic.networkdevice.name == self.getOptions().nic:
+            if dbInstallerNic.networkdevice.name == self.getArgs().nic:
                 break
         else:
             raise NicNotFound(
                 'NIC [%s] is not a provisioning NIC' % (
-                    self.getOptions().nic))
+                    self.getArgs().nic))
 
         hardwareProfiles = [
             entry.hardwareprofile
@@ -115,7 +115,7 @@ class DeleteNicApp(TortugaCli):
 
         dbm.closeSession()
 
-        if bUpdated and self.getOptions().bSync:
+        if bUpdated and self.getArgs().bSync:
             print('Applying changes to Tortuga...')
 
             cmd = 'puppet agent --onetime --no-daemonize >/dev/null 2>&1'

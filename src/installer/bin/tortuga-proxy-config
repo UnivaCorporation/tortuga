@@ -113,7 +113,7 @@ class TortugaProxyConfig(TortugaCli):
 
         proxyDict = dict(cfg.items('proxy'))
 
-        if self.getOptions().bDryRun:
+        if self.getArgs().bDryRun:
             print('[dryrun] %s' % (pprint.pformat(proxyDict)))
             return
 
@@ -134,7 +134,7 @@ class TortugaProxyConfig(TortugaCli):
 
                 sys.exit(1)
 
-            if not self.getOptions().bForce:
+            if not self.getArgs().bForce:
                 print(('URI [%s] is already proxied to [%s]' % (
                     proxy_from, proxyMap[proxy_from])))
 
@@ -221,7 +221,7 @@ class TortugaProxyConfig(TortugaCli):
         if proxy_path in proxyMap:
             existingKit = self.__get_existing_kit_by_url(proxy_path)
 
-            if existingKit and not self.getOptions().bForce:
+            if existingKit and not self.getArgs().bForce:
                 print(('WARNING: an installed %s [%s] matches this URL.'
                       ' Use \'--force\' to override this sanity check.' % (
                           'OS kit' if existingKit.getIsOs() else 'kit',

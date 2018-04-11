@@ -14,19 +14,20 @@
 
 # pylint: disable=no-member
 
+from typing import Optional, Union
 import cherrypy
 
-from tortuga.hardwareprofile.hardwareProfileManager \
-    import HardwareProfileManager
+from tortuga.exceptions.hardwareProfileNotFound import HardwareProfileNotFound
 from tortuga.exceptions.userNotAuthorized import UserNotAuthorized
+from tortuga.hardwareprofile.hardwareProfileManager import \
+    HardwareProfileManager
 from tortuga.objects.hardwareProfile import HardwareProfile
-from tortuga.exceptions.hardwareProfileNotFound \
-    import HardwareProfileNotFound
 from tortuga.objects.osInfo import OsInfo
-from .common import parse_tag_query_string
-from .tortugaController import TortugaController
-from .authController import AuthController
+from tortuga.objects.tortugaObject import TortugaObjectList
+
 from .authController import require
+from .common import parse_tag_query_string, make_options_from_query_string
+from .tortugaController import TortugaController
 
 
 class HardwareProfileController(TortugaController):
@@ -35,6 +36,12 @@ class HardwareProfileController(TortugaController):
             'name': 'getHardwareProfiles',
             'path': '/v1/hardwareProfiles',
             'action': 'getHardwareProfiles',
+            'method': ['GET'],
+        },
+        {
+            'name': 'getHardwareProfile',
+            'path': '/v1/hardwareProfiles/:(hwprofile_id)',
+            'action': 'getHardwareProfile',
             'method': ['GET'],
         },
         {
@@ -50,18 +57,6 @@ class HardwareProfileController(TortugaController):
             'method': ['POST'],
         },
         {
-            'name': 'getHardwareProfile',
-            'path': '/v1/hardwareProfiles/:(hardwareProfileName)',
-            'action': 'getHardwareProfile',
-            'method': ['POST'],
-        },
-        {
-            'name': 'getHardwareProfileById',
-            'path': '/v1/hardwareProfiles/id/:(hardware_profile_id)',
-            'action': 'getHardwareProfileById',
-            'method': ['POST'],
-        },
-        {
             'name': 'updateHardwareProfile',
             'path': '/v1/hardwareProfiles/:(hardwareProfileId)',
             'action': 'updateHardwareProfile',
@@ -69,7 +64,7 @@ class HardwareProfileController(TortugaController):
         },
         {
             'name': 'copyHardwareProfile',
-            'path': '/v1/hardwareProfiles/:(srcHardwareProfileName)/copy',
+            'path': '/v1/hardwareProfiles/:(srcHardwareProfileName)/copy/:(dstHardwareProfileName)',
             'action': 'copyHardwareProfile',
             'method': ['POST'],
         },
@@ -111,7 +106,6 @@ class HardwareProfileController(TortugaController):
 
     @require()
     @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
     def getHardwareProfiles(self, **kwargs):
         tagspec = []
 
@@ -119,8 +113,18 @@ class HardwareProfileController(TortugaController):
             tagspec.extend(parse_tag_query_string(kwargs['tag']))
 
         try:
-            hardwareProfiles = HardwareProfileManager().\
-                getHardwareProfileList(tags=tagspec)
+            if 'name' in kwargs and kwargs['name']:
+                options = make_options_from_query_string(
+                    kwargs['include']
+                    if 'include' in kwargs else None, ['resourceadapter'])
+
+                hardwareProfiles = TortugaObjectList(
+                    [HardwareProfileManager().getHardwareProfile(
+                        kwargs['name'], optionDict=options)])
+            else:
+                hardwareProfiles = \
+                    HardwareProfileManager().getHardwareProfileList(
+                        tags=tagspec)
 
             response = {
                 'hardwareprofiles': hardwareProfiles.getCleanDict(),
@@ -137,44 +141,12 @@ class HardwareProfileController(TortugaController):
 
     @require()
     @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
-    def getHardwareProfileById(self, hardware_profile_id):
-        postdata = cherrypy.request.json
-
-        optionDict = postdata['optionDict'] \
-            if 'optionDict' in postdata else {}
-
+    def getHardwareProfile(self, hwprofile_id):
+        """
+        TODO: implement support for optionDict through query string
+        """
         try:
-            hp = HardwareProfileManager().\
-                getHardwareProfileById(hardware_profile_id, optionDict)
-
-            response = createHwProfileResponse(hp)
-        except HardwareProfileNotFound as ex:
-            self.handleException(ex)
-            code = self.getTortugaStatusCode(ex)
-            response = self.notFoundErrorResponse(str(ex), code)
-        except Exception as ex:
-            self.getLogger().exception(
-                'hardware profile WS API getHardwareProfileById()')
-
-            self.handleException(ex)
-
-            response = self.errorResponse(str(ex))
-
-        return self.formatResponse(response)
-
-    @require()
-    @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
-    def getHardwareProfile(self, hardwareProfileName):
-        postdata = cherrypy.request.json
-
-        optionDict = postdata['optionDict'] \
-            if 'optionDict' in postdata else {}
-
-        try:
-            hp = HardwareProfileManager().getHardwareProfile(
-                hardwareProfileName, optionDict)
+            hp = HardwareProfileManager().getHardwareProfileById(hwprofile_id)
 
             response = createHwProfileResponse(hp)
         except HardwareProfileNotFound as ex:
@@ -195,7 +167,9 @@ class HardwareProfileController(TortugaController):
     @cherrypy.tools.json_in()
     @require()
     def createHardwareProfile(self):
-        """Create hardware profile"""
+        """
+        Create hardware profile
+        """
 
         response = None
 
@@ -206,7 +180,7 @@ class HardwareProfileController(TortugaController):
         settingsDict = postdata['settingsDict'] \
             if 'settingsDict' in postdata else {}
 
-        if 'osInfo' in settingsDict:
+        if 'osInfo' in settingsDict and settingsDict['osInfo']:
             settingsDict['osInfo'] = OsInfo.getFromDict(
                 settingsDict['osInfo'])
 
@@ -256,33 +230,28 @@ class HardwareProfileController(TortugaController):
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     def updateHardwareProfile(self, hardwareProfileId):
-        '''
+        """
         Handle PUT to "hardwareprofiles/:(hardwareProfileId)"
-        '''
 
+        """
         response = None
 
         try:
             postdata = cherrypy.request.json
+            hw_profile = HardwareProfile.getFromDict(postdata)
+            hw_profile.setId(hardwareProfileId)
+            hp_mgr = HardwareProfileManager()
+            hp_mgr.updateHardwareProfile(hw_profile)
 
-            hwProfile = HardwareProfile.getFromDict(postdata)
-
-            # Make sure the id is synced
-            hwProfile.setId(hardwareProfileId)
-
-            hpMgr = HardwareProfileManager()
-
-            hpMgr.updateHardwareProfile(hwProfile)
         except HardwareProfileNotFound as ex:
             self.handleException(ex)
             code = self.getTortugaStatusCode(ex)
             response = self.notFoundErrorResponse(str(ex), code)
+
         except Exception as ex:
             self.getLogger().exception(
                 'hardware profile WS API updateHardwareProfile() failed')
-
             self.handleException(ex)
-
             response = self.errorResponse(str(ex))
 
         return self.formatResponse(response)
@@ -392,20 +361,10 @@ class HardwareProfileController(TortugaController):
     #     return self.formatResponse(response)
 
     @require()
-    @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
-    def copyHardwareProfile(self, srcHardwareProfileName):
+    def copyHardwareProfile(self, srcHardwareProfileName, dstHardwareProfileName):
         response = None
 
-        postdata = cherrypy.request.json
-
         try:
-            if 'dstHardwareProfileName' not in postdata:
-                raise HardwareProfileNotFound(
-                    'Missing destination hardware profile parameter')
-
-            dstHardwareProfileName = postdata['dstHardwareProfileName']
-
             hpMgr = HardwareProfileManager()
 
             hpMgr.copyHardwareProfile(
@@ -431,3 +390,5 @@ def createHwProfileResponse(hp):
     }
 
     return response
+
+

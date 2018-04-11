@@ -15,10 +15,11 @@
 # pylint: disable=no-name-in-module
 
 import cherrypy
-
+from tortuga.exceptions.kitNotFound import KitNotFound
 from tortuga.kit.manager import KitManager
+
+from .authController import require
 from .tortugaController import TortugaController
-from .authController import AuthController, require
 
 
 class KitController(TortugaController):
@@ -52,6 +53,12 @@ class KitController(TortugaController):
             'action': 'kitEulaRequest',
             'method': ['GET']
         },
+        {
+            'name': 'deleteKit',
+            'path': '/v1/kits/:(name)/:(version)',
+            'action': 'deleteKit',
+            'method': ['DELETE'],
+        }
     ]
 
     @cherrypy.tools.json_out()
@@ -230,13 +237,25 @@ class KitController(TortugaController):
 
     #     return self.formatResponse(response)
 
-    def deleteKit(self, name, version, iteration=None):
-        """ Remove kit by name, version and iteration. """
+    @cherrypy.tools.json_out()
+    @require()
+    def deleteKit(self, name: str, version: str) -> str:
+        """
+        Remove kit by name and version
+        """
 
         response = None
 
+        # 'version' can be formatted as '<version>-<iteration>'
+        if '-' in version:
+            version, iteration = version.split('-', 1)
+        else:
+            iteration = None
+
         try:
             KitManager().deleteKit(name, version, iteration)
+        except KitNotFound:
+            pass
         except Exception as ex:
             self.getLogger().error('%s' % ex)
             self.handleException(ex)

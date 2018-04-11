@@ -14,19 +14,35 @@
 
 # pylint: disable=no-member
 
-import json
 import datetime
+import json
+
 import cherrypy
+from marshmallow import Schema, fields
 
 from tortuga.addhost.addHostManager import AddHostManager
-from tortuga.exceptions.invalidArgument import InvalidArgument
-from tortuga.exceptions.notFound import NotFound
 from tortuga.addhost.utility import validate_addnodes_request
 from tortuga.db.nodeRequests import NodeRequests
-from ..threadManager import threadManager
-from .tortugaController import TortugaController
-from .authController import AuthController, require
+from tortuga.db.nodeRequestsDbHandler import NodeRequestsDbHandler
+from tortuga.exceptions.invalidArgument import InvalidArgument
+from tortuga.exceptions.notFound import NotFound
+
 from .. import dbm
+from ..threadManager import threadManager
+from .authController import AuthController, require
+from .tortugaController import TortugaController
+
+
+class NodeRequestSchema(Schema):
+    id = fields.Integer()
+    request = fields.String()
+    timestamp = fields.DateTime()
+    last_update = fields.DateTime()
+    state = fields.String()
+    addHostSession = fields.String()
+    message = fields.String()
+    admin_id = fields.Integer()
+    action = fields.String()
 
 
 class AddHostController(TortugaController):
@@ -42,6 +58,12 @@ class AddHostController(TortugaController):
             'path': '/v1/nodes',
             'action': 'addNodes',
             'method': ['POST']
+        },
+        {
+            'name': 'getAddHostRequests',
+            'path': '/v1/addhost/requests/',
+            'action': 'getAddHostRequests',
+            'method': ['GET'],
         },
     ]
 
@@ -101,6 +123,29 @@ class AddHostController(TortugaController):
             response = self.notFoundErrorResponse(str(ex), code)
         except Exception as ex:
             self.getLogger().error('Exception retrieving addhost status')
+            self.handleException(ex)
+            response = self.errorResponse(str(ex))
+
+        return self.formatResponse(response)
+
+    @cherrypy.tools.json_out()
+    @require()
+    def getAddHostRequests(self, **kwargs):
+        try:
+            if 'addHostSession' in kwargs:
+                add_host_request = \
+                    NodeRequestsDbHandler().get_by_addHostSession(
+                        cherrypy.request.db, kwargs['addHostSession'])
+                if not add_host_request:
+                    return self.formatResponse(response=[])
+
+                result = [add_host_request]
+            else:
+                result = NodeRequestsDbHandler().get_all(cherrypy.request.db)
+
+            response = NodeRequestSchema().dump(result, many=True).data
+        except Exception as ex:
+            self.getLogger().error('Exception retrieving add host request(s)')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
