@@ -100,9 +100,12 @@ class NodeApi(TortugaApi):
 
     def getNodeById(self, nodeId: int,
                     optionDict: Optional[Union[dict, None]] = None) -> Node:
-        """Get a node by id"""
+        """
+        Get a node by id
+        """
+
         try:
-            return self._nodeManager.getNodeById(nodeId, optionDict)
+            return self._nodeManager.getNodeById(nodeId, optionDict=optionDict)
         except TortugaException:
             raise
         except Exception as ex:

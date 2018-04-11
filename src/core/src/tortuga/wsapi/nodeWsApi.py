@@ -22,6 +22,8 @@ from typing import Dict, List, Optional, Union
 
 import tortuga.objects.node
 import tortuga.objects.provisioningInfo
+from tortuga.exceptions.invalidArgument import InvalidArgument
+from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.objects.tortugaObject import TortugaObjectList
 
@@ -33,7 +35,8 @@ class NodeWsApi(TortugaWsApi):
     Node WS API class.
     """
 
-    def getNodeList(self, tags=None):
+    def getNodeList(self, nodespec: Optional[Union[str, None]] = None,
+                    tags: Optional[Union[dict, None]] = None):
         """
         Get list of nodes
 
@@ -44,6 +47,9 @@ class NodeWsApi(TortugaWsApi):
         """
 
         url = 'v1/nodes'
+
+        if nodespec:
+            url += '?name={}'.format(nodespec)
 
         if tags:
             params = []
@@ -95,6 +101,15 @@ class NodeWsApi(TortugaWsApi):
         try:
             _, responseDict = self.sendSessionRequest(url)
 
+            if not responseDict['nodes']:
+                raise NodeNotFound(
+                    'No nodes matching nodespec [{}]'.format(name))
+
+            if len(responseDict['nodes']) > 1:
+                raise InvalidArgument(
+                    'Nodespec [{}] returned multiple results for a single'
+                    ' node request; use getNodeList()'.format(name))
+
             return tortuga.objects.node.Node.getFromDict(
                 responseDict.get('nodes')[0])
         except TortugaException:
@@ -125,6 +140,12 @@ class NodeWsApi(TortugaWsApi):
                     optionDict: Optional[Union[dict, None]] = None): \
             # pylint: disable=unused-argument
         url = 'v1/nodes/%d' % (int(nodeId))
+
+        if optionDict:
+            for key, value in optionDict.items():
+                if not value:
+                    continue
+                url += '&include={}'.format(key)
 
         try:
             _, responseDict = self.sendSessionRequest(url)

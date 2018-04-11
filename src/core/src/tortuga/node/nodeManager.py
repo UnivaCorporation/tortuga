@@ -38,6 +38,7 @@ from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
 from tortuga.exceptions.volumeDoesNotExist import VolumeDoesNotExist
 from tortuga.kit.actions import KitActionsManager
+from tortuga.objects.node import Node
 from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.os_utility import osUtility, tortugaSubprocess
@@ -161,13 +162,15 @@ class NodeManager(TortugaObjectManager): \
 
         return node
 
-    def getNodeById(self, nodeId, optionDict=None):
+    def getNodeById(self, nodeId: int,
+                    optionDict: Optional[Union[dict, None]] = None) -> Node:
         """
         Get node by node id
 
         Raises:
             NodeNotFound
         """
+
         return self._nodeDbApi.getNodeById(int(nodeId), optionDict)
 
     def getNodeByIp(self, ip):

@@ -28,7 +28,7 @@ from tortuga.utility.helper import str2bool
 from .. import app
 from ..threadManager import threadManager
 from .authController import require
-from .common import parse_tag_query_string, make_options_from_query_string
+from .common import make_options_from_query_string, parse_tag_query_string
 from .tortugaController import TortugaController
 
 
@@ -39,9 +39,9 @@ class NodeController(TortugaController):
     """
     actions = [
         {
-            'name': 'userNodes',
+            'name': 'getNodeList',
             'path': '/v1/nodes',
-            'action': 'nodeListRequest',
+            'action': 'getNodes',
             'method': ['GET']
         },
         {
@@ -51,9 +51,9 @@ class NodeController(TortugaController):
             'method': ['GET']
         },
         {
-            'name': 'userNode',
+            'name': 'getNodeById',
             'path': '/v1/nodes/:(node_id)',
-            'action': 'nodeRequest',
+            'action': 'getNodeById',
             'method': ['GET']
         },
         {
@@ -152,7 +152,7 @@ class NodeController(TortugaController):
 
     @cherrypy.tools.json_out()
     @require()
-    def nodeListRequest(self, **kwargs):
+    def getNodes(self, **kwargs):
         """
         Return list of all available nodes
 
@@ -172,9 +172,6 @@ class NodeController(TortugaController):
 
                 nodeList = app.node_api.getNodesByNameFilter(
                     kwargs['name'], optionDict=options)
-
-                if not nodeList:
-                    raise NodeNotFound('No nodes matching nodespec [{}]'.format(kwargs['name']))
             elif 'installer' in kwargs and str2bool(kwargs['installer']):
                 nodeList = TortugaObjectList(
                     [app.node_api.getInstallerNode()]
@@ -197,15 +194,18 @@ class NodeController(TortugaController):
 
     @cherrypy.tools.json_out()
     @require()
-    def nodeRequest(self, node_id):
+    def getNodeById(self, node_id: str, **kwargs):
         """
         Return node information
 
-        TODO: implement support for 'optionDict' passed through query
-        string
         """
         try:
-            node = app.node_api.getNodeById(node_id)
+            options = make_options_from_query_string(
+                kwargs['include']
+                if 'include' in kwargs else None,
+                ['softwareprofile', 'hardwareprofile'])
+
+            node = app.node_api.getNodeById(node_id, optionDict=options)
 
             response = {
                 'node': node.getCleanDict(),
