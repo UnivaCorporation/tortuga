@@ -29,11 +29,17 @@ class DeleteNodeCli(TortugaCli):
     Delete node command line interface.
     """
 
-    def __init__(self):
-        super(DeleteNodeCli, self).__init__(validArgCount=100)
+    def parseArgs(self, usage=None):
+        excl_group = \
+            self.getParser().add_mutually_exclusive_group(required=True)
 
-        self.addOption('--node', dest='nodeList', default=[],
-                       help=_('Name or list of node(s) to delete'))
+        excl_group.add_argument(
+            '--node', dest='nodeList',
+            help=argparse.SUPPRESS)
+
+        excl_group.add_argument(
+            '--name', dest='nodeList',
+            help=_('Name or list of node(s) to delete'))
 
         # This is a deprecated option. Accept the '--force' argument, but
         # don't do anything with it.
@@ -41,29 +47,17 @@ class DeleteNodeCli(TortugaCli):
                        default=False,
                        help=argparse.SUPPRESS)
 
-
+        super().parseArgs(usage=usage)
 
     def runCommand(self):
-
-        self.parseArgs('''
-    delete-node --node=NAME
-    delete-node --node=NAME[,NODE...]
-    delete-node NAME [NODE]...
-
-Description:
-    The delete-node tool removes node(s) from the system.
-''')
-
-        if not self.getArgs().nodeList and not self.getArgs():
-            self.getParser().error(_('Missing --node option'))
+        self.parseArgs()
 
         node_api = NodeWsApi(username=self.getUsername(),
                              password=self.getPassword(),
                              baseurl=self.getUrl()
         )
 
-        if self.getArgs().nodeList and \
-                self.getArgs().nodeList[0] == '-':
+        if self.getArgs().nodeList[0] == '-':
             # Perform bulk deletes, 100 nodes at a time
 
             nodes = []
@@ -78,12 +72,7 @@ Description:
 
             node_api.deleteNode(','.join(nodes))
         else:
-            nodes = self.getArgs().nodeList
-
-            if self.getArgs():
-                nodes += ',' + ','.join(self.getArgs())
-
-            node_api.deleteNode(nodes)
+            node_api.deleteNode(self.getArgs().nodeList)
 
 
 def main():
