@@ -18,13 +18,12 @@
 
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
-from tortuga.wsapi.nodeWsApi import NodeWsApi
 from tortuga.objects.network import Network
 from tortuga.objects.networkDevice import NetworkDevice
 from tortuga.objects.resourceAdapter import ResourceAdapter
 from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.wsapi.hardwareProfileWsApi import HardwareProfileWsApi
-from tortuga.wsapi.networkWsApi import NetworkWsApi
+from tortuga.wsapi.nodeWsApi import NodeWsApi
 from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
 
 
@@ -147,10 +146,6 @@ class UpdateHardwareProfileCli(TortugaCli):
                                      password=self.getPassword(),
                                      baseurl=self.getUrl())
 
-        networkApi = NetworkWsApi(username=self.getUsername(),
-                                  password=self.getPassword(),
-                                  baseurl=self.getUrl())
-
         nodeApi = NodeWsApi(username=self.getUsername(),
                             password=self.getPassword(),
                             baseurl=self.getUrl())
@@ -252,13 +247,12 @@ class UpdateHardwareProfileCli(TortugaCli):
             out.extend(hp.getNetworks())
 
             for netstring in self.getArgs().deleteNetwork:
-                netArgs = netstring.split('/')
-                if len(netArgs) != 3:
+                try:
+                    dnet, dmask, ddev = netstring.split('/')
+                except ValueError:
                     raise InvalidCliRequest(
                         _('Incorrect input format for --delete-network'
                           ' ("address/mask/device")'))
-
-                dnet, dmask, ddev = netArgs
 
                 for network in hp.getNetworks():
                     if dnet == network.getAddress() and \
@@ -273,23 +267,19 @@ class UpdateHardwareProfileCli(TortugaCli):
                         break
                 else:
                     # Not a NIC we are deleting
-                    print(('Ignoring deletion of non-existent network:'
-                           ' %s/%s/%s' % (dnet, dmask, ddev)))
+                    print('Ignoring deletion of non-existent network:'
+                           ' %s/%s/%s' % (dnet, dmask, ddev))
 
             hp.setNetworks(out)
 
         if self.getArgs().addNetwork:
             for netstring in self.getArgs().addNetwork:
-                netArgs = netstring.split('/')
-                if len(netArgs) != 3:
+                try:
+                    anet, amask, adev = netstring.split('/')
+                except ValueError:
                     raise InvalidCliRequest(
                         _('Incorrect input format for --add-network'
                           ' ("address/mask/device")'))
-
-                anet, amask, adev = netArgs
-
-                # check for network existence
-                networkApi.getNetwork(anet, amask)
 
                 network = Network()
                 networkDevice = NetworkDevice()
