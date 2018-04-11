@@ -320,5 +320,5 @@ Description:
         return '\n'.join(output)
 
 
-if __name__ == '__main__':
+def main():
     GetNodeStatus().run()
