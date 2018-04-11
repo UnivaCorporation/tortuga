@@ -64,7 +64,7 @@ class HardwareProfileController(TortugaController):
         },
         {
             'name': 'copyHardwareProfile',
-            'path': '/v1/hardwareProfiles/:(srcHardwareProfileName)/copy',
+            'path': '/v1/hardwareProfiles/:(srcHardwareProfileName)/copy/:(dstHardwareProfileName)',
             'action': 'copyHardwareProfile',
             'method': ['POST'],
         },
@@ -360,20 +360,10 @@ class HardwareProfileController(TortugaController):
     #     return self.formatResponse(response)
 
     @require()
-    @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
-    def copyHardwareProfile(self, srcHardwareProfileName):
+    def copyHardwareProfile(self, srcHardwareProfileName, dstHardwareProfileName):
         response = None
 
-        postdata = cherrypy.request.json
-
         try:
-            if 'dstHardwareProfileName' not in postdata:
-                raise HardwareProfileNotFound(
-                    'Missing destination hardware profile parameter')
-
-            dstHardwareProfileName = postdata['dstHardwareProfileName']
-
             hpMgr = HardwareProfileManager()
 
             hpMgr.copyHardwareProfile(
