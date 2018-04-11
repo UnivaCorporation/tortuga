@@ -36,7 +36,8 @@ class NodeWsApi(TortugaWsApi):
     """
 
     def getNodeList(self, nodespec: Optional[Union[str, None]] = None,
-                    tags: Optional[Union[dict, None]] = None):
+                    tags: Optional[Union[dict, None]] = None,
+                    addHostSession: Optional[Union[str, None]] = None):
         """
         Get list of nodes
 
@@ -50,6 +51,9 @@ class NodeWsApi(TortugaWsApi):
 
         if nodespec:
             url += '?name={}'.format(nodespec)
+
+        if addHostSession:
+            url += '?addHostSession={}'.format(addHostSession)
 
         if tags:
             params = []
@@ -442,6 +446,23 @@ class NodeWsApi(TortugaWsApi):
 
         try:
             self.sendSessionRequest(url)
+        except TortugaException:
+            raise
+        except Exception as ex:
+            raise TortugaException(exception=ex)
+
+    def getNodeRequests(self, addHostSession: Optional[Union[str, None]] = None):
+        url = 'v1/addhost/requests/'
+
+        if addHostSession:
+            url += '?addHostSession={}'.format(
+               urllib.parse.quote_plus(addHostSession)
+            )
+
+        try:
+            _, responseDict = self.sendSessionRequest(url)
+
+            return responseDict
         except TortugaException:
             raise
         except Exception as ex:

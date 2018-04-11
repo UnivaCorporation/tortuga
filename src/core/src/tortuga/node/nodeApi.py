@@ -412,3 +412,16 @@ class NodeApi(TortugaApi):
                     nodespec))
 
             raise TortugaException(exception=ex)
+
+    def getNodesByAddHostSession(self, addHostSession):
+        try:
+            return self._nodeManager.getNodesByAddHostSession(
+                nodespec, optionDict=optionDict)
+        except TortugaException:
+            raise
+        except Exception as ex:
+            self.getLogger().exception(
+                'Fatal error retrieving nodes by add host session [{}]'.format(
+                    addHostSession))
+
+            raise TortugaException(exception=ex)

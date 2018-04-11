@@ -78,19 +78,18 @@ class NodeDbApi(TortugaDbApi):
         Get node(s) from db based their addhost session
         """
 
-        session = DbManager().openSession()
-
-        try:
-            return self.__convert_nodes_to_TortugaObjectList(
-                self._nodesDbHandler.getNodesByAddHostSession(
-                    session, ahSession))
-        except TortugaException as ex:
-            raise
-        except Exception as ex:
-            self.getLogger().exception('%s' % ex)
-            raise
-        finally:
-            DbManager().closeSession()
+        with DbManager().session() as session:
+            try:
+                return self.__convert_nodes_to_TortugaObjectList(
+                    self._nodesDbHandler.getNodesByAddHostSession(
+                        session, ahSession))
+            except TortugaException as ex:
+                raise
+            except Exception as ex:
+                self.getLogger().exception('%s' % ex)
+                raise
+            finally:
+                DbManager().closeSession()
 
     def getNodesByNameFilter(self, nodespec, optionDict: Optional[Union[dict, None]] = None):
         """
