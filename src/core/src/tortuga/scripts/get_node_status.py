@@ -135,16 +135,20 @@ class GetNodeStatus(TortugaCli): \
                 ' mutually exclusive'
             )
 
-        api = NodeWsApi(self.getUsername(), self.getPassword())
+        api = NodeWsApi(username=self.getUsername(),
+                        password=self.getPassword(),
+                        baseurl=self.getUrl())
 
-        if options.nodeName:
-            nodes: List[Dict[str, Any]] = [dict(api.getNode(options.nodeName))]
-        else:
-            nodes: List[Dict[str, Any]] = [dict(x) for x in api.getNodeList(options.tags)]
+        nodes: List[Dict[str, Any]] = [
+            dict(x)
+            for x in api.getNodeList(nodespec=options.nodeName,
+                                     tags=options.tags)]
 
-        if not nodes or nodes == [None]:
+        if not nodes:
             if options.nodeName:
-                print('No nodes matching nodespec [{}]\n'.format(options.nodeName))
+                print('No nodes matching nodespec [{}]\n'.format(
+                    options.nodeName))
+
             sys.exit(1)
 
         if options.bActiveNodesOnly:
