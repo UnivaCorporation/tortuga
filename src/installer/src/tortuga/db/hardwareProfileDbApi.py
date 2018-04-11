@@ -495,11 +495,13 @@ class HardwareProfileDbApi(TortugaDbApi):
             # pylint: disable=no-self-use
         return session.query(NetworkDevice).all()
 
-    def __populateHardwareProfile(self, session: Session, hardwareProfile: HardwareProfiles,
-                                  dbHardwareProfile: Optional[Union[HardwareProfiles, None]] = None) -> HardwareProfiles:
+    def __populateHardwareProfile(self, session: Session,
+                                  hardwareProfile: HardwareProfileModel,
+                                  dbHardwareProfile: Optional[Union[HardwareProfileModel, None]] = None) -> HardwareProfileModel:
         """
-        Helper function for creating / updating HardwareProfiles. If
-        'dbHardwareProfile' is specified, this is an update (vs. add) operation
+        Helper function for creating / updating hardware profiles. If
+        'dbHardwareProfile' is specified, this is an update (vs. add)
+        operation
 
         Raises:
             NicNotFound
