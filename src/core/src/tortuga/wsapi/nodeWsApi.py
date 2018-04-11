@@ -142,19 +142,19 @@ class NodeWsApi(TortugaWsApi):
         except Exception as ex:
             raise TortugaException(exception=ex)
 
-    def getNodeByIp(self, ip):
+    def getNodeByIp(self, ip: str):
         """
         This API is called by compute nodes to get the node record
         associated with an IP
         """
 
-        url = 'v1/nics/%s/node' % (urllib.parse.quote_plus(ip))
+        url = 'v1/nodes?ip={}'.format(urllib.parse.quote_plus(ip))
 
         try:
             _, responseDict = self.sendSessionRequest(url)
 
             return tortuga.objects.node.Node.getFromDict(
-                responseDict.get('node'))
+                responseDict.get('nodes')[0])
         except TortugaException:
             raise
         except Exception as ex:

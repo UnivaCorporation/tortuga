@@ -173,6 +173,8 @@ class NodeController(TortugaController):
                 nodeList = TortugaObjectList(
                     [app.node_api.getInstallerNode()]
                 )
+            elif 'ip' in kwargs:
+                nodeList = TortugaObjectList([app.node_api.getNodeByIp(kwargs['ip'])])
             else:
                 nodeList = app.node_api.getNodeList(tags=tagspec)
 
