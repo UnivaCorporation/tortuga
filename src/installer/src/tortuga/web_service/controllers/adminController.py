@@ -32,31 +32,31 @@ class AdminController(TortugaController):
     actions = [
         {
             'name': 'addAdmin',
-            'path': '/v1/admin',
+            'path': '/v1/admins/',
             'action': 'addAdmin',
             'method': ['POST'],
         },
         {
             'name': 'getAdminList',
-            'path': '/v1/admin',
+            'path': '/v1/admins/',
             'action': 'getAdminList',
             'method': ['GET'],
         },
         {
             'name': 'getAdmin',
-            'path': '/v1/admin/:(admin_id)',
+            'path': '/v1/admins/:(admin_id)',
             'action': 'getAdmin',
             'method': ['GET'],
         },
         {
             'name': 'adminUpdate',
-            'path': '/v1/admin/:(admin_id)',
+            'path': '/v1/admins/:(admin_id)',
             'action': 'updateAdmin',
             'method': ['PUT'],
         },
         {
             'name': 'deleteAdmin',
-            'path': '/v1/admin/:(admin_id)',
+            'path': '/v1/admins/:(admin_id)',
             'action': 'deleteAdmin',
             'method': ['DELETE'],
         },

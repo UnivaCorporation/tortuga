@@ -47,7 +47,7 @@ class NodeWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/nodes'
+        url = 'v1/nodes/'
 
         if nodespec:
             url += '?name={}'.format(nodespec)
@@ -94,7 +94,7 @@ class NodeWsApi(TortugaWsApi):
     def getNode(self, name,
                 optionDict: Optional[Union[dict, None]] = None): \
             # pylint: disable=unused-argument
-        url = 'v1/nodes?name=%s' % (urllib.parse.quote(name))
+        url = 'v1/nodes/?name=%s' % (urllib.parse.quote(name))
 
         if optionDict:
             for key, value in optionDict.items():
@@ -128,7 +128,7 @@ class NodeWsApi(TortugaWsApi):
         multiple REST API calls
         """
 
-        url = 'v1/nodes?installer=true'
+        url = 'v1/nodes/?installer=true'
 
         try:
             _, responseDict = self.sendSessionRequest(url)
@@ -179,7 +179,7 @@ class NodeWsApi(TortugaWsApi):
         associated with an IP
         """
 
-        url = 'v1/nodes?ip={}'.format(urllib.parse.quote_plus(ip))
+        url = 'v1/nodes/?ip={}'.format(urllib.parse.quote_plus(ip))
 
         try:
             _, responseDict = self.sendSessionRequest(url)

@@ -40,7 +40,7 @@ class NodeController(TortugaController):
     actions = [
         {
             'name': 'getNodeList',
-            'path': '/v1/nodes',
+            'path': '/v1/nodes/',
             'action': 'getNodes',
             'method': ['GET']
         },

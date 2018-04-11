@@ -34,37 +34,37 @@ class SoftwareProfileController(TortugaController):
     actions = [
         {
             'name': 'getSoftwareProfiles',
-            'path': '/v1/softwareProfiles',
+            'path': '/v1/softwareprofiles/',
             'action': 'getSoftwareProfiles',
             'method': ['GET'],
         },
         {
             'name': 'getSoftwareProfileById',
-            'path': '/v1/softwareProfiles/:(swprofile_id)',
+            'path': '/v1/softwareprofiles/:(swprofile_id)',
             'action': 'getSoftwareProfileById',
             'method': ['GET'],
         },
         {
             'name': 'deleteSoftwareProfile',
-            'path': '/v1/softwareProfiles/:(softwareProfileName)',
+            'path': '/v1/softwareprofiles/:(softwareProfileName)',
             'action': 'deleteSoftwareProfile',
             'method': ['DELETE'],
         },
         {
             'name': 'createSoftwareProfile',
-            'path': '/v1/softwareProfiles',
+            'path': '/v1/softwareprofiles/',
             'action': 'createSoftwareProfile',
             'method': ['POST'],
         },
         {
             'name': 'copySoftwareProfile',
-            'path': '/v1/softwareProfiles/:(srcSoftwareProfileName)/copy/:(dstSoftwareProfileName)',
+            'path': '/v1/softwareprofiles/:(srcSoftwareProfileName)/copy/:(dstSoftwareProfileName)',
             'action': 'copySoftwareProfile',
             'method': ['POST'],
         },
         {
             'name': 'getUsableNodes',
-            'path': '/v1/softwareProfiles/:(softwareProfileName)/usable',
+            'path': '/v1/softwareprofiles/:(softwareProfileName)/usable',
             'action': 'getUsableNodes',
             'method': ['GET'],
         },
@@ -76,74 +76,74 @@ class SoftwareProfileController(TortugaController):
         },
         {
             'name': 'updateSoftwareProfile',
-            'path': '/v1/softwareProfiles/:(softwareProfileId)',
+            'path': '/v1/softwareprofiles/:(softwareProfileId)',
             'action': 'updateSoftwareProfile',
             'method': ['PUT'],
         },
         {
             'name': 'getSoftwareProfileProvisioningInfo',
-            'path': '/v1/softwareProfiles/:(softwareProfileName)'
+            'path': '/v1/softwareprofiles/:(softwareProfileName)'
                     '/provisioningInfo',
             'action': 'getProvisioningInfo',
             'method': ['GET'],
         },
         {
             'name': 'getSoftwareProfileAdmins',
-            'path': '/v1/softwareProfiles/:(softwareProfileName)/admins',
+            'path': '/v1/softwareprofiles/:(softwareProfileName)/admins',
             'action': 'getAdmins',
             'method': ['GET'],
         },
         {
             'name': 'getEnabledComponents',
-            'path': '/v1/softwareProfiles/:(softwareProfileName)/components',
+            'path': '/v1/softwareprofiles/:(softwareProfileName)/components',
             'action': 'getEnabledComponents',
             'method': ['GET'],
         },
         {
             'name': 'addSwAdmin',
-            'path': '/v1/softwareProfiles/:(softwareProfileName)'
+            'path': '/v1/softwareprofiles/:(softwareProfileName)'
                     '/admin/:(adminUsername)',
             'action': 'addAdmin',
             'method': ['POST'],
         },
         {
             'name': 'deleteSwAdmin',
-            'path': '/v1/softwareProfiles/:(softwareProfileName)'
+            'path': '/v1/softwareprofiles/:(softwareProfileName)'
                     '/admin/:(adminUsername)',
             'action': 'deleteAdmin',
             'method': ['DELETE'],
         },
         {
             'name': 'enableComponent',
-            'path': '/v1/softwareProfiles/:(softwareProfileName)'
+            'path': '/v1/softwareprofiles/:(softwareProfileName)'
                     '/enable_components',
             'action': 'enableComponent',
             'method': ['PUT'],
         },
         {
             'name': 'disableComponent',
-            'path': '/v1/softwareProfiles/:(softwareProfileName)'
+            'path': '/v1/softwareprofiles/:(softwareProfileName)'
                     '/disable_components',
             'action': 'disableComponent',
             'method': ['PUT'],
         },
         {
             'name': 'addUsableHardwareProfileToSoftwareProfile',
-            'path': '/v1/softwareProfiles/:(softwareProfileName)'
+            'path': '/v1/softwareprofiles/:(softwareProfileName)'
                     '/mappings/:(hardwareProfileName)',
             'action': 'addUsableHardwareProfileToSoftwareProfile',
             'method': ['POST'],
         },
         {
             'name': 'deleteUsableHardwareProfileFromSoftwareProfile',
-            'path': '/v1/softwareProfiles/:(softwareProfileName)'
+            'path': '/v1/softwareprofiles/:(softwareProfileName)'
                     '/mappings/:(hardwareProfileName)',
             'action': 'deleteUsableHardwareProfileFromSoftwareProfile',
             'method': ['DELETE'],
         },
         {
             'name': 'softwareProfileNodes',
-            'path': '/v1/softwareProfiles/:(softwareProfileName)/nodes',
+            'path': '/v1/softwareprofiles/:(softwareProfileName)/nodes',
             'action': 'getNodes',
             'method': ['GET'],
         },

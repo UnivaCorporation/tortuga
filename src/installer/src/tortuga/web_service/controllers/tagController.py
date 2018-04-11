@@ -30,7 +30,7 @@ class TagController(TortugaController):
     actions = [
         {
             'name': 'get_tags',
-            'path': '/v1/tags',
+            'path': '/v1/tags/',
             'action': 'get',
             'method': ['GET'],
         },

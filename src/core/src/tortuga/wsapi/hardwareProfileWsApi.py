@@ -33,7 +33,7 @@ class HardwareProfileWsApi(TortugaWsApi):
         """
         Get hardware profile by name
         """
-        url = 'v1/hardwareProfiles?name=%s' % (hardwareProfileName)
+        url = 'v1/hardwareprofiles/?name=%s' % (hardwareProfileName)
 
         for key, value in optionDict.items():
             if not value:
@@ -54,7 +54,7 @@ class HardwareProfileWsApi(TortugaWsApi):
         """
         Get hardware profile by name
         """
-        url = 'v1/hardwareProfiles/%d' % (id_)
+        url = 'v1/hardwareprofiles/%d' % (id_)
 
         try:
             _, responseDict = self.sendSessionRequest(url)
@@ -67,7 +67,7 @@ class HardwareProfileWsApi(TortugaWsApi):
             raise TortugaException(exception=ex)
 
     def updateSoftwareOverrideAllowed(self, hardwareProfileName, flag):
-        url = 'v1/hardwareProfiles/%s/softwareOverrideAllowed' % (
+        url = 'v1/hardwareprofiles/%s/softwareOverrideAllowed' % (
             hardwareProfileName)
 
         postdata = json.dumps({
@@ -85,7 +85,7 @@ class HardwareProfileWsApi(TortugaWsApi):
             raise TortugaException(exception=ex)
 
     def getHypervisorNodes(self, hardwareProfileName):
-        url = 'v1/hardwareProfiles/%s/virtualContainerNodes' % (
+        url = 'v1/hardwareprofiles/%s/virtualContainerNodes' % (
             hardwareProfileName)
 
         try:
@@ -118,7 +118,7 @@ class HardwareProfileWsApi(TortugaWsApi):
         Get list of hardware profiles by calling WS API
         """
 
-        url = 'v1/hardwareProfiles'
+        url = 'v1/hardwareprofiles/'
 
         # TODO: add support for building query string with 'tags'
         try:
@@ -133,7 +133,7 @@ class HardwareProfileWsApi(TortugaWsApi):
         Update the given Hardware Profile by calling WS API
         """
 
-        url = 'v1/hardwareProfiles/%s' % (hardwareProfileObject.getId())
+        url = 'v1/hardwareprofiles/%s' % (hardwareProfileObject.getId())
 
         try:
             (response, responseDict) = self.sendSessionRequest(
@@ -154,7 +154,7 @@ class HardwareProfileWsApi(TortugaWsApi):
                 HardwareProfileNotFound
         """
 
-        url = 'v1/hardwareProfiles/%s/admin/%s' % (
+        url = 'v1/hardwareprofiles/%s/admin/%s' % (
             hardwareProfileName, adminUsername)
 
         try:
@@ -179,7 +179,7 @@ class HardwareProfileWsApi(TortugaWsApi):
                 HardwareProfileNotFound
         """
 
-        url = 'v1/hardwareProfiles/%s/admin/%s' % (
+        url = 'v1/hardwareprofiles/%s/admin/%s' % (
             hardwareProfileName, adminUsername)
 
         try:
@@ -215,7 +215,7 @@ class HardwareProfileWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/hardwareProfiles/%s' % (hardwareProfileName)
+        url = 'v1/hardwareprofiles/%s' % (hardwareProfileName)
 
         try:
             (response, responseDict) = self.sendSessionRequest(
@@ -238,7 +238,7 @@ class HardwareProfileWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/hardwareProfiles'
+        url = 'v1/hardwareprofiles/'
 
         postdata = {
             'hardwareProfile': hwProfile.getCleanDict(),
@@ -266,7 +266,7 @@ class HardwareProfileWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/hardwareProfiles/%s/copy' % (srcHardwareProfileName)
+        url = 'v1/hardwareprofiles/%s/copy' % (srcHardwareProfileName)
 
         postdata = {
             'dstHardwareProfileName': dstHardwareProfileName,

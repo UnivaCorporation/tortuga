@@ -36,13 +36,13 @@ class ParameterController(TortugaController):
         },
         {
             'name': 'userParameterList',
-            'path': '/v1/parameters',
+            'path': '/v1/parameters/',
             'action': 'getParameterList',
             'method': ['GET']
         },
         {
             'name': 'createParameter',
-            'path': '/v1/parameters',
+            'path': '/v1/parameters/',
             'action': 'createParameter',
             'method': ['POST']
         },

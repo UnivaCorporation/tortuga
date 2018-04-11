@@ -34,70 +34,70 @@ class HardwareProfileController(TortugaController):
     actions = [
         {
             'name': 'getHardwareProfiles',
-            'path': '/v1/hardwareProfiles',
+            'path': '/v1/hardwareprofiles/',
             'action': 'getHardwareProfiles',
             'method': ['GET'],
         },
         {
             'name': 'getHardwareProfile',
-            'path': '/v1/hardwareProfiles/:(hwprofile_id)',
+            'path': '/v1/hardwareprofiles/:(hwprofile_id)',
             'action': 'getHardwareProfile',
             'method': ['GET'],
         },
         {
             'name': 'deleteHardwareProfile',
-            'path': '/v1/hardwareProfiles/:(hardwareProfileName)',
+            'path': '/v1/hardwareprofiles/:(hardwareProfileName)',
             'action': 'deleteHardwareProfile',
             'method': ['DELETE'],
         },
         {
             'name': 'createHardwareProfile',
-            'path': '/v1/hardwareProfiles',
+            'path': '/v1/hardwareprofiles/',
             'action': 'createHardwareProfile',
             'method': ['POST'],
         },
         {
             'name': 'updateHardwareProfile',
-            'path': '/v1/hardwareProfiles/:(hardwareProfileId)',
+            'path': '/v1/hardwareprofiles/:(hardwareProfileId)',
             'action': 'updateHardwareProfile',
             'method': ['PUT'],
         },
         {
             'name': 'copyHardwareProfile',
-            'path': '/v1/hardwareProfiles/:(srcHardwareProfileName)/copy/:(dstHardwareProfileName)',
+            'path': '/v1/hardwareprofiles/:(srcHardwareProfileName)/copy/:(dstHardwareProfileName)',
             'action': 'copyHardwareProfile',
             'method': ['POST'],
         },
         {
             'name': 'getHardwareProfileNodes',
-            'path': '/v1/hardwareProfiles/:(hardwareProfileName)/nodes',
+            'path': '/v1/hardwareprofiles/:(hardwareProfileName)/nodes',
             'action': 'getNodes',
             'method': ['GET'],
         },
         {
             'name': 'getHardwareProfileProvisioningInfo',
-            'path': '/v1/hardwareProfiles/:(hardwareProfileName)'
+            'path': '/v1/hardwareprofiles/:(hardwareProfileName)'
                     '/provisioningInfo',
             'action': 'getProvisioningInfo',
             'method': ['GET'],
         },
         {
             'name': 'addHwAdmin',
-            'path': '/v1/hardwareProfiles/:(hardwareProfileName)'
+            'path': '/v1/hardwareprofiles/:(hardwareProfileName)'
                     '/admin/:(adminUsername)',
             'action': 'addAdmin',
             'method': ['POST'],
         },
         {
             'name': 'deleteHwAdmin',
-            'path': '/v1/hardwareProfiles/:(hardwareProfileName)'
+            'path': '/v1/hardwareprofiles/:(hardwareProfileName)'
                     '/admin/:(adminUsername)',
             'action': 'deleteAdmin',
             'method': ['DELETE'],
         },
         {
             'name': 'getVirtualContainerNodes',
-            'path': '/v1/hardwareProfiles/:hardwareProfileName'
+            'path': '/v1/hardwareprofiles/:hardwareProfileName'
                     '/virtualContainerNodes',
             'action': 'getHypervisorNodes',
             'method': ['GET'],
