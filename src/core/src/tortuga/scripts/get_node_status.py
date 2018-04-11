@@ -39,6 +39,7 @@ class GetNodeStatus(TortugaCli): \
             1: 'Network'
         }
 
+    def parseArgs(self, usage=None):
         self.addOption(
             '-n', '--node',
             dest='nodeName',
@@ -52,26 +53,31 @@ class GetNodeStatus(TortugaCli): \
             help=_('Display node list by hardware profile'
                    ' (default is by software profile)'))
 
-        self.addOption(
+        active_idle_excl_group = self.getParser().add_mutually_exclusive_group()
+
+        active_idle_excl_group.add_argument(
             '--active',
             dest='bActiveNodesOnly',
             action='store_true',
             help=_('Display only active nodes'))
 
-        self.addOption(
+        active_idle_excl_group.add_argument(
             '--idle',
             dest='bIdleNodesOnly',
             action='store_true',
             help=_('Display only idle nodes'))
 
-        self.addOption(
+        installed_not_installed_excl_group = \
+            self.getParser().add_mutually_exclusive_group()
+
+        installed_not_installed_excl_group.add_argument(
             '--installed',
             dest='bInstalled',
             action='store_true',
             help=_('Display only nodes that are in \'Installed\' state')
         )
 
-        self.addOption(
+        installed_not_installed_excl_group.add_argument(
             '--not-installed',
             dest='bNotInstalled',
             action='store_true',
@@ -116,38 +122,17 @@ class GetNodeStatus(TortugaCli): \
             help=_('Filter results by specified tag(s) (comma-separated)'),
         )
 
+        super().parseArgs(usage=usage)
+
     def runCommand(self):
-        self.parseArgs("""
-    get-node-status [--list] [--active|--idle] [--by-hwprofile]
-    get-node-status [options] [--node=NAME]
-
-    'get-node-list' is a shell alias for 'get-node-status --list [options]'
-
-Description:
-    The get-node-status tool displays the status of nodes known to Tortuga.
-
-    If the '--node option' is not given, the status for all nodes is displayed.
-
-    --active will display only active nodes.
-
-     --idle will display only idle nodes.
-
-    --by-hwprofile sorts by hardware profile (default is to sort by
-    software profile)
-""")
+        self.parseArgs()
 
         options = self.getArgs()
-
-        if options.bActiveNodesOnly and options.bIdleNodesOnly:
-            raise InvalidCliRequest('--active and --idle cannot be specified together')
-
-        if options.bNotInstalled and options.bInstalled:
-            raise InvalidCliRequest('--installed and --not-installed cannot be specified together')
 
         if options.state and (options.bNotInstalled or options.bInstalled):
             raise InvalidCliRequest(
                 '--state and --installed/--not-installed arguments are'
-                ' mutually excluive'
+                ' mutually exclusive'
             )
 
         api = NodeWsApi(self.getUsername(), self.getPassword())
