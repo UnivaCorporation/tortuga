@@ -396,9 +396,11 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def getNodesByNameFilter(self, nodespec: str) -> TortugaObjectList:
+    def getNodesByNameFilter(self, nodespec: str,
+                             optionDict: Optional[Union[dict, None]] = None) -> TortugaObjectList:
         try:
-            return self._nodeManager.getNodesByNameFilter(nodespec)
+            return self._nodeManager.getNodesByNameFilter(
+                nodespec, optionDict=optionDict)
         except TortugaException:
             raise
         except Exception as ex:

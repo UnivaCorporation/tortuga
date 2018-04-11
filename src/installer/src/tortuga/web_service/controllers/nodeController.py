@@ -28,7 +28,7 @@ from tortuga.utility.helper import str2bool
 from .. import app
 from ..threadManager import threadManager
 from .authController import require
-from .common import parse_tag_query_string
+from .common import parse_tag_query_string, make_options_from_query_string
 from .tortugaController import TortugaController
 
 
@@ -156,8 +156,6 @@ class NodeController(TortugaController):
         """
         Return list of all available nodes
 
-        TODO: implement support for 'optionDict' passed through query
-        string
         """
 
         tagspec = []
@@ -167,13 +165,20 @@ class NodeController(TortugaController):
 
         try:
             if 'name' in kwargs and kwargs['name']:
-                nodeList = app.node_api.getNodesByNameFilter(kwargs['name'])
+                options = make_options_from_query_string(
+                    kwargs['include']
+                    if 'include' in kwargs else None,
+                        ['softwareprofile', 'hardwareprofile'])
+
+                nodeList = app.node_api.getNodesByNameFilter(
+                    kwargs['name'], optionDict=options)
             elif 'installer' in kwargs and str2bool(kwargs['installer']):
                 nodeList = TortugaObjectList(
                     [app.node_api.getInstallerNode()]
                 )
             elif 'ip' in kwargs:
-                nodeList = TortugaObjectList([app.node_api.getNodeByIp(kwargs['ip'])])
+                nodeList = TortugaObjectList(
+                    [app.node_api.getNodeByIp(kwargs['ip'])])
             else:
                 nodeList = app.node_api.getNodeList(tags=tagspec)
 

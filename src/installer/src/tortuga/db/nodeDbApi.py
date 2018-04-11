@@ -92,14 +92,19 @@ class NodeDbApi(TortugaDbApi):
         finally:
             DbManager().closeSession()
 
-    def getNodesByNameFilter(self, nodespec):
+    def getNodesByNameFilter(self, nodespec, optionDict: Optional[Union[dict, None]] = None):
         """
         Get node(s) from db based on the name filter
         """
+        result = []
 
         with DbManager().session() as session:
-            return self.getTortugaObjectList(
-                Node, self.__expand_nodespec(session, nodespec))
+            for node in self.__expand_nodespec(session, nodespec):
+                self.loadRelations(node, optionDict)
+
+                result.append(Node.getFromDbDict(node.__dict__))
+
+        return TortugaObjectList(result)
 
     def getNodeById(self, nodeId: int, optionDict: Optional[Union[dict, None]] = None):
 

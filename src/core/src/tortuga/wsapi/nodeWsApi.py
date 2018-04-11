@@ -86,11 +86,17 @@ class NodeWsApi(TortugaWsApi):
             # pylint: disable=unused-argument
         url = 'v1/nodes?name=%s' % (urllib.parse.quote(name))
 
+        if optionDict:
+            for key, value in optionDict.items():
+                if not value:
+                    continue
+                url += '&include={}'.format(key)
+
         try:
             _, responseDict = self.sendSessionRequest(url)
 
             return tortuga.objects.node.Node.getFromDict(
-                responseDict.get('node'))
+                responseDict.get('nodes')[0])
         except TortugaException:
             raise
         except Exception as ex:

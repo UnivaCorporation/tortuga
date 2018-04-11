@@ -17,7 +17,7 @@
 import os
 import socket
 import time
-from typing import NoReturn, Optional
+from typing import NoReturn, Optional, Union
 
 from sqlalchemy.orm.session import Session
 
@@ -892,5 +892,7 @@ class NodeManager(TortugaObjectManager): \
     def getNodesByNodeState(self, state: str):
         return self._nodeDbApi.getNodesByNodeState(state)
 
-    def getNodesByNameFilter(self, nodespec: str) -> TortugaObjectList:
-        return self._nodeDbApi.getNodesByNameFilter(nodespec)
+    def getNodesByNameFilter(self, nodespec: str,
+                             optionDict: Optional[Union[dict, None]] = None) -> TortugaObjectList:
+        return self._nodeDbApi.getNodesByNameFilter(
+            nodespec, optionDict=optionDict)
