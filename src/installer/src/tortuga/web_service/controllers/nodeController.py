@@ -17,6 +17,7 @@
 import datetime
 
 import cherrypy
+
 from tortuga.addhost.addHostManager import AddHostManager
 from tortuga.db.nodeRequests import NodeRequests
 from tortuga.exceptions.invalidArgument import InvalidArgument
@@ -24,11 +25,11 @@ from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.utility.helper import str2bool
 
+from .. import app
+from ..threadManager import threadManager
 from .authController import require
 from .common import parse_tag_query_string
 from .tortugaController import TortugaController
-from .. import app
-from ..threadManager import threadManager
 
 
 class NodeController(TortugaController):
@@ -166,9 +167,7 @@ class NodeController(TortugaController):
 
         try:
             if 'name' in kwargs and kwargs['name']:
-                nodeList = TortugaObjectList(
-                    [app.node_api.getNodesByNameFilter(kwargs['name'])]
-                )
+                nodeList = app.node_api.getNodesByNameFilter(kwargs['name'])
             elif 'installer' in kwargs and str2bool(kwargs['installer']):
                 nodeList = TortugaObjectList(
                     [app.node_api.getInstallerNode()]

@@ -14,16 +14,18 @@
 
 # pylint: disable=no-member,too-many-public-methods
 
-from typing import Optional, NoReturn, List, Union
+from typing import List, NoReturn, Optional, Union
 
 from sqlalchemy.orm.session import Session
+
 from tortuga.db.hardwareProfiles import HardwareProfiles
 from tortuga.db.nodes import Nodes
 from tortuga.db.softwareProfiles import SoftwareProfiles
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.node.nodeManager import NodeManager
-from tortuga.utility.tortugaApi import TortugaApi
 from tortuga.objects.node import Node
+from tortuga.objects.tortugaObject import TortugaObjectList
+from tortuga.utility.tortugaApi import TortugaApi
 
 
 class NodeApi(TortugaApi):
@@ -391,5 +393,17 @@ class NodeApi(TortugaApi):
         except Exception as ex:
             self.getLogger().exception(
                 'Fatal error retrieving nodes in state [{}]'.format(state))
+
+            raise TortugaException(exception=ex)
+
+    def getNodesByNameFilter(self, nodespec: str) -> TortugaObjectList:
+        try:
+            return self._nodeManager.getNodesByNameFilter(nodespec)
+        except TortugaException:
+            raise
+        except Exception as ex:
+            self.getLogger().exception(
+                'Fatal error retrieving nodes by nodespec [{}]'.format(
+                    nodespec))
 
             raise TortugaException(exception=ex)

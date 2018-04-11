@@ -17,31 +17,32 @@
 import os
 import socket
 import time
-from typing import Optional, NoReturn
+from typing import NoReturn, Optional
 
 from sqlalchemy.orm.session import Session
-from tortuga.objects.tortugaObjectManager import TortugaObjectManager
-from tortuga.db.nodeDbApi import NodeDbApi
-from tortuga.db.hardwareProfileDbApi import HardwareProfileDbApi
-from tortuga.os_utility import osUtility
-from tortuga.config.configManager import ConfigManager
-from tortuga.resourceAdapter import resourceAdapterFactory
-from tortuga.san import san
-from tortuga.os_utility import tortugaSubprocess
-from tortuga.addhost.addHostServerLocal import AddHostServerLocal
+
 from tortuga.addhost.addHostManager import AddHostManager
-from tortuga.exceptions.configurationError import ConfigurationError
-from tortuga.db.nodes import Nodes
+from tortuga.addhost.addHostServerLocal import AddHostServerLocal
+from tortuga.config.configManager import ConfigManager
 from tortuga.db.dbManager import DbManager
+from tortuga.db.hardwareProfileDbApi import HardwareProfileDbApi
+from tortuga.db.hardwareProfiles import HardwareProfiles
+from tortuga.db.nodeDbApi import NodeDbApi
+from tortuga.db.nodes import Nodes
 from tortuga.db.nodesDbHandler import NodesDbHandler
+from tortuga.db.softwareProfiles import SoftwareProfiles
+from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
+from tortuga.exceptions.configurationError import ConfigurationError
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.exceptions.tortugaException import TortugaException
-from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
-from tortuga.kit.actions import KitActionsManager
 from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
 from tortuga.exceptions.volumeDoesNotExist import VolumeDoesNotExist
-from tortuga.db.hardwareProfiles import HardwareProfiles
-from tortuga.db.softwareProfiles import SoftwareProfiles
+from tortuga.kit.actions import KitActionsManager
+from tortuga.objects.tortugaObject import TortugaObjectList
+from tortuga.objects.tortugaObjectManager import TortugaObjectManager
+from tortuga.os_utility import osUtility, tortugaSubprocess
+from tortuga.resourceAdapter import resourceAdapterFactory
+from tortuga.san import san
 
 
 class NodeManager(TortugaObjectManager): \
@@ -891,5 +892,5 @@ class NodeManager(TortugaObjectManager): \
     def getNodesByNodeState(self, state: str):
         return self._nodeDbApi.getNodesByNodeState(state)
 
-    def getNodesByNameFilter(self, _filter: str):
-        return self._nodeDbApi.getNodesByNameFilter(_filter)
+    def getNodesByNameFilter(self, nodespec: str) -> TortugaObjectList:
+        return self._nodeDbApi.getNodesByNameFilter(nodespec)
