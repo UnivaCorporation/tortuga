@@ -172,6 +172,9 @@ class NodeController(TortugaController):
 
                 nodeList = app.node_api.getNodesByNameFilter(
                     kwargs['name'], optionDict=options)
+
+                if not nodeList:
+                    raise NodeNotFound('No nodes matching nodespec [{}]'.format(kwargs['name']))
             elif 'installer' in kwargs and str2bool(kwargs['installer']):
                 nodeList = TortugaObjectList(
                     [app.node_api.getInstallerNode()]
