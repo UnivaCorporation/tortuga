@@ -26,7 +26,7 @@ from tortuga.objects.osInfo import OsInfo
 from tortuga.objects.tortugaObject import TortugaObjectList
 
 from .authController import require
-from .common import parse_tag_query_string
+from .common import parse_tag_query_string, make_options_from_query_string
 from .tortugaController import TortugaController
 
 
@@ -115,7 +115,8 @@ class HardwareProfileController(TortugaController):
         try:
             if 'name' in kwargs and kwargs['name']:
                 options = make_options_from_query_string(
-                    kwargs['include'], ['resourceadapter'])
+                    kwargs['include']
+                    if 'include' in kwargs else None, ['resourceadapter'])
 
                 hardwareProfiles = TortugaObjectList(
                     [HardwareProfileManager().getHardwareProfile(
@@ -391,28 +392,3 @@ def createHwProfileResponse(hp):
     return response
 
 
-def make_options_from_query_string(
-        value: Union[list, str],
-        default_options: Optional[Union[list, None]] = None) -> dict:
-    # take string or list of strings and convert into dict of key=True
-    # for use with query methods that take settingsDict. Defaults can
-    # be provided as a list of strings
-
-    addl_options = {}
-
-    if isinstance(value, str):
-        addl_options[value] = True
-    else:
-        addl_options = dict(
-            **addl_options,
-            **{key: True for key in value}
-        )
-
-    if not default_options:
-        return addl_options
-
-    options = {key: True for key in default_options}
-    merged_options = options.copy()
-    merged_options.update(addl_options)
-
-    return merged_options
