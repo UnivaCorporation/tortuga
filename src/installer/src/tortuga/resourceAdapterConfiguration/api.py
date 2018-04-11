@@ -15,8 +15,7 @@
 # pylint: disable=no-member
 
 from ..utility.tortugaApi import TortugaApi
-from .resourceAdapterConfigurationManager \
-    import ResourceAdapterConfigurationManager
+from .manager import ResourceAdapterConfigurationManager
 
 
 class ResourceAdapterConfigurationApi(TortugaApi):
