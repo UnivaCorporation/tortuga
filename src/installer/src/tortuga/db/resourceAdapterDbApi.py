@@ -31,24 +31,23 @@ class ResourceAdapterDbApi(TortugaDbApi):
             ResourceAdaptersDbHandler()
 
     def getResourceAdapter(self, name):
-        resourceAdapterObj = None
+        ra_obj = None
 
         try:
             session = DbManager().openSession()
+            db_ra = self._resourceAdaptersDbHandler.getResourceAdapter(
+                session, name)
+            self.loadRelations(db_ra, {'kit': True})
+            ra_obj = ResourceAdapter.getFromDbDict(db_ra.__dict__)
+            ra_obj.set_settings(db_ra.settings)
 
-            dbResourceAdapter = self._resourceAdaptersDbHandler.\
-                getResourceAdapter(session, name)
-
-            self.loadRelations(dbResourceAdapter, {'kit': True})
-
-            resourceAdapterObj = ResourceAdapter.getFromDbDict(
-                dbResourceAdapter.__dict__)
         except TortugaException:
             raise
+
         except Exception as ex:
             self.getLogger().exception(str(ex))
 
-        return resourceAdapterObj
+        return ra_obj
 
     def addResourceAdapter(self, name, kitId=None):
         """

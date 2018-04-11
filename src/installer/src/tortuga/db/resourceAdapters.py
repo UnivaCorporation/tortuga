@@ -12,10 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from tortuga.resourceAdapter.resourceAdapterFactory import \
+    getResourceAdapterClass
+
+
 class ResourceAdapters(object):
     def __init__(self, name, kitId=None):
         self.name = name
         self.kitId = kitId
+
+    def settings(self):
+        ra_class = getResourceAdapterClass(self.name)
+        return ra_class.settings
 
     def __repr__(self):
         return '<ResourceAdapter(name=[%s])>' % (self.name)
