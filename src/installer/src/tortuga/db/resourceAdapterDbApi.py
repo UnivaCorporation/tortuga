@@ -21,6 +21,8 @@ from tortuga.exceptions.resourceAdapterAlreadyExists \
     import ResourceAdapterAlreadyExists
 from tortuga.exceptions.resourceAdapterNotFound \
     import ResourceAdapterNotFound
+from tortuga.resourceAdapter.resourceAdapterFactory import \
+    getResourceAdapterClass
 
 
 class ResourceAdapterDbApi(TortugaDbApi):
@@ -43,6 +45,10 @@ class ResourceAdapterDbApi(TortugaDbApi):
 
             resourceAdapterObj = ResourceAdapter.getFromDbDict(
                 dbResourceAdapter.__dict__)
+
+            ra_class = getResourceAdapterClass(resourceAdapterObj.getName())
+            resourceAdapterObj.set_settings(ra_class.settings)
+
         except TortugaException:
             raise
         except Exception as ex:
@@ -129,8 +135,12 @@ class ResourceAdapterDbApi(TortugaDbApi):
                 dbResourceAdapters = self._resourceAdaptersDbHandler.\
                     getResourceAdapterList(session)
 
-                return self.getTortugaObjectList(
+                resourceAdapters = self.getTortugaObjectList(
                     ResourceAdapter, dbResourceAdapters)
+
+                for ra in resourceAdapters:
+                    ra_class = getResourceAdapterClass(ra.getName())
+                    ra.set_settings(ra_class.settings)
             except TortugaException as ex:
                 raise
             except Exception as ex:

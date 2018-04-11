@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from tortuga.objects.tortugaObject import TortugaObject
+from .resource_adapter_settings import get_setting_class
 
 
 class ResourceAdapter(TortugaObject): \
@@ -20,10 +21,15 @@ class ResourceAdapter(TortugaObject): \
 
     ROOT_TAG = 'resourceadapter'
 
-    def __init__(self, name=None, kitId=None):
-        TortugaObject.__init__(self, {
-            'name': name,
-            'kitId': kitId}, ['id', 'name'], ResourceAdapter.ROOT_TAG)
+    def __init__(self, name=None, kitId=None, settings=None):
+        if not settings:
+            settings = {}
+
+        super().__init__(
+            {'name': name, 'kitId': kitId, 'settings': settings},
+            ['id', 'name'],
+            ResourceAdapter.ROOT_TAG
+        )
 
     def __repr__(self):
         return self.getName()
@@ -46,6 +52,60 @@ class ResourceAdapter(TortugaObject): \
     def setKitId(self, kitId):
         self['kitId'] = kitId
 
+    def get_settings(self):
+        return self['settings']
+
+    def set_settings(self, settings):
+        if not settings:
+            settings = {}
+
+        self['settings'] = settings
+
     @staticmethod
     def getKeys():
-        return ['id', 'name', 'kitId']
+        return ['id', 'name', 'kitId', 'settings']
+
+    @classmethod
+    def getFromDict(cls, _dict, ignore=None):
+        inst = cls()
+
+        for key in cls.getKeys():
+            if key not in _dict:
+                inst[key] = None
+
+            elif key == 'settings':
+                inst[key] = cls.deserialize_settings(_dict[key])
+
+            else:
+                inst[key] = _dict[key]
+
+        return inst
+
+    @classmethod
+    def deserialize_settings(cls, settings_dict: dict) -> dict:
+        if not settings_dict:
+            settings_dict = {}
+
+        deserialized_settings_dict = {}
+
+        for key, setting in settings_dict.items():
+            setting_class = get_setting_class(setting['type'])
+            schema = setting_class.schema()
+            deserialized_settings_dict[key] = schema.load(setting)
+
+        return deserialized_settings_dict
+
+    def getCleanDict(self):
+        data_dict = super().getCleanDict()
+        data_dict['settings'] = self.serialize_settings()
+        return data_dict
+
+    def serialize_settings(self):
+        serialized_settings_dict = {}
+
+        for key, setting in self.get_settings().items():
+            setting_class = get_setting_class(setting.type)
+            schema = setting_class.schema()
+            serialized_settings_dict[key] = schema.dump(setting).data
+
+        return serialized_settings_dict

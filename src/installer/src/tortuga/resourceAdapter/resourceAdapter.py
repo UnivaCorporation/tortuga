@@ -43,7 +43,7 @@ class ResourceAdapter(object): \
     subclass did not implement the action.
     
     """
-    config = {}
+    settings = {}
 
     def __init__(self, addHostSession=None):
         if '__adaptername__' not in self.__class__.__dict__:
