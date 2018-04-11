@@ -58,7 +58,7 @@ class SoftwareProfileController(TortugaController):
         },
         {
             'name': 'copySoftwareProfile',
-            'path': '/v1/softwareProfiles/:(srcSoftwareProfileName)/copy',
+            'path': '/v1/softwareProfiles/:(srcSoftwareProfileName)/copy/:(dstSoftwareProfileName)',
             'action': 'copySoftwareProfile',
             'method': ['POST'],
         },
@@ -512,8 +512,6 @@ class SoftwareProfileController(TortugaController):
         return self.formatResponse(response)
 
     @require()
-    @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
     def copySoftwareProfile(self, srcSoftwareProfileName,
                             dstSoftwareProfileName):
         response = None

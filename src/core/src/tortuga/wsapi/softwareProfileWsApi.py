@@ -393,8 +393,9 @@ class SoftwareProfileWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/softwareProfiles/%s/copy' % (
-            urllib.parse.quote_plus(srcSoftwareProfileName))
+        url = 'v1/softwareProfiles/{}/copy/{}'.format(
+            urllib.parse.quote_plus(srcSoftwareProfileName),
+            urllib.parse.quote_plus(dstSoftwareProfileName))
 
         postdata = json.dumps({
             'dstSoftwareProfileName': dstSoftwareProfileName,
