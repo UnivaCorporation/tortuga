@@ -15,14 +15,14 @@
 # pylint: disable=no-member,no-name-in-module
 
 import cherrypy
+
 from tortuga.exceptions.invalidArgument import InvalidArgument
-from tortuga.exceptions.softwareProfileNotFound \
-    import SoftwareProfileNotFound
+from tortuga.exceptions.softwareProfileNotFound import SoftwareProfileNotFound
 from tortuga.objects.softwareProfile import SoftwareProfile
 from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.softwareprofile.softwareProfileApi import SoftwareProfileApi
-from tortuga.softwareprofile.softwareProfileManager \
-    import SoftwareProfileManager
+from tortuga.softwareprofile.softwareProfileManager import \
+    SoftwareProfileManager
 from tortuga.utility.helper import str2bool
 
 from .authController import require
@@ -160,22 +160,34 @@ class SoftwareProfileController(TortugaController):
         """
         TODO: implement support for optionDict through query string
         """
-        tagspec = []
 
-        if 'tag' in kwargs and kwargs['tag']:
-            tagspec.extend(parse_tag_query_string(kwargs['tag']))
+        try:
+            tagspec = []
 
-        if 'name' in kwargs and kwargs['name']:
-            softwareProfiles = TortugaObjectList(
-                [self._softwareProfileManager.getSoftwareProfile(
-                    kwargs['name'])])
-        else:
-            softwareProfiles = self._softwareProfileManager.\
-                getSoftwareProfileList(tags=tagspec)
+            if 'tag' in kwargs and kwargs['tag']:
+                tagspec.extend(parse_tag_query_string(kwargs['tag']))
 
-        response = {
-            'softwareprofiles': softwareProfiles.getCleanDict(),
-        }
+            if 'name' in kwargs and kwargs['name']:
+                softwareProfiles = TortugaObjectList(
+                    [self._softwareProfileManager.getSoftwareProfile(
+                        kwargs['name'])])
+            else:
+                softwareProfiles = self._softwareProfileManager.\
+                    getSoftwareProfileList(tags=tagspec)
+
+            response = {
+                'softwareprofiles': softwareProfiles.getCleanDict(),
+            }
+        except Exception as ex:
+            self.getLogger().exception(
+                'getSoftwareProfiles() WS controller exception')
+
+            self.handleException(ex)
+
+            http_status = 404 \
+                if isinstance(ex, SoftwareProfileNotFound) else 400
+
+            response = self.errorResponse(str(ex), http_status=http_status)
 
         return self.formatResponse(response)
 
