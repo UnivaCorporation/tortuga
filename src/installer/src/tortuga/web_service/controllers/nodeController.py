@@ -174,7 +174,7 @@ class NodeController(TortugaController):
                 'nodes': nodeList.getCleanDict(),
             }
         except Exception as ex:
-            self.getLogger().exception('node WS API nodeListRequest() failed')
+            self.getLogger().exception('node WS API getNodes() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -203,7 +203,7 @@ class NodeController(TortugaController):
             code = self.getTortugaStatusCode(ex)
             response = self.notFoundErrorResponse(str(ex), code)
         except Exception as ex:
-            self.getLogger().exception('node WS API nodeRequest() failed')
+            self.getLogger().exception('node WS API getNodeById() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
