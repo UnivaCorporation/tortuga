@@ -213,8 +213,6 @@ class NodeController(TortugaController):
     @cherrypy.tools.json_in()
     @require()
     def updateNodeRequest(self, name):
-        response = None
-
         postdata = cherrypy.request.json
 
         state = postdata['state'] if 'state' in postdata else None
@@ -230,23 +228,6 @@ class NodeController(TortugaController):
             response = {
                 'changed': result,
             }
-
-            # node = app.node_api.getNode(name)
-
-            # Send data to event log
-
-            # d = {
-            #     'type': 'MODIFIED',
-            #     'object': {
-            #         # 'node': node.getCleanDict(),
-            #         'node': {
-            #             'name': node.getName(),
-            #         }
-            #     }
-            # }
-
-            # Workqueue().socket.send_multipart(['node',
-            #                                                json.dumps(d)])
         except Exception as ex:
             self.getLogger().exception(
                 'node WS API updateNodeRequest() failed')
@@ -411,11 +392,6 @@ class NodeController(TortugaController):
 
             liveMigrate = liveMigrate == 'True'
 
-            # self.getLogger().debug(
-            #     'migrateNode: nodeName [%s] remainingNodeList [%s]'
-            #     ' liveMigrate [%s]' % (
-            #         nodeName, remainingNodeList, liveMigrate))
-
             app.node_api.migrateNode(
                 nodeName, remainingNodeList, liveMigrate)
         except Exception as ex:
@@ -485,8 +461,6 @@ class NodeController(TortugaController):
     @require()
     def shutdownNode(self, nodeName):
         response = None
-
-        # self.getLogger().debug('shutdownNode: nodeName [%s]' % (nodeName))
 
         try:
             app.node_api.shutdownNode(nodeName)
