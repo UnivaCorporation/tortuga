@@ -240,7 +240,9 @@ class NodeController(TortugaController):
     @cherrypy.tools.json_in()
     @require()
     def getNodeProvisioningInfo(self, nodeName):
-        """ Return provisioning information for a node. """
+        """
+        Return provisioning information for a node
+        """
 
         try:
             info = app.node_api.getProvisioningInfo(nodeName)
@@ -264,11 +266,11 @@ class NodeController(TortugaController):
     @cherrypy.tools.json_in()
     @require()
     def setParentNode(self, nodeName, parentNodeName):
-        '''
+        """
         Handle POST to /nodes/:(nodeName)/parentNode
 
         Required data: parentNodeName
-        '''
+        """
 
         response = None
 
@@ -293,9 +295,9 @@ class NodeController(TortugaController):
     @cherrypy.tools.json_in()
     @require()
     def idleNode(self, nodeName):
-        '''
+        """
         Idle an active node
-        '''
+        """
 
         try:
             response = app.node_api.idleNode(nodeName)
@@ -314,9 +316,9 @@ class NodeController(TortugaController):
     @cherrypy.tools.json_in()
     @require()
     def activateNode(self, nodeName):
-        '''
+        """
         Activate an idle node
-        '''
+        """
 
         if int(cherrypy.request.headers['Content-Length']):
             postdata = cherrypy.request.json
@@ -340,9 +342,9 @@ class NodeController(TortugaController):
     @cherrypy.tools.json_in()
     @require()
     def checkpointNode(self, nodeName):
-        '''
+        """
         Checkpoint a node
-        '''
+        """
 
         response = None
 
@@ -359,9 +361,9 @@ class NodeController(TortugaController):
     @cherrypy.tools.json_in()
     @require()
     def revertNodeToCheckpoint(self, nodeName):
-        '''
+        """
         Migrate a node
-        '''
+        """
 
         response = None
 
@@ -378,10 +380,11 @@ class NodeController(TortugaController):
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     @require()
-    def migrateNode(self, nodeName, remainingNodeString, liveMigrate):
-        '''
+    def migrateNode(self, nodeName: str, remainingNodeString: str,
+                    liveMigrate: str):
+        """
         Migrate a node
-        '''
+        """
 
         response = None
 
@@ -441,7 +444,9 @@ class NodeController(TortugaController):
     @cherrypy.tools.json_in()
     @require()
     def getChildrenList(self, nodeName):
-        """Return list of all children nodes"""
+        """
+        Return list of all children nodes
+        """
 
         try:
             nodeList = app.node_api.getChildrenList(nodeName)
@@ -571,7 +576,9 @@ class NodeController(TortugaController):
     @cherrypy.tools.json_out()
     @require()
     def deleteNode(self, name):
-        """Handle /nodes/:(name) (DELETE)"""
+        """
+        Handle /nodes/:(name) (DELETE)
+        """
 
         try:
             transaction_id = enqueue_delete_hosts_request(
