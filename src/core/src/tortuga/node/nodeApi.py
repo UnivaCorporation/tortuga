@@ -413,10 +413,10 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def getNodesByAddHostSession(self, addHostSession: str):
+    def getNodesByAddHostSession(self, addHostSession: str, optionDict: Optional[Union[dict, None]] = None):
         try:
             return self._nodeManager.getNodesByAddHostSession(
-                addHostSession)
+                addHostSession, optionDict=optionDict)
         except TortugaException:
             raise
         except Exception as ex:

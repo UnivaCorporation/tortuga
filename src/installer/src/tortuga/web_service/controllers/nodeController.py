@@ -152,12 +152,15 @@ class NodeController(TortugaController):
             tagspec.extend(parse_tag_query_string(kwargs['tag']))
 
         try:
-            if 'name' in kwargs and kwargs['name']:
-                options = make_options_from_query_string(
-                    kwargs['include']
-                    if 'include' in kwargs else None,
-                        ['softwareprofile', 'hardwareprofile'])
+            options = make_options_from_query_string(
+                kwargs['include']
+                if 'include' in kwargs else None,
+                ['softwareprofile', 'hardwareprofile'])
 
+            if 'addHostSession' in kwargs and kwargs['addHostSession']:
+                nodeList = app.node_api.getNodesByAddHostSession(
+                    kwargs['addHostSession'], options)
+            elif 'name' in kwargs and kwargs['name']:
                 nodeList = app.node_api.getNodesByNameFilter(
                     kwargs['name'], optionDict=options)
             elif 'installer' in kwargs and str2bool(kwargs['installer']):

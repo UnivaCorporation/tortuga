@@ -900,5 +900,6 @@ class NodeManager(TortugaObjectManager): \
         return self._nodeDbApi.getNodesByNameFilter(
             nodespec, optionDict=optionDict)
 
-    def getNodesByAddHostSession(self, addHostSession: str):
-        return self._nodeDbApi.getNodesByAddHostSession(addHostSession)
+    def getNodesByAddHostSession(self, addHostSession: str,
+                                 optionDict: Optional[Union[dict, None]] = None) -> TortugaObjectList:
+        return self._nodeDbApi.getNodesByAddHostSession(addHostSession, optionDict)
