@@ -60,7 +60,6 @@ class GetNodeRequestsCli(TortugaCli):
             print()
 
     def _get_node_request(self, request_id):
-        # import pdb; pdb.set_trace()
         node_requests = \
             self.node_wsapi.getNodeRequests(addHostSession=request_id)
 
