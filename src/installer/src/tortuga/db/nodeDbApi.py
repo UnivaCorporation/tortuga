@@ -15,7 +15,7 @@
 # pylint: disable=no-member
 
 import socket
-from typing import Optional, Union
+from typing import Optional, Union, List
 
 from tortuga.db.dbManager import DbManager
 from tortuga.db.globalParameterDbApi import GlobalParameterDbApi
@@ -27,6 +27,7 @@ from tortuga.objects.node import Node
 from tortuga.objects.parameter import Parameter
 from tortuga.objects.provisioningInfo import ProvisioningInfo
 from tortuga.objects.tortugaObject import TortugaObjectList
+from tortuga.db.nodes import Nodes
 
 
 class NodeDbApi(TortugaDbApi):
@@ -73,7 +74,8 @@ class NodeDbApi(TortugaDbApi):
         finally:
             DbManager().closeSession()
 
-    def getNodesByAddHostSession(self, ahSession: str):
+    def getNodesByAddHostSession(self, ahSession: str,
+                                 optionDict: Optional[Union[dict, None]] = None) -> TortugaObjectList:
         """
         Get node(s) from db based their addhost session
         """
@@ -82,26 +84,23 @@ class NodeDbApi(TortugaDbApi):
             try:
                 return self.__convert_nodes_to_TortugaObjectList(
                     self._nodesDbHandler.getNodesByAddHostSession(
-                        session, ahSession))
+                        session, ahSession), relations=optionDict)
             except TortugaException:
                 raise
             except Exception as ex:
                 self.getLogger().exception('%s' % ex)
                 raise
 
-    def getNodesByNameFilter(self, nodespec, optionDict: Optional[Union[dict, None]] = None):
+    def getNodesByNameFilter(self, nodespec: str,
+                             optionDict: Optional[Union[dict, None]] = None) -> List[Nodes]:
         """
         Get node(s) from db based on the name filter
         """
-        result = []
 
         with DbManager().session() as session:
-            for node in self.__expand_nodespec(session, nodespec):
-                self.loadRelations(node, optionDict)
-
-                result.append(Node.getFromDbDict(node.__dict__))
-
-        return TortugaObjectList(result)
+            return self.__convert_nodes_to_TortugaObjectList(
+                self.__expand_nodespec(session, nodespec),
+                relations=optionDict)
 
     def getNodeById(self, nodeId: int, optionDict: Optional[Union[dict, None]] = None):
 
@@ -137,7 +136,16 @@ class NodeDbApi(TortugaDbApi):
             DbManager().closeSession()
 
     def __convert_nodes_to_TortugaObjectList(
-            self, nodes, relations: Optional[Union[dict, None]] = None) -> TortugaObjectList:
+            self, nodes: List[Nodes],
+            relations: Optional[Union[dict, None]] = None) -> TortugaObjectList:
+        """
+        Return TortugaObjectList of nodes with relations populated
+
+        :param nodes: List of Nodes objects
+        :param relations: dict of relations to be loaded
+        :return: TortugaObjectList
+        """
+
         nodeList = TortugaObjectList()
 
         relations = relations or dict(softwareprofile=True,

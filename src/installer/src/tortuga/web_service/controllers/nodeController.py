@@ -122,7 +122,7 @@ class NodeController(TortugaController):
             'name': 'resetNode',
             'path': '/v1/nodes/:nodeName/reset',
             'action': 'rebootNode',
-            'method': ['GET'],
+            'method': ['PUT'],
         },
         {
             'name': 'deleteNode',
@@ -152,12 +152,15 @@ class NodeController(TortugaController):
             tagspec.extend(parse_tag_query_string(kwargs['tag']))
 
         try:
-            if 'name' in kwargs and kwargs['name']:
-                options = make_options_from_query_string(
-                    kwargs['include']
-                    if 'include' in kwargs else None,
-                        ['softwareprofile', 'hardwareprofile'])
+            options = make_options_from_query_string(
+                kwargs['include']
+                if 'include' in kwargs else None,
+                ['softwareprofile', 'hardwareprofile'])
 
+            if 'addHostSession' in kwargs and kwargs['addHostSession']:
+                nodeList = app.node_api.getNodesByAddHostSession(
+                    kwargs['addHostSession'], options)
+            elif 'name' in kwargs and kwargs['name']:
                 nodeList = app.node_api.getNodesByNameFilter(
                     kwargs['name'], optionDict=options)
             elif 'installer' in kwargs and str2bool(kwargs['installer']):
@@ -479,16 +482,19 @@ class NodeController(TortugaController):
         return self.formatResponse(response)
 
     @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
     @require()
     def rebootNode(self, nodeName, **kwargs):
         response = None
 
-        bSoftReset = not kwargs['hard'].lower() not in ('1', 'y', 't') \
+        soft_reset = not str2bool(kwargs['hard']) \
             if 'hard' in kwargs else True
 
+        reinstall = str2bool(kwargs['reinstall']) \
+            if 'reinstall' in kwargs else False
+
         try:
-            app.node_api.rebootNode(nodeName, bSoftReset=bSoftReset)
+            app.node_api.rebootNode(
+                nodeName, bSoftReset=soft_reset, bReinstall=reinstall)
         except NodeNotFound as ex:
             self.handleException(ex)
             code = self.getTortugaStatusCode(ex)
