@@ -148,12 +148,6 @@ class NodeController(TortugaController):
             'action': 'getNodeByIpRequest',
             'method': ['GET']
         },
-        {
-            'name': 'getNodeRequests',
-            'path': '/v1/nodes/requests/',
-            'action': 'getNodeRequests',
-            'method': ['GET'],
-        }
     ]
 
     @cherrypy.tools.json_out()
