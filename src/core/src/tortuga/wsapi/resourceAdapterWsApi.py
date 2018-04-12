@@ -22,7 +22,7 @@ from .tortugaWsApi import TortugaWsApi
 
 class ResourceAdapterWsApi(TortugaWsApi):
     def getResourceAdapterList(self):
-        url = 'v1/resourceadapter/'
+        url = 'v1/resourceadapters/'
 
         try:
             _, responseDict = self.sendSessionRequest(url)

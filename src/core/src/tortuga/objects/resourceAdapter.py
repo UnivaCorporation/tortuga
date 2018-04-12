@@ -12,8 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Any, Dict
+
 from tortuga.objects.tortugaObject import TortugaObject
-from .resource_adapter_settings import get_setting_class
+from .resourceadapter_settings import BaseSetting, get_setting_class
+from .schemas.resourceadapter_settings import BaseSettingSchema
 
 
 class ResourceAdapter(TortugaObject): \
@@ -82,30 +85,36 @@ class ResourceAdapter(TortugaObject): \
         return inst
 
     @classmethod
-    def deserialize_settings(cls, settings_dict: dict) -> dict:
-        if not settings_dict:
-            settings_dict = {}
+    def deserialize_settings(
+            cls, settings: Dict[str, Any]) -> Dict[str, BaseSetting]:
+        if not settings:
+            settings = {}
 
-        deserialized_settings_dict = {}
+        deserialized: Dict[str, Any] = {}
 
-        for key, setting in settings_dict.items():
+        for key, setting in settings.items():
             setting_class = get_setting_class(setting['type'])
             schema = setting_class.schema()
-            deserialized_settings_dict[key] = schema.load(setting)
+            deserialized[key] = schema.load(setting)
 
-        return deserialized_settings_dict
+        return deserialized
 
     def getCleanDict(self):
-        data_dict = super().getCleanDict()
-        data_dict['settings'] = self.serialize_settings()
-        return data_dict
+        settings: Dict[str, Any] = self.serialize_settings()
+        data = super().getCleanDict()
+        data['settings'] = settings
+        return data
 
-    def serialize_settings(self):
-        serialized_settings_dict = {}
+    def serialize_settings(self) -> Dict[str, Any]:
+        settings: Dict[str, BaseSetting] = self.get_settings()
+        if not settings:
+            settings = {}
 
-        for key, setting in self.get_settings().items():
-            setting_class = get_setting_class(setting.type)
-            schema = setting_class.schema()
-            serialized_settings_dict[key] = schema.dump(setting).data
+        serialized: Dict[str, Any] = {}
 
-        return serialized_settings_dict
+        for key, setting in settings.items():
+            setting_class: BaseSetting = get_setting_class(setting.type)
+            schema: BaseSettingSchema = setting_class.schema()
+            serialized[key] = schema.dump(setting).data
+
+        return serialized

@@ -13,11 +13,18 @@
 # limitations under the License.
 
 import pkgutil
-import tortuga.resourceAdapter
+
 from tortuga.exceptions.resourceNotFound import ResourceNotFound
+import tortuga.resourceAdapter
 
 
-def find_resource_adapters():
+def find_resourceadapters():
+    """
+    Finds all resource adapter classes.
+
+    :return List[ResourceAdapter]: a list of all resource adapter classes
+
+    """
     subclasses = []
 
     def look_for_subclass(module_name):
@@ -28,13 +35,11 @@ def find_resource_adapters():
             d = d[m].__dict__
 
         for key, entry in d.items():
-            if key == tortuga.resourceAdapter.resourceAdapter.\
-                    ResourceAdapter.__name__:
+            if key == tortuga.resourceAdapter.resourceAdapter.ResourceAdapter.__name__:
                 continue
 
             try:
-                if issubclass(entry, tortuga.resourceAdapter.
-                              resourceAdapter.ResourceAdapter):
+                if issubclass(entry, tortuga.resourceAdapter.resourceAdapter.ResourceAdapter):
                     subclasses.append(entry)
             except TypeError:
                 continue
@@ -46,8 +51,16 @@ def find_resource_adapters():
     return subclasses
 
 
-def getResourceAdapterClass(adapter_name):
-    for adapter in find_resource_adapters():
+def get_resourceadapter_class(adapter_name: str):
+    """
+    Gets the resource adapter class for the given resource adapter name.
+
+    :param adapter_name:      the name of the resource adapter
+    :return ResourceAdatper:  a resource adapter class
+    :raises ResourceNotFound:
+
+    """
+    for adapter in find_resourceadapters():
         if adapter.__adaptername__ == adapter_name:
             return adapter
 
@@ -55,5 +68,14 @@ def getResourceAdapterClass(adapter_name):
         'Unable to find resource adapter [{0}]'.format(adapter_name))
 
 
-def getApi(adapter_name):
-    return getResourceAdapterClass(adapter_name)()
+def get_api(adapter_name: str):
+    """
+    Gets an instantiated resource adapter class for the given resource
+    adapter name.
+
+    :param adapter_name:      the name of the resource adapter
+    :return: ResourceAdapter: a resource adapter instance
+    :raises ResourceNotFound:
+
+    """
+    return get_resourceadapter_class(adapter_name)()

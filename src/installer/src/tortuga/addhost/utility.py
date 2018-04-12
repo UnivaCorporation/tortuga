@@ -158,7 +158,7 @@ def validate_addnodes_request(addNodesRequest):
             raise InvalidArgument(
                 'Missing "rackNumber" for name format [%s] of'
                 ' hardware profile [%s]' % (nameFormat, hp))
-        adapter = resourceAdapterFactory.getApi(hp.resourceadapter.name)
+        adapter = resourceAdapterFactory.get_api(hp.resourceadapter.name)
 
         adapter.validate_start_arguments(
             addNodesRequest, hp, dbSoftwareProfile=sp)
