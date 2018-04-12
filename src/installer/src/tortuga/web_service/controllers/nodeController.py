@@ -122,7 +122,7 @@ class NodeController(TortugaController):
             'name': 'resetNode',
             'path': '/v1/nodes/:nodeName/reset',
             'action': 'rebootNode',
-            'method': ['GET'],
+            'method': ['PUT'],
         },
         {
             'name': 'deleteNode',
@@ -479,16 +479,19 @@ class NodeController(TortugaController):
         return self.formatResponse(response)
 
     @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
     @require()
     def rebootNode(self, nodeName, **kwargs):
         response = None
 
-        bSoftReset = not kwargs['hard'].lower() not in ('1', 'y', 't') \
+        soft_reset = not str2bool(kwargs['hard']) \
             if 'hard' in kwargs else True
 
+        reinstall = str2bool(kwargs['reinstall']) \
+            if 'reinstall' in kwargs else False
+
         try:
-            app.node_api.rebootNode(nodeName, bSoftReset=bSoftReset)
+            app.node_api.rebootNode(
+                nodeName, bSoftReset=soft_reset, bReinstall=reinstall)
         except NodeNotFound as ex:
             self.handleException(ex)
             code = self.getTortugaStatusCode(ex)

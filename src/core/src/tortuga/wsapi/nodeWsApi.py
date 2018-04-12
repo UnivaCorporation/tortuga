@@ -342,17 +342,19 @@ class NodeWsApi(TortugaWsApi):
         except Exception as ex:
             raise TortugaException(exception=ex)
 
-    def rebootNode(self, nodespec, bSoftReset: Optional[bool] = True,
-                   bReinstall: Optional[bool] = False): \
-            # pylint: disable=unused-argument
+    def rebootNode(self, nodespec: str, bSoftReset: Optional[bool] = True,
+                   bReinstall: Optional[bool] = False):
         """
         reboot node
         """
 
-        url = 'v1/nodes/%s/reboot' % (urllib.parse.quote_plus(nodespec))
+        url = 'v1/nodes/{}/reboot?hard={}&reinstall={}'.format(
+            urllib.parse.quote_plus(nodespec),
+            '0' if bSoftReset else '1',
+            '1' if bReinstall else '0')
 
         try:
-            self.sendSessionRequest(url)
+            self.sendSessionRequest(url, method='PUT')
         except TortugaException:
             raise
         except Exception as ex:
