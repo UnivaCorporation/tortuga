@@ -390,10 +390,8 @@ class NodeController(TortugaController):
             remainingNodeList = [
                 node for node in remainingNodeString.split('+')]
 
-            liveMigrate = liveMigrate == 'True'
-
             app.node_api.migrateNode(
-                nodeName, remainingNodeList, liveMigrate)
+                nodeName, remainingNodeList, str2bool(liveMigrate))
         except Exception as ex:
             self.getLogger().exception('node WS API migrateNode() failed')
             self.handleException(ex)
