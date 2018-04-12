@@ -57,12 +57,6 @@ class NodeController(TortugaController):
             'method': ['GET']
         },
         {
-            'name': 'getNodeByIpRequest',
-            'path': '/v1/nics/:ip/node',
-            'action': 'getNodeByIpRequest',
-            'method': ['GET']
-        },
-        {
             'name': 'setParentNode',
             'path': '/v1/nodes/:nodeName/parentNode',
             'action': 'setParentNode',
@@ -141,12 +135,6 @@ class NodeController(TortugaController):
             'path': '/v1/nodes/:(name)',
             'action': 'updateNodeRequest',
             'method': ['PUT'],
-        },
-        {
-            'name': 'getNodeByIpRequest',
-            'path': '/v1/identify-node',
-            'action': 'getNodeByIpRequest',
-            'method': ['GET']
         },
     ]
 
