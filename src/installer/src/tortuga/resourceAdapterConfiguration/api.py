@@ -48,7 +48,7 @@ class ResourceAdapterConfigurationApi(TortugaApi):
         ResourceAdapterConfigurationManager().delete(
             session, resadapter_name, name)
 
-    def update(self, resadapter_name, name, configuration):
+    def update(self, session, resadapter_name, name, configuration):
         self.getLogger().debug(
             'update(resadapter_name=[{}], name=[{}],'
             ' configuration=[...])'.format(resadapter_name, name))
