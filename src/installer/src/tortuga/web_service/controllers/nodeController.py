@@ -57,12 +57,6 @@ class NodeController(TortugaController):
             'method': ['GET']
         },
         {
-            'name': 'getNodeByIpRequest',
-            'path': '/v1/nics/:ip/node',
-            'action': 'getNodeByIpRequest',
-            'method': ['GET']
-        },
-        {
             'name': 'setParentNode',
             'path': '/v1/nodes/:nodeName/parentNode',
             'action': 'setParentNode',
@@ -142,12 +136,6 @@ class NodeController(TortugaController):
             'action': 'updateNodeRequest',
             'method': ['PUT'],
         },
-        {
-            'name': 'getNodeByIpRequest',
-            'path': '/v1/identify-node',
-            'action': 'getNodeByIpRequest',
-            'method': ['GET']
-        },
     ]
 
     @cherrypy.tools.json_out()
@@ -186,7 +174,7 @@ class NodeController(TortugaController):
                 'nodes': nodeList.getCleanDict(),
             }
         except Exception as ex:
-            self.getLogger().exception('node WS API nodeListRequest() failed')
+            self.getLogger().exception('node WS API getNodes() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -215,7 +203,7 @@ class NodeController(TortugaController):
             code = self.getTortugaStatusCode(ex)
             response = self.notFoundErrorResponse(str(ex), code)
         except Exception as ex:
-            self.getLogger().exception('node WS API nodeRequest() failed')
+            self.getLogger().exception('node WS API getNodeById() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -225,8 +213,6 @@ class NodeController(TortugaController):
     @cherrypy.tools.json_in()
     @require()
     def updateNodeRequest(self, name):
-        response = None
-
         postdata = cherrypy.request.json
 
         state = postdata['state'] if 'state' in postdata else None
@@ -242,23 +228,6 @@ class NodeController(TortugaController):
             response = {
                 'changed': result,
             }
-
-            # node = app.node_api.getNode(name)
-
-            # Send data to event log
-
-            # d = {
-            #     'type': 'MODIFIED',
-            #     'object': {
-            #         # 'node': node.getCleanDict(),
-            #         'node': {
-            #             'name': node.getName(),
-            #         }
-            #     }
-            # }
-
-            # Workqueue().socket.send_multipart(['node',
-            #                                                json.dumps(d)])
         except Exception as ex:
             self.getLogger().exception(
                 'node WS API updateNodeRequest() failed')
@@ -271,7 +240,9 @@ class NodeController(TortugaController):
     @cherrypy.tools.json_in()
     @require()
     def getNodeProvisioningInfo(self, nodeName):
-        """ Return provisioning information for a node. """
+        """
+        Return provisioning information for a node
+        """
 
         try:
             info = app.node_api.getProvisioningInfo(nodeName)
@@ -295,11 +266,11 @@ class NodeController(TortugaController):
     @cherrypy.tools.json_in()
     @require()
     def setParentNode(self, nodeName, parentNodeName):
-        '''
+        """
         Handle POST to /nodes/:(nodeName)/parentNode
 
         Required data: parentNodeName
-        '''
+        """
 
         response = None
 
@@ -324,9 +295,9 @@ class NodeController(TortugaController):
     @cherrypy.tools.json_in()
     @require()
     def idleNode(self, nodeName):
-        '''
+        """
         Idle an active node
-        '''
+        """
 
         try:
             response = app.node_api.idleNode(nodeName)
@@ -345,9 +316,9 @@ class NodeController(TortugaController):
     @cherrypy.tools.json_in()
     @require()
     def activateNode(self, nodeName):
-        '''
+        """
         Activate an idle node
-        '''
+        """
 
         if int(cherrypy.request.headers['Content-Length']):
             postdata = cherrypy.request.json
@@ -371,9 +342,9 @@ class NodeController(TortugaController):
     @cherrypy.tools.json_in()
     @require()
     def checkpointNode(self, nodeName):
-        '''
+        """
         Checkpoint a node
-        '''
+        """
 
         response = None
 
@@ -390,9 +361,9 @@ class NodeController(TortugaController):
     @cherrypy.tools.json_in()
     @require()
     def revertNodeToCheckpoint(self, nodeName):
-        '''
+        """
         Migrate a node
-        '''
+        """
 
         response = None
 
@@ -409,10 +380,11 @@ class NodeController(TortugaController):
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     @require()
-    def migrateNode(self, nodeName, remainingNodeString, liveMigrate):
-        '''
+    def migrateNode(self, nodeName: str, remainingNodeString: str,
+                    liveMigrate: str):
+        """
         Migrate a node
-        '''
+        """
 
         response = None
 
@@ -421,15 +393,8 @@ class NodeController(TortugaController):
             remainingNodeList = [
                 node for node in remainingNodeString.split('+')]
 
-            liveMigrate = liveMigrate == 'True'
-
-            # self.getLogger().debug(
-            #     'migrateNode: nodeName [%s] remainingNodeList [%s]'
-            #     ' liveMigrate [%s]' % (
-            #         nodeName, remainingNodeList, liveMigrate))
-
             app.node_api.migrateNode(
-                nodeName, remainingNodeList, liveMigrate)
+                nodeName, remainingNodeList, str2bool(liveMigrate))
         except Exception as ex:
             self.getLogger().exception('node WS API migrateNode() failed')
             self.handleException(ex)
@@ -479,7 +444,9 @@ class NodeController(TortugaController):
     @cherrypy.tools.json_in()
     @require()
     def getChildrenList(self, nodeName):
-        """Return list of all children nodes"""
+        """
+        Return list of all children nodes
+        """
 
         try:
             nodeList = app.node_api.getChildrenList(nodeName)
@@ -497,8 +464,6 @@ class NodeController(TortugaController):
     @require()
     def shutdownNode(self, nodeName):
         response = None
-
-        # self.getLogger().debug('shutdownNode: nodeName [%s]' % (nodeName))
 
         try:
             app.node_api.shutdownNode(nodeName)
@@ -611,7 +576,9 @@ class NodeController(TortugaController):
     @cherrypy.tools.json_out()
     @require()
     def deleteNode(self, name):
-        """Handle /nodes/:(name) (DELETE)"""
+        """
+        Handle /nodes/:(name) (DELETE)
+        """
 
         try:
             transaction_id = enqueue_delete_hosts_request(
