@@ -13,14 +13,12 @@
 # limitations under the License.
 
 import pkgutil
-from typing import List, Type
 
 from tortuga.exceptions.resourceNotFound import ResourceNotFound
 import tortuga.resourceAdapter
-from tortuga.resourceAdapter.resourceAdapter import ResourceAdapter
 
 
-def find_resourceadapters() -> List[Type[ResourceAdapter]]:
+def find_resourceadapters():
     """
     Finds all resource adapter classes.
 
@@ -37,11 +35,11 @@ def find_resourceadapters() -> List[Type[ResourceAdapter]]:
             d = d[m].__dict__
 
         for key, entry in d.items():
-            if key == ResourceAdapter.__name__:
+            if key == tortuga.resourceAdapter.resourceAdapter.ResourceAdapter.__name__:
                 continue
 
             try:
-                if issubclass(entry, ResourceAdapter):
+                if issubclass(entry, tortuga.resourceAdapter.resourceAdapter.ResourceAdapter):
                     subclasses.append(entry)
             except TypeError:
                 continue
@@ -53,7 +51,7 @@ def find_resourceadapters() -> List[Type[ResourceAdapter]]:
     return subclasses
 
 
-def get_resourceadapter_class(adapter_name: str) -> Type[ResourceAdapter]:
+def get_resourceadapter_class(adapter_name: str):
     """
     Gets the resource adapter class for the given resource adapter name.
 
@@ -70,7 +68,7 @@ def get_resourceadapter_class(adapter_name: str) -> Type[ResourceAdapter]:
         'Unable to find resource adapter [{0}]'.format(adapter_name))
 
 
-def get_api(adapter_name: str) -> ResourceAdapter:
+def get_api(adapter_name: str):
     """
     Gets an instantiated resource adapter class for the given resource
     adapter name.

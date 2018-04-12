@@ -110,9 +110,9 @@ class ResourceAdapter(TortugaObject): \
         if not settings:
             settings = {}
 
-        serialized = Dict[str, Any] = {}
+        serialized: Dict[str, Any] = {}
 
-        for key, setting in settings:
+        for key, setting in settings.items():
             setting_class: BaseSetting = get_setting_class(setting.type)
             schema: BaseSettingSchema = setting_class.schema()
             serialized[key] = schema.dump(setting).data
