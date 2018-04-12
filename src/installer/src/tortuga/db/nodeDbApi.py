@@ -17,6 +17,7 @@
 import socket
 from typing import Optional, Union, List
 
+from sqlalchemy.orm.session import Session
 from tortuga.db.dbManager import DbManager
 from tortuga.db.globalParameterDbApi import GlobalParameterDbApi
 from tortuga.db.nodesDbHandler import NodesDbHandler
@@ -163,7 +164,7 @@ class NodeDbApi(TortugaDbApi):
 
         return nodeList
 
-    def getNodeList(self, tags=None):
+    def getNodeList(self, tags: Optional[Union[dict, None]] = None):
         """
         Get list of all available nodes from the db.
 
@@ -186,7 +187,7 @@ class NodeDbApi(TortugaDbApi):
         finally:
             DbManager().closeSession()
 
-    def getProvisioningInfo(self, nodeName):
+    def getProvisioningInfo(self, nodeName: str):
         """
         Get the provisioing information for a given provisioned address
 
@@ -248,7 +249,7 @@ class NodeDbApi(TortugaDbApi):
             provisioningInfo.setGlobalParameters(globalParameters)
 
             return provisioningInfo
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
@@ -256,7 +257,9 @@ class NodeDbApi(TortugaDbApi):
         finally:
             DbManager().closeSession()
 
-    def startupNode(self, nodespec, remainingNodeList=None, bootMethod='n'):
+    def startupNode(self, nodespec: str,
+                    remainingNodeList: Optional[Union[List[str]]] = None,
+                    bootMethod: Optional[str] = 'n'):
         """
         Start Node
         """
@@ -275,7 +278,7 @@ class NodeDbApi(TortugaDbApi):
                 bootMethod=bootMethod)
 
             session.commit()
-        except TortugaException as ex:
+        except TortugaException:
             session.rollback()
             raise
         except Exception as ex:
@@ -285,7 +288,8 @@ class NodeDbApi(TortugaDbApi):
         finally:
             DbManager().closeSession()
 
-    def shutdownNode(self, nodespec, bSoftShutdown=False):
+    def shutdownNode(self, nodespec: str,
+                     bSoftShutdown: Optional[bool] = False):
         """
         Shutdown Node
 
@@ -316,7 +320,7 @@ class NodeDbApi(TortugaDbApi):
         finally:
             DbManager().closeSession()
 
-    def __expand_nodespec(self, session, nodespec):
+    def __expand_nodespec(self, session: Session, nodespec: str):
         # Expand wildcards in nodespec. Each token in the nodespec can
         # be wildcard that expands into one or more nodes.
 
@@ -335,7 +339,7 @@ class NodeDbApi(TortugaDbApi):
 
         return self._nodesDbHandler.getNodesByNameFilter(session, filter_spec)
 
-    def evacuateChildren(self, nodeName):
+    def evacuateChildren(self, nodeName: str):
         """
         Evacuate Children of node
         """
@@ -348,7 +352,7 @@ class NodeDbApi(TortugaDbApi):
             self._nodesDbHandler.evacuateChildren(session, dbNode)
 
             session.commit()
-        except TortugaException as ex:
+        except TortugaException:
             session.rollback()
             raise
         except Exception as ex:
