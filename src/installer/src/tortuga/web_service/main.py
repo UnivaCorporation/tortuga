@@ -120,14 +120,19 @@ def runServer(daemonize=False, pidfile=None):
 def error_page_400(status, message, traceback, version): \
         # pylint: disable=unused-argument
     cherrypy.response.headers['Content-Type'] = 'application/json'
-    response = TortugaController().errorResponse(message)
-    return json.dumps(response)
+    return json.dumps(TortugaController().errorResponse(message))
+
+
+def error_page_404(status, message, traceback, version):
+    cherrypy.response.headers['Content-Type'] = 'application/json'
+    return json.dumps(
+        TortugaController().errorResponse(message, http_status=404))
 
 
 def handle_error():
     cherrypy.response.headers['Content-Type'] = 'application/json'
-    cherrypy.response.status = 500
-    return json.dumps(TortugaController().errorResponse('Internal error'))
+    return json.dumps(TortugaController().errorResponse(
+        'Internal error', http_status=500))
 
 
 class DatabaseEnginePlugin(plugins.SimplePlugin):
@@ -234,6 +239,7 @@ def main():
         'log.error_file': '/var/log/tortugaws_error_log',
         'request.error_response': handle_error,
         'error_page.400': error_page_400,
+        'error_page.404': error_page_404,
         'tools.sessions.on': True,
         'tools.auth.on': True,
     }
