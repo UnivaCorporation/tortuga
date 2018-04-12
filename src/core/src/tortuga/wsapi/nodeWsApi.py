@@ -18,7 +18,7 @@ import json
 import urllib.error
 import urllib.parse
 import urllib.request
-from typing import Dict, List, Optional, Union
+from typing import List, Optional, Union
 
 import tortuga.objects.node
 import tortuga.objects.provisioningInfo

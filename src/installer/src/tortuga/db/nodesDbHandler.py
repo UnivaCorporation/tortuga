@@ -943,7 +943,7 @@ class NodesDbHandler(TortugaDbObjectHandler):
                 'Hardware profile [%s] does not have an associated'
                 ' resource adapter' % (hardwareProfile.name))
 
-        return resourceAdapterFactory.getApi(
+        return resourceAdapterFactory.get_api(
             hardwareProfile.resourceadapter.name) \
             if hardwareProfile.resourceadapter else None
 

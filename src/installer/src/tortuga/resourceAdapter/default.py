@@ -18,7 +18,7 @@ import configparser
 import os
 import select
 import signal
-from typing import List
+from typing import Dict, List
 
 from tortuga.db.dbManager import DbManager
 from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
@@ -38,7 +38,7 @@ from tortuga.os_utility import tortugaSubprocess
 from tortuga.resourceAdapter.resourceAdapter import ResourceAdapter
 from tortuga.resourceAdapter.utility import get_provisioning_nic, \
     get_provisioning_nics
-from tortuga.resourceAdapterConfiguration import fields
+from tortuga.objects import resourceadapter_settings
 
 
 def initialize_nics(installer_provisioning_nic, hardwareprofilenetworks,
@@ -62,8 +62,8 @@ def initialize_nics(installer_provisioning_nic, hardwareprofilenetworks,
 class Default(ResourceAdapter):
     __adaptername__ = 'default'
 
-    config = {
-        'boot_host_hook_script': fields.FileVariable()
+    settings: Dict[str, resourceadapter_settings.BaseSetting] = {
+        'boot_host_hook_script': resourceadapter_settings.FileSetting()
     }
 
     def __init__(self, addHostSession=None):

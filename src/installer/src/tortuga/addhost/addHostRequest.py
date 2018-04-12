@@ -23,6 +23,7 @@ from tortuga.db.nodeRequestsDbHandler import NodeRequestsDbHandler
 
 from .contextManager import AddHostSessionContextManager
 
+
 logger = logging.getLogger('tortuga.addhost')
 logger.addHandler(logging.NullHandler())
 
