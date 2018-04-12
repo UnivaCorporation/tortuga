@@ -99,7 +99,7 @@ setup(
     package_dir={'': 'src'},
     scripts=[str(script_file) for script_file in Path('bin').iterdir()],
     data_files=[
-        ('etc', [str(fn) for fn in Path('etc').iterdir()]),
+        ('etc', ['etc/tortuga-release'] + [str(fn) for fn in Path('etc').iterdir()]),
         ('man/man8', [
             str(fn) for fn in Path(Path('man') / Path('man8')).iterdir()]),
     ],
