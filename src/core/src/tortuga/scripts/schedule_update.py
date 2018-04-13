@@ -17,7 +17,7 @@
 # pylint: disable=no-member
 
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.wsapi import syncWsApi
+from tortuga.wsapi.syncWsApi import SyncWsApi
 
 
 class ScheduleUpdateCli(TortugaCli):
@@ -27,13 +27,18 @@ class ScheduleUpdateCli(TortugaCli):
 
     def parseArgs(self, usage=None):
         self.addOption('reason',
-                       help='Optional update reason message')
+                       help='Reason for update (optional)',
+                       nargs='?')
+
+        super().parseArgs(usage=usage)
 
     def runCommand(self):
-        """ Run command. """
         self.parseArgs()
 
-        api = syncWsApi.SyncWsApi(self.getUsername(), self.getPassword())
+        api = SyncWsApi(username=self.getUsername(),
+                        password=self.getPassword(),
+                        baseurl=self.getUrl())
+
         api.scheduleClusterUpdate(updateReason=self.getArgs().reason)
 
 

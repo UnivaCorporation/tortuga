@@ -18,19 +18,17 @@
 
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
-from tortuga.node.nodeApiFactory import getNodeApi
+from tortuga.wsapi.nodeWsApi import NodeWsApi
 
 
 class StartupNodeCli(TortugaCli):
-    def __init__(self):
-        super(StartupNodeCli, self).__init__()
-
+    def parseArgs(self, usage=None):
         optionGroupName = _('Startup Node Options')
 
         self.addOptionGroup(optionGroupName, '')
 
         self.addOptionToGroup(
-            optionGroupName, '--node',
+            optionGroupName, '--node', required=True,
             dest='nodeName',
             help=_('Name of node to start'))
 
@@ -40,22 +38,11 @@ class StartupNodeCli(TortugaCli):
             help=_('List of nodes which can be the destination'))
 
         self.addOptionToGroup(optionGroupName, '--boot-method',
-                              dest='bootMethod',
+                              dest='bootMethod', default='n',
                               help=_('Boot method'))
 
     def runCommand(self):
-        self.parseArgs(_("""
-    startup-node --node=NODE --destination=PARENT[,PARENT] [--boot-method]
-
-Description:
-    The startup-node tool starts a node.
-"""))
-
-        if not self.getArgs().nodeName:
-            raise InvalidCliRequest(_('Node name must be specified'))
-
-        bootMethod = self.getArgs().bootMethod \
-            if self.getArgs().bootMethod else 'n'
+        self.parseArgs()
 
         # Turn user input into a list
         destinationList = [
@@ -64,12 +51,14 @@ Description:
         ] if self.getArgs().destinationString else []
 
         try:
-            getNodeApi().startupNode(
+            NodeWsApi(username=self.getUsername(),
+                      password=self.getPasword(),
+                      baseurl=self.getUrl()).startupNode(
                 self.getArgs().nodeName, destinationList, bootMethod)
         except Exception as msg:
             raise InvalidCliRequest(
                 _("Unable to start node(s) - %s") % (msg))
 
 
-if __name__ == '__main__':
+def main():
     StartupNodeCli().run()
