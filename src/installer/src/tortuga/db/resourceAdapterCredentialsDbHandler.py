@@ -12,25 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=not-callable,multiple-statements,no-self-use
-# pylint: disable=no-name-in-module,no-member,maybe-no-member
-
 from sqlalchemy import and_
-# from sqlalchemy.orm.exc import NoResultFound
 
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
-from .resourceAdapterCredentials import ResourceAdapterCredentials
-from .resourceAdapters import ResourceAdapters
-from .resourceAdaptersDbHandler import ResourceAdaptersDbHandler
+from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.resourceAlreadyExists import ResourceAlreadyExists
 from tortuga.exceptions.resourceNotFound import ResourceNotFound
-from tortuga.exceptions.invalidArgument import InvalidArgument
+
+from .models.resourceAdapterCredential import ResourceAdapterCredential
+from .models.resourceAdapter import ResourceAdapter
+from .resourceAdaptersDbHandler import ResourceAdaptersDbHandler
 
 
 class ResourceAdapterCredentialsDbHandler(TortugaDbObjectHandler):
     """Low-level API for managing resource adapter credentials"""
 
-    def __raise_not_found_exception(self, resadapter_name, name):
+    def __raise_not_found_exception(self, resadapter_name, name): \
+            # pylint: disable=no-self-use
         raise ResourceNotFound(
             'Resource adapter configuration [{1}] does not exist for'
             ' resource adapter [{0}]'.format(resadapter_name, name))
@@ -61,7 +59,8 @@ class ResourceAdapterCredentialsDbHandler(TortugaDbObjectHandler):
 
         return result
 
-    def get_profile_names(self, session, resadapter_name):
+    def get_profile_names(self, session, resadapter_name): \
+            # pylint: disable=no-self-use
         """Return list of all profile names for specified resource adapter
 
         Raises:
@@ -74,18 +73,18 @@ class ResourceAdapterCredentialsDbHandler(TortugaDbObjectHandler):
 
         return [result.name
                 for result in session.query(
-                    ResourceAdapterCredentials.name).join(
-                        ResourceAdapters).filter(
-                            ResourceAdapters.name ==
+                    ResourceAdapterCredential.name).join(
+                        ResourceAdapter).filter(
+                            ResourceAdapter.name ==
                             resadapter_name).distinct()]
 
     def __get_query(self, session, resadapter_name, name): \
             # pylint: disable=no-self-use
 
         return session.query(
-            ResourceAdapterCredentials).join(ResourceAdapters).filter(
-                and_(ResourceAdapterCredentials.name == name,
-                     ResourceAdapters.name == resadapter_name))
+            ResourceAdapterCredential).join(ResourceAdapter).filter(
+                and_(ResourceAdapterCredential.name == name,
+                     ResourceAdapter.name == resadapter_name))
 
     def create(self, session, resadapter_name, name, configuration):
         """Create new resource adapter configuration
@@ -117,10 +116,10 @@ class ResourceAdapterCredentialsDbHandler(TortugaDbObjectHandler):
                     'Malformed resource adapter configuration data')
 
             # Initialize ResourceAdapterCredentials record
-            cred = ResourceAdapterCredentials(name=name,
-                                              resourceadapter=adapter,
-                                              key=entry['key'],
-                                              value=entry['value'])
+            cred = ResourceAdapterCredential(name=name,
+                                             resourceadapter=adapter,
+                                             key=entry['key'],
+                                             value=entry['value'])
 
             # Add record to session
             session.add(cred)
@@ -128,7 +127,8 @@ class ResourceAdapterCredentialsDbHandler(TortugaDbObjectHandler):
     def delete(self, session, resadapter_name, name):
         """Delete resource adapter configuration"""
 
-        ResourceAdaptersDbHandler().getResourceAdapter(session, resadapter_name)
+        ResourceAdaptersDbHandler().getResourceAdapter(
+            session, resadapter_name)
 
         for entry in self.__get_query(session, resadapter_name, name).all():
             session.delete(entry)
@@ -158,10 +158,10 @@ class ResourceAdapterCredentialsDbHandler(TortugaDbObjectHandler):
             value = entry['value']
 
             r = session.query(
-                ResourceAdapterCredentials).join(ResourceAdapters).filter(
-                    and_(ResourceAdapterCredentials.name == name,
-                         ResourceAdapters.name == resadapter_name,
-                         ResourceAdapterCredentials.key == key)).first()
+                ResourceAdapterCredential).join(ResourceAdapter).filter(
+                    and_(ResourceAdapterCredential.name == name,
+                         ResourceAdapter.name == resadapter_name,
+                         ResourceAdapterCredential.key == key)).first()
 
             if r and value is not None:
                 # Update existing record with new value
@@ -171,9 +171,9 @@ class ResourceAdapterCredentialsDbHandler(TortugaDbObjectHandler):
                 session.delete(r)
             elif value is not None:
                 # Create new record
-                r = ResourceAdapterCredentials(name=name,
-                                               resourceadapter=adapter,
-                                               key=key,
-                                               value=value)
+                r = ResourceAdapterCredential(name=name,
+                                              resourceadapter=adapter,
+                                              key=key,
+                                              value=value)
 
                 session.add(r)

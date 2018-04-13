@@ -16,7 +16,7 @@
 
 import unittest
 import pytest
-from tortuga.db.tags import Tags
+from tortuga.db.models.tag import Tag
 from tortuga.db.tagsDbHandler import TagsDbHandler
 
 
@@ -38,8 +38,8 @@ class TestTagsDbHandler(unittest.TestCase):
 
     def _populate(self):
         self._tags = [
-            Tags('tag1', 'value1'),
-            Tags('tag2', 'value2'),
+            Tag('tag1', 'value1'),
+            Tag('tag2', 'value2'),
         ]
 
         self.session.add_all(self._tags)
