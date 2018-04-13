@@ -157,7 +157,7 @@ class NodeManager(TortugaObjectManager): \
             if hwprofile.getResourceAdapter() else 'default'
 
         # Query vcpus from resource adapter
-        ResourceAdapterClass = resourceAdapterFactory.getResourceAdapterClass(
+        ResourceAdapterClass = resourceAdapterFactory.get_resourceadapter_class(
             adapter_name)
 
         # Update Node object
@@ -518,7 +518,7 @@ class NodeManager(TortugaObjectManager): \
         # action as well as populate the nodeTransferDict. This saves
         # having to iterate twice on the same result data.
         for dbHardwareProfile, nodesDict in hwProfileMap.items():
-            adapter = resourceAdapterFactory.getApi(
+            adapter = resourceAdapterFactory.get_api(
                 dbHardwareProfile.resourceadapter.name)
 
             dbNodeTuples = []
@@ -860,7 +860,7 @@ class NodeManager(TortugaObjectManager): \
             raise UnsupportedOperation(
                 'Only persistent volumes can be attached')
 
-        api = resourceAdapterFactory.getApi(
+        api = resourceAdapterFactory.get_api(
             node.getHardwareProfile().getResourceAdapter().getName())
 
         if isDirect == "DEFAULT":
@@ -877,7 +877,7 @@ class NodeManager(TortugaObjectManager): \
 
         node = self.getNode(nodeName, {'hardwareprofile': True})
 
-        api = resourceAdapterFactory.getApi(
+        api = resourceAdapterFactory.get_api(
             node.getHardwareProfile().getResourceAdapter().getName())
 
         vol = self._san.getVolume(volume)
@@ -903,5 +903,6 @@ class NodeManager(TortugaObjectManager): \
         return self._nodeDbApi.getNodesByNameFilter(
             nodespec, optionDict=optionDict)
 
-    def getNodesByAddHostSession(self, addHostSession):
-        return self._nodeDbApi.getNodesByAddHostSession(addHostSession)
+    def getNodesByAddHostSession(self, addHostSession: str,
+                                 optionDict: Optional[Union[dict, None]] = None) -> TortugaObjectList:
+        return self._nodeDbApi.getNodesByAddHostSession(addHostSession, optionDict)

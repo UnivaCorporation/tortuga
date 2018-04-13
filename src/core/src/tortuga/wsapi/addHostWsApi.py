@@ -39,7 +39,7 @@ class AddHostWsApi(TortugaWsApi):
 
         try:
             _, responseDict = self.sendSessionRequest(
-                url='v1/nodes',
+                url='v1/nodes/',
                 method='POST',
                 data=json.dumps({'node': addNodesRequest}))
 

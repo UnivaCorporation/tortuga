@@ -33,7 +33,7 @@ class NetworkController(TortugaController):
     actions = [
         {
             'name': 'getNetworkList',
-            'path': '/v1/networks',
+            'path': '/v1/networks/',
             'action': 'getNetworkList',
             'method': ['GET'],
         },

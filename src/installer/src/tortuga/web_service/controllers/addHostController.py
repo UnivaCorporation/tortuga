@@ -55,7 +55,7 @@ class AddHostController(TortugaController):
         },
         {
             'name': 'addNodes',
-            'path': '/v1/nodes',
+            'path': '/v1/nodes/',
             'action': 'addNodes',
             'method': ['POST']
         },

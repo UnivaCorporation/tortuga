@@ -75,7 +75,7 @@ class AddHostManager(TortugaObjectManager, Singleton):
         tags = get_tags(session, addHostRequest['tags']) \
             if 'tags' in addHostRequest else []
 
-        ResourceAdapterClass = resourceAdapterFactory.getResourceAdapterClass(
+        ResourceAdapterClass = resourceAdapterFactory.get_resourceadapter_class(
             dbHardwareProfile.resourceadapter.name)
 
         resourceAdapter = ResourceAdapterClass(

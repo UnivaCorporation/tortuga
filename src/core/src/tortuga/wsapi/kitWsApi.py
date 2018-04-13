@@ -89,7 +89,7 @@ class KitWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/kits'
+        url = 'v1/kits/'
 
         try:
             _, responseDict = self.sendSessionRequest(url)

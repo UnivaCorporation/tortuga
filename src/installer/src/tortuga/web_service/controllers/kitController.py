@@ -30,7 +30,7 @@ class KitController(TortugaController):
     actions = [
         {
             'name': 'userKits',
-            'path': '/v1/kits',
+            'path': '/v1/kits/',
             'action': 'getKitList',
             'method': ['GET']
         },

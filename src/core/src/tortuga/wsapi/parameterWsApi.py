@@ -52,7 +52,7 @@ class ParameterWsApi(TortugaWsApi):
         :return: a list of parameters
 
         """
-        url = 'v1/parameters'
+        url = 'v1/parameters/'
 
         try:
             _, response_dict = self.sendSessionRequest(url)
@@ -71,7 +71,7 @@ class ParameterWsApi(TortugaWsApi):
         :param parameter: the parameter to create
 
         """
-        url = 'v1/parameters'
+        url = 'v1/parameters/'
         data = parameter.getJsonRep()
 
         try:

@@ -99,7 +99,7 @@ setup(
     package_dir={'': 'src'},
     scripts=[str(script_file) for script_file in Path('bin').iterdir()],
     data_files=[
-        ('etc', [str(fn) for fn in Path('etc').iterdir()]),
+        ('etc', ['etc/tortuga-release'] + [str(fn) for fn in Path('etc').iterdir()]),
         ('man/man8', [
             str(fn) for fn in Path(Path('man') / Path('man8')).iterdir()]),
     ],
@@ -159,16 +159,15 @@ setup(
             'migrate-node=tortuga.scripts.migrate_node:main',
             'reboot-node=tortuga.scripts.reboot_node:main',
             'revert-node-to-checkpoint=tortuga.scripts.revert_node_to_checkpoint:main',
-            'schedule-update=tortuga.scripts.schedule_update:main',
             'set-profile-mapping=tortuga.scripts.set_profile_mapping:main',
             'shutdown-node=tortuga.scripts.shutdown_node:main',
+            'schedule-update=tortuga.scripts.schedule_update:main',
             'transfer-node=tortuga.scripts.transfer_node:main',
             'uc-tag=tortuga.scripts.uc_tag:main',
             'ucparam=tortuga.scripts.ucparam:main',
             'update-hardware-profile=tortuga.scripts.update_hardware_profile:main',
             'update-software-profile=tortuga.scripts.update_software_profile:main',
             'update-admin=tortuga.scripts.update_admin:main',
-            'update-network=tortuga.scripts.update_network:main',
         ],
     },
 )

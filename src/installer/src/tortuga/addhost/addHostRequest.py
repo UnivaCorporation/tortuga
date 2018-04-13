@@ -23,6 +23,7 @@ from tortuga.db.nodeRequestsDbHandler import NodeRequestsDbHandler
 
 from .contextManager import AddHostSessionContextManager
 
+
 logger = logging.getLogger('tortuga.addhost')
 logger.addHandler(logging.NullHandler())
 
@@ -59,10 +60,11 @@ def process_addhost_request(addHostSession):
                         req.addHostSession))
             except Exception as exc:
                 logger.exception(
-                    'Fatal error occurred during add host workflow')
+                    'Exception occurred during add host workflow')
 
                 req.state = 'error'
-                req.message = str(exc)
+                req.message = 'Exception: {}: {}'.format(
+                    exc.__class__.__name__, exc if exc.args else '<None>')
                 req.last_update = datetime.datetime.utcnow()
             finally:
                 session.commit()

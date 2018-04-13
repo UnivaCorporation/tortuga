@@ -37,7 +37,7 @@ class AdminWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/admin/%s' % (urllib.parse.quote_plus(adminName))
+        url = 'v1/admins/%s' % (urllib.parse.quote_plus(adminName))
 
         try:
             _, responseDict = self.sendSessionRequest(url)
@@ -59,7 +59,7 @@ class AdminWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/admin/%s' % (admin_id)
+        url = 'v1/admins/%s' % (admin_id)
 
         try:
             _, responseDict = self.sendSessionRequest(url)
@@ -80,7 +80,7 @@ class AdminWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/admin'
+        url = 'v1/admins/'
 
         try:
             _, responseDict = self.sendSessionRequest(url)
@@ -105,7 +105,7 @@ class AdminWsApi(TortugaWsApi):
             TortugaException
         """
 
-        url = 'v1/admin'
+        url = 'v1/admins/'
 
         postdata = {
             'isCrypted': isCrypted,
@@ -140,7 +140,7 @@ class AdminWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/admin/%s' % (urllib.parse.quote_plus(admin))
+        url = 'v1/admins/%s' % (urllib.parse.quote_plus(admin))
 
         try:
             self.sendSessionRequest(url, method='DELETE')
@@ -161,7 +161,7 @@ class AdminWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/admin/%s' % (adminObject.getId())
+        url = 'v1/admins/%s' % (adminObject.getId())
 
         d = {
             'admin': adminObject.getCleanDict(),
