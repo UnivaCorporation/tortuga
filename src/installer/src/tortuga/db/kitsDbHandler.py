@@ -22,16 +22,17 @@ from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from sqlalchemy.orm.session import Session
 
 from tortuga.config.configManager import ConfigManager
-from tortuga.db.models.component import Component
-from tortuga.db.models.kit import Kit
-from tortuga.db.models.operatingSystemFamily import OperatingSystemFamily
-from tortuga.db.models.osComponent import OsComponent
-from tortuga.db.models.osFamilyComponent import OsFamilyComponent
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
 from tortuga.exceptions.kitAlreadyExists import KitAlreadyExists
 from tortuga.exceptions.kitInUse import KitInUse
 from tortuga.exceptions.kitNotFound import KitNotFound
 from tortuga.kit.utils import format_kit_descriptor
+
+from .models.component import Component
+from .models.kit import Kit
+from .models.operatingSystemFamily import OperatingSystemFamily
+from .models.osComponent import OsComponent
+from .models.osFamilyComponent import OsFamilyComponent
 
 
 class KitsDbHandler(TortugaDbObjectHandler):

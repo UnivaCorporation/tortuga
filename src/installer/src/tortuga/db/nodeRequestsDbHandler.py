@@ -16,8 +16,9 @@
 
 from sqlalchemy.orm.session import Session
 
-from tortuga.db.models.nodeRequest import NodeRequest
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
+
+from .models.nodeRequest import NodeRequest
 
 
 class NodeRequestsDbHandler(TortugaDbObjectHandler):

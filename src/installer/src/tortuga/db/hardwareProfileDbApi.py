@@ -26,10 +26,6 @@ from tortuga.db.adminsDbHandler import AdminsDbHandler
 from tortuga.db.dbManager import DbManager
 from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
 from tortuga.db.hardwareProfilesDbHandler import HardwareProfilesDbHandler
-from tortuga.db.models.hardwareProfile import \
-    HardwareProfile as HardwareProfileModel
-from tortuga.db.models.hardwareProfileNetwork import HardwareProfileNetwork
-from tortuga.db.models.networkDevice import NetworkDevice
 from tortuga.db.networkDevicesDbHandler import NetworkDevicesDbHandler
 from tortuga.db.networksDbHandler import NetworksDbHandler
 from tortuga.db.nicsDbHandler import NicsDbHandler
@@ -49,6 +45,10 @@ from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.objects.hardwareProfile import HardwareProfile
 from tortuga.objects.node import Node
 from tortuga.objects.tortugaObject import TortugaObjectList
+
+from .models.hardwareProfile import HardwareProfile as HardwareProfileModel
+from .models.hardwareProfileNetwork import HardwareProfileNetwork
+from .models.networkDevice import NetworkDevice
 
 
 class HardwareProfileDbApi(TortugaDbApi):

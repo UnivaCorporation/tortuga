@@ -15,9 +15,10 @@
 # pylint: disable=no-member
 
 import socket
-from typing import Optional, Union, List
+from typing import List, Optional, Union
 
 from sqlalchemy.orm.session import Session
+
 from tortuga.db.dbManager import DbManager
 from tortuga.db.globalParameterDbApi import GlobalParameterDbApi
 from tortuga.db.nodesDbHandler import NodesDbHandler
@@ -28,7 +29,8 @@ from tortuga.objects.node import Node
 from tortuga.objects.parameter import Parameter
 from tortuga.objects.provisioningInfo import ProvisioningInfo
 from tortuga.objects.tortugaObject import TortugaObjectList
-from tortuga.db.models.node import Node as NodeModel
+
+from .models.node import Node as NodeModel
 
 
 class NodeDbApi(TortugaDbApi):

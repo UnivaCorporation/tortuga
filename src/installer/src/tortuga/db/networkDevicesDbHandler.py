@@ -17,8 +17,9 @@
 from sqlalchemy.orm.exc import NoResultFound
 
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
-from tortuga.db.models.networkDevice import NetworkDevice
 from tortuga.exceptions.networkDeviceNotFound import NetworkDeviceNotFound
+
+from .models.networkDevice import NetworkDevice
 
 
 class NetworkDevicesDbHandler(TortugaDbObjectHandler):

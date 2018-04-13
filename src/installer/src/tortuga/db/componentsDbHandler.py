@@ -14,17 +14,17 @@
 
 # pylint: disable=not-callable,multiple-statements,no-self-use,no-member
 
-from sqlalchemy import and_, or_
-from sqlalchemy import func
+from sqlalchemy import and_, func, or_
 from sqlalchemy.orm.exc import NoResultFound
 
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
-from tortuga.db.models.component import Component
 from tortuga.exceptions.componentAlreadyExists import ComponentAlreadyExists
 from tortuga.exceptions.componentNotFound import ComponentNotFound
-from tortuga.db.models.operatingSystem import OperatingSystem
-from tortuga.db.models.operatingSystemFamily import OperatingSystemFamily
 from tortuga.helper import osHelper
+
+from .models.component import Component
+from .models.operatingSystem import OperatingSystem
+from .models.operatingSystemFamily import OperatingSystemFamily
 
 
 class ComponentsDbHandler(TortugaDbObjectHandler):

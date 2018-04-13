@@ -14,32 +14,30 @@
 
 # pylint: disable=not-callable,multiple-statements,no-member
 
-from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import and_, or_
+from sqlalchemy.orm.exc import NoResultFound
 
-from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
-from tortuga.db.models.softwareProfile import SoftwareProfile
-from tortuga.db.models.hardwareProfile import HardwareProfile
-from tortuga.db.models.package import Package
-from tortuga.db.models.partition import Partition
-from tortuga.exceptions.softwareProfileNotFound \
-    import SoftwareProfileNotFound
-from tortuga.exceptions.softwareProfileComponentAlreadyExists \
-    import SoftwareProfileComponentAlreadyExists
-from tortuga.exceptions.softwareProfileComponentNotFound \
-    import SoftwareProfileComponentNotFound
-from tortuga.exceptions.hardwareProfileNotFound \
-    import HardwareProfileNotFound
-from tortuga.exceptions.softwareUsesHardwareAlreadyExists \
-    import SoftwareUsesHardwareAlreadyExists
-from tortuga.exceptions.softwareUsesHardwareNotFound \
-    import SoftwareUsesHardwareNotFound
-from tortuga.exceptions.partitionAlreadyExists \
-    import PartitionAlreadyExists
-from tortuga.exceptions.partitionNotFound import PartitionNotFound
 from tortuga.db.componentsDbHandler import ComponentsDbHandler
+from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
+from tortuga.exceptions.hardwareProfileNotFound import HardwareProfileNotFound
 from tortuga.exceptions.packageAlreadyExists import PackageAlreadyExists
 from tortuga.exceptions.packageNotFound import PackageNotFound
+from tortuga.exceptions.partitionAlreadyExists import PartitionAlreadyExists
+from tortuga.exceptions.partitionNotFound import PartitionNotFound
+from tortuga.exceptions.softwareProfileComponentAlreadyExists import \
+    SoftwareProfileComponentAlreadyExists
+from tortuga.exceptions.softwareProfileComponentNotFound import \
+    SoftwareProfileComponentNotFound
+from tortuga.exceptions.softwareProfileNotFound import SoftwareProfileNotFound
+from tortuga.exceptions.softwareUsesHardwareAlreadyExists import \
+    SoftwareUsesHardwareAlreadyExists
+from tortuga.exceptions.softwareUsesHardwareNotFound import \
+    SoftwareUsesHardwareNotFound
+
+from .models.hardwareProfile import HardwareProfile
+from .models.package import Package
+from .models.partition import Partition
+from .models.softwareProfile import SoftwareProfile
 
 
 class SoftwareProfilesDbHandler(TortugaDbObjectHandler):

@@ -16,8 +16,6 @@ from typing import List, Type
 
 from tortuga.db import resourceAdaptersDbHandler
 from tortuga.db.dbManager import DbManager
-from tortuga.db.models.resourceAdapter import \
-    ResourceAdapter as ResourceAdapterModel
 from tortuga.db.tortugaDbApi import TortugaDbApi
 from tortuga.exceptions.resourceAdapterAlreadyExists import \
     ResourceAdapterAlreadyExists
@@ -25,6 +23,8 @@ from tortuga.exceptions.resourceAdapterNotFound import ResourceAdapterNotFound
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.objects.resourceAdapter import ResourceAdapter
 from tortuga.objects.tortugaObject import TortugaObject, TortugaObjectList
+
+from .models.resourceAdapter import ResourceAdapter as ResourceAdapterModel
 
 
 class ResourceAdapterDbApi(TortugaDbApi):

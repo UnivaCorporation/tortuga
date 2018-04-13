@@ -13,8 +13,10 @@
 # limitations under the License.
 
 from sqlalchemy import and_
+
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
-from tortuga.db.models.tag import Tag
+
+from .models.tag import Tag
 
 
 class TagsDbHandler(TortugaDbObjectHandler):

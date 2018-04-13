@@ -14,18 +14,16 @@
 
 # pylint: disable=not-callable,multiple-statements,no-member
 
-from sqlalchemy import or_, and_
+from sqlalchemy import and_, or_
 from sqlalchemy.orm.exc import NoResultFound
 
+from tortuga.db import networkDevicesDbHandler, networksDbHandler
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
-from tortuga.db.models.hardwareProfile import HardwareProfile
-from tortuga.exceptions.hardwareProfileNotFound \
-    import HardwareProfileNotFound
-from tortuga.db import networksDbHandler
-from tortuga.db import networkDevicesDbHandler
-from tortuga.exceptions.softwareProfileNotIdle \
-    import SoftwareProfileNotIdle
+from tortuga.exceptions.hardwareProfileNotFound import HardwareProfileNotFound
 from tortuga.exceptions.invalidArgument import InvalidArgument
+from tortuga.exceptions.softwareProfileNotIdle import SoftwareProfileNotIdle
+
+from .models.hardwareProfile import HardwareProfile
 
 
 class HardwareProfilesDbHandler(TortugaDbObjectHandler):

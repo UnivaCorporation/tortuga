@@ -16,31 +16,31 @@
 
 from typing import List, Union
 
-from sqlalchemy import and_, or_
+from sqlalchemy import and_, func, or_
 from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy import func
 
-from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
-from tortuga.db.models.node import Node
-from tortuga.db.models.nic import Nic
-from tortuga.db.models.softwareProfile import SoftwareProfile
-from tortuga.exceptions.nodeNotFound import NodeNotFound
-from tortuga.exceptions.nodeSoftwareProfileLocked \
-    import NodeSoftwareProfileLocked
-from tortuga.exceptions.nodeTransferNotValid import NodeTransferNotValid
-from tortuga.exceptions.profileMappingNotAllowed \
-    import ProfileMappingNotAllowed
-from tortuga.db.nicsDbHandler import NicsDbHandler
-from tortuga.db.hardwareProfilesDbHandler import HardwareProfilesDbHandler
-from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
-from tortuga.db.softwareUsesHardwareDbHandler \
-    import SoftwareUsesHardwareDbHandler
 from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
-from tortuga.db.models.hardwareProfileProvisioningNic \
-    import HardwareProfileProvisioningNic
+from tortuga.db.hardwareProfilesDbHandler import HardwareProfilesDbHandler
+from tortuga.db.nicsDbHandler import NicsDbHandler
+from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
+from tortuga.db.softwareUsesHardwareDbHandler import \
+    SoftwareUsesHardwareDbHandler
+from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
+from tortuga.exceptions.nodeNotFound import NodeNotFound
+from tortuga.exceptions.nodeSoftwareProfileLocked import \
+    NodeSoftwareProfileLocked
+from tortuga.exceptions.nodeTransferNotValid import NodeTransferNotValid
+from tortuga.exceptions.operationFailed import OperationFailed
+from tortuga.exceptions.profileMappingNotAllowed import \
+    ProfileMappingNotAllowed
 from tortuga.os_utility import osUtility
 from tortuga.resourceAdapter import resourceAdapterFactory
-from tortuga.exceptions.operationFailed import OperationFailed
+
+from .models.hardwareProfileProvisioningNic import \
+    HardwareProfileProvisioningNic
+from .models.nic import Nic
+from .models.node import Node
+from .models.softwareProfile import SoftwareProfile
 
 
 class NodesDbHandler(TortugaDbObjectHandler):
@@ -357,10 +357,10 @@ class NodesDbHandler(TortugaDbObjectHandler):
                 for dbNic in dbNode.nics:
                     try:
                         r = session.\
-                            query(HardwareProfileProvisioningNics).\
-                            filter(and_(HardwareProfileProvisioningNics.
+                            query(HardwareProfileProvisioningNic).\
+                            filter(and_(HardwareProfileProvisioningNic.
                                         nicId == dbNic.id,
-                                        HardwareProfileProvisioningNics.
+                                        HardwareProfileProvisioningNic.
                                         hardwareProfileId ==
                                         hwProfile.id)).one()
 

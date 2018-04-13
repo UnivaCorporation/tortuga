@@ -17,10 +17,10 @@
 from sqlalchemy.orm.exc import NoResultFound
 
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
-from tortuga.db.models.softwareUsesHardware import SoftwareUsesHardware
-from tortuga.db.models.softwareProfile import SoftwareProfile
-from tortuga.exceptions.softwareProfileNotFound \
-    import SoftwareProfileNotFound
+from tortuga.exceptions.softwareProfileNotFound import SoftwareProfileNotFound
+
+from .models.softwareProfile import SoftwareProfile
+from .models.softwareUsesHardware import SoftwareUsesHardware
 
 
 class SoftwareUsesHardwareDbHandler(TortugaDbObjectHandler):

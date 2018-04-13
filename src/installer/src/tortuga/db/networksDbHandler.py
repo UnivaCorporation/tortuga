@@ -18,11 +18,12 @@ from sqlalchemy import and_
 from sqlalchemy.orm.exc import NoResultFound
 
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
-from tortuga.db.models.network import Network
-from tortuga.exceptions.networkAlreadyExists import NetworkAlreadyExists
-from tortuga.exceptions.networkNotFound import NetworkNotFound
 from tortuga.exceptions.deleteNetworkFailed import DeleteNetworkFailed
 from tortuga.exceptions.invalidArgument import InvalidArgument
+from tortuga.exceptions.networkAlreadyExists import NetworkAlreadyExists
+from tortuga.exceptions.networkNotFound import NetworkNotFound
+
+from .models.network import Network
 
 
 class NetworksDbHandler(TortugaDbObjectHandler):

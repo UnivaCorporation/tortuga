@@ -16,11 +16,12 @@
 
 from sqlalchemy.orm.exc import NoResultFound
 
+from tortuga.db.networkDevicesDbHandler import NetworkDevicesDbHandler
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
-from tortuga.db.models.nic import Nic
 from tortuga.exceptions.nicAlreadyExists import NicAlreadyExists
 from tortuga.exceptions.nicNotFound import NicNotFound
-from tortuga.db.networkDevicesDbHandler import NetworkDevicesDbHandler
+
+from .models.nic import Nic
 
 
 class NicsDbHandler(TortugaDbObjectHandler):

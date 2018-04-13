@@ -19,12 +19,13 @@ from sqlalchemy import and_
 from sqlalchemy.orm.exc import NoResultFound
 
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
-from tortuga.db.models.operatingSystem import OperatingSystem
-from tortuga.db.models.operatingSystemFamily import OperatingSystemFamily
-from tortuga.exceptions.osNotFound import OsNotFound
 from tortuga.exceptions.osAlreadyExists import OsAlreadyExists
+from tortuga.exceptions.osNotFound import OsNotFound
 from tortuga.helper import osHelper
 from tortuga.objects.osFamilyInfo import OsFamilyInfo
+
+from .models.operatingSystem import OperatingSystem
+from .models.operatingSystemFamily import OperatingSystemFamily
 
 
 class OperatingSystemsDbHandler(TortugaDbObjectHandler):

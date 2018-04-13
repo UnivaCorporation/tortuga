@@ -15,11 +15,13 @@
 # pylint: disable=not-callable,multiple-statements,no-member
 
 from sqlalchemy.orm.exc import NoResultFound
+
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
-from tortuga.db.models.admin import Admin
 from tortuga.exceptions.adminAlreadyExists import AdminAlreadyExists
 from tortuga.exceptions.adminNotFound import AdminNotFound
 from tortuga.exceptions.deleteAdminFailed import DeleteAdminFailed
+
+from .models.admin import Admin
 
 
 class AdminsDbHandler(TortugaDbObjectHandler):

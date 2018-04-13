@@ -17,10 +17,10 @@
 from sqlalchemy.orm.exc import NoResultFound
 
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
-from tortuga.db.models.resourceAdapter import ResourceAdapter
-from tortuga.exceptions.resourceAdapterNotFound \
-    import ResourceAdapterNotFound
 from tortuga.exceptions.resourceAdapterInUse import ResourceAdapterInUse
+from tortuga.exceptions.resourceAdapterNotFound import ResourceAdapterNotFound
+
+from .models.resourceAdapter import ResourceAdapter
 
 
 class ResourceAdaptersDbHandler(TortugaDbObjectHandler):

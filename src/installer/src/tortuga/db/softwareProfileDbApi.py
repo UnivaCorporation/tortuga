@@ -22,10 +22,6 @@ from tortuga.db.adminsDbHandler import AdminsDbHandler
 from tortuga.db.componentsDbHandler import ComponentsDbHandler
 from tortuga.db.dbManager import DbManager
 from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
-from tortuga.db.models.package import Package as PackageModel
-from tortuga.db.models.partition import Partition as PartitionModel
-from tortuga.db.models.softwareProfile import \
-    SoftwareProfile as SoftwareProfileModel
 from tortuga.db.nodesDbHandler import NodesDbHandler
 from tortuga.db.operatingSystemsDbHandler import OperatingSystemsDbHandler
 from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
@@ -45,6 +41,10 @@ from tortuga.objects.package import Package
 from tortuga.objects.partition import Partition
 from tortuga.objects.softwareProfile import SoftwareProfile
 from tortuga.objects.tortugaObject import TortugaObjectList
+
+from .models.package import Package as PackageModel
+from .models.partition import Partition as PartitionModel
+from .models.softwareProfile import SoftwareProfile as SoftwareProfileModel
 
 
 class SoftwareProfileDbApi(TortugaDbApi):
