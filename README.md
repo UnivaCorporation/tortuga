@@ -1,6 +1,10 @@
-# ![Tortuga](http://www.univa.com/img/tortuga_icon-rgb.png?utm_source=Tortuga%20GitHub&utm_medium=Img&utm_campaign=Tortuga%20on%20GitHub&utm_content=Tortuga%20GitHub) Tortuga
+# ![Tortuga](http://www.univa.com/img/tortuga_icon-rgb.png?utm_source=Tortuga%20GitHub&utm_medium=Img&utm_campaign=Tortuga%20on%20GitHub&utm_content=Tortuga%20GitHub) Tortuga - Cloud & Hybrid Clusters Made Easy
 
 [![Build Status](https://travis-ci.org/UnivaCorporation/tortuga.svg?branch=master)](https://travis-ci.org/UnivaCorporation/tortuga)
+
+## Tortuga Slack Channel
+
+[Join the discussion on Slack!](https://join.slack.com/t/tortugaproject/shared_invite/enQtMzM1MDU3ODk0MjI2LThjYTNkNzFiMDc1NzdjYmJhMGZhZGI5ZDIzMzUwODBkNzU3ZDBmMGY3NzE3ZmVlNDVhMmRiY2UxNGVjZmFiNzk)
 
 ## Overview
 
@@ -80,7 +84,7 @@ pandoc -f markdown -o tortuga-6-admin-guide.pdf \
     --template tortuga-template.tex \
     --smart --listings \
     --variable papersize=letter \
-    tortuga-6-admin-guide.md
+    doc/tortuga-6-admin-guide.md.raw
 ```
 
 ## Developer information
@@ -91,7 +95,7 @@ Tortuga runs on Red Hat Enterprise Linux (RHEL) or CentOS version 6 or 7 (7 is
 preferred). Installation packages for it can be built on most Linux modern
 distributions or macOS.
 
-Python 3.4 or higher is required and can be installed from [The Software Collections
+Python 3.6 or higher is required and can be installed from [The Software Collections
 (SCL) repository](https://wiki.centos.org/AdditionalResources/Repositories/SCL).
 
 CentOS 6 and 7:
