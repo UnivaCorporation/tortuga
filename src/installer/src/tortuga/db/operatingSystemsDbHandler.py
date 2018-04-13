@@ -19,12 +19,13 @@ from sqlalchemy import and_
 from sqlalchemy.orm.exc import NoResultFound
 
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
-from tortuga.db.operatingSystems import OperatingSystems
-from tortuga.db.operatingSystemsFamilies import OperatingSystemsFamilies
-from tortuga.exceptions.osNotFound import OsNotFound
 from tortuga.exceptions.osAlreadyExists import OsAlreadyExists
+from tortuga.exceptions.osNotFound import OsNotFound
 from tortuga.helper import osHelper
 from tortuga.objects.osFamilyInfo import OsFamilyInfo
+
+from .models.operatingSystem import OperatingSystem
+from .models.operatingSystemFamily import OperatingSystemFamily
 
 
 class OperatingSystemsDbHandler(TortugaDbObjectHandler):
@@ -38,17 +39,17 @@ class OperatingSystemsDbHandler(TortugaDbObjectHandler):
         """
 
         if name and vers and arch:
-            osFilter = and_(OperatingSystems.name == name,
-                            OperatingSystems.version == vers,
-                            OperatingSystems.arch == arch)
+            osFilter = and_(OperatingSystem.name == name,
+                            OperatingSystem.version == vers,
+                            OperatingSystem.arch == arch)
         elif name and vers:
-            osFilter = and_(OperatingSystems.name == name,
-                            OperatingSystems.version == vers)
+            osFilter = and_(OperatingSystem.name == name,
+                            OperatingSystem.version == vers)
         else:
-            osFilter = and_(OperatingSystems.name == name)
+            osFilter = and_(OperatingSystem.name == name)
 
         try:
-            return session.query(OperatingSystems).filter(osFilter).one()
+            return session.query(OperatingSystem).filter(osFilter).one()
         except NoResultFound:
             raise OsNotFound(
                 'Operating system [%s-%s-%s] not found.' % (
@@ -75,7 +76,7 @@ class OperatingSystemsDbHandler(TortugaDbObjectHandler):
             # OK.
             pass
 
-        dbOs = OperatingSystems(
+        dbOs = OperatingSystem(
             name=osInfo.getName(), version=osInfo.getVersion(),
             arch=osInfo.getArch())
 
@@ -87,27 +88,27 @@ class OperatingSystemsDbHandler(TortugaDbObjectHandler):
         if osFamilyInfo.getName() and osFamilyInfo.getVersion() and \
                 osFamilyInfo.getArch():
             osFamilyFilter = and_(
-                OperatingSystemsFamilies.name == osFamilyInfo.getName(),
-                OperatingSystemsFamilies.version == osFamilyInfo.
+                OperatingSystemFamily.name == osFamilyInfo.getName(),
+                OperatingSystemFamily.version == osFamilyInfo.
                 getVersion(),
-                OperatingSystemsFamilies.arch == osFamilyInfo.getArch()
+                OperatingSystemFamily.arch == osFamilyInfo.getArch()
             )
         elif osFamilyInfo.getName() and osFamilyInfo.getVersion():
             osFamilyFilter = and_(
-                OperatingSystemsFamilies.name == osFamilyInfo.getName(),
-                OperatingSystemsFamilies.version ==
+                OperatingSystemFamily.name == osFamilyInfo.getName(),
+                OperatingSystemFamily.version ==
                 osFamilyInfo.getVersion(),
-                OperatingSystemsFamilies.arch == None  # noqa
+                OperatingSystemFamily.arch == None  # noqa
             )
         else:
             osFamilyFilter = and_(
-                OperatingSystemsFamilies.name == osFamilyInfo.getName(),
-                OperatingSystemsFamilies.version == None,  # noqa
-                OperatingSystemsFamilies.arch == None  # noqa
+                OperatingSystemFamily.name == osFamilyInfo.getName(),
+                OperatingSystemFamily.version == None,  # noqa
+                OperatingSystemFamily.arch == None  # noqa
             )
 
         try:
-            return session.query(OperatingSystemsFamilies).filter(
+            return session.query(OperatingSystemFamily).filter(
                 osFamilyFilter).one()
         except NoResultFound:
             pass
@@ -115,7 +116,7 @@ class OperatingSystemsDbHandler(TortugaDbObjectHandler):
         return None
 
     def __addOsFamilyRoot(self, session):
-        dbOsFamily = OperatingSystemsFamilies(name='root')
+        dbOsFamily = OperatingSystemFamily(name='root')
         session.add(dbOsFamily)
         return dbOsFamily
 
@@ -151,14 +152,14 @@ class OperatingSystemsDbHandler(TortugaDbObjectHandler):
                 if not dbOsFamilyRoot:
                     dbOsFamilyRoot = self.__addOsFamilyRoot(session)
 
-                dbOsFamilyParent = OperatingSystemsFamilies(
+                dbOsFamilyParent = OperatingSystemFamily(
                     name=familyName, version=familyVers)
 
                 session.add(dbOsFamilyParent)
 
                 dbOsFamilyRoot.children.append(dbOsFamilyParent)
 
-            dbOsFamily = OperatingSystemsFamilies(
+            dbOsFamily = OperatingSystemFamily(
                 name=familyName,
                 version=familyVers,
                 arch=familyArch)
@@ -189,9 +190,9 @@ class OperatingSystemsDbHandler(TortugaDbObjectHandler):
         dbOsFamily = self.addOsFamilyIfNotFound(
             session, tmpOsInfo.getOsFamilyInfo())
 
-        dbOs = OperatingSystems(name=osInfo.getName(),
-                                version=osInfo.getVersion(),
-                                arch=osInfo.getArch())
+        dbOs = OperatingSystem(name=osInfo.getName(),
+                               version=osInfo.getVersion(),
+                               arch=osInfo.getArch())
 
         dbOs.family = dbOsFamily
 

@@ -22,7 +22,7 @@ from marshmallow import Schema, fields
 
 from tortuga.addhost.addHostManager import AddHostManager
 from tortuga.addhost.utility import validate_addnodes_request
-from tortuga.db.nodeRequests import NodeRequests
+from tortuga.db.models.nodeRequest import NodeRequest
 from tortuga.db.nodeRequestsDbHandler import NodeRequestsDbHandler
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.notFound import NotFound
@@ -172,7 +172,7 @@ def enqueue_addnodes_request(session, addNodesRequest):
 
 
 def init_node_request_record(addNodesRequest):
-    request = NodeRequests(json.dumps(addNodesRequest['addNodesRequest']))
+    request = NodeRequest(json.dumps(addNodesRequest['addNodesRequest']))
     request.timestamp = datetime.datetime.utcnow()
     request.addHostSession = AddHostManager().createNewSession()
     request.action = 'ADD'

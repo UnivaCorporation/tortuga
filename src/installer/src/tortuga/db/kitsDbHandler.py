@@ -16,21 +16,23 @@
 # pylint; disable=no-name-in-module
 
 from typing import Optional, Union
-from sqlalchemy import and_
-from sqlalchemy.orm.session import Session
-from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
-from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
-from tortuga.db.kits import Kits
-from tortuga.db.components import Components
-from tortuga.db.operatingSystemsFamilies import OperatingSystemsFamilies
-from tortuga.db.osComponents import OsComponents
-from tortuga.db.osFamilyComponents import OsFamilyComponents
-from tortuga.exceptions.kitNotFound import KitNotFound
-from tortuga.exceptions.kitInUse import KitInUse
-from tortuga.exceptions.kitAlreadyExists import KitAlreadyExists
-from tortuga.kit.utils import format_kit_descriptor
+from sqlalchemy import and_
+from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
+from sqlalchemy.orm.session import Session
+
 from tortuga.config.configManager import ConfigManager
+from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
+from tortuga.exceptions.kitAlreadyExists import KitAlreadyExists
+from tortuga.exceptions.kitInUse import KitInUse
+from tortuga.exceptions.kitNotFound import KitNotFound
+from tortuga.kit.utils import format_kit_descriptor
+
+from .models.component import Component
+from .models.kit import Kit
+from .models.operatingSystemFamily import OperatingSystemFamily
+from .models.osComponent import OsComponent
+from .models.osFamilyComponent import OsFamilyComponent
 
 
 class KitsDbHandler(TortugaDbObjectHandler):
@@ -47,7 +49,7 @@ class KitsDbHandler(TortugaDbObjectHandler):
 
         self.getLogger().debug('Retrieving kit id [%s]' % (kit_id))
 
-        dbKit = session.query(Kits).get(kit_id)
+        dbKit = session.query(Kit).get(kit_id)
 
         if not dbKit:
             raise KitNotFound('Kit ID [%s] not found.' % (kit_id))
@@ -56,7 +58,7 @@ class KitsDbHandler(TortugaDbObjectHandler):
 
     def getKit(self, session: Session, name: str,
                version: Optional[Union[str, None]] = None,
-               iteration: Optional[Union[str, None]] = None) -> Kits:
+               iteration: Optional[Union[str, None]] = None) -> Kit:
         """
         Get kit from the db.
 
@@ -68,15 +70,15 @@ class KitsDbHandler(TortugaDbObjectHandler):
         try:
             if version is not None and version is not None and \
                     iteration is not None:
-                dbKitQuery = session.query(Kits).filter(
-                    and_(Kits.name == name,
-                         Kits.version == version,
-                         Kits.iteration == iteration))
+                dbKitQuery = session.query(Kit).filter(
+                    and_(Kit.name == name,
+                         Kit.version == version,
+                         Kit.iteration == iteration))
             elif version is not None:
-                dbKitQuery = session.query(Kits).filter(
-                    and_(Kits.name == name, Kits.version == version))
+                dbKitQuery = session.query(Kit).filter(
+                    and_(Kit.name == name, Kit.version == version))
             else:
-                dbKitQuery = session.query(Kits).filter(Kits.name == name)
+                dbKitQuery = session.query(Kit).filter(Kit.name == name)
 
             return dbKitQuery.one()
         except NoResultFound:
@@ -93,7 +95,7 @@ class KitsDbHandler(TortugaDbObjectHandler):
 
         self.getLogger().debug('Retrieving all available kits')
 
-        return session.query(Kits).all()
+        return session.query(Kit).all()
 
     def _getOsFamilyInfo(self, session, osFamilyName, osFamilyVersion,
                          osFamilyArch):
@@ -102,10 +104,10 @@ class KitsDbHandler(TortugaDbObjectHandler):
         """
 
         try:
-            return session.query(OperatingSystemsFamilies).filter(and_(
-                OperatingSystemsFamilies.name == osFamilyName,
-                OperatingSystemsFamilies.version == osFamilyVersion,
-                OperatingSystemsFamilies.arch == osFamilyArch)).one()
+            return session.query(OperatingSystemFamily).filter(and_(
+                OperatingSystemFamily.name == osFamilyName,
+                OperatingSystemFamily.version == osFamilyVersion,
+                OperatingSystemFamily.arch == osFamilyArch)).one()
         except NoResultFound:
             return None
 
@@ -115,8 +117,8 @@ class KitsDbHandler(TortugaDbObjectHandler):
         _operatingSystemsDbHandler = operatingSystemsDbHandler.\
             OperatingSystemsDbHandler()
 
-        # Create OsComponents assocation object
-        dbOsComponent = OsComponents()
+        # Create OsComponent assocation object
+        dbOsComponent = OsComponent()
         dbOsComponent.os = _operatingSystemsDbHandler.\
             addOsIfNotFound(session, osComponent.getOsInfo())
         dbOsComponent.os_components = dbComponent
@@ -128,8 +130,8 @@ class KitsDbHandler(TortugaDbObjectHandler):
         _operatingSystemsDbHandler = operatingSystemsDbHandler.\
             OperatingSystemsDbHandler()
 
-        # Create OsFamilyComponents assocation object
-        dbOsFamilyComponent = OsFamilyComponents()
+        # Create OsFamilyComponent assocation object
+        dbOsFamilyComponent = OsFamilyComponent()
         dbOsFamilyComponent.family = _operatingSystemsDbHandler.\
             addOsFamilyIfNotFound(
                 session, osFamilyComponent.getOsFamilyInfo())
@@ -142,15 +144,15 @@ class KitsDbHandler(TortugaDbObjectHandler):
         """
 
         try:
-            dbComponent = session.query(Components).join(Kits).filter(
-                and_(Kits.name == dbKit.name,
-                     Kits.version == dbKit.version,
-                     Kits.iteration == dbKit.iteration,
-                     Components.name == c.getName(),
-                     Components.version == c.getVersion())).one()
+            dbComponent = session.query(Component).join(Kit).filter(
+                and_(Kit.name == dbKit.name,
+                     Kit.version == dbKit.version,
+                     Kit.iteration == dbKit.iteration,
+                     Component.name == c.getName(),
+                     Component.version == c.getVersion())).one()
         except NoResultFound:
             # Unable to find matching component, add a new one
-            dbComponent = Components(name=c.getName(),
+            dbComponent = Component(name=c.getName(),
                                      version=c.getVersion(),
                                      description=c.getDescription())
 
@@ -174,10 +176,10 @@ class KitsDbHandler(TortugaDbObjectHandler):
         specified 'kit'
         """
 
-        dbKit = session.query(Kits).filter(
-            and_(Kits.name == kit.getName(),
-                 Kits.version == kit.getVersion(),
-                 Kits.iteration == kit.getIteration())).one()
+        dbKit = session.query(Kit).filter(
+            and_(Kit.name == kit.getName(),
+                 Kit.version == kit.getVersion(),
+                 Kit.iteration == kit.getIteration())).one()
 
         # Add components.
         for c in compList:
@@ -205,7 +207,7 @@ class KitsDbHandler(TortugaDbObjectHandler):
 
         self.getLogger().debug('Installing kit [%s]' % (kit))
 
-        dbKit = Kits(name=kit.getName(),
+        dbKit = Kit(name=kit.getName(),
                      version=kit.getVersion(),
                      iteration=kit.getIteration(),
                      description=kit.getDescription(),

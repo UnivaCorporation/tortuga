@@ -69,7 +69,7 @@ class ConfigurableMixin:
                     'No valid configuration for {}: {}'.format(
                         self.config_type, self.name))
         return self._config_parser
-    
+
     def set_defaults(self, config_parser):
         if config_parser is None:
             config_parser = self.get_config()
@@ -107,11 +107,11 @@ class ConfigurableMixin:
         config_parser = configparser.ConfigParser()
         self.set_defaults(config_parser)
         self.write_config()
-    
+
     def write_config(self):
         if self.config_file is None:
             return
-        
+
         if not os.path.exists(os.path.dirname(self.config_file)):
             os.makedirs(os.path.dirname(self.config_file))
         config_parser = self.get_config()
@@ -399,7 +399,7 @@ class KitInstallerBase(ConfigurableMixin, metaclass=KitInstallerMeta):
 
         """
         kit_pkg_name = inspect.getmodule(self).__package__
-        db_table_pkg_name = '{}.db.tables'.format(kit_pkg_name)
+        db_table_pkg_name = '{}.db.models'.format(kit_pkg_name)
         logger.debug(
             'Searching for database table mappers in package: {}'.format(
                 db_table_pkg_name)

@@ -19,10 +19,11 @@ import datetime
 import cherrypy
 
 from tortuga.addhost.addHostManager import AddHostManager
-from tortuga.db.nodeRequests import NodeRequests
+from tortuga.db.models.nodeRequest import NodeRequest
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.objects.tortugaObject import TortugaObjectList
+from tortuga.schema import NodeSchema
 from tortuga.utility.helper import str2bool
 
 from .. import app
@@ -174,7 +175,7 @@ class NodeController(TortugaController):
                 nodeList = app.node_api.getNodeList(tags=tagspec)
 
             response = {
-                'nodes': nodeList.getCleanDict(),
+                'nodes': NodeSchema().dump(nodeList, many=True).data
             }
         except Exception as ex:
             self.getLogger().exception('node WS API getNodes() failed')
@@ -626,7 +627,7 @@ def enqueue_delete_hosts_request(session, nodespec):
 
 
 def init_node_request_record(nodespec):
-    request = NodeRequests(nodespec)
+    request = NodeRequest(nodespec)
     request.timestamp = datetime.datetime.utcnow()
     request.addHostSession = AddHostManager().createNewSession()
     request.action = 'DELETE'

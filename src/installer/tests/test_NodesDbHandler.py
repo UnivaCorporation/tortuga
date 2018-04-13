@@ -16,8 +16,8 @@
 
 import unittest
 import pytest
-from tortuga.db.nodes import Nodes
-from tortuga.db.tags import Tags
+from tortuga.db.models.node import Node
+from tortuga.db.models.tag import Tag
 from tortuga.db.nodesDbHandler import NodesDbHandler
 
 
@@ -145,24 +145,24 @@ class TestNodesDbHandler(unittest.TestCase):
 
 
 def get_tags():
-    tag1 = Tags('tag1', 'value1')
-    tag2 = Tags('tag2', 'value2')
-    tag3 = Tags('tag3', 'value3')
-    tag4 = Tags('tag4', 'value4')
-    tag5 = Tags('tag5', 'value5')
+    tag1 = Tag(name='tag1', value='value1')
+    tag2 = Tag(name='tag2', value='value2')
+    tag3 = Tag(name='tag3', value='value3')
+    tag4 = Tag(name='tag4', value='value4')
+    tag5 = Tag(name='tag5', value='value5')
 
     return [tag1, tag2, tag3, tag4, tag5]
 
 
 def get_nodes():
-    n1 = Nodes('compute-01')
-    n2 = Nodes('compute-02')
-    n3 = Nodes('compute-03')
-    n4 = Nodes('compute-04')
-    n5 = Nodes('compute-05')
-    n6 = Nodes('compute-06')
-    n7 = Nodes('compute-07')
-    n8 = Nodes('compute-08')
+    n1 = Node(name='compute-01')
+    n2 = Node(name='compute-02')
+    n3 = Node(name='compute-03')
+    n4 = Node(name='compute-04')
+    n5 = Node(name='compute-05')
+    n6 = Node(name='compute-06')
+    n7 = Node(name='compute-07')
+    n8 = Node(name='compute-08')
 
     return [n1, n2, n3, n4, n5, n6, n7, n8]
 

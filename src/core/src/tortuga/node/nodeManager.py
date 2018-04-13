@@ -26,11 +26,13 @@ from tortuga.addhost.addHostServerLocal import AddHostServerLocal
 from tortuga.config.configManager import ConfigManager
 from tortuga.db.dbManager import DbManager
 from tortuga.db.hardwareProfileDbApi import HardwareProfileDbApi
-from tortuga.db.hardwareProfiles import HardwareProfiles
 from tortuga.db.nodeDbApi import NodeDbApi
-from tortuga.db.nodes import Nodes
 from tortuga.db.nodesDbHandler import NodesDbHandler
-from tortuga.db.softwareProfiles import SoftwareProfiles
+from tortuga.db.models.hardwareProfile import HardwareProfile
+from tortuga.db.models.node import Node as NodeModel
+from tortuga.db.models.softwareProfile import SoftwareProfile
+from tortuga.db.nodeDbApi import NodeDbApi
+from tortuga.db.nodesDbHandler import NodesDbHandler
 from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
 from tortuga.exceptions.configurationError import ConfigurationError
 from tortuga.exceptions.nodeNotFound import NodeNotFound
@@ -44,6 +46,7 @@ from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.os_utility import osUtility, tortugaSubprocess
 from tortuga.resourceAdapter import resourceAdapterFactory
 from tortuga.san import san
+from tortuga.db.models.node import Node as NodeModel
 
 
 class NodeManager(TortugaObjectManager): \
@@ -78,10 +81,10 @@ class NodeManager(TortugaObjectManager): \
                 'Hardware profile requires host names to be set')
 
     def createNewNode(self, session: Session, addNodeRequest: dict,
-                      dbHardwareProfile: HardwareProfiles,
-                      dbSoftwareProfile: Optional[SoftwareProfiles] = None,
+                      dbHardwareProfile: HardwareProfile,
+                      dbSoftwareProfile: Optional[SoftwareProfile] = None,
                       validateIp: bool = True, bGenerateIp: bool = True,
-                      dns_zone: Optional[str] = None) -> Nodes:
+                      dns_zone: Optional[str] = None) -> NodeModel:
         """
         Convert the addNodeRequest into a Nodes object
 
@@ -106,7 +109,7 @@ class NodeManager(TortugaObjectManager): \
         # hardware profile in which host names are generated)
         self.__validateHostName(hostname, dbHardwareProfile.nameFormat)
 
-        node = Nodes(name=hostname)
+        node = NodeModel(name=hostname)
 
         if 'rack' in addNodeRequest:
             node.rack = addNodeRequest['rack']

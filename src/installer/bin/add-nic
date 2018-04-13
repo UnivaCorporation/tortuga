@@ -18,20 +18,22 @@
 
 # Add NIC to installer after Tortuga has been installed
 
+import os.path
 import subprocess
 import sys
 
-import os.path
 import yaml
 from sqlalchemy import and_
 from sqlalchemy.orm.exc import NoResultFound
+
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.db.components import Components
+from tortuga.db.models.component import Component
 from tortuga.db.dbManager import DbManager
-from tortuga.db.hardwareProfileNetworks import HardwareProfileNetworks
-from tortuga.db.networkDevices import NetworkDevices
-from tortuga.db.networks import Networks
-from tortuga.db.nics import Nics
+from tortuga.db.models.component import Component
+from tortuga.db.models.hardwareProfileNetwork import HardwareProfileNetwork
+from tortuga.db.models.network import Network
+from tortuga.db.models.networkDevice import NetworkDevice
+from tortuga.db.models.nic import Nic
 from tortuga.db.nodesDbHandler import NodesDbHandler
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
 from tortuga.exceptions.tortugaException import TortugaException
@@ -182,7 +184,7 @@ class AddNicCli(TortugaCli):
 
     def _addNetwork(self, nicName, network, netmask, session): \
             # pylint: disable=no-self-use
-        dbNetwork = Networks()
+        dbNetwork = Network()
 
         dbNetwork.address = network
         dbNetwork.netmask = netmask
@@ -198,7 +200,7 @@ class AddNicCli(TortugaCli):
             # pylint: disable=no-self-use
         try:
             dbNetworkDevice = session.query(
-                NetworkDevices).filter(NetworkDevices.name == nicName).one()
+                NetworkDevice).filter(NetworkDevice.name == nicName).one()
         except NoResultFound:
             dbNetworkDevice = None
 
@@ -206,7 +208,7 @@ class AddNicCli(TortugaCli):
 
     def _addNetworkDevice(self, nicName, session): \
             # pylint: disable=no-self-use
-        dbNetworkDevice = NetworkDevices(name=nicName)
+        dbNetworkDevice = NetworkDevice(name=nicName)
 
         session.add(dbNetworkDevice)
 
@@ -303,10 +305,10 @@ class AddNicCli(TortugaCli):
 
             # Attempt to find matching network
             try:
-                dbNetwork = session.query(Networks).filter(
+                dbNetwork = session.query(Network).filter(
                     and_(
-                        Networks.address == network,
-                        Networks.netmask == netmask)).one()
+                        Network.address == network,
+                        Network.netmask == netmask)).one()
 
                 print('Found network [%s/%s]' % (
                     dbNetwork.address, dbNetwork.netmask))
@@ -341,7 +343,7 @@ class AddNicCli(TortugaCli):
             else:
                 print('Creating NIC entry for [%s]' % (dbNetworkDevice.name))
 
-                dbNic = Nics()
+                dbNic = Nic()
                 dbNic.networkdevice = dbNetworkDevice
                 dbNic.ip = ipaddress
                 dbNic.boot = True
@@ -368,7 +370,7 @@ class AddNicCli(TortugaCli):
                     print('Found existing hardware profile/network association')
                     break
             else:
-                dbHardwareProfileNetwork = HardwareProfileNetworks()
+                dbHardwareProfileNetwork = HardwareProfileNetwork()
 
                 dbHardwareProfileNetwork.network = dbNetwork
                 dbHardwareProfileNetwork.networkdevice = dbNetworkDevice
@@ -390,9 +392,9 @@ class AddNicCli(TortugaCli):
     def _componentEnabled(self, session, dbSoftwareProfile, componentName): \
             # pylint: disable=no-self-use
         dbComponents = session.query(
-            Components).filter(
-                Components.name == componentName).filter(
-                    Components.softwareprofiles.contains(
+            Component).filter(
+                Component.name == componentName).filter(
+                    Component.softwareprofiles.contains(
                         dbSoftwareProfile)).all()
 
         if not dbComponents:

@@ -14,17 +14,17 @@
 
 # pylint: disable=not-callable,multiple-statements,no-self-use,no-member
 
-from sqlalchemy import and_, or_
-from sqlalchemy import func
+from sqlalchemy import and_, func, or_
 from sqlalchemy.orm.exc import NoResultFound
 
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
-from tortuga.db.components import Components
 from tortuga.exceptions.componentAlreadyExists import ComponentAlreadyExists
 from tortuga.exceptions.componentNotFound import ComponentNotFound
-from tortuga.db.operatingSystems import OperatingSystems
-from tortuga.db.operatingSystemsFamilies import OperatingSystemsFamilies
 from tortuga.helper import osHelper
+
+from .models.component import Component
+from .models.operatingSystem import OperatingSystem
+from .models.operatingSystemFamily import OperatingSystemFamily
 
 
 class ComponentsDbHandler(TortugaDbObjectHandler):
@@ -38,7 +38,7 @@ class ComponentsDbHandler(TortugaDbObjectHandler):
             ComponentNotFound
         """
 
-        dbComponent = session.query(Components).get(_id)
+        dbComponent = session.query(Component).get(_id)
 
         if not dbComponent:
             raise ComponentNotFound('Component ID [%d] not found' % (_id))
@@ -52,12 +52,12 @@ class ComponentsDbHandler(TortugaDbObjectHandler):
         """
 
         try:
-            return session.query(Components).filter(
-                and_(Components.name == name,
-                     Components.version == version,
-                     Components.os.any(name=osInfo.getName(),
-                                       version=osInfo.getVersion(),
-                                       arch=osInfo.getArch()))
+            return session.query(Component).filter(
+                and_(Component.name == name,
+                     Component.version == version,
+                     Component.os.any(name=osInfo.getName(),
+                                      version=osInfo.getVersion(),
+                                      arch=osInfo.getArch()))
             ).one()
         except NoResultFound:
             raise ComponentNotFound(
@@ -68,11 +68,11 @@ class ComponentsDbHandler(TortugaDbObjectHandler):
                                    osFamilyInfo):
         try:
             return session.query(
-                Components).filter(
+                Component).filter(
                     and_(
-                        Components.name == name,
-                        Components.version == version,
-                        Components.family.any(
+                        Component.name == name,
+                        Component.version == version,
+                        Component.family.any(
                             name=osFamilyInfo.getName(),
                             version=osFamilyInfo.getVersion(),
                             arch=osFamilyInfo.getArch()))).one()
@@ -96,30 +96,30 @@ class ComponentsDbHandler(TortugaDbObjectHandler):
             osInfo.getName(), osInfo.getVersion(), osInfo.getArch())
 
         matchSpec = or_(
-            Components.os.any(
+            Component.os.any(
                 name=osInfo.getName(),
                 version=osInfo.getVersion(),
                 arch=osInfo.getArch()),
-            Components.family.any(
+            Component.family.any(
                 name=osConfig.getOsFamilyInfo().getName(),
                 version=osConfig.getOsFamilyInfo().getVersion(),
                 arch=osInfo.getArch()),
-            Components.family.any(
+            Component.family.any(
                 name=osConfig.getOsFamilyInfo().getName(),
                 version=osConfig.getOsFamilyInfo().getVersion(),
                 arch=None),
-            Components.family.any(name='root')
+            Component.family.any(name='root')
         )
 
         if version:
-            filter_spec = and_(Components.kitId == kitId,
-                               Components.name == name,
-                               Components.version == version, matchSpec)
+            filter_spec = and_(Component.kitId == kitId,
+                               Component.name == name,
+                               Component.version == version, matchSpec)
         else:
-            filter_spec = and_(Components.kitId == kitId,
-                               Components.name == name, matchSpec)
+            filter_spec = and_(Component.kitId == kitId,
+                               Component.name == name, matchSpec)
 
-        dbComponent = session.query(Components).filter(filter_spec).first()
+        dbComponent = session.query(Component).filter(filter_spec).first()
 
         if not dbComponent:
             comp_label = '%s-%s' % (name, version) if version else name
@@ -137,7 +137,7 @@ class ComponentsDbHandler(TortugaDbObjectHandler):
 
         self.getLogger().debug('Retrieving component list')
 
-        return session.query(Components).all()
+        return session.query(Component).all()
 
     def getEnabledComponentList(self, session):
         """
@@ -147,7 +147,7 @@ class ComponentsDbHandler(TortugaDbObjectHandler):
         self.getLogger().debug('Retrieving enabled component list')
 
         return session.query(
-            Components).filter(Components.softwareprofiles.any()).all()
+            Component).filter(Component.softwareprofiles.any()).all()
 
     def getComponentFromComponentObject(self, session, component):
         for osInfo in component.getOsInfoList():
@@ -159,8 +159,8 @@ class ComponentsDbHandler(TortugaDbObjectHandler):
         else:
             for osFamilyInfo in component.getOsFamilyInfoList():
                 self.getComponentByOsFamilyInfo(
-                    session, Components.name == component.getName(),
-                    Components.version == component.getVersion(),
+                    session, Component.name == component.getName(),
+                    Component.version == component.getVersion(),
                     osFamilyInfo)
 
     def addComponent(self, session, component):
@@ -180,7 +180,7 @@ class ComponentsDbHandler(TortugaDbObjectHandler):
             # OK.
             pass
 
-        dbComponent = Components(
+        dbComponent = Component(
             name=component.getName(),
             version=component.getVersion(),
             kitId=component.getKitId(),
@@ -190,7 +190,7 @@ class ComponentsDbHandler(TortugaDbObjectHandler):
         # an association with an operating system family
         for osInfo in component.getOsInfoList():
             dbComponent.os.append(
-                OperatingSystems(
+                OperatingSystem(
                     name=osInfo.getName(),
                     version=osInfo.getVersion(),
                     arch=osInfo.getArch()
@@ -199,7 +199,7 @@ class ComponentsDbHandler(TortugaDbObjectHandler):
 
         for osFamilyInfo in component.getOsFamilyInfoList():
             dbComponent.family.append(
-                OperatingSystemsFamilies(
+                OperatingSystemFamily(
                     name=osFamilyInfo.getName(),
                     version=osFamilyInfo.getVersion(),
                     arch=osFamilyInfo.getArch()
@@ -207,7 +207,7 @@ class ComponentsDbHandler(TortugaDbObjectHandler):
             )
 
         session.add(dbComponent)
-        session.query(func.max(Components.id)).one()
+        session.query(func.max(Component.id)).one()
         self.getLogger().info('Inserted component id %s' % dbComponent.id)
 
         return dbComponent

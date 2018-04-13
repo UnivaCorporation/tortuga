@@ -14,13 +14,15 @@
 
 # pylint: disable=not-callable,multiple-statements,no-member
 
-from typing import NoReturn, List
+from typing import List, NoReturn
+
 from sqlalchemy.orm.exc import NoResultFound
 
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
-from tortuga.db.globalParameters import GlobalParameters
 from tortuga.exceptions.parameterAlreadyExists import ParameterAlreadyExists
 from tortuga.exceptions.parameterNotFound import ParameterNotFound
+
+from .models.globalParameter import GlobalParameter
 
 
 class GlobalParametersDbHandler(TortugaDbObjectHandler):
@@ -28,7 +30,7 @@ class GlobalParametersDbHandler(TortugaDbObjectHandler):
     This class handles global parameters table.
     """
 
-    def getParameter(self, session, name: str) -> GlobalParameters:
+    def getParameter(self, session, name: str) -> GlobalParameter:
         """
         Return parameter.
 
@@ -39,21 +41,21 @@ class GlobalParametersDbHandler(TortugaDbObjectHandler):
         self.getLogger().debug('Retrieving parameter [%s]' % (name))
 
         try:
-            return session.query(GlobalParameters).filter(
-                GlobalParameters.name == name).one()
+            return session.query(GlobalParameter).filter(
+                GlobalParameter.name == name).one()
         except NoResultFound:
             raise ParameterNotFound('Parameter [%s] not found.' % (name))
 
-    def getParameterList(self, session) -> List[GlobalParameters]:
+    def getParameterList(self, session) -> List[GlobalParameter]:
         """
         Get list of parameters from the db.
         """
 
         self.getLogger().debug('Retrieving parameter list')
 
-        return session.query(GlobalParameters).all()
+        return session.query(GlobalParameter).all()
 
-    def addParameter(self, session, parameter) -> GlobalParameters:
+    def addParameter(self, session, parameter) -> GlobalParameter:
         """
         Insert parameter into the db.
 
@@ -73,7 +75,7 @@ class GlobalParametersDbHandler(TortugaDbObjectHandler):
             # OK.
             pass
 
-        dbParameter = GlobalParameters(
+        dbParameter = GlobalParameter(
             name=parameter.getName(),
             value=parameter.getValue(),
             description=parameter.getDescription())
@@ -83,11 +85,11 @@ class GlobalParametersDbHandler(TortugaDbObjectHandler):
         return dbParameter
 
     def upsertParameter(self, session, name: str, value: str,
-                        description=None) -> GlobalParameters:
+                        description=None) -> GlobalParameter:
         try:
             dbParameter = self.getParameter(session, name)
         except ParameterNotFound:
-            dbParameter = GlobalParameters()
+            dbParameter = GlobalParameter()
 
             session.add(dbParameter)
 

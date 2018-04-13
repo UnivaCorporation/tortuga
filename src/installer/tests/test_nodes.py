@@ -12,12 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
-from tortuga.db.nodes import Nodes
+from tortuga.db.models.node import Node
 
 
 def test_addnode(dbm):
-    node = Nodes(name='mike')
+    node = Node(name='mike')
 
     with dbm.session() as session:
         session.add(node)
