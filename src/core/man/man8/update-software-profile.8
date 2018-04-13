@@ -18,7 +18,7 @@
 update-software-profile - Update an existing software profile in the Tortuga system.
 .SH "SYNTAX"
 .LP
-\fBupdate-software-profile [--xml-file=\fIXMLFILE\fB|--name=\fISOFTWAREPROFILENAME\fB] [--new-name=\fISOFTWAREPROFILENAME\fB --description=\fIDESCRIPTION\fB --kernel=\fIKERNEL\fB --kernel-parameters=\fIKERNELPARAMETERS\fB  --initrd=\fIINITRD\fB --min-nodes=\fIMINNODES\fB --add-package=\fIPACKAGENAME\fB --delete-package=\fIPACKAGENAME\fB --add-script=\fISCRIPTNAME\fB --delete-script=\fISCRIPTNAME\fB]
+\fBupdate-software-profile [--xml-file=\fIXMLFILE\fB|--name=\fISOFTWAREPROFILENAME\fB] [--new-name=\fISOFTWAREPROFILENAME\fB --description=\fIDESCRIPTION\fB --kernel=\fIKERNEL\fB --kernel-parameters=\fIKERNELPARAMETERS\fB  --initrd=\fIINITRD\fB --min-nodes=\fIMINNODES\fB --add-package=\fIPACKAGENAME\fB --delete-package=\fIPACKAGENAME\fB]
 
 \fBupdate-software-profile --name=\fISOFTWAREPROFILENAME\fB --add-partition=\fIPARTITION\fB --device=\fIDEVICE\fB --mount-point=\fIMOUNTPOINT\fB --file-system=\fIFILESYSTEM\fB --size=\fISIZE\fB --options=\fIOPTIONS\fB [ --preserve | --no-preserve ]\fB [ --boot-loader | --no-boot-loader ]\fB
 
@@ -61,12 +61,6 @@ Name of software package to add to the software profile.
 .TP
 \fB--delete-package=\fIPACKAGENAME
 Name of software package to delete from the software profile.
-.TP
-\fB--add-script=\fISCRIPTNAME
-Name of script to add to the software profile.
-.TP
-\fB--delete-script=\fISCRIPTNAME
-Name of script to delete from the software profile.
 .TP
 \fB--add-partition=ADDPARTITION
 A new partition to add to the software profile.
