@@ -15,11 +15,11 @@
 # limitations under the License.
 
 import sys
-
 from typing import List
-from tortuga.puppet import Puppet
-from tortuga.kit.kitCli import KitCli
+
 from tortuga.kit.kitApiFactory import getKitApi
+from tortuga.kit.kitCli import KitCli
+from tortuga.puppet import Puppet
 
 
 class InstallOsKitCli(KitCli):
@@ -47,7 +47,7 @@ class InstallOsKitCli(KitCli):
                        default=True, help=_('component version'))
 
     def runCommand(self):
-        (options, args) = self.parseArgs(_("""
+        self.parseArgs(_("""
     install-os-kit [--symlinks] [--mirror] --media=PACKAGEURL
 
 Description:
@@ -57,22 +57,22 @@ Description:
 
         api = getKitApi(self.getUsername(), self.getPassword())
 
-        if not self.getOptions().osMediaUrl:
+        if not self.getArgs().osMediaUrl:
             sys.stderr.write(_('Error: missing --media option\n'))
 
             sys.exit(1)
 
         # Pre-process the media URL list
-        os_media_urls: List[str] = self.getOptions().osMediaUrl.split(',')
+        os_media_urls: List[str] = self.getArgs().osMediaUrl.split(',')
 
         api.installOsKit(
             os_media_urls,
-            bUseSymlinks=self.getOptions().symlinksFlag,
+            bUseSymlinks=self.getArgs().symlinksFlag,
             bInteractive=True,
-            mirror=self.getOptions().mirror
+            mirror=self.getArgs().mirror
         )
 
-        if self.getOptions().sync:
+        if self.getArgs().sync:
             Puppet().agent()
 
 

@@ -12,9 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Optional
+
+
 class Nodes(object):
-    def __init__(self, name=None):
+    def __init__(self, name=None, state: Optional[str] = 'Discovered'):
         self.name = name
+        self.state = state
 
     def __repr__(self):
         return 'Nodes(name=%s)' % (self.name)

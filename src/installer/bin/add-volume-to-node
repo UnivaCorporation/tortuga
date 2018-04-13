@@ -49,10 +49,10 @@ Description:
     --indirect options can be used to choose the method to use.  If these options are
     omitted the hardware profiles resource adapter determines the default.
 """))
-        node = self.getOptions().node
-        volume = self.getOptions().volume
-        direct = self.getOptions().direct
-        indirect = self.getOptions().indirect
+        node = self.getArgs().node
+        volume = self.getArgs().volume
+        direct = self.getArgs().direct
+        indirect = self.getArgs().indirect
         if not node:
             raise InvalidCliRequest(_('Node must be specified'))
         if not volume:

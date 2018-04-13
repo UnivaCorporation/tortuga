@@ -46,7 +46,7 @@ Description:
     The get-usable-nodes-by-low-cost tool returns the list of nodes that are
     able to use the specified software profile ordered by cost.
 """))
-        softwareProfileName = self.getOptions().softwareProfile
+        softwareProfileName = self.getArgs().softwareProfile
         if not softwareProfileName:
             print('The "--software-profile" option is required')
             return

@@ -26,7 +26,7 @@ class GetUsableHardwareProfilesCli(TortugaCli):
 
     def __init__(self):
         TortugaCli.__init__(self)
-        self.addOption('', '--software-profile', dest='swprofile',
+        self.addOption('--software-profile', dest='swprofile',
                        help=_('software profile'))
 
     def runCommand(self):
@@ -37,7 +37,7 @@ Description:
     The get-usable-hardware-profiles tool shows the software to hardware
     profile mappings for the specified software profile."""))
 
-        if not self.getOptions().swprofile:
+        if not self.getArgs().swprofile:
             self.getParser().error('--software-profile is a required option')
 
         softwareUsesHardwareDbApi = SoftwareUsesHardwareDbApi()
@@ -46,10 +46,10 @@ Description:
 
         hardwareProfileIdList = softwareUsesHardwareDbApi.\
             getAllowedHardwareProfilesBySoftwareProfileName(
-                self.getOptions().swprofile)
+                self.getArgs().swprofile)
 
         print(('Software Profile [%s] is allowed to use the following'
-               ' hardware profiles:' % (self.getOptions().swprofile)))
+               ' hardware profiles:' % (self.getArgs().swprofile)))
 
         for hardwareProfileId in hardwareProfileIdList:
             for hp in api.getHardwareProfileList():

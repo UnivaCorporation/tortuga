@@ -38,12 +38,12 @@ class NetworkWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/networks/%s/%s' % (address, netmask)
+        url = 'v1/networks/?address=%s&netmask=%s' % (address, netmask)
 
         try:
             _, responseDict = self.sendSessionRequest(url)
 
-            return Network.getFromDict(responseDict.get(Network.ROOT_TAG))
+            return Network.getListFromDict(responseDict)[0]
         except TortugaException:
             raise
         except Exception as ex:
@@ -83,7 +83,7 @@ class NetworkWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/networks'
+        url = 'v1/networks/'
 
         try:
             _, responseDict = self.sendSessionRequest(url)

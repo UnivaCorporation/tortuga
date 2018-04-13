@@ -37,11 +37,13 @@ from tortuga.parameter.parameterApi import ParameterApi
 
 class ResourceAdapter(object): \
         # pylint: disable=too-many-public-methods
-    '''
+    """
     This is the base class for all resource adapters to derive from.
     The default actions simply print a debug message to show that the
     subclass did not implement the action.
-    '''
+    
+    """
+    settings = {}
 
     def __init__(self, addHostSession=None):
         if '__adaptername__' not in self.__class__.__dict__:
@@ -112,20 +114,20 @@ class ResourceAdapter(object): \
         self.__trace(session, node, updateNodeRequest)
 
     def suspendActiveNode(self, nodeId):
-        '''Change the given active node to an idle node'''
+        """Change the given active node to an idle node"""
         self.__trace(nodeId)
 
     def idleActiveNode(self, nodeIds):
-        '''Change the given active node to an idle node'''
+        """Change the given active node to an idle node"""
         self.__trace(nodeIds)
 
     def activateIdleNode(self, node, softwareProfileName,
                          softwareProfileChanged):
-        '''Change the given idle node to an active node'''
+        """Change the given idle node to an active node"""
         self.__trace(node, softwareProfileName, softwareProfileChanged)
 
     def deleteNode(self, nodeIds):
-        '''Remove the given node (active or idle) from the system'''
+        """Remove the given node (active or idle) from the system"""
         self.__trace(nodeIds)
 
     def _async_delete_nodes(self, nodes):
@@ -154,67 +156,67 @@ class ResourceAdapter(object): \
 
     def transferNode(self, nodeIdSoftwareProfileTuples,
                      newSoftwareProfileName):
-        '''Transfer the given idle node'''
+        """Transfer the given idle node"""
         self.__trace(nodeIdSoftwareProfileTuples, newSoftwareProfileName)
 
     def startupNode(self, nodeIds, remainingNodeList=None,
                     tmpBootMethod='n'): \
             # pylint: disable=unused-argument
-        '''Start the given node'''
+        """Start the given node"""
         # By default raise unsupported operation
         raise UnsupportedOperation('Node does not support starting')
 
     def shutdownNode(self, nodes, bSoftReset=False): \
             # pylint: disable=unused-argument
-        '''Shutdown the given node'''
+        """Shutdown the given node"""
         # By default raise unsupported operation
         raise UnsupportedOperation('Node does not support shutdown')
 
     def rebootNode(self, nodes, bSoftReset=False): \
             # pylint: disable=unused-argument
-        '''Reboot the given node'''
+        """Reboot the given node"""
         # By default raise unsupported operation
         raise UnsupportedOperation('Node does not support rebooting')
 
     def checkpointNode(self, nodeId): \
             # pylint: disable=unused-argument
-        '''Checkpoint the given node'''
+        """Checkpoint the given node"""
         # By default raise unsupported operation
         raise UnsupportedOperation('Node does not support checkpointing')
 
     def revertNodeToCheckpoint(self, nodeId): \
             # pylint: disable=unused-argument
-        '''Revert the given node to the checkpoint'''
+        """Revert the given node to the checkpoint"""
         # By default raise unsupported operation
         raise UnsupportedOperation('Node does not support checkpointing')
 
     def migrateNode(self, nodeId, remainingNodeList, liveMigrate): \
             # pylint: disable=unused-argument
-        '''Migrate the given node'''
+        """Migrate the given node"""
         # By default raise unsupported operation
         raise UnsupportedOperation('Node does not support migrating')
 
     def addVolumeToNode(self, node, volume, isDirect): \
             # pylint: disable=unused-argument
-        '''Add a disk to a node'''
+        """Add a disk to a node"""
         # By default raise unsupported operation
         raise UnsupportedOperation(
             'Node does not support dynamic disk addition')
 
     def removeVolumeFromNode(self, node, volume): \
             # pylint: disable=unused-argument
-        '''Remove a disk from a node'''
+        """Remove a disk from a node"""
         # By default raise unsupported operation
         raise UnsupportedOperation(
             'Node does not support dynamic disk deletion' % (node))
 
     def abort(self):
-        '''abort node addition'''
+        """abort node addition"""
         self._logger.debug('Setting abort flag')
         self.__isAborted = True
 
     def isAborted(self):
-        '''Returns status of abort flag'''
+        """Returns status of abort flag"""
         return self.__isAborted
 
     def __trace(self, *pargs, **kargs):
@@ -293,7 +295,7 @@ class ResourceAdapter(object): \
                 name, 'resource_adapter_configuration') else None
 
     def __getAddHostApi(self):
-        '''Get and cache the Add Host API'''
+        """Get and cache the Add Host API"""
 
         if self.__addHostApi is None:
             from tortuga.addhost.addHostServerLocal \
@@ -304,7 +306,7 @@ class ResourceAdapter(object): \
         return self.__addHostApi
 
     def __getNodeApi(self):
-        '''Get and cache the Node API'''
+        """Get and cache the Node API"""
 
         if self.__nodeApi is None:
             from tortuga.node.nodeApi import NodeApi
@@ -312,7 +314,7 @@ class ResourceAdapter(object): \
         return self.__nodeApi
 
     def __getOsObject(self):
-        '''Get and cache the OS Object Factory'''
+        """Get and cache the OS Object Factory"""
 
         if self.__osObject is None:
             from tortuga.os_utility import osUtility
@@ -320,7 +322,7 @@ class ResourceAdapter(object): \
         return self.__osObject
 
     def __getSanApi(self):
-        '''Internal: Get and cache the SAN API'''
+        """Internal: Get and cache the SAN API"""
 
         if self.__sanApi is None:
             from tortuga.san import san

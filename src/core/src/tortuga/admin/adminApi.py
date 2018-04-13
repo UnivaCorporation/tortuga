@@ -15,8 +15,8 @@
 # pylint: disable=no-member
 
 from tortuga.admin.adminManager import AdminManager
-from tortuga.utility.tortugaApi import TortugaApi
 from tortuga.exceptions.tortugaException import TortugaException
+from tortuga.utility.tortugaApi import TortugaApi
 
 
 class AdminApi(TortugaApi):
@@ -75,7 +75,8 @@ class AdminApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self.getLogger().exception('addAdmin failed')
+
             raise TortugaException(exception=ex)
 
     def deleteAdmin(self, admin):
@@ -86,7 +87,7 @@ class AdminApi(TortugaApi):
         except TortugaException as ex:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self.getLogger().exception('deleteAdmin failed')
             raise TortugaException(exception=ex)
 
     def updateAdmin(self, adminObject, isCrypted=True):
@@ -97,7 +98,7 @@ class AdminApi(TortugaApi):
         except TortugaException as ex:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self.getLogger().exception('updateAdmin failed')
             raise TortugaException(exception=ex)
 
     def authenticate(self, adminUsername, adminPassword):

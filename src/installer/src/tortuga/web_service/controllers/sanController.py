@@ -18,7 +18,7 @@ import cherrypy
 
 from tortuga.san.sanApi import SanApi
 from .tortugaController import TortugaController
-from .authController import require, AuthController
+from .authController import require
 
 
 class SanController(TortugaController):

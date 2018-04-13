@@ -53,7 +53,7 @@ class Puppet(object):
         if not self._log_file_handle:
             out.close()
 
-    def agent(self, daemonize=False, verbose=True, one_time=True,
+    def agent(self, daemonize=True, verbose=True, one_time=True,
               no_splay=True):
         """
         Execute an agent command.

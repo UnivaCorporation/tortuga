@@ -141,7 +141,7 @@ class NodesDbHandler(TortugaDbObjectHandler):
 
         return session.query(Nodes).filter(or_(*searchspec)).all()
 
-    def getNodesByAddHostSession(self, session, ahSession):
+    def getNodesByAddHostSession(self, session, ahSession) -> List[Nodes]:
         """
         Get nodes by add host session
         Returns a list of nodes
@@ -943,7 +943,7 @@ class NodesDbHandler(TortugaDbObjectHandler):
                 'Hardware profile [%s] does not have an associated'
                 ' resource adapter' % (hardwareProfile.name))
 
-        return resourceAdapterFactory.getApi(
+        return resourceAdapterFactory.get_api(
             hardwareProfile.resourceadapter.name) \
             if hardwareProfile.resourceadapter else None
 

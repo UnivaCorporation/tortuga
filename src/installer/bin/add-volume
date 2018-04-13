@@ -52,21 +52,21 @@ class AddVolumeCli(TortugaCli):
 Description:
     The add-volume tool creates a new storage volume in the cluster that can be associated with nodes.
 """))
-        if not self.getOptions().storageAdapter:
+        if not self.getArgs().storageAdapter:
             raise InvalidCliRequest(_('Storage Adapter must be specified'))
 
-        if not self.getOptions().size:
+        if not self.getArgs().size:
             raise InvalidCliRequest(_('Size must be specified'))
 
         # Validate disk size
-        diskSize = self._parseDiskSize(self.getOptions().size)
+        diskSize = self._parseDiskSize(self.getArgs().size)
 
         api = getSanApi(self.getUsername(), self.getPassword())
 
         api.addVolume(
-            storageAdapter=self.getOptions().storageAdapter, size=diskSize,
-            nameFormat=self.getOptions().nameFormat,
-            shared=self.getOptions().shared)
+            storageAdapter=self.getArgs().storageAdapter, size=diskSize,
+            nameFormat=self.getArgs().nameFormat,
+            shared=self.getArgs().shared)
 
 
 if __name__ == '__main__':

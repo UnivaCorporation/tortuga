@@ -46,15 +46,17 @@ class UpdateNodeStatusCli(TortugaCli):
         self.parseArgs(_('''\
 update-node-status --node=NAME [--status=STATUS] [--boot-from=0|1]'''))
 
-        if self.getOptions().nodeName is None:
+        if self.getArgs().nodeName is None:
             self.getParser().error('--node NAME must be specified')
 
         # Always go over the web service for this call.
         nodeWsApi.NodeWsApi(
-            self.getUsername(), self.getPassword()).updateNodeStatus(
-                self.getOptions().nodeName,
-                self.getOptions().status,
-                self.getOptions().bootFrom)
+            username=self.getUsername(),
+            password=self.getPassword(),
+            baseurl=self.getUrl()).updateNodeStatus(
+                self.getArgs().nodeName,
+                self.getArgs().status,
+                self.getArgs().bootFrom)
 
 
 if __name__ == '__main__':

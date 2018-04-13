@@ -46,7 +46,7 @@ Description:
     The get-children tool returns all nodes that have the given node as a
     parent.
 """))
-        nodeName = self.getOptions().nodeName
+        nodeName = self.getArgs().nodeName
         if not nodeName:
             raise InvalidCliRequest(_('Node name must be specified'))
 

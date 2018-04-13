@@ -14,30 +14,31 @@
 
 # pylint: disable=no-member
 
-import signal
+import configparser
 import os
 import select
-import configparser
-from typing import NoReturn, List
+import signal
+from typing import Dict, List
 
-from tortuga.resourceAdapter.resourceAdapter import ResourceAdapter
+from tortuga.db.dbManager import DbManager
+from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
+from tortuga.db.nodes import Nodes
+from tortuga.db.nodesDbHandler import NodesDbHandler
+from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
 from tortuga.exceptions.commandFailed import CommandFailed
-from tortuga.exceptions.nodeAlreadyExists import NodeAlreadyExists
 from tortuga.exceptions.ipAlreadyExists import IpAlreadyExists
-from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
 from tortuga.exceptions.macAddressAlreadyExists \
     import MacAddressAlreadyExists
+from tortuga.exceptions.nodeAlreadyExists import NodeAlreadyExists
+from tortuga.exceptions.nodeNotFound import NodeNotFound
+from tortuga.exceptions.parameterNotFound import ParameterNotFound
+from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
 from tortuga.os_utility import osUtility
 from tortuga.os_utility import tortugaSubprocess
-from tortuga.db.nodesDbHandler import NodesDbHandler
-from tortuga.db.dbManager import DbManager
-from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
-from tortuga.exceptions.nodeNotFound import NodeNotFound
+from tortuga.resourceAdapter.resourceAdapter import ResourceAdapter
 from tortuga.resourceAdapter.utility import get_provisioning_nic, \
     get_provisioning_nics
-from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
-from tortuga.exceptions.parameterNotFound import ParameterNotFound
-from tortuga.db.nodes import Nodes
+from tortuga.objects import resourceadapter_settings
 
 
 def initialize_nics(installer_provisioning_nic, hardwareprofilenetworks,
@@ -60,6 +61,10 @@ def initialize_nics(installer_provisioning_nic, hardwareprofilenetworks,
 
 class Default(ResourceAdapter):
     __adaptername__ = 'default'
+
+    settings: Dict[str, resourceadapter_settings.BaseSetting] = {
+        'boot_host_hook_script': resourceadapter_settings.FileSetting()
+    }
 
     def __init__(self, addHostSession=None):
         super(Default, self).__init__(addHostSession=addHostSession)

@@ -18,7 +18,7 @@ import logging
 from tortuga.config.configManager import ConfigManager
 
 
-def getApi(moduleName):
+def get_api(moduleName):
     Logger = logging.getLogger(__name__)
     Logger.addHandler(logging.NullHandler())
 

@@ -1,0 +1,63 @@
+#!/usr/bin/env python
+
+# Copyright 2008-2018 Univa Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# pylint: disable=no-member
+
+from tortuga.network.networkCli import NetworkCli
+
+
+class UpdateNetworkCli(NetworkCli):
+    """
+    update-network command line interface
+
+    """
+    def __init__(self):
+        super().__init__()
+
+        # Now add in the default options
+        self.setupDefaultOptions()
+
+    def runCommand(self):
+        self.parseArgs(_("""
+    update-network --xml-file=FILENAME
+
+    update-network <--address=NETWORK --netmask=NETMASK>|<--network NETWORK>
+       [--name=NAME --type=TYPE | --suffix=SUFFIX
+       --gateway=GATEWAY | --options=OPTIONS | --start-ip=STARTIP
+       --increment=INCREMENT ] | [--dhcp | --static ]
+
+Description:
+    The update-network tool updates an existing network definition in Tortuga.
+
+    The update-network tool has two forms one in which the network is pro-
+    vided via a XML file representation (as returned by  get-network)  and
+    the other where all of the options are specified on the command-line.
+"""))
+
+        network = self.get_network_from_cmdline()
+
+        # Apply command line parameters
+        self.updateNetwork(network)
+
+        # Validate network
+        self.validateNetwork(network)
+
+        # Save the updated network
+        self.getNetworkApi().updateNetwork(network)
+
+
+def main():
+    UpdateNetworkCli().run()

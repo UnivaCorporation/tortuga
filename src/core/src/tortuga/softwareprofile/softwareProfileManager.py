@@ -37,6 +37,7 @@ from tortuga.os_utility import osUtility
 from tortuga.types import Singleton
 from tortuga.utility import validation
 from tortuga.objects.softwareProfile import SoftwareProfile
+from tortuga.puppet import Puppet
 
 
 class SoftwareProfileManager(TortugaObjectManager, Singleton):
@@ -229,8 +230,7 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
         validation.validateProfileName(swProfileSpec.getName())
 
         # Insert default description for software profile
-        if not swProfileSpec.getDescription() or \
-                swProfileSpec.getDescription() == '**DEFAULT**':
+        if swProfileSpec.getDescription() is None:
             swProfileSpec.setDescription(
                 '%s Nodes' % (swProfileSpec.getName()))
 
@@ -428,7 +428,8 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
         return kits[0]
 
     def enableComponent(self, software_profile_name, kit_name, kit_version,
-                        kit_iteration, comp_name, comp_version=None):
+                        kit_iteration, comp_name, comp_version=None,
+                        sync=True):
         """
         Enable a component on a software profile.
 
@@ -466,6 +467,9 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
                     best_match_component, software_profile
                 )
             )
+
+            if sync:
+                Puppet().agent()
 
     def _get_kit_and_component_version(self, kit_name, kit_version,
                                        kit_iteration, comp_name,
@@ -600,7 +604,9 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
         return best_match_component
 
     def disableComponent(self, software_profile_name, kit_name, kit_version,
-                         kit_iteration, comp_name, comp_version=None):
+                         kit_iteration, comp_name, comp_version=None,
+                         sync=True): \
+            # pylint: disable=unused-argument
         """
         Disables a component on a software profile.
 
@@ -634,6 +640,9 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
                 best_match_component, software_profile
             )
         )
+
+        if sync:
+            Puppet().agent()
 
     def _disable_kit_component(self, kit, comp_name, comp_version,
                                software_profile):
