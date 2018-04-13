@@ -26,7 +26,7 @@ class Node(ModelBase):
 
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True, nullable=False)
-    state = Column(String)
+    state = Column(String, default='Discovered')
     bootFrom = Column(Integer, default=0)
     lastUpdate = Column(String(20))
     rack = Column(Integer, default=0)
@@ -68,4 +68,4 @@ class Node(ModelBase):
         self.name = name
 
     def __repr__(self):
-        return 'Nodes(name=%s)' % (self.name)
+        return 'Node(name=%s)' % (self.name)

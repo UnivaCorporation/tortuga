@@ -27,7 +27,7 @@ from sqlalchemy import and_
 from sqlalchemy.orm.exc import NoResultFound
 
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.db.components import Components
+from tortuga.db.models.component import Component
 from tortuga.db.dbManager import DbManager
 from tortuga.db.models.component import Component
 from tortuga.db.models.hardwareProfileNetwork import HardwareProfileNetwork

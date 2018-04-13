@@ -140,7 +140,7 @@ class NodesDbHandler(TortugaDbObjectHandler):
 
         return session.query(Node).filter(or_(*searchspec)).all()
 
-    def getNodesByAddHostSession(self, session, ahSession) -> List[Nodes]:
+    def getNodesByAddHostSession(self, session, ahSession) -> List[Node]:
         """
         Get nodes by add host session
         Returns a list of nodes

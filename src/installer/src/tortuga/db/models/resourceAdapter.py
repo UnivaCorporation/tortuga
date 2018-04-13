@@ -14,11 +14,11 @@
 
 from typing import Dict
 
-from tortuga.objects.resourceadapter_settings import BaseSetting
-from tortuga.exceptions.resourceNotFound import ResourceNotFound
-
 from sqlalchemy import Column, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import relationship
+
+from tortuga.exceptions.resourceNotFound import ResourceNotFound
+from tortuga.objects.resourceadapter_settings import BaseSetting
 
 from .base import ModelBase
 

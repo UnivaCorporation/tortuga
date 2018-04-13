@@ -92,12 +92,12 @@ class DeleteNicApp(TortugaCli):
                     ' '.join([hp.name for hp in hardwareProfiles])))
 
         session.query(
-            HardwareProfileNetworks).filter(
-                HardwareProfileNetworks.network == dbInstallerNic.network).\
+            HardwareProfileNetwork).filter(
+                HardwareProfileNetwork.network == dbInstallerNic.network).\
             delete()
 
-        session.query(HardwareProfileProvisioningNics).filter(
-            HardwareProfileProvisioningNics.nic == dbInstallerNic).delete()
+        session.query(HardwareProfileProvisioningNic).filter(
+            HardwareProfileProvisioningNic.nic == dbInstallerNic).delete()
 
         dbNetworkId = dbInstallerNic.network.id
 
@@ -105,7 +105,7 @@ class DeleteNicApp(TortugaCli):
 
         session.delete(dbInstallerNic)
 
-        session.query(Networks).filter(Networks.id == dbNetworkId).delete()
+        session.query(Network).filter(Network.id == dbNetworkId).delete()
 
         self._deleteNetworkDevice(session, networkDeviceId)
 
@@ -124,8 +124,8 @@ class DeleteNicApp(TortugaCli):
     def _deleteNetworkDevice(self, session, networkDeviceId): \
             # pylint: disable=no-self-use
         results = [
-            entry for entry in session.query(HardwareProfileNetworks).filter(
-                HardwareProfileNetworks.networkDeviceId == networkDeviceId)
+            entry for entry in session.query(HardwareProfileNetwork).filter(
+                HardwareProfileNetwork.networkDeviceId == networkDeviceId)
             .all()]
 
         if not results:

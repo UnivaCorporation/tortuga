@@ -28,7 +28,7 @@ from tortuga.objects.node import Node
 from tortuga.objects.parameter import Parameter
 from tortuga.objects.provisioningInfo import ProvisioningInfo
 from tortuga.objects.tortugaObject import TortugaObjectList
-from tortuga.db.nodes import Nodes
+from tortuga.db.models.node import Node as NodeModel
 
 
 class NodeDbApi(TortugaDbApi):
@@ -93,7 +93,7 @@ class NodeDbApi(TortugaDbApi):
                 raise
 
     def getNodesByNameFilter(self, nodespec: str,
-                             optionDict: Optional[Union[dict, None]] = None) -> List[Nodes]:
+                             optionDict: Optional[Union[dict, None]] = None) -> TortugaObjectList:
         """
         Get node(s) from db based on the name filter
         """
@@ -137,7 +137,7 @@ class NodeDbApi(TortugaDbApi):
             DbManager().closeSession()
 
     def __convert_nodes_to_TortugaObjectList(
-            self, nodes: List[Nodes],
+            self, nodes: List[NodeModel],
             relations: Optional[Union[dict, None]] = None) -> TortugaObjectList:
         """
         Return TortugaObjectList of nodes with relations populated
