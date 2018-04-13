@@ -17,9 +17,11 @@
 import cherrypy
 
 from tortuga.objects.admin import Admin
-from .tortugaController import TortugaController
-from .authController import AuthController, require
+from tortuga.utility.helper import str2bool
+
 from .. import app
+from .authController import require
+from .tortugaController import TortugaController
 
 
 class AdminController(TortugaController):
@@ -30,31 +32,31 @@ class AdminController(TortugaController):
     actions = [
         {
             'name': 'addAdmin',
-            'path': '/v1/admin',
+            'path': '/v1/admins/',
             'action': 'addAdmin',
             'method': ['POST'],
         },
         {
             'name': 'getAdminList',
-            'path': '/v1/admin',
+            'path': '/v1/admins/',
             'action': 'getAdminList',
             'method': ['GET'],
         },
         {
             'name': 'getAdmin',
-            'path': '/v1/admin/:(admin_id)',
+            'path': '/v1/admins/:(admin_id)',
             'action': 'getAdmin',
             'method': ['GET'],
         },
         {
             'name': 'adminUpdate',
-            'path': '/v1/admin/:(admin_id)',
+            'path': '/v1/admins/:(admin_id)',
             'action': 'updateAdmin',
             'method': ['PUT'],
         },
         {
             'name': 'deleteAdmin',
-            'path': '/v1/admin/:(admin_id)',
+            'path': '/v1/admins/:(admin_id)',
             'action': 'deleteAdmin',
             'method': ['DELETE'],
         },
@@ -68,7 +70,6 @@ class AdminController(TortugaController):
 
     @require()
     @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
     def getAdmin(self, admin_id):
         """ Get an admin by name """
 
@@ -87,7 +88,6 @@ class AdminController(TortugaController):
 
     @require()
     @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
     def getAdminList(self):
         """ Return list of admin users """
 
@@ -121,8 +121,7 @@ class AdminController(TortugaController):
 
         adminRequestObject = Admin.getFromDict(postdata['admin'])
 
-        isCrypted = postdata['isCrypted'][0].lower() == 't' \
-            if 'isCrypted' in postdata else False
+        isCrypted = str2bool(postdata['isCrypted'])
 
         try:
             app.admin_api.addAdmin(
@@ -140,7 +139,6 @@ class AdminController(TortugaController):
 
     @require()
     @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
     def deleteAdmin(self, admin_id):
         """ Delete an existing admin from the system """
 

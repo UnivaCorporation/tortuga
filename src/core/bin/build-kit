@@ -38,22 +38,31 @@ class BuildKit(TortugaCli):
         #
         self._kit_builder = KitBuilder()
 
+    def parseArgs(self, usage=None):
+
+        parser = self.getParser()
+
+        parser.set_defaults(subcommand='build')
+
+        subparsers = parser.add_subparsers(title='subcommands',
+                                           description='valid subcommands',
+                                           help='additional help')
+
+        build_subparser = subparsers.add_parser('build')
+        build_subparser.set_defaults(subcommand='build')
+        clean_subparser = subparsers.add_parser('clean')
+        clean_subparser.set_defaults(subcommand='clean')
+
+        super().parseArgs(usage=usage)
+
     def runCommand(self):
         self.parseArgs()
-        args = self.getArgs()
 
-        command = 'build'
-        if args:
-            command = args[0]
-
+        command = self.getArgs().subcommand
         if command == 'build':
             self._kit_builder.build()
-
         elif command == 'clean':
             self._kit_builder.clean()
-
-        else:
-            self.usage()
 
 
 if __name__ == '__main__':

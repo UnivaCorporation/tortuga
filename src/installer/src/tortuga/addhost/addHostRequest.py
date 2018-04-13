@@ -17,31 +17,18 @@
 import datetime
 import json
 import logging
+
 from tortuga.db.dbManager import DbManager
 from tortuga.db.nodeRequestsDbHandler import NodeRequestsDbHandler
-from tortuga.addhost.addHostManager import AddHostManager
+
+from .contextManager import AddHostSessionContextManager
 
 
-class AddHostSessionContextManager(object):
-    def __init__(self, addHostSession):
-        self.addHostSession = addHostSession
-        self.ahm = None
-
-    def __enter__(self):
-        self.ahm = AddHostManager()
-
-        self.ahm.update_session(self.addHostSession, running=True)
-
-        return self.ahm
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.ahm.update_session(self.addHostSession, running=False)
+logger = logging.getLogger('tortuga.addhost')
+logger.addHandler(logging.NullHandler())
 
 
 def process_addhost_request(addHostSession):
-    logger = logging.getLogger('tortuga.addhost')
-    logger.addHandler(logging.NullHandler())
-
     with DbManager().session() as session:
         req = NodeRequestsDbHandler().get_by_addHostSession(
             session, addHostSession)
@@ -50,7 +37,9 @@ def process_addhost_request(addHostSession):
             # session was deleted prior to being processed; nothing to do...
             return
 
-        addHostRequest = dict(list(json.loads(req.request).items()))
+        addHostRequest = json.loads(req.request)
+
+        addHostRequest['addHostSession'] = addHostSession
 
         with AddHostSessionContextManager(req.addHostSession) as ahm:
             try:
@@ -58,7 +47,7 @@ def process_addhost_request(addHostSession):
                     'process_addhost_request(): Processing add host'
                     ' request [%s]' % (req.addHostSession))
 
-                ahm.addHosts(session, req.addHostSession, addHostRequest)
+                ahm.addHosts(session, addHostRequest)
 
                 # Delete session log
                 ahm.delete_session(req.addHostSession)
@@ -67,13 +56,15 @@ def process_addhost_request(addHostSession):
                 session.delete(req)
 
                 logger.debug(
-                    'process_addhost_request() Add host request [%s] processed'
-                    ' successfully' % (req.addHostSession))
+                    'Add host request [%s] processed successfully' % (
+                        req.addHostSession))
             except Exception as exc:
-                logger.exception('A fatal error occurred during add host workflow')
+                logger.exception(
+                    'Exception occurred during add host workflow')
 
                 req.state = 'error'
-                req.message = str(exc)
+                req.message = 'Exception: {}: {}'.format(
+                    exc.__class__.__name__, exc if exc.args else '<None>')
                 req.last_update = datetime.datetime.utcnow()
             finally:
                 session.commit()

@@ -112,7 +112,7 @@ class San(object): \
 
     def __getStorageAdapter(self, adapter):
         from tortuga.resourceAdapter.san import storageAdapterFactory
-        return storageAdapterFactory.getApi(adapter)
+        return storageAdapterFactory.get_api(adapter)
 
     def __getDriveInfo(self, nodeName, driveNumber, config=None):
         """

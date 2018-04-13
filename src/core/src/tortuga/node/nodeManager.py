@@ -17,31 +17,33 @@
 import os
 import socket
 import time
-from typing import Optional, NoReturn
+from typing import NoReturn, Optional, Union
 
 from sqlalchemy.orm.session import Session
-from tortuga.objects.tortugaObjectManager import TortugaObjectManager
-from tortuga.db.nodeDbApi import NodeDbApi
-from tortuga.db.hardwareProfileDbApi import HardwareProfileDbApi
-from tortuga.os_utility import osUtility
-from tortuga.config.configManager import ConfigManager
-from tortuga.resourceAdapter import resourceAdapterFactory
-from tortuga.san import san
-from tortuga.os_utility import tortugaSubprocess
-from tortuga.addhost.addHostServerLocal import AddHostServerLocal
+
 from tortuga.addhost.addHostManager import AddHostManager
-from tortuga.exceptions.configurationError import ConfigurationError
-from tortuga.db.nodes import Nodes
+from tortuga.addhost.addHostServerLocal import AddHostServerLocal
+from tortuga.config.configManager import ConfigManager
 from tortuga.db.dbManager import DbManager
+from tortuga.db.hardwareProfileDbApi import HardwareProfileDbApi
+from tortuga.db.hardwareProfiles import HardwareProfiles
+from tortuga.db.nodeDbApi import NodeDbApi
+from tortuga.db.nodes import Nodes
 from tortuga.db.nodesDbHandler import NodesDbHandler
+from tortuga.db.softwareProfiles import SoftwareProfiles
+from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
+from tortuga.exceptions.configurationError import ConfigurationError
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.exceptions.tortugaException import TortugaException
-from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
-from tortuga.kit.actions import KitActionsManager
 from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
 from tortuga.exceptions.volumeDoesNotExist import VolumeDoesNotExist
-from tortuga.db.hardwareProfiles import HardwareProfiles
-from tortuga.db.softwareProfiles import SoftwareProfiles
+from tortuga.kit.actions import KitActionsManager
+from tortuga.objects.node import Node
+from tortuga.objects.tortugaObject import TortugaObjectList
+from tortuga.objects.tortugaObjectManager import TortugaObjectManager
+from tortuga.os_utility import osUtility, tortugaSubprocess
+from tortuga.resourceAdapter import resourceAdapterFactory
+from tortuga.san import san
 
 
 class NodeManager(TortugaObjectManager): \
@@ -97,17 +99,6 @@ class NodeManager(TortugaObjectManager): \
                 dbSoftwareProfile.name if dbSoftwareProfile else '(none)',
                 validateIp, bGenerateIp))
 
-        # This is where the Nodes() object is first created.
-        node = Nodes()
-
-        # Set the default node state
-        node.state = 'Discovered'
-
-        if 'rack' in addNodeRequest:
-            node.rack = addNodeRequest['rack']
-
-        node.addHostSession = addNodeRequest['addHostSession']
-
         hostname = addNodeRequest['name'] \
             if 'name' in addNodeRequest else None
 
@@ -115,7 +106,12 @@ class NodeManager(TortugaObjectManager): \
         # hardware profile in which host names are generated)
         self.__validateHostName(hostname, dbHardwareProfile.nameFormat)
 
-        node.name = hostname
+        node = Nodes(name=hostname)
+
+        if 'rack' in addNodeRequest:
+            node.rack = addNodeRequest['rack']
+
+        node.addHostSession = addNodeRequest['addHostSession']
 
         # Complete initialization of new node record
         nic_defs = addNodeRequest['nics'] \
@@ -127,7 +123,7 @@ class NodeManager(TortugaObjectManager): \
             dns_zone=dns_zone)
 
         # Set hardware profile of new node
-        node.hardwareProfileId = dbHardwareProfile.id
+        node.hardwareprofile = dbHardwareProfile
 
         # Set software profile of new node; if the software profile is None,
         # attempt to set the software profile to the idle software profile
@@ -158,7 +154,7 @@ class NodeManager(TortugaObjectManager): \
             if hwprofile.getResourceAdapter() else 'default'
 
         # Query vcpus from resource adapter
-        ResourceAdapterClass = resourceAdapterFactory.getResourceAdapterClass(
+        ResourceAdapterClass = resourceAdapterFactory.get_resourceadapter_class(
             adapter_name)
 
         # Update Node object
@@ -166,13 +162,15 @@ class NodeManager(TortugaObjectManager): \
 
         return node
 
-    def getNodeById(self, nodeId, optionDict=None):
+    def getNodeById(self, nodeId: int,
+                    optionDict: Optional[Union[dict, None]] = None) -> Node:
         """
         Get node by node id
 
         Raises:
             NodeNotFound
         """
+
         return self._nodeDbApi.getNodeById(int(nodeId), optionDict)
 
     def getNodeByIp(self, ip):
@@ -517,7 +515,7 @@ class NodeManager(TortugaObjectManager): \
         # action as well as populate the nodeTransferDict. This saves
         # having to iterate twice on the same result data.
         for dbHardwareProfile, nodesDict in hwProfileMap.items():
-            adapter = resourceAdapterFactory.getApi(
+            adapter = resourceAdapterFactory.get_api(
                 dbHardwareProfile.resourceadapter.name)
 
             dbNodeTuples = []
@@ -859,7 +857,7 @@ class NodeManager(TortugaObjectManager): \
             raise UnsupportedOperation(
                 'Only persistent volumes can be attached')
 
-        api = resourceAdapterFactory.getApi(
+        api = resourceAdapterFactory.get_api(
             node.getHardwareProfile().getResourceAdapter().getName())
 
         if isDirect == "DEFAULT":
@@ -876,7 +874,7 @@ class NodeManager(TortugaObjectManager): \
 
         node = self.getNode(nodeName, {'hardwareprofile': True})
 
-        api = resourceAdapterFactory.getApi(
+        api = resourceAdapterFactory.get_api(
             node.getHardwareProfile().getResourceAdapter().getName())
 
         vol = self._san.getVolume(volume)
@@ -897,5 +895,11 @@ class NodeManager(TortugaObjectManager): \
     def getNodesByNodeState(self, state: str):
         return self._nodeDbApi.getNodesByNodeState(state)
 
-    def getNodesByNameFilter(self, _filter: str):
-        return self._nodeDbApi.getNodesByNameFilter(_filter)
+    def getNodesByNameFilter(self, nodespec: str,
+                             optionDict: Optional[Union[dict, None]] = None) -> TortugaObjectList:
+        return self._nodeDbApi.getNodesByNameFilter(
+            nodespec, optionDict=optionDict)
+
+    def getNodesByAddHostSession(self, addHostSession: str,
+                                 optionDict: Optional[Union[dict, None]] = None) -> TortugaObjectList:
+        return self._nodeDbApi.getNodesByAddHostSession(addHostSession, optionDict)

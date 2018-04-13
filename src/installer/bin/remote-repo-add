@@ -36,13 +36,13 @@ class RemoteRepoAddApp(TortugaCli):
         session = DbManager().openSession()
 
         dbKit = session.query(Kits).filter(
-            Kits.name == self.getOptions().kitspec).one()
+            Kits.name == self.getArgs().kitspec).one()
 
         # Check for existing entry
         for dbKitSource in dbKit.sources:
-            if dbKitSource.url == self.getOptions().url:
+            if dbKitSource.url == self.getArgs().url:
                 msg = 'Repo source URL [%s] already exists for [%s]' % (
-                    self.getOptions().url, dbKit.name)
+                    self.getArgs().url, dbKit.name)
 
                 print(msg)
 
@@ -50,8 +50,8 @@ class RemoteRepoAddApp(TortugaCli):
 
         dbKit.sources.append(
             KitSources(
-                url=self.getOptions().url,
-                description=self.getOptions().description))
+                url=self.getArgs().url,
+                description=self.getArgs().description))
 
         session.commit()
 

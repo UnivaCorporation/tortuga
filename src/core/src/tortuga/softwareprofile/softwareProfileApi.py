@@ -321,7 +321,7 @@ class SoftwareProfileApi(TortugaApi): \
             raise TortugaException(exception=ex)
 
     def enableComponent(self, softwareProfileName, kitName, kitVersion,
-                        kitIteration, compName, compVersion=None):
+                        kitIteration, compName, compVersion=None, sync=True):
         try:
             return self._softwareProfileManager.enableComponent(
                 softwareProfileName,
@@ -329,7 +329,8 @@ class SoftwareProfileApi(TortugaApi): \
                 kitVersion,
                 kitIteration,
                 compName,
-                compVersion)
+                compVersion,
+                sync=sync)
         except Exception as ex:
             if not isinstance(ex, TortugaException):
                 self.getLogger().exception(
@@ -342,7 +343,7 @@ class SoftwareProfileApi(TortugaApi): \
             raise
 
     def disableComponent(self, softwareProfileName, kitName, kitVersion,
-                         kitIteration, compName, compVersion=None):
+                         kitIteration, compName, compVersion=None, sync=True):
         try:
             return self._softwareProfileManager.disableComponent(
                 softwareProfileName,
@@ -350,7 +351,8 @@ class SoftwareProfileApi(TortugaApi): \
                 kitVersion,
                 kitIteration,
                 compName,
-                compVersion)
+                compVersion,
+                sync=sync)
         except TortugaException as ex:
             raise
         except Exception as ex:

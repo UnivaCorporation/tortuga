@@ -370,7 +370,7 @@ class TortugaDeployer(object): \
 
         self._logger.info('Running Puppet for post-configuration')
 
-        logFileName = '/tmp/tortuga_setup.log.log'
+        logFileName = '/tmp/tortuga_setup.log'
 
         cmd = ('/opt/puppetlabs/bin/puppet agent --color false --onetime'
                ' --no-daemonize --detailed-exitcodes --verbose 2>&1')
@@ -1004,7 +1004,8 @@ class TortugaDeployer(object): \
             SoftwareProfileApi().enableComponent(
                 installerNode.getSoftwareProfile().getName(),
                 k.getName(), k.getVersion(), k.getIteration(),
-                component.getName(), component.getVersion())
+                component.getName(), component.getVersion(),
+                sync=False)
 
     def promptForAdminCredentials(self):
         # Get admin username and password for use with web service

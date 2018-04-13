@@ -25,16 +25,16 @@ class KitCli(TortugaCli):
     """
 
     def get_name_version_iteration(self):
-        if self._args:
-            pkgname = self._args[0]
+        if self.getArgs().kitspec:
+            pkgname = self.getArgs().kitspec
             a = pkgname.split('-')
             name = a[0]
             version = '-'.join(a[1:-1])
             iteration = a[-1]
         else:
-            name = self.getOptions().name
-            version = self.getOptions().version
-            iteration = self.getOptions().iteration
+            name = self.getArgs().name
+            version = self.getArgs().version
+            iteration = self.getArgs().iteration
 
         return name, version, iteration
 
@@ -45,9 +45,9 @@ class KitCli(TortugaCli):
             version = '-'.join(a[1:-1])
             iteration = a[-1]
         else:
-            name = self.getOptions().kitName
-            version = self.getOptions().kitVersion
-            iteration = self.getOptions().kitIteration
+            name = self.getArgs().kitName
+            version = self.getArgs().kitVersion
+            iteration = self.getArgs().kitIteration
 
         return name, version, iteration
 

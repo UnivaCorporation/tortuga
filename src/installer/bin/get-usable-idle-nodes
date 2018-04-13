@@ -49,7 +49,7 @@ Description:
     The get-usable-nodes tool returns the list of nodes that are
     able to use the specified software profile.
 """))
-        softwareProfileName = self.getOptions().softwareProfile
+        softwareProfileName = self.getArgs().softwareProfile
         if not softwareProfileName:
             print('The "--software-profile" option is required')
             return

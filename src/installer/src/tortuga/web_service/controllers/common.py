@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Union, Optional
+
 
 def parse_tag_query_string(tag_dict):
     tagspec = []
@@ -28,3 +30,31 @@ def parse_tag_query_string(tag_dict):
                 tagspec.append((tagval[0],))
 
     return tagspec
+
+
+def make_options_from_query_string(
+        value: Union[list, str, None],
+        default_options: Optional[Union[list, None]] = None) -> dict:
+    # take string or list of strings and convert into dict of key=True
+    # for use with query methods that take settingsDict. Defaults can
+    # be provided as a list of strings
+
+    addl_options = {}
+
+    if value:
+        if isinstance(value, str):
+            addl_options[value] = True
+        else:
+            addl_options = dict(
+                **addl_options,
+                **{key: True for key in value}
+            )
+
+    if not default_options:
+        return addl_options
+
+    options = {key: True for key in default_options}
+    merged_options = options.copy()
+    merged_options.update(addl_options)
+
+    return merged_options

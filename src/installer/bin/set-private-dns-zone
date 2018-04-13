@@ -181,7 +181,7 @@ class SetPrivateDnsZoneApp(TortugaCli):
         dnsZone = args[0]
 
         if oldDnsZone == dnsZone.lower():
-            if not self.getOptions().bForce:
+            if not self.getArgs().bForce:
                 # Nothing changed. Nothing to do!
                 sys.exit(0)
 

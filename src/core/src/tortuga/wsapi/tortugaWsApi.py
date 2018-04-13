@@ -17,9 +17,12 @@
 import logging
 from urllib.parse import urlparse
 
-from tortuga.web_client import sessionManager
 from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.userNotAuthorized import UserNotAuthorized
+from tortuga.web_client import sessionManager
+
+
+WS_API_VERSION = 'v1'
 
 
 class TortugaWsApi:
@@ -27,12 +30,29 @@ class TortugaWsApi:
     Base tortuga ws api class.
     """
 
-    def __init__(self, username=None, password=None):
+    def __init__(self, username=None, password=None, baseurl=None):
         self._logger = logging.getLogger(
             'tortuga.wsapi.{0}'.format(self.__class__.__name__))
         self._logger.addHandler(logging.NullHandler())
 
         self._cm = ConfigManager()
+
+        if baseurl:
+            result = urlparse(baseurl)
+            self.serverHostname = result.hostname
+            self.serverPort = result.port
+            self.serverScheme = result.scheme
+            self._baseurl = baseurl
+        else:
+            self.serverHostname = self._cm.getInstaller()
+            self.serverPort = self._cm.getAdminPort()
+            self.serverScheme = self._cm.getAdminScheme()
+            self._baseurl = '%s://%s:%s/%s' % (
+                self.serverScheme,
+                self.serverHostname,
+                self.serverPort,
+                WS_API_VERSION
+            )
 
         if username is None and password is None:
             self._logger.debug('[%s] Using built-in user credentials' % (
@@ -49,15 +69,26 @@ class TortugaWsApi:
         """Extract scheme and net location from provided url. Use defaults
         if none exist."""
 
+        # if url is not fully-qualified, return base URL
         result = urlparse(url)
+        if not result.netloc:
+            # because the API version is hardcoded into the "internal" URLs,
+            # we massage the default base URL to not include the API version
+            # prefix if the specified path includes it
+            if result.path and result.path.startswith(WS_API_VERSION + '/'):
+                parsed_baseurl = urlparse(self._baseurl)
 
-        scheme = result.scheme if result.scheme else \
-            self._cm.getAdminScheme()
+                baseurl = '%s://%s' % (parsed_baseurl.scheme,
+                                       parsed_baseurl.hostname)
 
-        netloc = result.netloc if result.netloc else \
-            '{0}:{1}'.format(self._cm.getInstaller(), self._cm.getAdminPort())
+                if parsed_baseurl.port:
+                    baseurl += ':%s' % parsed_baseurl.port
 
-        return '{0}://{1}'.format(scheme, netloc)
+                return baseurl
+
+            return self._baseurl
+
+        return url
 
     def _getSessionManager(self):
         if not self._sm:
@@ -73,7 +104,7 @@ class TortugaWsApi:
         return self._cm
 
     def sendSessionRequest(self, url, method='GET',
-                           contentType='application/json', data='',
+                           contentType='application/json', data=None,
                            acceptType='application/json'):
         """
         Send authorized session request
@@ -101,9 +132,11 @@ class TortugaWsApi:
             url, method, contentType, data, acceptType=acceptType)
 
     def sendRequest(self, url, method='GET',
-                    contentType='application/json', data='',
+                    contentType='application/json', data=None,
                     acceptType='application/json'):
-        """ Send unauthorized request. """
+        """
+        Send unauthorized request
+        """
 
         sm = self._getSessionManager()
 

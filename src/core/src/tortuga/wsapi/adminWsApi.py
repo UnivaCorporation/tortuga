@@ -30,14 +30,14 @@ class AdminWsApi(TortugaWsApi):
         """Get admin information
 
             Returns:
-                rule
+                admin
             Throws:
                 UserNotAuthorized
                 AdminNotFound
                 TortugaException
         """
 
-        url = 'v1/admin/%s' % (urllib.parse.quote_plus(adminName))
+        url = 'v1/admins/%s' % (urllib.parse.quote_plus(adminName))
 
         try:
             _, responseDict = self.sendSessionRequest(url)
@@ -52,14 +52,14 @@ class AdminWsApi(TortugaWsApi):
         """Get admin information
 
             Returns:
-                rule
+                admin
             Throws:
                 UserNotAuthorized
                 AdminNotFound
                 TortugaException
         """
 
-        url = 'v1/admin/%s' % (admin_id)
+        url = 'v1/admins/%s' % (admin_id)
 
         try:
             _, responseDict = self.sendSessionRequest(url)
@@ -74,13 +74,13 @@ class AdminWsApi(TortugaWsApi):
         """Get admin list.
 
             Returns:
-                [rules]
+                [admins]
             Throws:
                 UserNotAuthorized
                 TortugaException
         """
 
-        url = 'v1/admin'
+        url = 'v1/admins/'
 
         try:
             _, responseDict = self.sendSessionRequest(url)
@@ -94,7 +94,8 @@ class AdminWsApi(TortugaWsApi):
     def addAdmin(self, username, password, isCrypted=False, realname=None,
                  description=None): \
             # pylint: disable=too-many-arguments
-        """Add an admin using rule name/password.
+        """
+        Add an admin using rule name/password.
 
         Raises:
             UserNotAuthorized
@@ -104,22 +105,25 @@ class AdminWsApi(TortugaWsApi):
             TortugaException
         """
 
-        url = 'v1/admin'
+        url = 'v1/admins/'
 
-        d = {
-            'username': username,
-            'password': password,
+        postdata = {
             'isCrypted': isCrypted,
+            'admin': {
+                'username': username,
+                'password': password,
+            }
         }
 
         if realname is not None:
-            d['realname'] = realname
+            postdata['admin']['realname'] = realname
 
         if description is not None:
-            d['description'] = description
+            postdata['admin']['description'] = description
 
         try:
-            self.sendSessionRequest(url, method='POST', data=json.dumps(d))
+            self.sendSessionRequest(
+                url, method='POST', data=json.dumps(postdata))
         except TortugaException:
             raise
         except Exception as ex:
@@ -136,7 +140,7 @@ class AdminWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/admin/%s' % (urllib.parse.quote_plus(admin))
+        url = 'v1/admins/%s' % (urllib.parse.quote_plus(admin))
 
         try:
             self.sendSessionRequest(url, method='DELETE')
@@ -157,7 +161,7 @@ class AdminWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/admin/%s' % (adminObject.getId())
+        url = 'v1/admins/%s' % (adminObject.getId())
 
         d = {
             'admin': adminObject.getCleanDict(),

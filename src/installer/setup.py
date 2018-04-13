@@ -130,7 +130,6 @@ setup(
     namespace_packages=['tortuga'],
     entry_points={
         'console_scripts': [
-            'uc-tag=tortuga.scripts.uc_tag:main',
             'tortugawsd=tortuga.web_service.main:main'
         ],
     },
