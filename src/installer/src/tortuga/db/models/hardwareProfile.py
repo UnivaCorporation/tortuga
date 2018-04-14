@@ -45,10 +45,7 @@ class HardwareProfile(ModelBase):
     localBootParams = Column(String(255))
     hypervisorSoftwareProfileId = Column(Integer,
                                          ForeignKey('softwareprofiles.id'))
-    maxUnits = Column(Integer, default=0)
     resourceAdapterId = Column(Integer, ForeignKey('resourceadapters.id'))
-    bcastEnabled = Column(Boolean, nullable=False, default=True)
-    mcastEnabled = Column(Boolean, nullable=False, default=True)
     cost = Column(Integer, default=0)
 
     admins = relationship('Admin', secondary='hardwareprofile_admins',

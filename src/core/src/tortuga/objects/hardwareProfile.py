@@ -190,14 +190,6 @@ class HardwareProfile(TortugaObject): \
         """ Return the parent hardware profile. """
         return self.get('hypervisorSoftwareProfileId')
 
-    def setMaxUnits(self, maxUnits):
-        """ Set max units. """
-        self['maxUnits'] = maxUnits
-
-    def getMaxUnits(self):
-        """ Return max units. """
-        return self.get('maxUnits')
-
     def setResourceAdapter(self, resourceAdapter):
         """ Set resource adapter. """
         self['resourceadapter'] = resourceAdapter
@@ -205,28 +197,6 @@ class HardwareProfile(TortugaObject): \
     def getResourceAdapter(self):
         """ Return resource adapter. """
         return self.get('resourceadapter')
-
-    def setBcastEnabled(self, bcastEnabled):
-        """ Set broadcast enabled flag. """
-        self['bcastEnabled'] = toBool(bcastEnabled)
-
-    def getBcastEnabled(self):
-        """ Return broadcast enabled flag. """
-        # The default for this flag is True...so if null set true..
-        if self.get('bcastEnabled') is None:
-            self.setBcastEnabled(True)
-        return toBool(self.get('bcastEnabled'))
-
-    def setMcastEnabled(self, mcastEnabled):
-        """ Set multicast enabled flag. """
-        self['mcastEnabled'] = toBool(mcastEnabled)
-
-    def getMcastEnabled(self):
-        """ Return multicast enabled flag. """
-        # The default for this flag is True...so if null set true..
-        if self.get('mcastEnabled') is None:
-            self.setMcastEnabled(True)
-        return toBool(self.get('mcastEnabled'))
 
     def getProvisioningNetwork(self):
         '''
@@ -273,8 +243,8 @@ class HardwareProfile(TortugaObject): \
             'id', 'name', 'description', 'nameFormat', 'installType',
             'kernel', 'kernelParams', 'initrd', 'softwareOverrideAllowed',
             'idleSoftwareProfileId', 'location', 'localBootParams',
-            'hypervisorSoftwareProfileId', 'maxUnits',
-            'bcastEnabled', 'mcastEnabled', 'cost',
+            'hypervisorSoftwareProfileId',
+            'cost',
         ]
 
     @classmethod
