@@ -27,12 +27,11 @@ class UpdateNodeStatusCli(TortugaCli):
     update-node-status CLI
     """
 
-    def __init__(self):
-        super(UpdateNodeStatusCli, self).__init__()
-
+    def parseArgs(self, usage=None):
         nodeName = socket.getfqdn()
 
         self.addOption("--node", dest='nodeName', default=nodeName,
+                       required=True,
                        help='Name of the node for which status is being'
                             ' updated')
 
@@ -42,12 +41,10 @@ class UpdateNodeStatusCli(TortugaCli):
         self.addOption('--boot-from', dest='bootFrom', default=1,
                        help='Updated boot-from flag')
 
-    def runCommand(self):
-        self.parseArgs(_('''\
-update-node-status --node=NAME [--status=STATUS] [--boot-from=0|1]'''))
+        super().parseArgs(usage=usage)
 
-        if self.getArgs().nodeName is None:
-            self.getParser().error('--node NAME must be specified')
+    def runCommand(self):
+        self.parseArgs()
 
         # Always go over the web service for this call.
         nodeWsApi.NodeWsApi(
@@ -59,5 +56,5 @@ update-node-status --node=NAME [--status=STATUS] [--boot-from=0|1]'''))
                 self.getArgs().bootFrom)
 
 
-if __name__ == '__main__':
+def main():
     UpdateNodeStatusCli().run()

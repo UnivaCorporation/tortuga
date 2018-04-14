@@ -97,7 +97,6 @@ setup(
     license='Apache 2.0',
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
-    scripts=[str(script_file) for script_file in Path('bin').iterdir()],
     data_files=[
         ('etc', ['etc/tortuga-release'] + [str(fn) for fn in Path('etc').iterdir()]),
         ('man/man8', [
@@ -122,6 +121,7 @@ setup(
             'add-admin-to-profile=tortuga.scripts.add_admin_to_profile:main',
             'add-network=tortuga.scripts.add_network:main',
             'add-nodes=tortuga.scripts.add_nodes:main',
+            'build-kit=tortuga.scripts.build_kit:main',
             'checkpoint-node=tortuga.scripts.checkpoint_node:main',
             'copy-hardware-profile=tortuga.scripts.copy_hardware_profile:main',
             'copy-software-profile=tortuga.scripts.copy_software_profile:main',
@@ -137,6 +137,7 @@ setup(
             'delete-software-profile=tortuga.scripts.delete_software_profile:main',
             'disable-component=tortuga.scripts.disable_component:main',
             'enable-component=tortuga.scripts.enable_component:main',
+            'generate-nii-profile=tortuga.scripts.generate_nii_profile:main',
             'get-admin=tortuga.scripts.get_admin:main',
             'get-admin-list=tortuga.scripts.get_admin_list:main',
             'get-component-list=tortuga.scripts.get_component_list:main',
@@ -166,6 +167,7 @@ setup(
             'uc-tag=tortuga.scripts.uc_tag:main',
             'ucparam=tortuga.scripts.ucparam:main',
             'update-hardware-profile=tortuga.scripts.update_hardware_profile:main',
+            'update-node-status=tortuga.scripts.update_node_status:main',
             'update-software-profile=tortuga.scripts.update_software_profile:main',
             'update-admin=tortuga.scripts.update_admin:main',
         ],
