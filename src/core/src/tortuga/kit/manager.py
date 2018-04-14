@@ -142,7 +142,7 @@ class KitManager(TortugaObjectManager, Singleton):
         :raisesEulaAcceptanceRequired:
 
         """
-        self.getLogger().debug('Installing kit package:'.format(kit_pkg_url))
+        self.getLogger().debug('Installing kit package: {}'.format(kit_pkg_url))
 
         #
         # Download/copy and unpack kit archive.
