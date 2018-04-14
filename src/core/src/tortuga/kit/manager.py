@@ -18,25 +18,24 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from typing import Any, List
 
-from typing import Any
+from tortuga.boot.distro import DistributionFactory
 from tortuga.config.configManager import ConfigManager
 from tortuga.db import componentDbApi
 from tortuga.db.dbManager import DbManager
 from tortuga.db.kitDbApi import KitDbApi
-from tortuga.exceptions.eulaAcceptanceRequired \
-    import EulaAcceptanceRequired
+from tortuga.exceptions.eulaAcceptanceRequired import EulaAcceptanceRequired
 from tortuga.exceptions.kitAlreadyExists import KitAlreadyExists
 from tortuga.exceptions.kitInstallError import KitInstallError
 from tortuga.exceptions.kitNotFound import KitNotFound
 from tortuga.exceptions.osNotSupported import OsNotSupported
-from tortuga.exceptions.softwareProfileComponentAlreadyExists \
-    import SoftwareProfileComponentAlreadyExists
+from tortuga.exceptions.softwareProfileComponentAlreadyExists import \
+    SoftwareProfileComponentAlreadyExists
 from tortuga.exceptions.unrecognizedKitMedia import UnrecognizedKitMedia
 from tortuga.helper import osHelper
 from tortuga.kit import utils
 from tortuga.kit.mountManager import MountManager
-from tortuga.boot.distro import DistributionFactory
 from tortuga.kit.utils import format_kit_descriptor
 from tortuga.objects.component import Component
 from tortuga.objects.kit import Kit
@@ -47,8 +46,8 @@ from tortuga.os_utility.osUtility import getOsObjectFactory, mapOsName
 from tortuga.repo import repoManager
 from tortuga.softwareprofile import softwareProfileFactory
 from tortuga.types import Singleton
-from typing import List
 from tortuga.utility.actionManager import ActionManager
+
 from .eula import BaseEulaValidator
 from .loader import load_kits
 from .registry import get_kit_installer
