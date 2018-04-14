@@ -355,9 +355,6 @@ class NodeApi(TortugaApi):
     def addStorageVolume(self, nodeName: str, volume: str,
                          isDirect: Optional[str] = 'DEFAULT'):
         try:
-            if isDirect == 'DEFAULT':
-                return self._nodeManager.addStorageVolume(nodeName, volume)
-
             return self._nodeManager.addStorageVolume(
                 nodeName, volume, isDirect)
         except TortugaException:
