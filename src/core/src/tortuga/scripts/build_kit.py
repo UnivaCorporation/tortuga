@@ -65,5 +65,5 @@ class BuildKit(TortugaCli):
             self._kit_builder.clean()
 
 
-if __name__ == '__main__':
+def main():
     BuildKit().run()

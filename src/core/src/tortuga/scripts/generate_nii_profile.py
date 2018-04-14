@@ -21,7 +21,7 @@ import os
 import xml.etree.cElementTree as ET
 
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.node.nodeApiFactory import getNodeApi
+from tortuga.wsapi.nodeWsApi import NodeWsApi
 from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
 
@@ -31,25 +31,23 @@ class GenerateNiiProfileCli(TortugaCli):
     Update node status command line interface.
     """
 
-    def __init__(self):
-        super(GenerateNiiProfileCli, self).__init__()
-
+    def parseArgs(self, usage=None):
         self.addOption("--node", dest='nodeName', default=socket.getfqdn(),
                        help='Name of the node for which NII profile is being'
                             ' generated')
 
         self.addOption("--installer", dest='installer',
+                       required=True,
                        help='IP address or hostname (and optional port number)'
                             ' of the installer node')
 
         self.addOption("--root-mount-point", dest='rootMountPoint',
                        default='/', help='Root file system mount point')
 
+        super().parseArgs(usage=usage)
+
     def runCommand(self):
         self.parseArgs()
-
-        if not self.getArgs().installer:
-            raise InvalidCliRequest('Missing --installer option')
 
         installer = self.getArgs().installer
 
@@ -64,7 +62,9 @@ class GenerateNiiProfileCli(TortugaCli):
         cm.setInstaller(instHostName)
         cm.setAdminPort(int(instHostPort))
 
-        api = getNodeApi(self.getUsername(), self.getPassword())
+        api = NodeWsApi(username=self.getUsername(),
+                        password=self.getPassword(),
+                        baseurl=self.getUrl())
 
         fileContent = api.getProvisioningInfo(
             self.getArgs().nodeName).getXmlRep()
@@ -91,5 +91,5 @@ class GenerateNiiProfileCli(TortugaCli):
             f.write(ET.tostring(dom, 'UTF-8').decode())
 
 
-if __name__ == '__main__':
+def main():
     GenerateNiiProfileCli().run()
