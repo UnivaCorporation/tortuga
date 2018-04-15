@@ -12,9 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=nonstandard-exception,no-name-in-module,logging-not-lazy
-# pylint: disable=catching-non-exception,no-member
-
 import os
 import shutil
 from typing import Optional, Union
@@ -27,7 +24,6 @@ from tortuga.db.nodeDbApi import NodeDbApi
 from tortuga.db.softwareProfileDbApi import SoftwareProfileDbApi
 from tortuga.exceptions.componentNotFound import ComponentNotFound
 from tortuga.exceptions.kitNotFound import KitNotFound
-from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.helper import osHelper
 from tortuga.kit.loader import load_kits
 from tortuga.kit.registry import get_kit_installer
@@ -40,7 +36,8 @@ from tortuga.types import Singleton
 from tortuga.utility import validation
 
 
-class SoftwareProfileManager(TortugaObjectManager, Singleton):
+class SoftwareProfileManager(TortugaObjectManager, Singleton): \
+        # pylint: disable=too-many-public-methods
 
     BASE_KIT_NAME = 'base'
 
@@ -95,27 +92,21 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
         return self._sp_db_api.deleteAdmin(softwareProfileName, adminUsername)
 
     def updateSoftwareProfile(self, softwareProfileObject):
-        try:
-            self.getLogger().debug(
-                'Updating software profile: %s' % (
-                    softwareProfileObject.getName()))
+        self.getLogger().debug(
+            'Updating software profile: %s' % (
+                softwareProfileObject.getName()))
 
-            # First get the object from the db we are updating...
-            existingProfile = self.\
-                getSoftwareProfileById(softwareProfileObject.getId())
+        # First get the object from the db we are updating...
+        existingProfile = self.\
+            getSoftwareProfileById(softwareProfileObject.getId())
 
-            # Set parameters that we will not allow updating
-            softwareProfileObject.setOsInfo(existingProfile.getOsInfo())
-            softwareProfileObject.setOsId(existingProfile.getOsId())
-            softwareProfileObject.setIsIdle(existingProfile.getIsIdle())
-            softwareProfileObject.setType(existingProfile.getType())
+        # Set parameters that we will not allow updating
+        softwareProfileObject.setOsInfo(existingProfile.getOsInfo())
+        softwareProfileObject.setOsId(existingProfile.getOsId())
+        softwareProfileObject.setIsIdle(existingProfile.getIsIdle())
+        softwareProfileObject.setType(existingProfile.getType())
 
-            self._sp_db_api.updateSoftwareProfile(softwareProfileObject)
-        except TortugaException as ex:
-            raise
-        except Exception as ex:
-            self.getLogger().exception('%s' % ex)
-            raise TortugaException(exception=ex)
+        self._sp_db_api.updateSoftwareProfile(softwareProfileObject)
 
     def getSoftwareProfile(
             self,
