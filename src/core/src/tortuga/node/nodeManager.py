@@ -224,8 +224,7 @@ class NodeManager(TortugaObjectManager): \
         except Exception:
             session.rollback()
 
-            self.getLogger().exception(
-                'Exception updating node [{0}]'.format(nodeName))
+            raise
         finally:
             DbManager().closeSession()
 
@@ -392,14 +391,8 @@ class NodeManager(TortugaObjectManager): \
             self.__scheduleUpdate()
 
             return result
-        except TortugaException:
-            session.rollback()
-
-            raise
         except Exception:
             session.rollback()
-
-            self.getLogger().exception('Exception in NodeManager.deleteNode()')
 
             raise
         finally:
@@ -655,15 +648,8 @@ class NodeManager(TortugaObjectManager): \
             self.__scheduleUpdate()
 
             return result_dict
-        except TortugaException as ex:
+        except Exception:
             session.rollback()
-
-            raise
-        except Exception as ex:
-            session.rollback()
-
-            self.getLogger().exception(
-                '[%s] %s' % (self.__class__.__name__, ex))
 
             raise
         finally:
@@ -734,12 +720,9 @@ class NodeManager(TortugaObjectManager): \
             self.__scheduleUpdate()
 
             return results
-        except TortugaException as ex:
+        except Exception:
             session.rollback()
-            raise
-        except Exception as ex:
-            session.rollback()
-            self.getLogger().exception('%s' % ex)
+
             raise
         finally:
             DbManager().closeSession()
