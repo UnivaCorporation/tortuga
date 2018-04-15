@@ -25,7 +25,6 @@ from tortuga.db.softwareProfileDbApi import SoftwareProfileDbApi
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.networkNotFound import NetworkNotFound
 from tortuga.exceptions.nicNotFound import NicNotFound
-from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.objects.hardwareProfile import HardwareProfile
 from tortuga.objects.networkDevice import NetworkDevice
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
@@ -119,24 +118,18 @@ class HardwareProfileManager(TortugaObjectManager, Singleton):
             'Updating hardware profile [%s]' % (
                 hardwareProfileObject.getName()))
 
-        try:
-            # First get the object from the db we are updating...
-            existingProfile = self.\
-                getHardwareProfileById(hardwareProfileObject.getId())
+        # First get the object from the db we are updating...
+        existingProfile = self.\
+            getHardwareProfileById(hardwareProfileObject.getId())
 
-            if hardwareProfileObject.getInstallType() and \
-                hardwareProfileObject.getInstallType() != \
-                    existingProfile.getInstallType():
-                raise InvalidArgument(
-                    'Hardware profile installation type cannot be'
-                    ' changed' % (hardwareProfileObject.getName()))
+        if hardwareProfileObject.getInstallType() and \
+            hardwareProfileObject.getInstallType() != \
+                existingProfile.getInstallType():
+            raise InvalidArgument(
+                'Hardware profile installation type cannot be'
+                ' changed' % (hardwareProfileObject.getName()))
 
-            self._hpDbApi.updateHardwareProfile(hardwareProfileObject)
-        except TortugaException as ex:
-            raise
-        except Exception as ex:
-            self.getLogger().exception('%s' % ex)
-            raise TortugaException(exception=ex)
+        self._hpDbApi.updateHardwareProfile(hardwareProfileObject)
 
     def createHardwareProfile(self, hwProfileSpec: HardwareProfile,
                               settingsDict: Optional[Union[dict, None]] = None):
