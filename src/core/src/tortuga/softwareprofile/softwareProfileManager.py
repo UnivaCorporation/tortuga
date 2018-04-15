@@ -325,7 +325,7 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
 
                     components.append(comp)
                 except ComponentNotFound:
-                    self.getLogger().warn(
+                    self.getLogger().warning(
                         'OS [{}] does not have a compatible \'core\' component'.format(
                             osInfo
                         )
