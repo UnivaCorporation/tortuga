@@ -742,9 +742,6 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
         """ Get list of partitions. """
         return self._sp_db_api.getPartitionList(softwareProfileName)
 
-    def getProvisioningInfo(self, nodeName):
-        return self._sp_db_api.getProvisioningInfo(nodeName)
-
     def addUsableHardwareProfileToSoftwareProfile(self, hardwareProfileName,
                                                   softwareProfileName):
         self._logger.info(
