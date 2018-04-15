@@ -31,13 +31,13 @@ from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.helper import osHelper
 from tortuga.kit.loader import load_kits
 from tortuga.kit.registry import get_kit_installer
+from tortuga.objects.softwareProfile import SoftwareProfile
 from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.os_utility import osUtility
+from tortuga.puppet import Puppet
 from tortuga.types import Singleton
 from tortuga.utility import validation
-from tortuga.objects.softwareProfile import SoftwareProfile
-from tortuga.puppet import Puppet
 
 
 class SoftwareProfileManager(TortugaObjectManager, Singleton):
@@ -162,10 +162,7 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
 
         return comp
 
-    def _get_os_kits(self):
-        return [kit for kit in self._kit_db_api.getKitList() if kit.getIsOs()]
-
-    def _getOsInfo(self, bOsMediaRequired):
+    def _getOsInfo(self, bOsMediaRequired: bool):
         if not bOsMediaRequired:
             # As a placeholder, use the same OS as the installer
 
@@ -179,7 +176,7 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
         # Use available operating system kit; raise exception if
         # multiple available
 
-        os_kits = self._get_os_kits()
+        os_kits = self._kit_db_api.getKitList(os_kits_only=True)
         if not os_kits:
             raise KitNotFound('No operating system kit installed')
 
