@@ -257,7 +257,6 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
 
             osObjFactory = osUtility.getOsObjectFactory(
                 osConfig.getOsFamilyInfo().getName())
-            compManager = osObjFactory.getComponentManager()
 
             # Need to be fancy with components
             spComponents = swProfileSpec.getComponents()
@@ -330,7 +329,6 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
                             osInfo
                         )
                     )
-                    pass
 
                 # Initialize values for kernel, kernelParams, and initrd
                 if not swProfileSpec.getKernel():
@@ -400,8 +398,8 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
             for kit in kit_list
             for component in kit.getComponentList()
             if component.getName() == comp_name and
-               (comp_version is None or
-                component.getVersion() == comp_version)
+            (comp_version is None or
+             component.getVersion() == comp_version)
         ]
         if not kits:
             raise KitNotFound(
@@ -491,9 +489,9 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
             for k in self._kit_db_api.getKitList():
                 if k.getName() == kit_name and \
                         (kit_version is None or
-                            k.getVersion() == kit_version) and \
+                         k.getVersion() == kit_version) and \
                         (kit_iteration is None or
-                            k.getIteration() == kit_iteration):
+                         k.getIteration() == kit_iteration):
                     kit = k
                     kits_found += 1
 
@@ -682,7 +680,7 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
 
         """
         return self._remove_component_from_software_profile(
-                kit, comp_name, comp_version, software_profile)
+            kit, comp_name, comp_version, software_profile)
 
     def _remove_component_from_software_profile(self, kit, comp_name,
                                                 comp_version,
