@@ -74,7 +74,3 @@ def main():
 
     # touch flagFile
     open(flagFile, 'w').close()
-
-
-if __name__ == '__main__':
-    main()

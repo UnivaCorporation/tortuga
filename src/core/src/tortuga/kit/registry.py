@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import copy
 import importlib
 from logging import getLogger
 import pkgutil
@@ -50,7 +49,7 @@ def discover_kit_installers_in_package(pkg_name):
     except ModuleNotFoundError:
         logger.debug('Package not found: {}'.format(pkg_name))
         return
-    for loader, name, is_pkg in pkgutil.iter_modules(pkg.__path__):
+    for _, name, is_pkg in pkgutil.iter_modules(pkg.__path__):
         if is_pkg:
             full_pkg_path = '{}.{}'.format(pkg_name, name)
             try:

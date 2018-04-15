@@ -26,8 +26,6 @@ from tortuga.addhost.addHostServerLocal import AddHostServerLocal
 from tortuga.config.configManager import ConfigManager
 from tortuga.db.dbManager import DbManager
 from tortuga.db.hardwareProfileDbApi import HardwareProfileDbApi
-from tortuga.db.nodeDbApi import NodeDbApi
-from tortuga.db.nodesDbHandler import NodesDbHandler
 from tortuga.db.models.hardwareProfile import HardwareProfile
 from tortuga.db.models.node import Node as NodeModel
 from tortuga.db.models.softwareProfile import SoftwareProfile
@@ -46,7 +44,6 @@ from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.os_utility import osUtility, tortugaSubprocess
 from tortuga.resourceAdapter import resourceAdapterFactory
 from tortuga.san import san
-from tortuga.db.models.node import Node as NodeModel
 
 
 class NodeManager(TortugaObjectManager): \

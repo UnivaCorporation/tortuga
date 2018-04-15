@@ -33,6 +33,7 @@ class TortugaProxyConfig(TortugaCli):
         self._cm = ConfigManager()
         self._kitApi = kitApiFactory.getKitApi()
 
+    def parseArgs(self, usage=None):
         # TODO: add stuff here
         self.addOption('-f', '--force', action='store_true', default=False,
                        dest='bForce',
@@ -41,6 +42,8 @@ class TortugaProxyConfig(TortugaCli):
         self.addOption('-n', '--dry-run', action='store_true',
                        dest='bDryRun', default=False,
                        help='Do not write anything to disk')
+
+        super().parseArgs(usage=usage)
 
     def runCommand(self):
         self.parseArgs()
@@ -245,5 +248,5 @@ class TortugaProxyConfig(TortugaCli):
             print('%s -> %s' % (key, value))
 
 
-if __name__ == '__main__':
+def main():
     TortugaProxyConfig().run()

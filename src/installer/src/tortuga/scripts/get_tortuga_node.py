@@ -267,7 +267,3 @@ def get_puppet_node_yaml(session, nodeName):
     sys.stdout.write(
         yaml.safe_dump(
             dataDict, default_flow_style=False, explicit_start=True))
-
-
-if __name__ == '__main__':
-    main()

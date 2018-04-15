@@ -30,13 +30,12 @@ class PreAddHostCli(TortugaCli):
     pre-add-host cli
     """
 
-    def __init__(self):
-        TortugaCli.__init__(self)
-
+    def parseArgs(self, usage=None):
         self.addOption('--hardware-profile', dest='hardwareProfile',
                        help=_('Hardware profile nodes were added to.'))
 
         self.addOption("--software-profile", dest='softwareProfile',
+                       metavar='NAME',
                        help=_('Software profile nodes were added to.'))
 
         self.addOption('--host-name', dest='hostname',
@@ -45,11 +44,11 @@ class PreAddHostCli(TortugaCli):
         self.addOption('--ip', dest='ip',
                        help=_('IP address of node being added.'))
 
+        super().parseArgs(usage=usage)
+
     def runCommand(self):
-        self.parseArgs(_("""
-pre-add-host --hardware-profile=HARDWAREPROFILE
-             --software-profile=SOFTWAREPROFILE --hostname <NAME> --ip <IP>
-"""))
+        self.parseArgs()
+
         if self.getArgs().softwareProfile:
             # Check for valid software profile - will throw exception and exit
             # if it doesn't exist
@@ -87,5 +86,5 @@ pre-add-host --hardware-profile=HARDWAREPROFILE
             self.getArgs().ip)
 
 
-if __name__ == '__main__':
+def main():
     PreAddHostCli().run()

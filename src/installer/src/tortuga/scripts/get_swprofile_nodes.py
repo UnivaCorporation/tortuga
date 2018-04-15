@@ -40,7 +40,3 @@ def main():
             '%s/%s' % (str(node.getName()), str(node.getNics()[0].getIp())))
 
     print(yaml.safe_dump(nodesDict))
-
-
-if __name__ == '__main__':
-    main()

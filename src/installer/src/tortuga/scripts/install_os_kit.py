@@ -30,7 +30,9 @@ class InstallOsKitCli(KitCli):
     def __init__(self):
         super(InstallOsKitCli, self).__init__()
 
+    def parseArgs(self, usage=None):
         self.addOption('-m', '--media', dest='osMediaUrl',
+                       required=True, metavar='URL',
                        help=_('OS kit package URL'))
 
         self.addOption('--symlinks', dest='symlinksFlag',
@@ -46,21 +48,15 @@ class InstallOsKitCli(KitCli):
         self.addOption('--no-sync', dest='sync', action='store_false',
                        default=True, help=_('component version'))
 
+        super().parseArgs(usage=usage)
+
     def runCommand(self):
         self.parseArgs(_("""
-    install-os-kit [--symlinks] [--mirror] --media=PACKAGEURL
-
-Description:
-    The install-os-kit tool adds operating system media to Tortuga for the
-    purpose of package-based node provisioning.
+Installs operating system media to Tortuga for the purpose of
+package-based node provisioning.
 """))
 
         api = getKitApi(self.getUsername(), self.getPassword())
-
-        if not self.getArgs().osMediaUrl:
-            sys.stderr.write(_('Error: missing --media option\n'))
-
-            sys.exit(1)
 
         # Pre-process the media URL list
         os_media_urls: List[str] = self.getArgs().osMediaUrl.split(',')
@@ -76,5 +72,5 @@ Description:
             Puppet().agent()
 
 
-if __name__ == '__main__':
+def main():
     InstallOsKitCli().run()

@@ -29,11 +29,7 @@ class GetUsableHardwareProfileListCli(TortugaCli):
 
     def runCommand(self):
         self.parseArgs(_("""
-   get-usable-hardwareprofile-list
-
-Description:
-    The get-usable-hardware-profile-list tool lists all software to hardware
-    profile mappings in the system.
+Lists all software to hardware profile mappings in the system.
 """))
         softwareUsesHardwareDbApi = SoftwareUsesHardwareDbApi()
 
@@ -58,5 +54,5 @@ Description:
             print(outputString)
 
 
-if __name__ == '__main__':
+def main():
     GetUsableHardwareProfileListCli().run()

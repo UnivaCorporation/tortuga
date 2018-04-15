@@ -16,25 +16,26 @@
 
 # pylint: disable=no-member
 
-from tortuga.db.dbManager import DbManager
-from tortuga.db.models.nic import Nic
-from tortuga.db.models.networkDevice import NetworkDevice
+from sqlalchemy.orm.session import Session
+
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.db.nodesDbHandler import NodesDbHandler
-from tortuga.db.networkDevicesDbHandler import NetworkDevicesDbHandler
-from tortuga.exceptions.nicNotFound import NicNotFound
-from tortuga.db.models.hardwareProfileProvisioningNic \
-    import HardwareProfileProvisioningNic
-from tortuga.db.models.hardwareProfileNetwork import HardwareProfileNetwork
-from tortuga.db.models.network import Network
+from tortuga.db.dbManager import DbManager
 from tortuga.db.models.component import Component
+from tortuga.db.models.hardwareProfileNetwork import HardwareProfileNetwork
+from tortuga.db.models.hardwareProfileProvisioningNic import \
+    HardwareProfileProvisioningNic
+from tortuga.db.models.network import Network
+from tortuga.db.models.networkDevice import NetworkDevice
+from tortuga.db.models.nic import Nic
+from tortuga.db.models.softwareProfile import SoftwareProfile
+from tortuga.db.networkDevicesDbHandler import NetworkDevicesDbHandler
+from tortuga.db.nodesDbHandler import NodesDbHandler
+from tortuga.exceptions.nicNotFound import NicNotFound
 from tortuga.os_utility import tortugaSubprocess
 
 
 class DeleteNicApp(TortugaCli):
-    def __init__(self):
-        TortugaCli.__init__(self)
-
+    def parseArgs(self, usage=None):
         optionsGroupName = 'Options'
 
         self.addOptionGroup(optionsGroupName, None)
@@ -42,7 +43,7 @@ class DeleteNicApp(TortugaCli):
         self.addOptionToGroup(
             optionsGroupName,
             '--nic',
-            dest='nic',
+            dest='nic', required=True,
             help='Provisioning NIC to be removed')
 
         self.addOptionToGroup(
@@ -51,69 +52,62 @@ class DeleteNicApp(TortugaCli):
             dest='bSync', default=True, action='store_false',
             help='Do not automatically synchronize configuration changes')
 
+        super().parseArgs(usage=usage)
+
     def runCommand(self):
         self.parseArgs()
 
-        if not self.getArgs().nic:
-            print('Error: missing --nic argument.')
+        with DbManager().session() as session:
+            dbNode = NodesDbHandler().getNode(
+                session, self._cm.getInstaller())
 
-            sys.exit(1)
+            # Validate device name
+            NetworkDevicesDbHandler().getNetworkDevice(
+                session, self.getArgs().nic)
 
-        dbm = DbManager()
-        session = dbm.openSession()
+            # Ensure it is a provisioning NIC that is being deleted
+            dbInstallerNic: Nic = None
 
-        dbNode = NodesDbHandler().getNode(
-            session, self._cm.getInstaller())
+            for dbInstallerNic in dbNode.hardwareprofile.nics:
+                if dbInstallerNic.networkdevice.name == self.getArgs().nic:
+                    break
+            else:
+                raise NicNotFound(
+                    'NIC [%s] is not a provisioning NIC' % (
+                        self.getArgs().nic))
 
-        # Validate device name
-        NetworkDevicesDbHandler().getNetworkDevice(
-            session, self.getArgs().nic)
+            hardwareProfiles = [
+                entry.hardwareprofile
+                for entry in dbInstallerNic.network.hardwareprofilenetworks
+                if entry.hardwareprofile != dbNode.hardwareprofile]
 
-        # Ensure it is a provisioning NIC that is being deleted
-        dbInstallerNic = None
+            if hardwareProfiles:
+                raise Exception(
+                    'Hardware profile(s) are associated with this'
+                    ' provisioning NIC: [%s]' % (
+                        ' '.join([hp.name for hp in hardwareProfiles])))
 
-        for dbInstallerNic in dbNode.hardwareprofile.nics:
-            if dbInstallerNic.networkdevice.name == self.getArgs().nic:
-                break
-        else:
-            raise NicNotFound(
-                'NIC [%s] is not a provisioning NIC' % (
-                    self.getArgs().nic))
+            session.query(
+                HardwareProfileNetwork).filter(
+                    HardwareProfileNetwork.network == dbInstallerNic.network).\
+                delete()
 
-        hardwareProfiles = [
-            entry.hardwareprofile
-            for entry in dbInstallerNic.network.hardwareprofilenetworks
-            if entry.hardwareprofile != dbNode.hardwareprofile]
+            session.query(HardwareProfileProvisioningNic).filter(
+                HardwareProfileProvisioningNic.nic == dbInstallerNic).delete()
 
-        if hardwareProfiles:
-            raise Exception(
-                'Hardware profile(s) are associated with this'
-                ' provisioning NIC: [%s]' % (
-                    ' '.join([hp.name for hp in hardwareProfiles])))
+            dbNetworkId = dbInstallerNic.network.id
 
-        session.query(
-            HardwareProfileNetwork).filter(
-                HardwareProfileNetwork.network == dbInstallerNic.network).\
-            delete()
+            networkDeviceId = dbInstallerNic.networkdevice.id
 
-        session.query(HardwareProfileProvisioningNic).filter(
-            HardwareProfileProvisioningNic.nic == dbInstallerNic).delete()
+            session.delete(dbInstallerNic)
 
-        dbNetworkId = dbInstallerNic.network.id
+            session.query(Network).filter(Network.id == dbNetworkId).delete()
 
-        networkDeviceId = dbInstallerNic.networkdevice.id
+            self._deleteNetworkDevice(session, networkDeviceId)
 
-        session.delete(dbInstallerNic)
+            session.commit()
 
-        session.query(Network).filter(Network.id == dbNetworkId).delete()
-
-        self._deleteNetworkDevice(session, networkDeviceId)
-
-        session.commit()
-
-        bUpdated = self._updateNetworkConfig(session, dbNode)
-
-        dbm.closeSession()
+            bUpdated = self._updateNetworkConfig(session, dbNode)
 
         if bUpdated and self.getArgs().bSync:
             print('Applying changes to Tortuga...')
@@ -129,14 +123,14 @@ class DeleteNicApp(TortugaCli):
             .all()]
 
         if not results:
-            results = [entry for entry in session.query(Nics).filter(
-                Nics.networkDeviceId == networkDeviceId).all()]
+            results = [entry for entry in session.query(Nic).filter(
+                Nic.networkDeviceId == networkDeviceId).all()]
 
             if not results:
-                session.query(NetworkDevices).filter(
-                    NetworkDevices.id == networkDeviceId).delete()
+                session.query(NetworkDevice).filter(
+                    NetworkDevice.id == networkDeviceId).delete()
 
-    def _updateNetworkConfig(self, session, dbNode):
+    def _updateNetworkConfig(self, session: Session, dbNode: Node) -> bool:
         """
         Returns True if configuration files were changed.
         """
@@ -170,12 +164,14 @@ class DeleteNicApp(TortugaCli):
 
         return bUpdated
 
-    def _componentEnabled(self, session, dbSoftwareProfile, componentName): \
+    def _componentEnabled(self, session: Session,
+                          dbSoftwareProfile: SoftwareProfile,
+                          componentName: str) -> Component: \
             # pylint: disable=no-self-use
         dbComponents = session.query(
-            Components).filter(
-                Components.name == componentName).filter(
-                    Components.softwareprofiles.contains(
+            Component).filter(
+                Component.name == componentName).filter(
+                    Component.softwareprofiles.contains(
                         dbSoftwareProfile)).all()
 
         if not dbComponents:
@@ -184,5 +180,5 @@ class DeleteNicApp(TortugaCli):
         return dbComponents[0]
 
 
-if __name__ == '__main__':
+def main():
     DeleteNicApp().run()

@@ -25,9 +25,7 @@ class GetUsableNodesCli(TortugaCli):
     Get nodes that can be used in a software profile
     """
 
-    def __init__(self):
-        TortugaCli.__init__(self)
-
+    def parseArgs(self, usage=None):
         softwareProfileAttrGroup = _('Software Profile Attribute Options')
 
         self.addOptionGroup(
@@ -37,21 +35,16 @@ class GetUsableNodesCli(TortugaCli):
         self.addOptionToGroup(
             softwareProfileAttrGroup,
             '--software-profile',
-            metavar='SOFTWAREPROFILENAME',
+            metavar='NAME', required=True,
             dest='softwareProfile',
             help=_('Software profile'))
 
+        super().parseArgs(usage=usage)
+
     def runCommand(self):
         self.parseArgs(_("""
-    get-usable-nodes --software-profile SOFTWAREPROFILENAME
-
-Description:
-    The get-usable-nodes tool returns the list of nodes that are
-    able to use the specified software profile.
+Display list of nodes able to use the specified software profile.
 """))
-
-        if not self.getArgs().softwareProfile:
-            self.usage(_('Missing --software-profile option'))
 
         print('\n'.join(
             [node.getName()
@@ -59,5 +52,5 @@ Description:
                  self.getArgs().softwareProfile)]))
 
 
-if __name__ == '__main__':
+def main():
     GetUsableNodesCli().run()

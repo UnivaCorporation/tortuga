@@ -106,7 +106,7 @@ class AddNicCli(TortugaCli):
         super().parseArgs(usage=usage)
 
     def runCommand(self):
-        self.parseArgs(_('''add-nic <--nic=NIC>|<--autodetect>'''))
+        self.parseArgs()
 
         if self.getArgs().autodetect:
             self._findUnmanagedNics()
@@ -442,5 +442,5 @@ class AddNicCli(TortugaCli):
         return bUpdated
 
 
-if __name__ == '__main__':
+def main():
     AddNicCli().run()

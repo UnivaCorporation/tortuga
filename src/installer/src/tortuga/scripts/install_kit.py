@@ -25,6 +25,8 @@ class InstallKitCli(KitCli):
 
     def __init__(self):
         KitCli.__init__(self, validArgCount=1)
+
+    def parseArgs(self, usage=None):
         kitPkgGroup = _('Kit Package Option')
         self.addOptionGroup(
             kitPkgGroup, _('If kit package URL is provided, kit'
@@ -60,6 +62,8 @@ class InstallKitCli(KitCli):
             kitAttrGroup, '--iteration', dest='iteration', default=None,
             help=_('kit iteration'))
 
+        super().parseArgs(usage=usage)
+
     def runCommand(self):
         self.parseArgs(_('Adds new application kit to Tortuga'))
 
@@ -77,5 +81,5 @@ class InstallKitCli(KitCli):
         return api.installKit(name, version, iteration, key)
 
 
-if __name__ == '__main__':
+def main():
     InstallKitCli().run()

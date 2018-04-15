@@ -48,7 +48,7 @@ session_nodes = []
 # session.
 reservedIps = []
 
-logger = logging.getLogger('tortuga.addhost.addhostserverlocal')
+logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 
