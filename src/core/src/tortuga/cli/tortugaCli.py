@@ -118,15 +118,15 @@ class TortugaCli(metaclass=ABCMeta):
 
         self.addOptionToGroup(
             commonGroup, '--url',
-            help=_('UniCloud web service URL'))
+            help=_('Tortuga web service URL'))
 
         self.addOptionToGroup(
             commonGroup, '--username', dest='username',
-            help=_('UniCloud web service user name'))
+            help=_('Tortuga web service user name'))
 
         self.addOptionToGroup(
             commonGroup, '--password', dest='password',
-            help=_('UniCloud web service password'))
+            help=_('Tortuga web service password'))
 
         if usage:
             self._parser.description = usage
@@ -179,7 +179,7 @@ class TortugaCli(metaclass=ABCMeta):
 
     def __get_web_service_options(self):
         """
-        Read UniCloud web service credentials from config file, environment,
+        Read Tortuga web service credentials from config file, environment,
         or command-line. Command-line overrides either config file or
         environment.
 
@@ -209,25 +209,25 @@ class TortugaCli(metaclass=ABCMeta):
                 if cfg.has_section('default') and \
                    cfg.has_option('default', 'url') else None
 
-        # UNICLOUD_WS_URL
+        # TORTUGA_WS_URL
         if self._args.url:
             # Command-line "--server" argument overrides env var and
             # setting contained within '/etc/profile.nii'
             url = self._args.url
-        elif os.getenv('UNICLOUD_WS_URL'):
-            url = os.getenv('UNICLOUD_WS_URL')
+        elif os.getenv('TORTUGA_WS_URL'):
+            url = os.getenv('TORTUGA_WS_URL')
 
-        # UNICLOUD_WS_USERNAME
+        # TORTUGA_WS_USERNAME
         if self._args.username:
             username = self._args.username
-        elif os.getenv('UNICLOUD_WS_USERNAME'):
-            username = os.getenv('UNICLOUD_WS_USERNAME')
+        elif os.getenv('TORTUGA_WS_USERNAME'):
+            username = os.getenv('TORTUGA_WS_USERNAME')
 
-        # UNICLOUD_WS_PASSWORD
+        # TORTUGA_WS_PASSWORD
         if self._args.password:
             password = self._args.password
-        elif os.getenv('UNICLOUD_WS_PASSWORD'):
-            password = os.getenv('UNICLOUD_WS_PASSWORD')
+        elif os.getenv('TORTUGA_WS_PASSWORD'):
+            password = os.getenv('TORTUGA_WS_PASSWORD')
 
         return url, username, password
 
