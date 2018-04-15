@@ -210,7 +210,6 @@ class NodeDbApi(TortugaDbApi):
             if dbNode.softwareprofile:
                 self.loadRelations(dbNode.softwareprofile, {
                     'partitions': True,
-                    'packages': True,
                 })
 
                 for component in dbNode.softwareprofile.components:

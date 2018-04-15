@@ -20,8 +20,6 @@ from sqlalchemy.orm.exc import NoResultFound
 from tortuga.db.componentsDbHandler import ComponentsDbHandler
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
 from tortuga.exceptions.hardwareProfileNotFound import HardwareProfileNotFound
-from tortuga.exceptions.packageAlreadyExists import PackageAlreadyExists
-from tortuga.exceptions.packageNotFound import PackageNotFound
 from tortuga.exceptions.partitionAlreadyExists import PartitionAlreadyExists
 from tortuga.exceptions.partitionNotFound import PartitionNotFound
 from tortuga.exceptions.softwareProfileComponentAlreadyExists import \
@@ -35,7 +33,6 @@ from tortuga.exceptions.softwareUsesHardwareNotFound import \
     SoftwareUsesHardwareNotFound
 
 from .models.hardwareProfile import HardwareProfile
-from .models.package import Package
 from .models.partition import Partition
 from .models.softwareProfile import SoftwareProfile
 
@@ -266,76 +263,6 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
         self.getLogger().debug(
             'Deleted component [%s] from software profile [%s]' % (
                 compDescr, dbSoftwareProfile.name))
-
-    def __getPackage(self, session, packageName): \
-            # pylint: disable=no-self-use
-        return session.query(Package).filter(
-            Package.name == packageName).one()
-
-    def addPackageToSoftwareProfile(self, session, packageName,
-                                    softwareProfileName):
-        """
-        Add package to software profile
-        """
-
-        self.getLogger().debug(
-            'Adding package [%s] to software profile [%s]' % (
-                packageName, softwareProfileName))
-
-        # Check if package record already exists
-        try:
-            dbPackage = self.__getPackage(session, packageName)
-        except NoResultFound:
-            dbPackage = None
-
-        dbSoftwareProfile = self.getSoftwareProfile(
-            session, softwareProfileName)
-
-        if not dbPackage:
-            dbPackage = Package(packageName)
-
-        if dbPackage in dbSoftwareProfile.packages:
-            raise PackageAlreadyExists(
-                'Package [%s] already exists for software'
-                ' profile [%s]' % (packageName, softwareProfileName))
-
-        self.getLogger().debug(
-            'Adding package [%s] to software profile [%s]' % (
-                packageName, softwareProfileName))
-
-        dbSoftwareProfile.packages.append(dbPackage)
-
-    def deletePackageFromSoftwareProfile(self, session, packageName,
-                                         softwareProfileName):
-        """
-        Delete package from software profile.
-        """
-
-        self.getLogger().debug(
-            'Deleting package [%s] from software profile [%s]' % (
-                packageName, softwareProfileName))
-
-        try:
-            dbPackage = self.__getPackage(session, packageName)
-        except NoResultFound:
-            dbPackage = None
-
-        dbSoftwareProfile = self.getSoftwareProfile(
-            session, softwareProfileName)
-
-        if dbPackage not in dbSoftwareProfile.packages:
-            raise PackageNotFound(
-                'Package [%s] does not exist for software profile [%s]' % (
-                    packageName, softwareProfileName))
-
-        dbSoftwareProfile.packages.remove(dbPackage)
-
-        if not dbPackage.softwareprofiles:
-            session.delete(dbPackage)
-
-        self.getLogger().debug(
-            'Deleted package [%s] from software profile ID [%s]' % (
-                packageName, softwareProfileName))
 
     def __getPartition(self, session, name):  # pylint: disable=no-self-use
         return session.query(Partition).filter(
