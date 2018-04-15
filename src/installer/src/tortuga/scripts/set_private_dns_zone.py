@@ -33,12 +33,12 @@ from tortuga.db.nodesDbHandler import NodesDbHandler
 
 
 class SetPrivateDnsZoneApp(TortugaCli):
-    def __init__(self):
-        super(SetPrivateDnsZoneApp, self).__init__(validArgCount=1)
-
+    def parseArgs(self, usage=None):
         self.addOption(
             '--force', action='store_true', default='false',
             dest='bForce', help='Force update of domain name')
+
+        self.addOption('zone', nargs='?')
 
         self.dbm = DbManager()
 
@@ -50,6 +50,8 @@ class SetPrivateDnsZoneApp(TortugaCli):
             self._cm.getRoot(), 'config/base/dns-component.conf')
 
         self._loadDNSConfig()
+
+        super().parseArgs(usage=usage)
 
     def _loadDNSConfig(self):
         self.cfg.read(self.cfgFileName)
@@ -166,19 +168,17 @@ class SetPrivateDnsZoneApp(TortugaCli):
     def runCommand(self):
         self.parseArgs()
 
-        args = self.getArgs()
-
         # Remove remnants
         oldDnsZone = self._getOldDnsZone()
 
-        if len(args) != 1:
+        dnsZone = self.getArgs().zone
+
+        if dnsZone:
             # Output current DNS zone and exit
 
             sys.stdout.write('{0}\n'.format(oldDnsZone))
 
             sys.exit(0)
-
-        dnsZone = args[0]
 
         if oldDnsZone == dnsZone.lower():
             if not self.getArgs().bForce:
@@ -221,5 +221,5 @@ class SetPrivateDnsZoneApp(TortugaCli):
             tortugaSubprocess.executeCommand(cmd)
 
 
-if __name__ == '__main__':
+def main():
     SetPrivateDnsZoneApp().run()

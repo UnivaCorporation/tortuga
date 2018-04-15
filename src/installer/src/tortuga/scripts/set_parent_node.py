@@ -26,18 +26,9 @@ class SetParentNode(KitCli):
     def runCommand(self):
 
         self.parseArgs('''
-    set-parent-node NODENAME PARENTNODENAME
-
-Description:
-    The  set-parent-node  tool sets the parent of a specified node.  This
-    relationship is currently used for virtual machine  nodes  where  the
-    parent  is  equivalent  to the current hypervisor the node is running
-    on.
-
-Arguments:
-    nodeName         The name of the node to change.
-
-    parentNodeName   The name of the parentNode. Use "null" to clear.
+Sets the parent of a specified node. This relationship is currently used for
+virtual machine nodes where the parent is equivalent to the current
+hypervisor the node is running on.
 ''')
 
         if self.getNArgs() != 2:
@@ -56,5 +47,5 @@ Arguments:
         api.setParentNode(nodeName, parentNodeName)
 
 
-if __name__ == '__main__':
+def main():
     SetParentNode().run()

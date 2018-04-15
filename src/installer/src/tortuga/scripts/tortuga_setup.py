@@ -86,15 +86,8 @@ class TortugaSetup(TortugaCli):
         self._logger.info('=' * 75)
 
         self.parseArgs(_("""
-    tortuga-setup [ --force --defaults -i <RESPONSEFILE> ]
-
-Description:
-    tortuga-setup is run after the installation of the Tortuga software
-    in order to configure the base cluster environment.
-
-    A  series of questions is asked with the answers determining the con-
-    figuration to apply.  This command is only run once in a given  clus-
-    ter install.
+tortuga-setup is run after the installation of the Tortuga software
+in order to configure the base cluster environment.
 """))
 
         self._logger.info('command-line args: %s' % (' '.join(sys.argv[1:])))
@@ -133,5 +126,5 @@ Description:
             raise
 
 
-if __name__ == '__main__':
+def main():
     TortugaSetup().run()

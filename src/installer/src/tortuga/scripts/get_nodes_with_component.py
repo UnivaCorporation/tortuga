@@ -27,9 +27,7 @@ class GetNodesWithComponentCli(TortugaCli):
     Get list of nodes with a specific component enabled
     """
 
-    def __init__(self):
-        TortugaCli.__init__(self)
-
+    def parseArgs(self, usage=None):
         nodeProfileAttrGroup = _('Node Attribute Options')
 
         self.addOptionGroup(
@@ -51,46 +49,32 @@ class GetNodesWithComponentCli(TortugaCli):
 
         self.addOptionToGroup(
             componentProfileAttrGroup, '--kit-name', dest='kitName',
+            metavar='NAME', required=True,
             help=_('kit name'))
 
         self.addOptionToGroup(
             componentProfileAttrGroup, '--kit-version', dest='kitVersion',
+            metavar='VERSION', required=True,
             help=_('kit version'))
 
         self.addOptionToGroup(
             componentProfileAttrGroup, '--kit-iteration',
+            metavar='ITERATION', required=True,
             dest='kitIteration',
             help=_('kit iteration name'))
 
         self.addOptionToGroup(
             componentProfileAttrGroup, '--component-name',
+            metavar='NAME', required=True,
             dest='componentName', help=_('component name'))
+
+        super().parseArgs(usage=usage)
 
     def runCommand(self):
         self.parseArgs(_("""
-    get-nodes-with-component --kit-name=KITNAME  --kit-version=KITVERSION
-       --kit-iteration=KITITERATION     --component-name=COMPONENTNAME
-       [ --state=STATE --count=COUNT ]
-
-Description:
-    The get-nodes-with-component tool returns the list of nodes that have
-    the given component enabled.  The result set can be filtered by state
-    and count.
+Returns the list of nodes that have the given component enabled. The
+result set can be filtered by state and count.
 """))
-        if not self.getArgs().kitName:
-            raise InvalidCliRequest(_('The --kit-name option must be set.'))
-
-        if not self.getArgs().kitVersion:
-            raise InvalidCliRequest(
-                _('The --kit-version option must be set.'))
-
-        if not self.getArgs().kitIteration:
-            raise InvalidCliRequest(
-                _('The --kit-iteration option must be set.'))
-
-        if not self.getArgs().componentName:
-            raise InvalidCliRequest(
-                _('The --component-name option must be set.'))
 
         state = self.getArgs().state
 
@@ -130,5 +114,5 @@ Description:
                                 return
 
 
-if __name__ == '__main__':
+def main():
     GetNodesWithComponentCli().run()

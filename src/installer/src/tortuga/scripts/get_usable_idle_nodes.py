@@ -26,33 +26,26 @@ class GetUsableIdleNodesCli(TortugaCli):
     Get nodes that can be used in a software profile
     """
 
-    def __init__(self):
-        TortugaCli.__init__(self)
-
-        softwareProfileAttrGroup = _('Node Group Attribute Options')
+    def parseArgs(self, usage=None):
+        softwareProfileAttrGroup = _('Software Profile Attribute Options')
 
         self.addOptionGroup(
             softwareProfileAttrGroup,
-            _('Node group name must be specified.'))
+            _('Software profile must be specified.'))
 
         self.addOptionToGroup(softwareProfileAttrGroup,
                               '--software-profile',
                               dest='softwareProfile',
-                              metavar='SOFTWAREPROFILENAME',
+                              metavar='NAME', required=True,
                               help=_('software profile'))
+
+        super().parseArgs(usage=usage)
 
     def runCommand(self):
         self.parseArgs(_("""
-    get-usable-nodes --software-profile SOFTWAREPROFILENAME
-
-Description:
-    The get-usable-nodes tool returns the list of nodes that are
-    able to use the specified software profile.
+Display list of nodes that are able to use the specified software profile.
 """))
         softwareProfileName = self.getArgs().softwareProfile
-        if not softwareProfileName:
-            print('The "--software-profile" option is required')
-            return
 
         nodeApi = getNodeApi(self.getUsername(), self.getPassword())
 
@@ -72,5 +65,5 @@ Description:
                 print('%s' % node)
 
 
-if __name__ == '__main__':
+def main():
     GetUsableIdleNodesCli().run()

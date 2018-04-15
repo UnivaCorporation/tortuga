@@ -22,7 +22,6 @@ from tortuga.softwareprofile.softwareProfileFactory \
 from tortuga.hardwareprofile.hardwareProfileFactory \
     import getHardwareProfileApi
 from tortuga.node.nodeApiFactory import getNodeApi
-from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
 
 
 class GetIdleChildrenCli(TortugaCli):
@@ -33,6 +32,7 @@ class GetIdleChildrenCli(TortugaCli):
     def __init__(self):
         TortugaCli.__init__(self)
 
+    def parseArgs(self, usage=None):
         softwareProfileAttrGroup = _('Idle Children Attribute Options')
 
         self.addOptionGroup(
@@ -40,21 +40,18 @@ class GetIdleChildrenCli(TortugaCli):
             _('Software Profile name must be specified.'))
 
         self.addOptionToGroup(softwareProfileAttrGroup,
-                              '--software-profile',
+                              '--software-profile', metavar='NAME',
                               dest='softwareProfileName',
+                              required=True,
                               help=_('software profile name'))
+
+        super().parseArgs(usage=usage)
 
     def runCommand(self):
         self.parseArgs(_("""
-    get-idle-children --software-profile=SOFTWAREPROFILENAME
-
-Description:
-    Get the list of idle nodes associated with a given software  profile.
+Get the list of idle nodes associated with a given software profile.
 """))
         softwareProfileName = self.getArgs().softwareProfileName
-        if not softwareProfileName:
-            raise InvalidCliRequest(
-                _('Software profile name must be specified'))
 
         swapi = getSoftwareProfileApi(self.getUsername(), self.getPassword())
         hwapi = getHardwareProfileApi(self.getUsername(), self.getPassword())
@@ -88,5 +85,5 @@ Description:
                 softwareProfileName))
 
 
-if __name__ == '__main__':
+def main():
     GetIdleChildrenCli().run()

@@ -29,6 +29,8 @@ class GetChildrenCli(TortugaCli):
     def __init__(self):
         TortugaCli.__init__(self)
 
+
+    def parseArgs(self, usage=None):
         softwareProfileAttrGroup = _('Idle Children Attribute Options')
 
         self.addOptionGroup(
@@ -36,19 +38,16 @@ class GetChildrenCli(TortugaCli):
             _('Software Profile name must be specified.'))
 
         self.addOptionToGroup(softwareProfileAttrGroup, '--node',
+                              metavar='NAME', required=True,
                               dest='nodeName', help=_('node name'))
+
+        super().parseArgs(usage=usage)
 
     def runCommand(self):
         self.parseArgs(_("""
-    get-children --node=NODENAME
-
-Description:
-    The get-children tool returns all nodes that have the given node as a
-    parent.
+Returns all nodes that have the given node as a parent.
 """))
         nodeName = self.getArgs().nodeName
-        if not nodeName:
-            raise InvalidCliRequest(_('Node name must be specified'))
 
         napi = getNodeApi(self.getUsername(), self.getPassword())
 
@@ -60,5 +59,5 @@ Description:
         print('\n'.join([node.getName() for node in nodeList]))
 
 
-if __name__ == '__main__':
+def main():
     GetChildrenCli().run()

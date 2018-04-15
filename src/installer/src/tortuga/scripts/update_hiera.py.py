@@ -42,7 +42,3 @@ def main():
                               default_flow_style=False))
 
     shutil.move(fn + '.new', fn)
-
-
-if __name__ == '__main__':
-    main()

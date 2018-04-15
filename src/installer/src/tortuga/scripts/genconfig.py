@@ -46,5 +46,5 @@ class GenconfigAppClass(TortugaCli):
         component._configure(nodegroup, sys.stdout)
 
 
-if __name__ == '__main__':
+def main():
     GenconfigAppClass().run()

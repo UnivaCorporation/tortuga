@@ -55,5 +55,5 @@ profile."""))
                     print(hp.getName())
 
 
-if __name__ == '__main__':
+def main():
     GetUsableHardwareProfilesCli().run()
