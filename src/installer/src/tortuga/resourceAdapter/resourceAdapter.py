@@ -22,7 +22,6 @@ import configparser
 import subprocess
 import csv
 import logging
-import gevent
 from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
 from tortuga.config.configManager import ConfigManager
 from tortuga.os_utility.osUtility import getOsObjectFactory
@@ -129,30 +128,6 @@ class ResourceAdapter(object): \
     def deleteNode(self, nodeIds):
         """Remove the given node (active or idle) from the system"""
         self.__trace(nodeIds)
-
-    def _async_delete_nodes(self, nodes):
-        """
-        Asynchronously delete nodes; calls "ResourceAdapter._delete_node()"
-        method for each deleted nodes
-
-        :param dbNodes: list of Nodes objects
-        :return: None
-        """
-        greenlets = []
-
-        for node in nodes:
-            greenlets.append(gevent.spawn(self._delete_node, node))
-
-        # TODO: implement timeout
-        gevent.joinall(greenlets)
-
-    def _delete_node(self, node):
-        """
-        Abstract method called to delete node from
-        "ResourceAdapter._async_delete_nodes()"
-
-        :param node: Nodes object
-        """
 
     def transferNode(self, nodeIdSoftwareProfileTuples,
                      newSoftwareProfileName):
