@@ -18,9 +18,9 @@ from typing import List, NoReturn, Optional, Union
 
 from sqlalchemy.orm.session import Session
 
-from tortuga.db.hardwareProfiles import HardwareProfiles
-from tortuga.db.nodes import Nodes
-from tortuga.db.softwareProfiles import SoftwareProfiles
+from tortuga.db.models.hardwareProfile import HardwareProfile
+from tortuga.db.models.node import Node as NodeModel
+from tortuga.db.models.softwareProfile import SoftwareProfile
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.node.nodeManager import NodeManager
 from tortuga.objects.node import Node
@@ -38,10 +38,10 @@ class NodeApi(TortugaApi):
         self._nodeManager = NodeManager()
 
     def createNewNode(self, session: Session, addNodeRequest: dict,
-                      dbHardwareProfile: HardwareProfiles,
-                      dbSoftwareProfile: Optional[Union[SoftwareProfiles, None]] = None,
+                      dbHardwareProfile: HardwareProfile,
+                      dbSoftwareProfile: Optional[Union[SoftwareProfile, None]] = None,
                       validateIp: bool = True, bGenerateIp: bool = True,
-                      dns_zone: Optional[str] = None) -> Nodes:
+                      dns_zone: Optional[str] = None) -> NodeModel:
         try:
             return self._nodeManager.createNewNode(
                 session, addNodeRequest, dbHardwareProfile,
@@ -77,6 +77,20 @@ class NodeApi(TortugaApi):
         """Get node id by name"""
         try:
             return self._nodeManager.getNode(name, optionDict=optionDict)
+        except TortugaException:
+            raise
+        except Exception as ex:
+            self.getLogger().exception(
+                'Fatal error retrieving node [{}]'.format(name))
+
+            raise TortugaException(exception=ex)
+
+    def getNode2(self, session: Session, name: str) -> NodeModel:
+        """
+        Get node by name
+        """
+        try:
+            return self._nodeManager.getNode2(session, name)
         except TortugaException:
             raise
         except Exception as ex:
@@ -341,9 +355,6 @@ class NodeApi(TortugaApi):
     def addStorageVolume(self, nodeName: str, volume: str,
                          isDirect: Optional[str] = 'DEFAULT'):
         try:
-            if isDirect == 'DEFAULT':
-                return self._nodeManager.addStorageVolume(nodeName, volume)
-
             return self._nodeManager.addStorageVolume(
                 nodeName, volume, isDirect)
         except TortugaException:

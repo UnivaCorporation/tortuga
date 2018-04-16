@@ -25,10 +25,11 @@ from typing import NoReturn, List, Optional, Union
 
 from sqlalchemy.orm.session import Session
 
-from tortuga.db.hardwareProfiles import HardwareProfiles
-from tortuga.db.networks import Networks
-from tortuga.db.nics import Nics
-from tortuga.db.nodes import Nodes
+from tortuga.db.models.hardwareProfile import HardwareProfile
+from tortuga.db.models.softwareProfile import SoftwareProfile
+from tortuga.db.models.network import Network
+from tortuga.db.models.nic import Nic
+from tortuga.db.models.node import Node
 from tortuga.db.nodesDbHandler import NodesDbHandler
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.invalidMacAddress import InvalidMacAddress
@@ -47,7 +48,7 @@ session_nodes = []
 # session.
 reservedIps = []
 
-logger = logging.getLogger('tortuga.addhost.addhostserverlocal')
+logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 
@@ -57,7 +58,7 @@ class AddHostServerLocal(TortugaApi):
         self._nodesDbHandler = NodesDbHandler()
 
     @staticmethod
-    def clear_session_nodes(nodes: List[Nodes]) -> NoReturn:
+    def clear_session_nodes(nodes: List[Node]) -> NoReturn:
         """Remove session entries for specified nodes"""
 
         with session_nodes_lock:
@@ -65,7 +66,7 @@ class AddHostServerLocal(TortugaApi):
                 AddHostServerLocal.clear_session_node(node, lock=False)
 
     @staticmethod
-    def clear_session_node(node: Nodes, lock: bool = True) -> NoReturn:
+    def clear_session_node(node: Node, lock: bool = True) -> NoReturn:
         if lock:
             session_nodes_lock.acquire()
 
@@ -95,11 +96,12 @@ class AddHostServerLocal(TortugaApi):
             if lock:
                 session_nodes_lock.release()
 
-    def initializeNode(self, session: Session, dbNode: Nodes,
-                       dbHardwareProfile: HardwareProfiles,
-                       dbSoftwareProfile, nic_defs: List[dict],
-                       bValidateIp: Optional[bool] = True,
-                       bGenerateIp: Optional[bool] = True,
+    def initializeNode(self, session: Session, dbNode: Node,
+                       dbHardwareProfile: HardwareProfile,
+                       dbSoftwareProfile: SoftwareProfile,
+                       nic_defs: List[dict],
+                       bValidateIp: bool = True,
+                       bGenerateIp: bool = True,
                        dns_zone: Optional[Union[str, None]] = None) -> NoReturn: \
             # pylint: disable=unused-argument
         """
@@ -275,12 +277,12 @@ class AddHostServerLocal(TortugaApi):
 
         return s
 
-    def _initializeNics(self, session: Session, dbNode: Nodes,
-                        dbHardwareProfile: HardwareProfiles,
+    def _initializeNics(self, session: Session, dbNode: Node,
+                        dbHardwareProfile: HardwareProfile,
                         nic_defs: List[dict], bValidateIp: bool = True,
-                        bGenerateIp: bool = True) -> List[Nics]:
+                        bGenerateIp: bool = True) -> List[Nic]:
         """
-        Return list of Nics objects reflecting the configuration of dbNode
+        Return list of Nic objects reflecting the configuration of dbNode
         and nic definitions provided in nic_defs.
 
         :raises NetworkNotFound:
@@ -297,7 +299,7 @@ class AddHostServerLocal(TortugaApi):
         for nic_def, dbHardwareProfileNetwork in itertools.zip_longest(
                 nic_defs, hwpnetworks, fillvalue=None):
             # Create a nic for each associated hardware profile network
-            dbNic = Nics()
+            dbNic = Nic()
 
             dbNic.node = dbNode
 
@@ -358,13 +360,13 @@ class AddHostServerLocal(TortugaApi):
         return nics
 
     def _validate_mac_address(self, session: Session, mac_address: str,
-                              network: Networks) -> str:
+                              network: Network) -> str:
         """
         Validate a MAC address and make sure it is not a duplicate.
 
         :raises InvalidMacAddress:
         :raises MacAddressAlreadyExists:
-        
+
         """
 
         if not mac_address:
@@ -412,7 +414,7 @@ class AddHostServerLocal(TortugaApi):
     def _validate_ip_address(self, ip, network) -> NoReturn:
         """
         :raises NetworkNotFound:
-               
+
         """
         #
         # Only validate IP addresses in 'local' hardware profiles

@@ -13,18 +13,18 @@
 # limitations under the License.
 
 from typing import List, Type
-from tortuga.objects.tortugaObject import TortugaObject
-from tortuga.db.dbManager import DbManager
-from tortuga.db.resourceAdapters import ResourceAdapters
-from tortuga.db.tortugaDbApi import TortugaDbApi
-from tortuga.exceptions.tortugaException import TortugaException
+
 from tortuga.db import resourceAdaptersDbHandler
+from tortuga.db.dbManager import DbManager
+from tortuga.db.tortugaDbApi import TortugaDbApi
+from tortuga.exceptions.resourceAdapterAlreadyExists import \
+    ResourceAdapterAlreadyExists
+from tortuga.exceptions.resourceAdapterNotFound import ResourceAdapterNotFound
+from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.objects.resourceAdapter import ResourceAdapter
-from tortuga.exceptions.resourceAdapterAlreadyExists \
-    import ResourceAdapterAlreadyExists
-from tortuga.exceptions.resourceAdapterNotFound \
-    import ResourceAdapterNotFound
-from tortuga.objects.tortugaObject import TortugaObjectList
+from tortuga.objects.tortugaObject import TortugaObject, TortugaObjectList
+
+from .models.resourceAdapter import ResourceAdapter as ResourceAdapterModel
 
 
 class ResourceAdapterDbApi(TortugaDbApi):
@@ -125,7 +125,7 @@ class ResourceAdapterDbApi(TortugaDbApi):
     def getResourceAdapterList(self) -> List[ResourceAdapter]:
         try:
             session = DbManager().openSession()
-            db_ra_list: List[ResourceAdapters] = \
+            db_ra_list: List[ResourceAdapterModel] = \
                 self._resourceAdaptersDbHandler.getResourceAdapterList(
                     session)
             ra_list: List[ResourceAdapter] = \
@@ -145,7 +145,7 @@ class ResourceAdapterDbApi(TortugaDbApi):
 
     def getTortugaObjectList(self,
                              cls: Type[ResourceAdapter],
-                             db_list: List[ResourceAdapters]
+                             db_list: List[ResourceAdapterModel]
                              ) -> List[ResourceAdapter]:
         item_list: List[ResourceAdapter] = []
 

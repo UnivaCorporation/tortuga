@@ -22,19 +22,17 @@ from typing import Dict, List
 
 from tortuga.db.dbManager import DbManager
 from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
-from tortuga.db.nodes import Nodes
+from tortuga.db.models.node import Node
 from tortuga.db.nodesDbHandler import NodesDbHandler
 from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
 from tortuga.exceptions.commandFailed import CommandFailed
 from tortuga.exceptions.ipAlreadyExists import IpAlreadyExists
-from tortuga.exceptions.macAddressAlreadyExists \
-    import MacAddressAlreadyExists
+from tortuga.exceptions.macAddressAlreadyExists import MacAddressAlreadyExists
 from tortuga.exceptions.nodeAlreadyExists import NodeAlreadyExists
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.exceptions.parameterNotFound import ParameterNotFound
 from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
-from tortuga.os_utility import osUtility
-from tortuga.os_utility import tortugaSubprocess
+from tortuga.os_utility import osUtility, tortugaSubprocess
 from tortuga.resourceAdapter.resourceAdapter import ResourceAdapter
 from tortuga.resourceAdapter.utility import get_provisioning_nic, \
     get_provisioning_nics
@@ -243,7 +241,7 @@ class Default(ResourceAdapter):
         return None
 
     def start(self, addNodesRequest, dbSession, dbHardwareProfile,
-              dbSoftwareProfile=None) -> List[Nodes]:
+              dbSoftwareProfile=None) -> List[Node]:
         """
         Raises:
             CommandFailed
@@ -324,7 +322,7 @@ class Default(ResourceAdapter):
 
     def __add_predefined_nodes(self, addNodesRequest: dict, dbSession,
                                dbHardwareProfile, dbSoftwareProfile,
-                               dns_zone: str = None) -> List[Nodes]:
+                               dns_zone: str = None) -> List[Node]:
         nodeDetails = addNodesRequest['nodeDetails'] \
             if 'nodeDetails' in addNodesRequest else []
 

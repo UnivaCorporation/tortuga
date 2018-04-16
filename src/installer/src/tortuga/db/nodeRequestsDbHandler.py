@@ -15,8 +15,10 @@
 # pylint: disable=not-callable,no-member,multiple-statements
 
 from sqlalchemy.orm.session import Session
-from tortuga.db.nodeRequests import NodeRequests
+
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
+
+from .models.nodeRequest import NodeRequest
 
 
 class NodeRequestsDbHandler(TortugaDbObjectHandler):
@@ -25,19 +27,19 @@ class NodeRequestsDbHandler(TortugaDbObjectHandler):
 
     def get_all(self, session: Session): \
             # pylint: disable=no-self-use
-        return session.query(NodeRequests).all()
+        return session.query(NodeRequest).all()
 
     def get_by_id(self, session: Session, node_request_id: int): \
             # pylint: disable=no-self-use
-        return session.query(NodeRequests).get(node_request_id)
+        return session.query(NodeRequest).get(node_request_id)
 
     def get_first_by_state(self, session: Session, state: str): \
             # pylint: disable=no-self-use
-        return session.query(NodeRequests).filter(
-            NodeRequests.state == state).first()
+        return session.query(NodeRequest).filter(
+            NodeRequest.state == state).first()
 
     def get_by_addHostSession(self, session: Session,
                               add_host_session: str): \
             # pylint: disable=no-self-use
-        return session.query(NodeRequests).filter(
-            NodeRequests.addHostSession == add_host_session).first()
+        return session.query(NodeRequest).filter(
+            NodeRequest.addHostSession == add_host_session).first()

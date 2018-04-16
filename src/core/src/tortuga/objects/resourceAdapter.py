@@ -16,7 +16,7 @@ from typing import Any, Dict
 
 from tortuga.objects.tortugaObject import TortugaObject
 from .resourceadapter_settings import BaseSetting, get_setting_class
-from .schemas.resourceadapter_settings import BaseSettingSchema
+from tortuga.objects.resourceadapter_settings.base import BaseSettingSchema
 
 
 class ResourceAdapter(TortugaObject): \
@@ -90,7 +90,7 @@ class ResourceAdapter(TortugaObject): \
         if not settings:
             settings = {}
 
-        deserialized: Dict[str, Any] = {}
+        deserialized: Dict[str, BaseSetting] = {}
 
         for key, setting in settings.items():
             setting_class = get_setting_class(setting['type'])

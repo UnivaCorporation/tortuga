@@ -13,22 +13,24 @@
 # limitations under the License.
 
 from sqlalchemy import and_
+
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
-from tortuga.db.tags import Tags
+
+from .models.tag import Tag
 
 
 class TagsDbHandler(TortugaDbObjectHandler):
     def get_tags(self, session): \
             # pylint: disable=no-self-use
-        return session.query(Tags).all()
+        return session.query(Tag).all()
 
     def get_tag(self, session, name, value=None): \
             # pylint: disable=no-self-use
         if value is None:
-            return session.query(Tags).filter(Tags.name == name).first()
+            return session.query(Tag).filter(Tag.name == name).first()
 
-        return session.query(Tags).filter(
-            and_(Tags.name == name, Tags.value == value)).first()
+        return session.query(Tag).filter(
+            and_(Tag.name == name, Tag.value == value)).first()
 
     def delete(self, session, name):
         tag = self.get_tag(session, name)

@@ -18,11 +18,17 @@ import socket
 import string
 import time
 from random import choice
+from typing import Any, Dict, List, NoReturn, Optional, Union
 
 from jinja2 import Template
-from typing import Any, Dict, List, Optional
+
 from tortuga.db.globalParameterDbApi import GlobalParameterDbApi
 from tortuga.db.helper import get_installer_hostname_suffix
+from tortuga.db.models.hardwareProfile import HardwareProfile
+from tortuga.db.models.nic import Nic
+from tortuga.db.models.node import Node
+from tortuga.db.models.partition import Partition
+from tortuga.db.models.softwareProfile import SoftwareProfile
 from tortuga.exceptions.nicNotFound import NicNotFound
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.exceptions.parameterNotFound import ParameterNotFound
@@ -30,7 +36,7 @@ from tortuga.os.osSupportBase import OsSupportBase
 from tortuga.utility.bootParameters import getBootParameters
 
 
-def sort_by_devicename_comparator(nic1, nic2):
+def sort_by_devicename_comparator(nic1: Nic, nic2: Nic) -> int:
     if nic1.networkdevice is None and nic2.networkdevice is None:
         return 0
 
@@ -64,8 +70,9 @@ class OSSupport(OsSupportBase):
 
         self._cm.setDepotDir(depot_dir)
 
-    def getPXEReinstallSnippet(self, ksurl, node, hardwareprofile=None,
-                               softwareprofile=None): \
+    def getPXEReinstallSnippet(self, ksurl: str, node: Node,
+                               hardwareprofile: Optional[Union[HardwareProfile, None]] = None,
+                               softwareprofile: Optional[Union[SoftwareProfile, None]] = None) -> str: \
             # pylint: disable=no-self-use
         # General kickstart/kernel parameters
 
@@ -116,7 +123,9 @@ class OSSupport(OsSupportBase):
 
         return result
 
-    def __get_kickstart_network_entry(self, dbNode, hardwareprofile, nic): \
+    def __get_kickstart_network_entry(self, dbNode: None,
+                                      hardwareprofile: HardwareProfile,
+                                      nic: Nic) -> str: \
             # pylint: disable=no-self-use
         bProvisioningNic = nic.network == hardwareprofile.nics[0].network
 
@@ -190,7 +199,7 @@ class OSSupport(OsSupportBase):
 
         return ' '.join(netargs)
 
-    def __validate_node(self, node): \
+    def __validate_node(self, node: Node) -> NoReturn: \
             # pylint: disable=no-self-use
         """
         Raises:
@@ -205,14 +214,15 @@ class OSSupport(OsSupportBase):
             raise NicNotFound('Node [%s] has no associated nics' % (
                 node.name))
 
-    def __kickstart_get_timezone(self):
+    def __kickstart_get_timezone(self) -> str:
         tz = self._globalParameterDbApi.getParameter(
             'Timezone_zone').getValue()
 
         # Ensure timezone does not contain any spaces
         return tz.replace(' ', '_')
 
-    def __kickstart_get_network_section(self, node, hardwareprofile):
+    def __kickstart_get_network_section(self, node: Node,
+                                        hardwareprofile: HardwareProfile) -> str:
         # Ensure nics are processed in order (ie. eth0, eth1, eth2...)
         nics = node.nics
         nics.sort(key=lambda nic: nic.networkdevice.name)
@@ -238,7 +248,8 @@ class OSSupport(OsSupportBase):
 
         return '\n'.join(network_entries)
 
-    def __kickstart_get_repos(self, dbSwProfile, installer_private_ip):
+    def __kickstart_get_repos(self, dbSwProfile: SoftwareProfile,
+                              installer_private_ip: str) -> List[str]:
         repo_entries = []
 
         for dbComponent in dbSwProfile.components:
@@ -285,7 +296,7 @@ class OSSupport(OsSupportBase):
 
         return repo_entries
 
-    def __get_kickstart_template(self, swprofile):
+    def __get_kickstart_template(self, swprofile: SoftwareProfile) -> str:
         ksTemplate = os.path.join(
             self._cm.getKitConfigBase(),
             'kickstart-%s.tmpl' % (swprofile.os.family.name.encode('ascii')))
@@ -301,7 +312,8 @@ class OSSupport(OsSupportBase):
 
         return ksTemplate
 
-    def __kickstart_get_partition_section(self, softwareprofile):
+    def __kickstart_get_partition_section(self,
+                                          softwareprofile: SoftwareProfile) -> str:
         buf = """\
 #!/bin/sh
 # Determine how many drives we have
@@ -383,7 +395,9 @@ dd if=/dev/zero of=$d%s bs=512 count=1
 
         return buf
 
-    def __get_template_subst_dict(self, node, hardwareprofile, softwareprofile) -> Dict[str, Any]:
+    def __get_template_subst_dict(self, node: Node,
+                                  hardwareprofile: HardwareProfile,
+                                  softwareprofile: SoftwareProfile) -> Dict[str, Any]:
         """
         :param node: Object
         :param hardwareprofile: Object
@@ -464,8 +478,9 @@ dd if=/dev/zero of=$d%s bs=512 count=1
             'cfmstring': self._cm.getCfmPassword()
         }
 
-    def getKickstartFileContents(self, node, hardwareprofile,
-                                 softwareprofile):
+    def getKickstartFileContents(self, node: Node,
+                                 hardwareprofile: HardwareProfile,
+                                 softwareprofile: SoftwareProfile) -> str:
         # Perform basic sanity checking before proceeding
         self.__validate_node(node)
 
@@ -485,7 +500,7 @@ dd if=/dev/zero of=$d%s bs=512 count=1
         root_password_salted: str = crypt.crypt(str(root_password), str(time.time()))
         return root_password_salted
 
-    def __get_partition_mountpoint(self, dbPartition): \
+    def __get_partition_mountpoint(self, dbPartition: Partition) -> str: \
             # pylint: disable=no-self-use
         if not dbPartition.mountPoint:
             if dbPartition.fsType == 'swap':
@@ -499,7 +514,7 @@ dd if=/dev/zero of=$d%s bs=512 count=1
 
         return mountPoint
 
-    def _processPartition(self, dbPartition): \
+    def _processPartition(self, dbPartition: Partition) -> str: \
             # pylint: disable=no-self-use
         mountPoint = dbPartition.mountPoint \
             if dbPartition.mountPoint else \
@@ -507,8 +522,6 @@ dd if=/dev/zero of=$d%s bs=512 count=1
 
         if not mountPoint:
             return ''
-
-        result = ''
 
         # All partitions must have a mount point and partition type
         result = 'part %s --fstype %s' % (mountPoint, dbPartition.fsType)

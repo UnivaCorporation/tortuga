@@ -14,34 +14,33 @@
 
 # pylint: disable=not-callable,no-member,multiple-statements,no-self-use
 
-import time
 from typing import List, Union
 
-from sqlalchemy import and_, or_
+from sqlalchemy import and_, func, or_
 from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy import func
 
-from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
-from tortuga.db.nodes import Nodes
-from tortuga.db.nics import Nics
-from tortuga.db.softwareProfiles import SoftwareProfiles
-from tortuga.exceptions.nodeNotFound import NodeNotFound
-from tortuga.exceptions.nodeSoftwareProfileLocked \
-    import NodeSoftwareProfileLocked
-from tortuga.exceptions.nodeTransferNotValid import NodeTransferNotValid
-from tortuga.exceptions.profileMappingNotAllowed \
-    import ProfileMappingNotAllowed
-from tortuga.db.nicsDbHandler import NicsDbHandler
-from tortuga.db.hardwareProfilesDbHandler import HardwareProfilesDbHandler
-from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
-from tortuga.db.softwareUsesHardwareDbHandler \
-    import SoftwareUsesHardwareDbHandler
 from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
-from tortuga.db.hardwareProfileProvisioningNics \
-    import HardwareProfileProvisioningNics
+from tortuga.db.hardwareProfilesDbHandler import HardwareProfilesDbHandler
+from tortuga.db.nicsDbHandler import NicsDbHandler
+from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
+from tortuga.db.softwareUsesHardwareDbHandler import \
+    SoftwareUsesHardwareDbHandler
+from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
+from tortuga.exceptions.nodeNotFound import NodeNotFound
+from tortuga.exceptions.nodeSoftwareProfileLocked import \
+    NodeSoftwareProfileLocked
+from tortuga.exceptions.nodeTransferNotValid import NodeTransferNotValid
+from tortuga.exceptions.operationFailed import OperationFailed
+from tortuga.exceptions.profileMappingNotAllowed import \
+    ProfileMappingNotAllowed
 from tortuga.os_utility import osUtility
 from tortuga.resourceAdapter import resourceAdapterFactory
-from tortuga.exceptions.operationFailed import OperationFailed
+
+from .models.hardwareProfileProvisioningNic import \
+    HardwareProfileProvisioningNic
+from .models.nic import Nic
+from .models.node import Node
+from .models.softwareProfile import SoftwareProfile
 
 
 class NodesDbHandler(TortugaDbObjectHandler):
@@ -91,14 +90,14 @@ class NodesDbHandler(TortugaDbObjectHandler):
         try:
             if '.' in name:
                 # Attempt exact match on fully-qualfied name
-                return session.query(Nodes).filter(
-                    func.lower(Nodes.name) == name.lower()).one()
+                return session.query(Node).filter(
+                    func.lower(Node.name) == name.lower()).one()
 
             # 'name' is short host name; attempt to match on either short
             # host name or any host starting with same host name
-            return session.query(Nodes).filter(
-                or_(func.lower(Nodes.name) == name.lower(),
-                    func.lower(Nodes.name).like(name.lower() + '.%'))).one()
+            return session.query(Node).filter(
+                or_(func.lower(Node.name) == name.lower(),
+                    func.lower(Node.name).like(name.lower() + '.%'))).one()
         except NoResultFound:
             raise NodeNotFound("Node [%s] not found" % (name))
 
@@ -133,15 +132,15 @@ class NodesDbHandler(TortugaDbObjectHandler):
         for tag in tags:
             if len(tag) == 2:
                 # Match tag 'name' and 'value'
-                searchspec.append(and_(Nodes.tags.any(name=tag[0]),
-                                       Nodes.tags.any(value=tag[1])))
+                searchspec.append(and_(Node.tags.any(name=tag[0]),
+                                       Node.tags.any(value=tag[1])))
             else:
                 # Match tag 'name' only
-                searchspec.append(Nodes.tags.any(name=tag[0]))
+                searchspec.append(Node.tags.any(name=tag[0]))
 
-        return session.query(Nodes).filter(or_(*searchspec)).all()
+        return session.query(Node).filter(or_(*searchspec)).all()
 
-    def getNodesByAddHostSession(self, session, ahSession) -> List[Nodes]:
+    def getNodesByAddHostSession(self, session, ahSession) -> List[Node]:
         """
         Get nodes by add host session
         Returns a list of nodes
@@ -150,15 +149,15 @@ class NodesDbHandler(TortugaDbObjectHandler):
         self.getLogger().debug(
             'getNodesByAddHostSession(): ahSession [%s]' % (ahSession))
 
-        return session.query(Nodes).filter(
-            Nodes.addHostSession == ahSession).order_by(Nodes.name).all()
+        return session.query(Node).filter(
+            Node.addHostSession == ahSession).order_by(Node.name).all()
 
     def getNodesByNameFilter(self, session,
-                             filter_spec: Union[str, list]) -> List[Nodes]:
+                             filter_spec: Union[str, list]) -> List[Node]:
         """
         Filter follows SQL "LIKE" semantics (ie. "something%")
 
-        Returns a list of Nodes
+        Returns a list of Node
         """
 
         filter_spec_list = [filter_spec] \
@@ -169,18 +168,18 @@ class NodesDbHandler(TortugaDbObjectHandler):
         for filter_spec_item in filter_spec_list:
             if '.' not in filter_spec_item:
                 # Match exactly (ie. "hostname-01")
-                node_filter.append(Nodes.name.like(filter_spec_item))
+                node_filter.append(Node.name.like(filter_spec_item))
 
                 # Match host name only (ie. "hostname-01.%")
-                node_filter.append(Nodes.name.like(filter_spec_item + '.%'))
+                node_filter.append(Node.name.like(filter_spec_item + '.%'))
 
                 continue
 
             # Match fully-qualified node names exactly
             # (ie. "hostname-01.domain")
-            node_filter.append(Nodes.name.like(filter_spec_item))
+            node_filter.append(Node.name.like(filter_spec_item))
 
-        return session.query(Nodes).filter(or_(*node_filter)).all()
+        return session.query(Node).filter(or_(*node_filter)).all()
 
     def getNodeById(self, session, _id):
         """
@@ -192,7 +191,7 @@ class NodesDbHandler(TortugaDbObjectHandler):
 
         self.getLogger().debug('Retrieving node by ID [%s]' % (_id))
 
-        dbNode = session.query(Nodes).get(_id)
+        dbNode = session.query(Node).get(_id)
 
         if not dbNode:
             raise NodeNotFound('Node ID [%s] not found.' % (_id))
@@ -208,8 +207,7 @@ class NodesDbHandler(TortugaDbObjectHandler):
         self.getLogger().debug('Retrieving node by IP [%s]' % (ip))
 
         try:
-            return session.query(
-                Nodes).join(Nics).filter(Nics.ip == ip).one()
+            return session.query(Node).join(Nic).filter(Nic.ip == ip).one()
         except NoResultFound:
             raise NodeNotFound(
                 'Node with IP address [%s] not found.' % (ip))
@@ -237,13 +235,13 @@ class NodesDbHandler(TortugaDbObjectHandler):
             for tag in tags:
                 if len(tag) == 2:
                     searchspec.append(
-                        and_(Nodes.tags.any(name=tag[0]),
-                             Nodes.tags.any(value=tag[1])))
+                        and_(Node.tags.any(name=tag[0]),
+                             Node.tags.any(value=tag[1])))
                 else:
-                    searchspec.append(Nodes.tags.any(name=tag[0]))
+                    searchspec.append(Node.tags.any(name=tag[0]))
 
-        return session.query(Nodes).filter(
-            or_(*searchspec)).order_by(Nodes.name).all()
+        return session.query(Node).filter(
+            or_(*searchspec)).order_by(Node.name).all()
 
     def getNodeListByNodeStateAndSoftwareProfileName(self, session,
                                                      nodeState,
@@ -256,9 +254,9 @@ class NodesDbHandler(TortugaDbObjectHandler):
             'Retrieving nodes with state [%s] from software'
             ' profile [%s]' % (nodeState, softwareProfileName))
 
-        return session.query(Nodes).join(SoftwareProfiles).filter(and_(
-            SoftwareProfiles.name == softwareProfileName,
-            Nodes.state == nodeState)).all()
+        return session.query(Node).join(SoftwareProfile).filter(and_(
+            SoftwareProfile.name == softwareProfileName,
+            Node.state == nodeState)).all()
 
     def evacuateChildren(self, session, dbNode):
         swProfile = dbNode.softwareprofile
@@ -359,10 +357,10 @@ class NodesDbHandler(TortugaDbObjectHandler):
                 for dbNic in dbNode.nics:
                     try:
                         r = session.\
-                            query(HardwareProfileProvisioningNics).\
-                            filter(and_(HardwareProfileProvisioningNics.
+                            query(HardwareProfileProvisioningNic).\
+                            filter(and_(HardwareProfileProvisioningNic.
                                         nicId == dbNic.id,
-                                        HardwareProfileProvisioningNics.
+                                        HardwareProfileProvisioningNic.
                                         hardwareProfileId ==
                                         hwProfile.id)).one()
 
@@ -993,11 +991,11 @@ class NodesDbHandler(TortugaDbObjectHandler):
         return list(set(dbSoftwareProfile.nodes) - set([dbnode]))
 
     def getNodesByNodeState(self, session, state):
-        return session.query(Nodes).filter(Nodes.state == state).all()
+        return session.query(Node).filter(Node.state == state).all()
 
     def getNodesByMac(self, session, usedMacList):
         if not usedMacList:
             return []
 
-        return session.query(Nodes).join(Nics).filter(
-            Nics.mac.in_(usedMacList)).all()
+        return session.query(Node).join(Nic).filter(
+            Nic.mac.in_(usedMacList)).all()
