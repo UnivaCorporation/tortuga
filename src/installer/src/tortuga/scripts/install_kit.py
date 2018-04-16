@@ -23,9 +23,6 @@ class InstallKitCli(KitCli):
     Install kit command line interface.
     """
 
-    def __init__(self):
-        KitCli.__init__(self, validArgCount=1)
-
     def parseArgs(self, usage=None):
         kitPkgGroup = _('Kit Package Option')
         self.addOptionGroup(
