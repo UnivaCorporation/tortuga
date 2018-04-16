@@ -137,7 +137,7 @@ class AddHostManager(TortugaObjectManager, Singleton):
 
         try:
             if addHostSession not in self._sessions:
-                self.getLogger().warn(
+                self.getLogger().warning(
                     'updateStatus(): unknown session ID [%s]' % (
                         addHostSession))
 

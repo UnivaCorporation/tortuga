@@ -17,7 +17,6 @@
 # pylint: disable=no-member
 
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
 from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
 
 
@@ -26,9 +25,7 @@ class GetSoftwareProfileNodesCli(TortugaCli):
     Get software profile command line interface.
     """
 
-    def __init__(self):
-        super().__init__()
-
+    def parseArgs(self, usage=None):
         software_profile_attr_group = _('Software Profile Attribute Options')
 
         self.addOptionGroup(
@@ -37,24 +34,19 @@ class GetSoftwareProfileNodesCli(TortugaCli):
 
         self.addOptionToGroup(
             software_profile_attr_group,
-            '--software-profile',
-            metavar='SOFTWAREPROFILENAME',
+            '--software-profile', required=True,
+            metavar='NAME',
             dest='softwareProfile',
             help=_('software profile'))
 
+        super().parseArgs(usage=usage)
+
     def runCommand(self):
         self.parseArgs(_("""
-    get-software-profile-nodes --software-profile SOFTWAREPROFILENAME
-
-Description:
-    The get-software-profile-nodes tool returns the list of nodes that are
-    using the specified software profile.
+Return list of nodes that are using the specified software profile.
 """))
-        software_profile_name = self.getArgs().softwareProfile
 
-        if not software_profile_name:
-            raise InvalidCliRequest(
-                _('Software profile name must be specified'))
+        software_profile_name = self.getArgs().softwareProfile
 
         api = SoftwareProfileWsApi(username=self.getUsername(),
                                    password=self.getPassword(),

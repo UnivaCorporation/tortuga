@@ -24,25 +24,18 @@ from tortuga.wsapi.hardwareProfileWsApi import HardwareProfileWsApi
 class DeleteHardwareProfileCli(TortugaCli):
     def __init__(self):
         super().__init__()
+
+    def parseArgs(self, usage=None):
         option_group_name = _('Delete Hardware Profile Options')
         self.addOptionGroup(option_group_name, '')
-        self.addOptionToGroup(option_group_name, '--name',
+        self.addOptionToGroup(option_group_name, '--name', required=True,
                               dest='hardwareProfileName',
                               help=_('Name of hardware profile to delete'))
 
+        super().parseArgs(usage=usage)
+
     def runCommand(self):
-        self.parseArgs(_("""
-    delete-hardware-profile --name=NAME
-
-Description:
-    The delete-hardware-profile tool removes a hardware profile  from  the
-    system.   There  can not be any nodes currently assigned to the hard-
-    ware profile for it be successfully removed.
-"""))
-
-        if not self.getArgs().hardwareProfileName:
-            raise InvalidCliRequest(
-                _('Hardware profile name must be specified'))
+        self.parseArgs(_('Removes hardware profile from the'))
 
         api = HardwareProfileWsApi(username=self.getUsername(),
                                    password=self.getPassword(),

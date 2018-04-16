@@ -26,18 +26,16 @@ class GetNetworkCli(NetworkCli):
     def __init__(self):
         super().__init__()
 
+    def parseArgs(self, usage=None):
+
         # The get command can take only the network option
         self.addOption('--network', dest='network',
                        help=_('Network identifier ("address/netmask")'))
 
-    def runCommand(self):
-        self.parseArgs(_("""
-    get-network --network=NETWORK
+        super().parseArgs(usage=usage)
 
-Description:
-    The  get-network  tool  gets  the details of a specific network.  The
-    nework is specified by the key "network-address/netmask".
-"""))
+    def runCommand(self):
+        self.parseArgs(_('Get details of a specific network.'))
 
         # Parse --network parameter if it exists
         networkAddress, networkMask = self.parseNetworkParameter(

@@ -73,15 +73,7 @@ class GetKitCli(KitCli):
 
     def runCommand(self):
         self.parseArgs(_("""
-    get-kit [--quiet] --name=NAME --version=VERSION --iteration=ITERATION
-
-Description:
-    The get-kit tool returns the details of the kit specified by the con-
-    figuration parameters.
-
-    --quiet causes get-kit to return 1 if the kit does not exist,
-    otherwise 0. There is no actual output from get-kit when --quiet is
-    specified.
+Returns details of the specified kit
 """))
 
         name, version, iteration = self.get_name_version_iteration()

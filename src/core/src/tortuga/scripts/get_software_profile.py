@@ -41,7 +41,7 @@ class GetSoftwareProfileCli(TortugaCli):
         self.addOptionGroup(softwareProfileAttrGroup, None)
 
         self.addOptionToGroup(
-            softwareProfileAttrGroup, '--name', dest='name',
+            softwareProfileAttrGroup, '--name', dest='name', required=True,
             help=_('software profile name'))
 
         self.addOptionToGroup(
@@ -92,9 +92,6 @@ class GetSoftwareProfileCli(TortugaCli):
 
     def runCommand(self):
         self.parseArgs(usage=_('Displays software profile details'))
-
-        if not self.getArgs().name:
-            self.getParser().error('--software-profile must be specified')
 
         self.swprofileapi = SoftwareProfileWsApi(
             username=self.getUsername(),

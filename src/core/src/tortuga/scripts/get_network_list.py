@@ -27,8 +27,8 @@ class GetNetworkListCli(NetworkCli):
     Get list tortuga command line interface.
 
     """
-    def parseArgs(self, usage=None):
 
+    def parseArgs(self, usage=None):
         output_attr_group = _('Output formatting options')
 
         self.addOptionGroup(output_attr_group, None)
@@ -48,14 +48,7 @@ class GetNetworkListCli(NetworkCli):
         super(GetNetworkListCli, self).parseArgs(usage=usage)
 
     def runCommand(self):
-        self.parseArgs(_("""
-    get-network-list [options]
-
-Description:
-    The get-network-list tool returns the list of networks in the system.
-    Networks can be associated with hardware profiles to match the physi-
-    cal network configuration of your cluster.
-"""))
+        self.parseArgs(_('Return list of networks in the system'))
 
         network_list = self.getNetworkApi().getNetworkList()
 

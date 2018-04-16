@@ -29,5 +29,3 @@ class AddHostSessionContextManager(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.ahm.update_session(self.addHostSession, running=False)
-
-

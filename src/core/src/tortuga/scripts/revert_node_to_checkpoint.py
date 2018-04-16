@@ -27,6 +27,7 @@ class RevertNodeToCheckpointCli(TortugaCli):
         self.addOptionGroup(optionGroupName, '')
         self.addOptionToGroup(optionGroupName, '--node',
                               dest='nodeName',
+                              required=True,
                               metavar='NAME',
                               help=_('Name of node to revert'))
 
@@ -34,18 +35,8 @@ class RevertNodeToCheckpointCli(TortugaCli):
 
     def runCommand(self):
         self.parseArgs(_("""
-    revert-node-to-checkpoint --node=NODENAME
-
-Description:
-    The revert-node-to-checkpoint tool reverts the given node
-    back to the last checkpoint.
-
-    NOTE: Both the node adapter and the storage adapter for
-    the given node must support this operation.
+Revert given node back to the last checkpoint.
 """))
-
-        if not self.getArgs().nodeName:
-            raise InvalidCliRequest(_('Node name must be specified'))
 
         nodeName = self.getArgs().nodeName
 

@@ -28,13 +28,7 @@ from tortuga.wsapi.networkWsApi import NetworkWsApi
 
 class GetProvisioningNetworks(TortugaCli):
     def runCommand(self):
-        self.parseArgs(_("""
-            get-provisioning-networks [options]
-
-        Description:
-            The get-provisioning-networks tool returns a YAML list of the
-            provisioning networks.
-        """))
+        self.parseArgs(_('Returns a YAML list of provisioning networks'))
 
         api = NetworkWsApi(username=self.getUsername(),
                            password=self.getPassword(),

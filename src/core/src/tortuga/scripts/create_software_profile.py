@@ -86,14 +86,7 @@ class CreateSoftwareProfileCli(TortugaCli):
         super().parseArgs(usage=usage)
 
     def runCommand(self):
-        self.parseArgs(_("""
-The  create-software-profile tool either lists the paths of available
-templates or creates a software profile from an existing template.
-
-When creating a software profile the description, os, and type specified in
-the template can be overridden by providing the appropriate
-command line options.
-"""))
+        self.parseArgs(_('Create software profile'))
 
         if self.getArgs().jsonTemplatePath:
             # load from template

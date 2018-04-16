@@ -32,7 +32,9 @@ from tortuga.db.models.nic import Nic
 from tortuga.db.models.node import Node
 from tortuga.db.models.operatingSystem import OperatingSystem
 from tortuga.db.models.operatingSystemFamily import OperatingSystemFamily
+from tortuga.db.models.resourceAdapter import ResourceAdapter
 from tortuga.db.models.softwareProfile import SoftwareProfile
+from tortuga.db.models.hardwareProfileNetwork import HardwareProfileNetwork
 from tortuga.deployer.dbUtility import init_global_parameters, primeDb
 from tortuga.node import nodeManager
 from tortuga.objects import osFamilyInfo, osInfo
@@ -119,12 +121,24 @@ def dbm():
 
         session.add(network)
 
+        # create 'hardwareprofilenetwork' entry
+        hwpn1 = HardwareProfileNetwork(
+            hardwareprofile=installer_node.hardwareprofile,
+            network=network,
+            networkdevice=eth1_network_device
+        )
+
+        installer_node.hardwareprofile.hardwareprofilenetworks.append(hwpn1)
+
+        # create nic on installer
         installer_nic = Nic()
+        installer_nic.ip = '10.2.0.1'
         installer_nic.network = network
         installer_nic.networkdevice = eth1_network_device
 
         installer_node.nics = [installer_nic]
 
+        # create 'base' kit
         kit = Kit()
         kit.name = 'base'
         kit.version = '6.3.0'
@@ -143,19 +157,71 @@ def dbm():
         core_component.family = [os_family]
         core_component.kit = kit
 
+        session.add(kit)
+
+        # create OS kit
+        os_kit = Kit(name='centos', version='7.4', iteration='0')
+        os_kit.isOs = True
+        os_component = Component(name='centos-7.4-x86_64', version='7.4')
+        os_component.os = [os_]
+        os_component.kit = os_kit
+        os_kit.components.append(os_component)
+
+        session.add(os_kit)
+
+        # create resource adapter kit
+        ra_kit = Kit(name='awsadapter', version='0.0.1', iteration='0')
+        ra_component = Component(name='management', version='0.0.1')
+        ra_component.family.append(os_family)
+        ra_kit.components.append(ra_component)
+
+        # create 'default' resource adapter
+        default_adapter = ResourceAdapter(name='default')
+        default_adapter.kit = kit
+
+        # create resource adapter
+        aws_adapter = ResourceAdapter(name='aws')
+        aws_adapter.kit = ra_kit
+
+        session.add(aws_adapter)
+
+        # create 'aws' hardware profile
+        aws_hwprofile = HardwareProfile(name='aws')
+        aws_hwprofile.location = 'remote'
+        aws_hwprofile.resourceadapter = aws_adapter
+
+        session.add(aws_hwprofile)
+
+        # create 'compute' software profile
         compute_swprofile = SoftwareProfile(name='compute')
         compute_swprofile.os = os_
         compute_swprofile.components = [core_component]
         compute_swprofile.type = 'compute'
 
+        # map 'aws' to 'compute'
+        aws_hwprofile.mappedsoftwareprofiles.append(compute_swprofile)
+
+        # create 'localiron' hardware profile
         localiron_hwprofile = HardwareProfile(name='localiron')
+        localiron_hwprofile.resourceadapter = default_adapter
+        localiron_hwprofile.mappedsoftwareprofiles.append(compute_swprofile)
 
-        session.add(kit)
+        eth0_networkdevice = NetworkDevice(name='eth0')
 
+        # create compute (compute-01, compute-02, ...) nodes
         for n in range(1, 11):
             compute_node = Node('compute-{0:02d}.private'.format(n))
             compute_node.softwareprofile = compute_swprofile
             compute_node.hardwareprofile = localiron_hwprofile
+
+            compute_node.nics.append(
+                Nic(
+                    ip='10.2.0.{}'.format(100 + n),
+                    boot=True,
+                    network=network,
+                    networkdevice=eth0_networkdevice
+                )
+            )
 
             session.add(compute_node)
 
