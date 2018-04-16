@@ -24,57 +24,46 @@ from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
 
 class DeleteAdminFromProfileCli(TortugaCli):
     """
-    Delete an admin fro, a hw/sw profile command line interface.
+    Delete an admin from, a hw/sw profile command line interface.
     """
 
     def __init__(self):
         super().__init__()
 
+    def parseArgs(self, usage=None):
         profile_attr_group = _('Profile Attribute Options')
-        self.addOptionGroup(
+        grp = self.addOptionGroup(
             profile_attr_group,
             _('Hardware or software profile must be specified.'))
-        self.addOptionToGroup(profile_attr_group,
-                              '--software-profile', dest='swprofile',
-                              help=_('hardware profile name'))
-        self.addOptionToGroup(profile_attr_group, '--hardware-profile',
-                              dest='hwprofile',
-                              help=_('software profile name'))
+
+        excl_group = grp.add_mutually_exclusive_group(required=True)
+
+        excl_group.add_argument(profile_attr_group,
+                                '--software-profile', dest='swprofile',
+                                help=_('hardware profile name'))
+        excl_group.add_argument(profile_attr_group, '--hardware-profile',
+                                dest='hwprofile',
+                                help=_('software profile name'))
 
         profile_attr_group = _('Admin Attribute Options')
         self.addOptionGroup(
             profile_attr_group, _('Admin username must be specified.'))
-        self.addOptionToGroup(profile_attr_group,
+        self.addOptionToGroup(profile_attr_group, required=True,
                               '--admin-username', dest='adminUsername',
                               help=_('Admin username'))
 
+        super().parseArgs(usage=usage)
+
     def runCommand(self):
         self.parseArgs(_("""
-    delete-admin-from-profile --admin-username=ADMINUSERNAME
-       --software-profile=SOFTWAREPROFILENAME |
-        --hardware-profile=HARDWAREPROFILENAME
-
-Description:
-    The  delete-admin-from-profile  tool  removes the association between
-    an existing adminstrative user and a hardware or software profile.
+Removes association between an existing adminstrative user and hardware or
+software profile.
 """))
 
         swprofile = self.getArgs().swprofile
         hwprofile = self.getArgs().hwprofile
 
-        if swprofile and hwprofile:
-            raise InvalidCliRequest(
-                _('Only one of --software-profile and --hardware-profile'
-                  ' can be specified.'))
-
-        if not swprofile and not hwprofile:
-            raise InvalidCliRequest(
-                _('Either --software-profile or --hardware-profile must'
-                  ' be specified.'))
-
         admin_username = self.getArgs().adminUsername
-        if admin_username is None:
-            raise InvalidCliRequest(_('Missing Admin Username'))
 
         if swprofile:
             profile = swprofile

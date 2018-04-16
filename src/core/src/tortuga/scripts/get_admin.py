@@ -25,7 +25,7 @@ class GetAdminCli(AdminCli):
 
     """
     def parseArgs(self, usage=None):
-        self.addOption('--admin-username',
+        self.addOption('--admin-username', required=True,
                        help=_('Username of admin to get.'))
 
         output_attr_group = _('Output formatting options')
@@ -48,14 +48,8 @@ class GetAdminCli(AdminCli):
 
     def runCommand(self):
         self.parseArgs(_("""
-    get-admin --admin-username=ADMINUSERNAME
-
-Description:
-    The get-admin tool returns a single admin user from the Tortuga system.
+Returns admin user from the Tortuga system.
 """))
-
-        if not self.getArgs().admin_username:
-            self.getParser().error('--admin-username must be specified')
 
         api = AdminWsApi(username=self.getUsername(),
                          password=self.getPassword(),

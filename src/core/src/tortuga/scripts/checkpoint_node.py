@@ -24,6 +24,8 @@ from tortuga.wsapi.nodeWsApi import NodeWsApi
 class CheckpointNodeCli(TortugaCli):
     def __init__(self):
         super().__init__()
+
+    def parseArgs(self, usage=None):
         option_group_name = _('Checkpoint Node Options')
         self.addOptionGroup(option_group_name, '')
         self.addOptionToGroup(option_group_name, '--node',
@@ -31,17 +33,12 @@ class CheckpointNodeCli(TortugaCli):
                               dest='nodeName',
                               help=_('Name of node to checkpoint'))
 
+        super().parseArgs(usage=usage)
+
     def runCommand(self):
         self.parseArgs(_("""
-    checkpoint-node --node=NODENAME
-
-Description:
-    The checkpoint-node tool takes a checkpoint of the given node
-    which can then be used to revert the node back to should
-    the need arise.
-
-    NOTE: Both the node adapter and the storage adapter for
-    the given node must support this operation.
+Take a checkpoint of the given node which can then be used to revert the
+node back to should the need arise.
 """))
 
         if not self.getArgs().nodeName:

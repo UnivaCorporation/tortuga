@@ -23,30 +23,25 @@ from tortuga.wsapi.hardwareProfileWsApi import HardwareProfileWsApi
 class CopyHardwareProfileCli(tortugaCli.TortugaCli):
     def __init__(self):
         super().__init__()
+
+    def parseArgs(self, usage=None):
         option_group_name = _('Copy Hardware Profile Options')
         self.addOptionGroup(option_group_name, '')
         self.addOptionToGroup(option_group_name,
-                              '--src',
+                              '--src', required=True,
                               dest='srcHardwareProfileName',
                               metavar='HARDWAREPROFILENAME',
                               help=_('Name of source hardware profile'))
         self.addOptionToGroup(option_group_name,
-                              '--dst',
+                              '--dst', required=True,
                               dest='dstHardwareProfileName',
                               metavar='HARDWAREPROFILENAME',
                               help=_('Name of destination hardware profile'))
 
+        super().parseArgs(usage=usage)
+
     def runCommand(self):
-        self.parseArgs(_("""
-    copy-hardware-profile --src HARDWAREPROFILENAME --dst HARDWAREPROFILENAME
-
-Description:
-    Copy an existing hardware profile.
-"""))
-
-        if self.getArgs().srcHardwareProfileName is None or \
-                self.getArgs().dstHardwareProfileName is None:
-            self.usage()
+        self.parseArgs(_('Copy an existing hardware profile'))
 
         api = HardwareProfileWsApi(username=self.getUsername(),
                                    password=self.getPassword(),

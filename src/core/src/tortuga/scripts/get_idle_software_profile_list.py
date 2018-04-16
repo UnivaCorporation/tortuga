@@ -25,16 +25,10 @@ class GetIdleSoftwareProfileListCli(TortugaCli):
     Get software profile command line interface.
 
     """
+
     def runCommand(self):
         self.parseArgs(_("""
-    get-idle-software-profile-list [options]
-
-Description:
-    The get-idle-software-profile-list returns the list of idle software
-    profiles configured on the system.  An idle software profile is simply
-    a software profile that contains enough functionality for a given
-    hardware profile to be reprovisioned.  For a non-BMC or virtual machine
-    an idle profile typically contains the base Tortuga components.
+Return list of idle software profiles configured on the system.
 """))
         api = SoftwareProfileWsApi(username=self.getUsername(),
                                    password=self.getPassword(),

@@ -33,21 +33,9 @@ class AddNetworkCli(NetworkCli):
 
     def runCommand(self):
         self.parseArgs(_("""
-    add-network --xml-file=FILENAME
-
-    add-network <[--address=ADDRESS --netmask=NETMASK]|--network=NETWORK>
-       [ --name=NAME | --type=TYPE | --suffix=SUFFIX | --gateway=GATEWAY
-       --options=OPTIONS | --start-ip=STARTIP | --increment=INCREMENT
-       --dhcp | --static ]
-
-Description:
-    The add-network tool registers a network within Tortuga.  This
-    network can then be associated with hardware profile(s) to allow
-    Tortuga to manage cluster node networking configuration.
-
-    The add-network tool has to forms one in which the  network  is  pro-
-    vided  via  a XML file reprenstation (as returned by get-network) and
-    the other where all of the options are specified on the command line.
+Registers a network within Tortuga. This network can then be associated with
+hardware profile(s) to allow Tortuga to manage cluster node networking
+configuration.
 """))
 
         network = self.get_network_from_cmdline(retrieve_network=False)

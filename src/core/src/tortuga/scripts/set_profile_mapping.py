@@ -17,18 +17,17 @@
 # pylint: disable=no-member
 
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
 from tortuga.exceptions.softwareUsesHardwareAlreadyExists \
     import SoftwareUsesHardwareAlreadyExists
 from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
 
 
 class SetProfileMappingCli(TortugaCli):
-    """Hardware/software profile mapping CLI"""
+    """
+    Hardware/software profile mapping CLI
+    """
 
-    def __init__(self):
-        super().__init__()
-
+    def parseArgs(self, usage=None):
         option_group = _('Set profile mapping options')
 
         self.addOptionGroup(
@@ -38,14 +37,16 @@ class SetProfileMappingCli(TortugaCli):
         self.addOptionToGroup(option_group,
                               '--software-profile',
                               metavar='NAME',
-                              dest='swprofile',
+                              dest='swprofile', required=True,
                               help=_('software profile'))
 
         self.addOptionToGroup(option_group,
                               '--hardware-profile',
                               metavar='NAME',
-                              dest='hwprofile',
+                              dest='hwprofile', required=True,
                               help=_('hardware profile'))
+
+        super().parseArgs(usage=usage)
 
     def runCommand(self):
         self.parseArgs(_("""
@@ -53,14 +54,6 @@ Multiple software profiles can be mapped to a single hardware profile to
 accomodate a consistent software stack across mulitple resource adapters,
 for example. All profiles must be mapped in order to be used for active nodes.
 """))
-
-        if not self.getArgs().swprofile:
-            raise InvalidCliRequest(
-                _('Software profile name must be specified'))
-
-        if not self.getArgs().hwprofile:
-            raise InvalidCliRequest(
-                _('Hardware profile name must be specified'))
 
         api = SoftwareProfileWsApi(username=self.getUsername(),
                                    password=self.getPassword(),

@@ -27,23 +27,16 @@ class DeleteNetworkCli(NetworkCli):
     Delete network command line interface.
     """
 
-    def __init__(self):
-        super().__init__()
-
+    def parseArgs(self, usage=None):
         # The delete command can take only the network option
         self.addOption('--network',
-                       dest='network',
+                       dest='network', required=True,
                        help=_('Network identifier (ADDRESS/NETMASK)'))
 
-    def runCommand(self):
-        self.parseArgs(_("""
-    delete-network --network=ADDRESS/NETMASK
+        super().parseArgs(usage=usage)
 
-Description:
-    The  delete-network tool removes a network from the system.  The net-
-    work must not be associated with any hardware profiles in  order  for
-    it to be successfully removed.
-"""))
+    def runCommand(self):
+        self.parseArgs(_('Remove network from the system'))
 
         # Parse --network argument if it exists
         networkAddress, networkSubnet = self.parseNetworkParameter(
