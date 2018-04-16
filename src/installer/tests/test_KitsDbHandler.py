@@ -1,0 +1,125 @@
+import pytest
+from tortuga.db.kitsDbHandler import KitsDbHandler
+from tortuga.db.models.kit import Kit
+from tortuga.exceptions.kitInUse import KitInUse
+from tortuga.exceptions.kitNotFound import KitNotFound
+from tortuga.exceptions.kitAlreadyExists import KitAlreadyExists
+from tortuga.objects.kit import Kit as KitTortugaObject
+from tortuga.objects.component import Component as ComponentTortugaObject
+
+
+def test_getKitList(dbm):
+    with dbm.session() as session:
+        result = KitsDbHandler().getKitList(session)
+
+        assert isinstance(result, list)
+
+        assert len(result)
+
+
+def test_getKitList_os(dbm):
+    with dbm.session() as session:
+        result = KitsDbHandler().getKitList(session, os_kits_only=True)
+
+        assert isinstance(result, list)
+
+        assert len(result) == 1
+
+        assert result[0].isOs
+
+
+def test_getKitId(dbm):
+    with dbm.session() as session:
+        result = KitsDbHandler().getKitById(session, 1)
+
+        assert isinstance(result, Kit)
+
+
+@pytest.mark.parametrize('name,isOs', [
+    ('base', False),
+    ('centos', True),
+])
+def test_getKit_name_only(dbm, name, isOs):
+    with dbm.session() as session:
+        result = KitsDbHandler().getKit(session, name)
+
+        assert isinstance(result, Kit)
+
+        assert result.name == name
+
+        assert result.isOs == isOs
+
+
+def test_getKit_name_and_version(dbm):
+    with dbm.session() as session:
+        result = KitsDbHandler().getKit(session, 'centos', '7.4')
+
+        assert isinstance(result, Kit)
+
+        assert result.name == 'centos'
+
+        assert result.isOs
+
+
+def test_getKit_name_and_version_and_iteration(dbm):
+    with dbm.session() as session:
+        result = KitsDbHandler().getKit(session, 'centos', '7.4', '0')
+
+        assert isinstance(result, Kit)
+
+        assert result.name == 'centos'
+        assert result.version == '7.4'
+        assert result.iteration == '0'
+
+        assert result.isOs
+
+
+def test_getKit_failed(dbm):
+    with dbm.session() as session:
+        with pytest.raises(KitNotFound):
+            KitsDbHandler().getKit(session, 'XXXXkitXXXX')
+
+
+def test_deleteKit(dbm):
+    with dbm.session() as session:
+        with pytest.raises(KitInUse):
+            KitsDbHandler().deleteKit(
+                session, 'base', version='6.3.0', iteration='0')
+
+
+def test_addKit(dbm):
+    with dbm.session() as session:
+        name = 'testkit'
+        version = '0.0.1'
+        iteration = '0'
+
+        kitObj = KitTortugaObject(name=name,
+                                  version=version,
+                                  iteration=iteration)
+
+        # create dummy component
+        dummy_component1 = ComponentTortugaObject(name='dummy',
+                                                  version='0.0.1')
+
+        kitObj.addComponent(dummy_component1)
+
+        dummy_component2 = ComponentTortugaObject(name='dummy2',
+                                                  version='0.0.1')
+
+        kitObj.addComponent(dummy_component2)
+
+        KitsDbHandler().addKit(session, kitObj)
+
+        new_kit = KitsDbHandler().getKit(session, 'testkit')
+
+        assert new_kit.name == 'testkit'
+
+        assert new_kit.components
+
+        with pytest.raises(KitAlreadyExists):
+            KitsDbHandler().addKit(session, kitObj)
+
+        KitsDbHandler().deleteKit(session, name, version, iteration)
+
+        with pytest.raises(KitNotFound):
+            KitsDbHandler().getKit(session, name)

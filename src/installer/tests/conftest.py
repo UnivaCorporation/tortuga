@@ -143,14 +143,24 @@ def dbm():
         core_component.family = [os_family]
         core_component.kit = kit
 
+        session.add(kit)
+
+        # create OS kit
+        os_kit = Kit(name='centos', version='7.4', iteration='0')
+        os_kit.isOs = True
+        os_component = Component(name='centos-7.4-x86_64', version='7.4')
+        os_component.os = [os_]
+        os_component.kit = os_kit
+        os_kit.components.append(os_component)
+
+        session.add(os_kit)
+
         compute_swprofile = SoftwareProfile(name='compute')
         compute_swprofile.os = os_
         compute_swprofile.components = [core_component]
         compute_swprofile.type = 'compute'
 
         localiron_hwprofile = HardwareProfile(name='localiron')
-
-        session.add(kit)
 
         for n in range(1, 11):
             compute_node = Node('compute-{0:02d}.private'.format(n))
