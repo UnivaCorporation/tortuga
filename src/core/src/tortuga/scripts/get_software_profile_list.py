@@ -21,9 +21,6 @@ from tortuga.cli.utils import FilterTagsAction
 
 
 class GetSoftwareProfileListCli(TortugaCli):
-    def __init__(self):
-        super(GetSoftwareProfileListCli, self).__init__()
-
     def parseArgs(self, usage=None):
         self.addOption(
             '--tag',
@@ -35,13 +32,9 @@ class GetSoftwareProfileListCli(TortugaCli):
         super().parseArgs(usage=usage)
 
     def runCommand(self):
-        self.parseArgs(_("""
-    get-software-profile-list [options]
+        self.parseArgs(_('Return list of software profiles configured in'
+                         ' the system'))
 
-Description:
-    The get-software-profile-list tool returns the list of software
-    profiles configured in the system.
-"""))
         api = SoftwareProfileWsApi(username=self.getUsername(),
                                    password=self.getPassword(),
                                    baseurl=self.getUrl())

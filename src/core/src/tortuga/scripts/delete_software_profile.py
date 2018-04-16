@@ -17,7 +17,6 @@
 # pylint: disable=no-member
 
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
 from tortuga.exceptions import softwareProfileNotFound
 from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
 
@@ -25,25 +24,20 @@ from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
 class DeleteSoftwareProfileCli(TortugaCli):
     def __init__(self):
         super().__init__()
+
+    def parseArgs(self, usage=None):
         option_group_name = _('Delete Software Profile Options')
         self.addOptionGroup(option_group_name, '')
         self.addOptionToGroup(option_group_name, '--name',
-                              dest='softwareProfileName',
+                              dest='softwareProfileName', required=True,
                               help=_('Name of software profile to delete'))
+
+        super().parseArgs(usage=usage)
 
     def runCommand(self):
         self.parseArgs(_("""
-    delete-software-profile --name=NAME
-
-Description:
-    The delete-software-profile tool removes a software profile  from  the
-    system.   There  can not be any nodes currently assigned to the soft-
-    ware profile for it be successfully removed.
+Removes software profile from system.
 """))
-
-        if not self.getArgs().softwareProfileName:
-            raise InvalidCliRequest(
-                _('Software profile name must be specified'))
 
         api = SoftwareProfileWsApi(username=self.getUsername(),
                                    password=self.getPassword(),

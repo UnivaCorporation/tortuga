@@ -25,9 +25,7 @@ from tortuga.wsapi.nodeWsApi import NodeWsApi
 
 
 class GetProvisioningNicsApp(TortugaCli):
-    def __init__(self):
-        super().__init__()
-
+    def parseArgs(self, usage=None):
         self.addOption('--hardware-profile', dest='hardwareProfile',
                        help=('Return provisioning NIC for specified'
                              'hardware profile'))
@@ -38,8 +36,10 @@ class GetProvisioningNicsApp(TortugaCli):
         self.addOption('--verbose', dest='bVerbose', action='store_true',
                        default=False, help='Enable verbose mode')
 
+        super().parseArgs(usage=usage)
+
     def runCommand(self):
-        self.parseArgs('''%prog''')
+        self.parseArgs()
 
         if self.getArgs().hardwareProfile:
             hw_profile_api = HardwareProfileWsApi(username=self.getUsername(),

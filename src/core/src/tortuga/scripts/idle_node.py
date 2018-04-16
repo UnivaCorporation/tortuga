@@ -26,27 +26,21 @@ class IdleNodeCli(TortugaCli):
     Idle node command line interface.
     """
 
-    def __init__(self):
-        super().__init__(validArgCount=8000)
-
-        self.addOption('--node', dest='nodeName',
+    def parseArgs(self, usage=None):
+        self.addOption('--node', dest='nodeName', required=True,
                        help=_('Name of node to idle'))
+
+        super().parseArgs(usage=usage)
 
     def runCommand(self):
         self.parseArgs('''
-    idle-node --node=NODENAME
-
-Description:
-    The idle-node tool marks an active node idle which will cause varying
-    actions based on the resource adapter associated with the given node.
+Marks active node idle which will cause varying
+actions based on the resource adapter associated with the given node.
 ''')
 
         # The "--node nodeName" option was implemented first
         # and we maintain backwards compatability for it.
         # The "nodeName..." arguments were added later.
-
-        if not self.getArgs().nodeName:
-            self.usage(_('Missing --node option'))
 
         node_api = NodeWsApi(username=self.getUsername(),
                              password=self.getPassword(),

@@ -21,20 +21,18 @@ from tortuga.wsapi.nodeWsApi import NodeWsApi
 
 
 class MigrateNodeCli(TortugaCli):
-    def __init__(self):
-        super().__init__()
-
+    def parseArgs(self, usage=None):
         option_group_name = _('Migrate Node Options')
 
         self.addOptionGroup(option_group_name, '')
 
         self.addOptionToGroup(
-            option_group_name, '--node',
+            option_group_name, '--node', required=True,
             dest='nodeName',
             help=_('Name of node to migrate'))
 
         self.addOptionToGroup(
-            option_group_name, '--destination',
+            option_group_name, '--destination', required=True,
             dest='destinationString',
             help=_('List of nodes which can be the destination'))
 
@@ -45,23 +43,12 @@ class MigrateNodeCli(TortugaCli):
             default=True,
             help=_('Migrate by shutting down/restarting node'))
 
+        super().parseArgs(usage=usage)
+
     def runCommand(self):
         self.parseArgs(_("""
-    migrate-node --node=NODENAME --destination=PARENT[,PARENT] [--with-shutdown]
-
-Description:
-    The migrate-node tool migrates a node from one parent
-    node to another.
-
-    NOTE: Both the resource adapter and the storage adapter for
-    the given node must support this operation.
+Migrate node from one parent node to another.
 """))
-
-        if not self.getArgs().nodeName:
-            raise InvalidCliRequest(_('Node name must be specified'))
-
-        if not self.getArgs().destinationString:
-            raise InvalidCliRequest(_('Destination must be specified'))
 
         node_name = self.getArgs().nodeName
         destination_string = self.getArgs().destinationString

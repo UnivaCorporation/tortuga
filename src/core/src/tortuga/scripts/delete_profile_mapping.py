@@ -17,7 +17,6 @@
 # pylint: disable=no-member
 
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
 from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
 
 
@@ -26,9 +25,7 @@ class DeleteProfileMappingCli(TortugaCli):
     Get software uses hardware command line interface.
     """
 
-    def __init__(self):
-        super().__init__()
-
+    def parseArgs(self, usage=None):
         software_uses_hardware_attr_group = \
             _('Software Uses Hardware Attribute Options')
 
@@ -38,36 +35,23 @@ class DeleteProfileMappingCli(TortugaCli):
 
         self.addOptionToGroup(
             software_uses_hardware_attr_group, '--software-profile',
-            dest='swprofile', metavar='SOFTWAREPROFILENAME',
+            dest='swprofile', metavar='NAME', required=True,
             help=_('software profile'))
 
         self.addOptionToGroup(
             software_uses_hardware_attr_group, '--hardware-profile',
-            dest='hwprofile', metavar='HARDWAREPROFILENAME',
+            dest='hwprofile', metavar='NAME', required=True,
             help=_('hardware profile'))
+
+        super().parseArgs(usage=usage)
 
     def runCommand(self):
         self.parseArgs(_("""
-   delete-profile-mapping  --software-profile=SOFTWAREPROFILENAME --hardware-profile=HARDWAREPROFILENAME
-
-Description:
-    The  delete-profile-mapping  tool  adjusts  the  software  uses hardware
-    attribute on  a  software  profile.   This  attribute  allows  for  a
-    restriciton on what hardware profiles a given software profile can be
-    associated with.
+Adjust "software uses hardware" attribute on a software  profile.
 """))
 
         swprofile_name = self.getArgs().swprofile
-
-        if not swprofile_name:
-            raise InvalidCliRequest(
-                _('Software profile name must be specified'))
-
         hwprofile_name = self.getArgs().hwprofile
-
-        if not hwprofile_name:
-            raise InvalidCliRequest(
-                _('Hardware profile name must be specified'))
 
         api = SoftwareProfileWsApi(username=self.getUsername(),
                                    password=self.getPassword(),

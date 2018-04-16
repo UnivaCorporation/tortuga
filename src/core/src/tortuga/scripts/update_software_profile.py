@@ -154,7 +154,7 @@ Updates software profile in the Tortuga system.
         api = SoftwareProfileWsApi(username=self.getUsername(),
                                    password=self.getPassword(),
                                    baseurl=self.getUrl())
-        
+
         if self.getArgs().xmlFile:
             # An XML file was provided as input...start with that...
             f = open(self.getArgs().xmlFile, 'r')

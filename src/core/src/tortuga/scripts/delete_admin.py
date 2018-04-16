@@ -19,28 +19,19 @@ from tortuga.wsapi.adminWsApi import AdminWsApi
 
 
 class DeleteAdminCli(AdminCli):
-    def __init__(self):
-        super().__init__()
+    def parseArgs(self, usage=None):
+        excl_group = self.getParser().add_mutually_exclusive_group(required=True)
 
-        self.addOption('--admin-username', dest='adminUsername',
-                       help=_('Username of admin to delete.'))
+        excl_group.add_argument('--admin-username', dest='adminUsername',
+                                help=_('Username of admin to delete.'))
 
-        self.addOption('--admin-id', dest='adminId',
-                       help=_('ID of admin to delete.'))
+        excl_group.add_argument('--admin-id', dest='adminId',
+                                help=_('ID of admin to delete.'))
+
+        super().parseArgs(usage=usage)
 
     def runCommand(self):
-        self.parseArgs(_("""
-    delete-admin <--admin-username=ADMINUSERNAME|--admin-id=ADMINID>
-
-Description:
-    The delete-admin tool deletes a single administrative user  from  the
-    Tortuga system.  This user does not need to match any operating sys-
-    tem user.
-"""))
-
-        if not self.getArgs().adminUsername and \
-                not self.getArgs().adminId:
-            self.getParser().error(_('Missing Admin Username or id'))
+        self.parseArgs(_('Deletes administrative user from Tortuga'))
 
         api = AdminWsApi(username=self.getUsername(),
                          password=self.getPassword(),

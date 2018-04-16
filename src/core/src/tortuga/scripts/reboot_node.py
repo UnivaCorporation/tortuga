@@ -29,7 +29,7 @@ class RebootNodeCli(TortugaCli):
 
         self.addOptionToGroup(
             optionGroupName, '--node', metavar='NODESPEC', dest='nodeSpec',
-            help=_('Name of node to reboot'))
+            required=True, help=_('Name of node to reboot'))
 
         self.addOptionToGroup(
             optionGroupName, '--reinstall', dest='bReinstall',
@@ -43,10 +43,6 @@ class RebootNodeCli(TortugaCli):
 Reboots specified node(s). Mark nodes for reinstallation if --reinstall
 flag is specified.
 """))
-
-        if not self.getArgs().nodeSpec:
-            raise InvalidCliRequest(
-                _('--node must be specified'))
 
         nodeApi = NodeWsApi(username=self.getUsername(),
                             password=self.getPassword(),
