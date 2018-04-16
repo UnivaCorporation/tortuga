@@ -34,7 +34,7 @@ class GetHardwareProfileCli(TortugaCli):
         self.addOptionGroup(hardwareProfileAttrGroup, None)
 
         self.addOptionToGroup(
-            hardwareProfileAttrGroup, '--name', dest='name',
+            hardwareProfileAttrGroup, '--name', required=True,
             help=_('hardware profile name'))
 
         self.addOptionToGroup(
@@ -66,13 +66,10 @@ class GetHardwareProfileCli(TortugaCli):
             help=argparse.SUPPRESS
         )
 
-        super(GetHardwareProfileCli, self).parseArgs(usage=usage)
+        super().parseArgs(usage=usage)
 
     def runCommand(self):
         self.parseArgs(usage=_('Display hardware profile details'))
-
-        if not self.getArgs().name:
-            self.getParser().error(_('--hardware-profile must be specified'))
 
         api = HardwareProfileWsApi(username=self.getUsername(),
                                    password=self.getPassword(),
