@@ -1,0 +1,9 @@
+FROM python:3.6
+
+COPY src/ /install
+
+WORKDIR /install
+RUN pip install core/
+
+WORKDIR /
+RUN rm -rf /install
