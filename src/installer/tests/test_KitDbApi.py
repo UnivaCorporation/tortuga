@@ -12,24 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tortuga.config.configManager import ConfigManager
+from tortuga.objects.tortugaObject import TortugaObjectList
+from tortuga.db.kitDbApi import KitDbApi
 
 
-def getNetworkApi(username=None, password=None):
-    """
-    Creates an object that derives from NetworkApiInterface
-    """
+def test_getKitList(dbm):
+    result = KitDbApi().getKitList()
 
-    cm = ConfigManager()
-
-    if username and password or not cm.isDbAvailable():
-
-        from tortuga.wsapi import networkWsApi
-        api = networkWsApi.NetworkWsApi(username, password)
-
-    else:
-
-        from tortuga.network import networkApi
-        api = networkApi.NetworkApi()
-
-    return api
+    assert isinstance(result, TortugaObjectList)

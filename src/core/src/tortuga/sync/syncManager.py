@@ -75,7 +75,7 @@ class SyncManager(TortugaObjectManager, Singleton):
                 'Cluster update timer count: %s' % (updateCnt))
 
             if updateCnt > SyncManager.CLUSTER_UPDATE_WARNING_LIMIT:
-                self.getLogger().warn(
+                self.getLogger().warning(
                     'Cluster updated more than %s times using the same'
                     ' timer (possible configuration problem)' % (
                         SyncManager.CLUSTER_UPDATE_WARNING_LIMIT))

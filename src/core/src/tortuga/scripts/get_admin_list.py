@@ -19,19 +19,17 @@ from tortuga.wsapi.adminWsApi import AdminWsApi
 
 
 class GetAdminListCli(AdminCli):
-    def __init__(self):
-        super().__init__()
+    def parseArgs(self, usage=None):
 
         self.addOption('-v', '--verbose',
                        action='store_true', default=False,
                        help=_('Enable verbose output'))
 
+        super().parseArgs(usage=usage)
+
     def runCommand(self):
         self.parseArgs(_("""
-    get-admin-list [options]
-
-Description:
-    Returns list of administrators in the Tortuga system.
+Return list of administrators in the Tortuga system.
 """))
 
         api = AdminWsApi(username=self.getUsername(),

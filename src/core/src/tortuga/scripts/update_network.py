@@ -31,21 +31,7 @@ class UpdateNetworkCli(NetworkCli):
         self.setupDefaultOptions()
 
     def runCommand(self):
-        self.parseArgs(_("""
-    update-network --xml-file=FILENAME
-
-    update-network <--address=NETWORK --netmask=NETMASK>|<--network NETWORK>
-       [--name=NAME --type=TYPE | --suffix=SUFFIX
-       --gateway=GATEWAY | --options=OPTIONS | --start-ip=STARTIP
-       --increment=INCREMENT ] | [--dhcp | --static ]
-
-Description:
-    The update-network tool updates an existing network definition in Tortuga.
-
-    The update-network tool has two forms one in which the network is pro-
-    vided via a XML file representation (as returned by  get-network)  and
-    the other where all of the options are specified on the command-line.
-"""))
+        self.parseArgs(_('Updates existing network definition in Tortuga'))
 
         network = self.get_network_from_cmdline()
 

@@ -23,36 +23,25 @@ from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
 class CopySoftwareProfileCli(tortugaCli.TortugaCli):
     def __init__(self):
         super().__init__()
+
+    def parseArgs(self, usage=None):
         option_group_name = _('Copy Software Profile Options')
         self.addOptionGroup(option_group_name, '')
         self.addOptionToGroup(option_group_name,
-                              '--src',
+                              '--src', required=True,
                               dest='srcSoftwareProfileName',
-                              metavar='SOFTWAREPROFILENAME',
+                              metavar='NAME',
                               help=_('Name of source software profile'))
         self.addOptionToGroup(option_group_name,
-                              '--dst',
+                              '--dst', required=True,
                               dest='dstSoftwareProfileName',
-                              metavar='SOFTWAREPROFILENAME',
+                              metavar='NAME',
                               help=_('Name of destination software profile'))
 
+        super().parseArgs(usage=usage)
+
     def runCommand(self):
-        self.parseArgs(_("""
-    copy-software-profile --src SOFTWAREPROFILENAME --dst SOFTWAREPROFILENAME
-
-Description:
-    Copy an existing software profile.
-
-    Note: This does not copy the enabled components (the exception being
-    the OS and base kits).
-
-    Additional components can be queried individually using get-component-list
-    and enabled using enable-component
-"""))
-
-        if self.getArgs().srcSoftwareProfileName is None or \
-           self.getArgs().dstSoftwareProfileName is None:
-            self.usage()
+        self.parseArgs(_('Copy an existing software profile'))
 
         api = SoftwareProfileWsApi(username=self.getUsername(),
                                    password=self.getPassword(),

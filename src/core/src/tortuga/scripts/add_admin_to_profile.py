@@ -55,16 +55,7 @@ class AddAdminToProfileCli(TortugaCli):
 
     def runCommand(self):
         self.parseArgs(_("""
-    add-admin-to-profile  --admin-username=ADMINUSERNAME
-       --software-profile=SOFTWAREPROFILENAME |
-       --hardware-profile=HARDWAREPROFILENAME
-
-Description:
-    The  add-admin-to-profile  tool  associates an existing adminstrative
-    user with a hardware or software profile.  Once a user is an adminis-
-    trative user of a profile that user can add additional administrative
-    users to the profile.
-
+Associates an existing adminstrative user with a hardware or software profile.
 """))
         swprofile = self.getArgs().swprofile
         hwprofile = self.getArgs().hwprofile

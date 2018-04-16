@@ -32,12 +32,14 @@ from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
 
 
 class GetComponentNodeListCli(TortugaCli):
-    def __init__(self):
-        super(GetComponentNodeListCli, self).__init__(validArgCount=1)
-
+    def parseArgs(self, usage=None):
         self.addOption(
             '--kit-name', dest='kitName',
             help='Kit for specified component')
+
+        self.addOption(
+            'component', nargs='?'
+        )
 
         self.addOption(
             '--expand-installer-hostname', dest='bExpandInstallerHostName',
@@ -45,9 +47,12 @@ class GetComponentNodeListCli(TortugaCli):
             help='Expand installer host name placeholder'
         )
 
+        super().parseArgs(usage=usage)
+
     def runCommand(self):
         self.parseArgs()
-        comp_name = self.getArgs()[0] if self.getArgs() else None
+
+        comp_name = self.getArgs().component
 
         api = SoftwareProfileWsApi(username=self.getUsername(),
                                    password=self.getPassword(),

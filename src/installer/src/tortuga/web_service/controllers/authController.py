@@ -56,7 +56,7 @@ def checkCredentials(username, password):
 
         return None
 
-    logger.warn('Web service login denied for user [%s]' % (username))
+    logger.warning('Web service login denied for user [%s]' % (username))
 
     sess = cherrypy.session
 

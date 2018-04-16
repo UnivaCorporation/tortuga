@@ -34,10 +34,11 @@ class TransferNodeCli(TortugaCli):
             help=_('Number of nodes to transfer'), type=int)
         self.addOption(
             '--src-software-profile',
-            dest='srcSoftwareProfileName',
+            dest='srcSoftwareProfileName', metavar='NAME',
             help=_('Source software profile to transfer nodes from'))
         self.addOption(
             '--software-profile', dest='softwareProfileName',
+            required=True, metavar='NAME",'
             help=_('Destination software profile to transfer node to'))
 
         self.addOption(
@@ -57,9 +58,6 @@ the new software profile.
         nodeCount = self.getArgs().nodeCount
         dstSoftwareProfileName = self.getArgs().softwareProfileName
         srcSoftwareProfileName = self.getArgs().srcSoftwareProfileName
-
-        if not dstSoftwareProfileName:
-            self.usage(_('Missing --software-profile option'))
 
         if nodeName:
             if nodeCount:

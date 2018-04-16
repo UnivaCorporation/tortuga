@@ -88,10 +88,16 @@ class KitsDbHandler(TortugaDbObjectHandler):
                 'Ambiguous kit specification. Specify version and/or'
                 ' iteration')
 
-    def getKitList(self, session):
+    def getKitList(self, session: Session,
+                   os_kits_only: Optional[bool] = False):
         """
         Get list of kits from the db.
         """
+
+        if os_kits_only:
+            self.getLogger().debug('Retrieving OS kits only')
+
+            return session.query(Kit).filter(Kit.isOs == True).all()
 
         self.getLogger().debug('Retrieving all available kits')
 

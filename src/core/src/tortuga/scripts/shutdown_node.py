@@ -22,25 +22,17 @@ from tortuga.wsapi.nodeWsApi import NodeWsApi
 
 
 class ShutdownNodeCli(TortugaCli):
-    def __init__(self):
-        super(ShutdownNodeCli, self).__init__()
-
+    def parseArgs(self, usage=None):
         optionGroupName = _('Shutdown Node Options')
         self.addOptionGroup(optionGroupName, '')
         self.addOptionToGroup(optionGroupName, '--node',
-                              dest='nodeName',
+                              dest='nodeName', required=True,
                               help=_('Name of node to shutdown'))
 
+        super().parseArgs(usage=usage)
+
     def runCommand(self):
-        self.parseArgs(_("""
-    shutdown-node --node=NODENAME
-
-Description:
-    Shuts down the given node.
-"""))
-
-        if not self.getArgs().nodeName:
-            raise InvalidCliRequest(_('Node name must be specified'))
+        self.parseArgs(_('Shuts down the given node'))
 
         try:
             # Perform a "soft" shutdown
