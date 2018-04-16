@@ -16,13 +16,14 @@
 
 # pylint: disable=no-member
 
-import sys
 import configparser
 import pprint
+import sys
 import urllib.parse
+
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.config.configManager import ConfigManager
+from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.kit import kitApiFactory
 
 
@@ -138,8 +139,8 @@ class TortugaProxyConfig(TortugaCli):
                 sys.exit(1)
 
             if not self.getArgs().bForce:
-                print(('URI [%s] is already proxied to [%s]' % (
-                    proxy_from, proxyMap[proxy_from])))
+                print('URI [%s] is already proxied to [%s]' % (
+                    proxy_from, proxyMap[proxy_from]))
 
                 sys.exit(1)
 
@@ -225,10 +226,10 @@ class TortugaProxyConfig(TortugaCli):
             existingKit = self.__get_existing_kit_by_url(proxy_path)
 
             if existingKit and not self.getArgs().bForce:
-                print(('WARNING: an installed %s [%s] matches this URL.'
+                print('WARNING: an installed %s [%s] matches this URL.'
                       ' Use \'--force\' to override this sanity check.' % (
                           'OS kit' if existingKit.getIsOs() else 'kit',
-                          existingKit)))
+                          existingKit))
 
                 sys.exit(1)
 

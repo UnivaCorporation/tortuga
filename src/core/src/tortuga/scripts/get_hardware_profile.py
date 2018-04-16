@@ -20,8 +20,7 @@ import argparse
 import json
 
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.wsapi.hardwareProfileWsApi \
-    import HardwareProfileWsApi
+from tortuga.wsapi.hardwareProfileWsApi import HardwareProfileWsApi
 
 
 class GetHardwareProfileCli(TortugaCli):
@@ -110,7 +109,8 @@ class GetHardwareProfileCli(TortugaCli):
     def __console_output(self, hwprofile):
         print(hwprofile.getName())
 
-        print(' ' * 2 + '- Description: {0}'.format(hwprofile.getDescription()))
+        print(' ' * 2 + '- Description: {0}'.format(
+            hwprofile.getDescription()))
 
         print(' ' * 2 + '- Install type: {0}'.format(
             hwprofile.getInstallType()))
@@ -144,10 +144,10 @@ class GetHardwareProfileCli(TortugaCli):
                 not hwprofile.getResourceAdapter():
             pass
         else:
-            print((' ' * 2 + '- Resource adapter: {0}'
-                   ' (location: {1}, cost: {2})'.format(
-                       hwprofile.getResourceAdapter().getName(),
-                       hwprofile.getLocation(), hwprofile.getCost())))
+            print(' ' * 2 + '- Resource adapter: {0}'
+                  ' (location: {1}, cost: {2})'.format(
+                      hwprofile.getResourceAdapter().getName(),
+                      hwprofile.getLocation(), hwprofile.getCost()))
 
         if self.getArgs().getAdmins:
             if hwprofile.getAdmins():
