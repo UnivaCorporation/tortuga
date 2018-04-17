@@ -23,8 +23,7 @@ import urllib.error
 import urllib.request
 from logging import getLogger
 
-import pip
-
+from pip._internal import main as pip
 from .metadata import KitMetadataSchema
 from tortuga.exceptions.fileNotFound import FileNotFound
 from tortuga.exceptions.kitNotFound import KitNotFound
@@ -84,7 +83,7 @@ def pip_install_requirements(kit_installer, requirements_path):
         '-r',
         requirements_path
     ])
-    pip.main(pip_arguments)
+    pip(pip_arguments)
 
 
 def is_requirements_empty(requirements_file_path):
