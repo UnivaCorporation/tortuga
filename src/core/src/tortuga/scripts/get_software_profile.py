@@ -121,9 +121,9 @@ class GetSoftwareProfileCli(TortugaCli):
             self.getArgs().name, optionDict)
 
         if self.getArgs().json:
-            print((json.dumps({
+            print(json.dumps({
                 'swprofile': swprofile.getCleanDict(),
-            }, sort_keys=True, indent=4, separators=(',', ': '))))
+            }, sort_keys=True, indent=4, separators=(',', ': ')))
         elif self.getArgs().xml:
             print(swprofile.getXmlRep())
         else:

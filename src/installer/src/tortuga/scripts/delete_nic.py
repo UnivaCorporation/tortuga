@@ -27,6 +27,7 @@ from tortuga.db.models.hardwareProfileProvisioningNic import \
 from tortuga.db.models.network import Network
 from tortuga.db.models.networkDevice import NetworkDevice
 from tortuga.db.models.nic import Nic
+from tortuga.db.models.node import Node
 from tortuga.db.models.softwareProfile import SoftwareProfile
 from tortuga.db.networkDevicesDbHandler import NetworkDevicesDbHandler
 from tortuga.db.nodesDbHandler import NodesDbHandler

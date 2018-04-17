@@ -16,11 +16,11 @@
 
 # pylint: disable=no-member
 
-import sys
 import json
+import sys
 
-from tortuga.kit.kitCli import KitCli
 from tortuga.exceptions.kitNotFound import KitNotFound
+from tortuga.kit.kitCli import KitCli
 from tortuga.wsapi.kitWsApi import KitWsApi
 
 
@@ -89,9 +89,9 @@ Returns details of the specified kit
                 if self.getArgs().xml:
                     print('%s' % (kit.getXmlRep()))
                 elif self.getArgs().json:
-                    print((json.dumps({
+                    print(json.dumps({
                         'kit': kit.getCleanDict(),
-                    }, sort_keys=True, indent=4, separators=(',', ': '))))
+                    }, sort_keys=True, indent=4, separators=(',', ': ')))
                 else:
                     self._console_output(kit)
 

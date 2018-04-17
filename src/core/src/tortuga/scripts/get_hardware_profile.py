@@ -20,8 +20,7 @@ import argparse
 import json
 
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.wsapi.hardwareProfileWsApi \
-    import HardwareProfileWsApi
+from tortuga.wsapi.hardwareProfileWsApi import HardwareProfileWsApi
 
 
 class GetHardwareProfileCli(TortugaCli):
@@ -35,7 +34,7 @@ class GetHardwareProfileCli(TortugaCli):
         self.addOptionGroup(hardwareProfileAttrGroup, None)
 
         self.addOptionToGroup(
-            hardwareProfileAttrGroup, '--name', dest='name',
+            hardwareProfileAttrGroup, '--name', required=True,
             help=_('hardware profile name'))
 
         self.addOptionToGroup(
@@ -67,13 +66,10 @@ class GetHardwareProfileCli(TortugaCli):
             help=argparse.SUPPRESS
         )
 
-        super(GetHardwareProfileCli, self).parseArgs(usage=usage)
+        super().parseArgs(usage=usage)
 
     def runCommand(self):
         self.parseArgs(usage=_('Display hardware profile details'))
-
-        if not self.getArgs().name:
-            self.getParser().error(_('--hardware-profile must be specified'))
 
         api = HardwareProfileWsApi(username=self.getUsername(),
                                    password=self.getPassword(),
@@ -110,7 +106,8 @@ class GetHardwareProfileCli(TortugaCli):
     def __console_output(self, hwprofile):
         print(hwprofile.getName())
 
-        print(' ' * 2 + '- Description: {0}'.format(hwprofile.getDescription()))
+        print(' ' * 2 + '- Description: {0}'.format(
+            hwprofile.getDescription()))
 
         print(' ' * 2 + '- Install type: {0}'.format(
             hwprofile.getInstallType()))
@@ -144,10 +141,10 @@ class GetHardwareProfileCli(TortugaCli):
                 not hwprofile.getResourceAdapter():
             pass
         else:
-            print((' ' * 2 + '- Resource adapter: {0}'
-                   ' (location: {1}, cost: {2})'.format(
-                       hwprofile.getResourceAdapter().getName(),
-                       hwprofile.getLocation(), hwprofile.getCost())))
+            print(' ' * 2 + '- Resource adapter: {0}'
+                  ' (location: {1}, cost: {2})'.format(
+                      hwprofile.getResourceAdapter().getName(),
+                      hwprofile.getLocation(), hwprofile.getCost()))
 
         if self.getArgs().getAdmins:
             if hwprofile.getAdmins():

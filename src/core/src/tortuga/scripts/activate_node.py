@@ -88,10 +88,10 @@ Transfers given idle node to the given active software profile.
 
             for nodeName, hardwareProfileName, software_profile_name in \
                     result['ProfileMappingNotAllowed']:
-                print((_('Node [{0}] belongs to hardware profile [{1}], which'
-                         ' is not allowed to use software profile'
-                         ' [{2}]').format(nodeName, hardwareProfileName,
-                                          software_profile_name)))
+                print(_('Node [{0}] belongs to hardware profile [{1}], which'
+                        ' is not allowed to use software profile'
+                        ' [{2}]').format(nodeName, hardwareProfileName,
+                                         software_profile_name))
         except TortugaException as ex:
             print(_("Error: Can't activate node(s) - {}".format(ex)))
 

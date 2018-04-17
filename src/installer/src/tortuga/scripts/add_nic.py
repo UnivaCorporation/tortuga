@@ -42,27 +42,21 @@ from tortuga.os_utility import tortugaSubprocess
 
 
 class AddNicCli(TortugaCli):
-    def __init__(self):
-        super().__init__()
-
-        self._dbm = DbManager()
-
-        self._nodeApi = nodeApiFactory.getNodeApi()
-
     def parseArgs(self, usage=None):
         optionsGroupName = 'Options'
 
-        self.addOptionGroup(optionsGroupName, None)
+        options_group = self.addOptionGroup(optionsGroupName, None)
 
-        self.addOptionToGroup(
-            optionsGroupName,
+        excl_group = options_group.add_mutually_exclusive_group(
+            required=True)
+
+        excl_group.add_argument(
             '--autodetect',
             action='store_true', default=False,
             dest='autodetect',
             help='Auto-detect unmanaged network interfaces')
 
-        self.addOptionToGroup(
-            optionsGroupName,
+        excl_group.add_argument(
             '--nic',
             dest='nic',
             help='Add provisioning NIC to installer')
@@ -106,7 +100,7 @@ class AddNicCli(TortugaCli):
         super().parseArgs(usage=usage)
 
     def runCommand(self):
-        self.parseArgs()
+        self.parseArgs('Register provisioning network interface in Tortuga')
 
         if self.getArgs().autodetect:
             self._findUnmanagedNics()
@@ -114,9 +108,6 @@ class AddNicCli(TortugaCli):
             # Attempt to automatically determine the parameters for the
             # specified NIC and associate with installer
             self._addNic(self.getArgs().nic)
-        else:
-            self.getParser().error('Missing required --nic or --autodetect'
-                                   ' argument')
 
     def _getSystemNics(self): \
             # pylint: disable=no-self-use
@@ -151,7 +142,8 @@ class AddNicCli(TortugaCli):
         systemNics = set(self._getSystemNics())
 
         # Get provisioning NICs on installer
-        nics = self._nodeApi.getInstallerNode().getNics()
+        node_api = nodeApiFactory.getNodeApi()
+        nics = node_api.getInstallerNode().getNics()
 
         # Filter out the NIC names
         primaryInstallerNics = set(
@@ -300,7 +292,7 @@ class AddNicCli(TortugaCli):
         # Check if nic is the default gateway as well...
         self._check_default_gateway_nic(nicName)
 
-        with self._dbm.session() as session:
+        with DbManager.session() as session:
             dbNetwork = None
 
             # Attempt to find matching network
