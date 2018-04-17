@@ -175,6 +175,10 @@ def dbm():
         ra_component.family.append(os_family)
         ra_kit.components.append(ra_component)
 
+        installer_node.softwareprofile.components.append(ra_component)
+        installer_node.softwareprofile.components.append(installer_component)
+        session.commit()
+
         # create 'default' resource adapter
         default_adapter = ResourceAdapter(name='default')
         default_adapter.kit = kit
