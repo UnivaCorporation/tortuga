@@ -122,6 +122,14 @@ class GetNodeStatus(TortugaCli): \
             help=_('Filter results by specified tag(s) (comma-separated)'),
         )
 
+        self.addOption(
+            '--all',
+            dest='showAll',
+            action='store_true',
+            default=False,
+            help=_('Show all nodes, including deleted'),
+        )
+
         super().parseArgs(usage=usage)
 
     def runCommand(self):
@@ -171,6 +179,9 @@ class GetNodeStatus(TortugaCli): \
 
         if options.hardwareProfile:
             nodes = self.__filter_nodes(nodes, ['hardwareprofile', 'name'], options.hardwareProfile)
+
+        if not options.showAll:
+            nodes = self.__filter_nodes(nodes, 'state', 'Deleted', True)
 
         grouped: Dict[str, List[Dict[str, Any]]] = self.__group_nodes(nodes, options.bByHardwareProfile)
 
