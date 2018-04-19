@@ -35,7 +35,7 @@ Notes on kit directory naming:
 - Since it is possible for multiple versions of the kit to be installed simultaneously, having the python package names versioned is important.
 - The top-level *tortuga_kits* directory is a python3 namespace, and must not contain an *\_\_init\_\_.py* file.
 
-### 3. Implement kit instlaller methods
+### 3. Implement kit installer methods
 
 Edit the **kit.py** file and implement the action methods as required for your kit.
 
