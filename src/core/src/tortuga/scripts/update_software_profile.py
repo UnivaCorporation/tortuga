@@ -29,7 +29,6 @@ class UpdateSoftwareProfileCli(TortugaCli):
     # Software Profile Fetch Options
     # Skip nodes, components, and admins for update operations
     optionDict = {
-        'packages': True,
         'partitions': True,
     }
 
@@ -52,13 +51,6 @@ class UpdateSoftwareProfileCli(TortugaCli):
                               ' this profile.'))
 
         # Complex Options
-        self.addOption('--add-package', dest='addPackage', action='append',
-                       help=_('A new package to add to the software profile'))
-
-        self.addOption('--delete-package', dest='deletePackage',
-                       action='append',
-                       help=_('A package to delete from software profile'))
-
         self.addOption('--add-partition', dest='addPartition',
                        help=_('A new partition to add to software profile'))
 
@@ -191,22 +183,6 @@ Updates software profile in the Tortuga system.
             sp.setInitrd(self.getArgs().initrd)
         if self.getArgs().minNodes is not None:
             sp.setMinNodes(self.getArgs().minNodes)
-        if self.getArgs().deletePackage is not None:
-            from tortuga.objects.tortugaObject import TortugaObjectList
-            out = TortugaObjectList()
-            for p in sp.getPackages():
-                for dp in self.getArgs().deletePackage:
-                    if dp == p.getName():
-                        # Skip over this item..its getting deleted
-                        break
-                else:
-                    # Not a package we are deleting
-                    out.append(p)
-            sp.setPackages(out)
-        if self.getArgs().addPackage is not None:
-            from tortuga.objects.package import Package
-            for p in self.getArgs().addPackage:
-                sp.getPackages().append(Package(p))
         if self.getArgs().deletePartition is not None:
             from tortuga.objects.tortugaObject import TortugaObjectList
             out = TortugaObjectList()

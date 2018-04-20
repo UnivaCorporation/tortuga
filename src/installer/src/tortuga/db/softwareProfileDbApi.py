@@ -37,12 +37,10 @@ from tortuga.exceptions.updateSoftwareProfileFailed import \
     UpdateSoftwareProfileFailed
 from tortuga.objects.component import Component
 from tortuga.objects.node import Node
-from tortuga.objects.package import Package
 from tortuga.objects.partition import Partition
 from tortuga.objects.softwareProfile import SoftwareProfile
 from tortuga.objects.tortugaObject import TortugaObjectList
 
-from .models.package import Package as PackageModel
 from .models.partition import Partition as PartitionModel
 from .models.softwareProfile import SoftwareProfile as SoftwareProfileModel
 
@@ -497,33 +495,6 @@ class SoftwareProfileDbApi(TortugaDbApi):
         finally:
             DbManager().closeSession()
 
-    def getPackageList(self, softwareProfileName):
-        """
-        Get a list of packages from the db.
-
-            Returns:
-                [package]
-            Throws:
-                SoftwareProfileNotFound
-                DbError
-        """
-
-        session = DbManager().openSession()
-
-        try:
-            dbPackages = self._softwareProfilesDbHandler.\
-                getSoftwareProfile(
-                    session, softwareProfileName).packages
-
-            return self.getTortugaObjectList(Package, dbPackages)
-        except TortugaException as ex:
-            raise
-        except Exception as ex:
-            self.getLogger().exception('%s' % ex)
-            raise
-        finally:
-            DbManager().closeSession()
-
     def getPartitionList(self, softwareProfileName):
         """
         Get a list of software profile partitions from the db.
@@ -545,64 +516,6 @@ class SoftwareProfileDbApi(TortugaDbApi):
         except TortugaException as ex:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
-            raise
-        finally:
-            DbManager().closeSession()
-
-    def addPackage(self, packageName, softwareProfileName):
-        """
-        Add software profile package.
-
-            Returns:
-                packageId
-            Throws:
-                PackageAlreadyExists
-                SoftwareProfileNotFound
-                DbError
-        """
-
-        session = DbManager().openSession()
-
-        try:
-            self._softwareProfilesDbHandler.addPackageToSoftwareProfile(
-                session, packageName, softwareProfileName)
-
-            session.commit()
-        except TortugaException as ex:
-            session.rollback()
-            raise
-        except Exception as ex:
-            session.rollback()
-            self.getLogger().exception('%s' % ex)
-            raise
-        finally:
-            DbManager().closeSession()
-
-    def deletePackage(self, packageName, softwareProfileName):
-        """
-        Delete node from the db.
-
-            Returns:
-                None
-            Throws:
-                PackageNotFound
-                SoftwareProfileNotFound
-                DbError
-        """
-
-        session = DbManager().openSession()
-
-        try:
-            self._softwareProfilesDbHandler.\
-                deletePackageFromSoftwareProfile(
-                    session, packageName, softwareProfileName)
-            session.commit()
-        except TortugaException as ex:
-            session.rollback()
-            raise
-        except Exception as ex:
-            session.rollback()
             self.getLogger().exception('%s' % ex)
             raise
         finally:
@@ -845,20 +758,6 @@ class SoftwareProfileDbApi(TortugaDbApi):
         dbSoftwareProfile.minNodes = softwareProfile.getMinNodes()
         dbSoftwareProfile.isIdle = softwareProfile.getIsIdle()
 
-        # Add packages
-        packages = {}
-        for package in softwareProfile.getPackages():
-            # This is a new package
-            dbPackage = PackageModel()
-
-            dbPackage.name = package.getName()
-            if packages.get(dbPackage.name) is not None:
-                # Duplicate package ...error
-                raise UpdateSoftwareProfileFailed(
-                    'Duplicate package [%s] found' % (dbPackage.name))
-
-            packages[dbPackage.name] = dbPackage
-
         # Add partitions
         partitions = {}
         for partition in softwareProfile.getPartitions():
@@ -938,12 +837,10 @@ class SoftwareProfileDbApi(TortugaDbApi):
 
         # Delete out the old ones
         dbSoftwareProfile.partitions = []
-        dbSoftwareProfile.packages = []
 
         session.flush()
 
         dbSoftwareProfile.partitions = list(partitions.values())
-        dbSoftwareProfile.packages = list(packages.values())
 
         session.add(dbSoftwareProfile)
 
@@ -958,7 +855,6 @@ class SoftwareProfileDbApi(TortugaDbApi):
         srcSoftwareProfile = self.getSoftwareProfile(
             srcSoftwareProfileName, {
                 'partitions': True,
-                'packages': True,
                 'components': True,
             })
 
@@ -972,9 +868,6 @@ class SoftwareProfileDbApi(TortugaDbApi):
         # partitions
         dstSoftwareProfile.setPartitions(
             srcSoftwareProfile.getPartitions())
-
-        # packages
-        dstSoftwareProfile.setPackages(srcSoftwareProfile.getPackages())
 
         # Finally add the software profile
         dstSoftwareProfile = self.addSoftwareProfile(

@@ -149,6 +149,11 @@ def install(options):
     if not newPath.exists():
         instScript.link(newPath)
 
+    # copy upgrade script
+    upgrade_script = path('src/install-script/upgrade-tortuga.sh')
+    upgrade_script_install = installDir.joinpath(upgrade_script.basename())
+    upgrade_script.link(upgrade_script_install)
+
 
 @task
 def tarball(options):

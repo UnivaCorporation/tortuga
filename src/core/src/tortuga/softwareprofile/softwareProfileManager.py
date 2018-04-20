@@ -732,10 +732,6 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
         """ Get the list of enabled components """
         return self._sp_db_api.getEnabledComponentList(name)
 
-    def getPackageList(self, softwareProfileName):
-        """ Get list of packages. """
-        return self._sp_db_api.getPackageList(softwareProfileName)
-
     def getPartitionList(self, softwareProfileName):
         """ Get list of partitions. """
         return self._sp_db_api.getPartitionList(softwareProfileName)

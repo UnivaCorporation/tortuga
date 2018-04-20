@@ -1,7 +1,7 @@
 """Rename Nodes table to nodes
 
 Revision ID: c39f7655419a
-Revises: 
+Revises:
 Create Date: 2018-04-14 14:27:57.420306
 
 """
@@ -43,6 +43,7 @@ old_tables = [
     ('Nodes', 'nodes'),
     ('OperatingSystems', 'operatingsystems'),
     ('OperatingSystemsFamilies', 'operatingsystemsfamilies'),
+    ('Packages', 'packages'),
 ]
 
 

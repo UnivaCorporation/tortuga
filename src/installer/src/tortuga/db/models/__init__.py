@@ -40,6 +40,5 @@ from . import partition  # noqa
 from . import softwareProfile  # noqa
 from . import resourceAdapter  # noqa
 from . import hardwareProfileProvisioningNic  # noqa
-from . import package  # noqa
 from . import nodeRequest  # noqa
 from . import resourceAdapterCredential  # noqa
