@@ -17,7 +17,6 @@ depends_on = None
 
 
 def upgrade():
-    op.drop_table('software_profile_packages')
     op.drop_table('packages')
 
 
