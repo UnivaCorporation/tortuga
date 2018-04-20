@@ -559,9 +559,6 @@ class HardwareProfileDbApi(TortugaDbApi):
 
         dbHardwareProfile.hypervisorSoftwareProfileId = hardwareProfile.\
             getHypervisorSoftwareProfileId()
-        dbHardwareProfile.maxUnits = hardwareProfile.getMaxUnits()
-        dbHardwareProfile.bcastEnabled = hardwareProfile.getBcastEnabled()
-        dbHardwareProfile.mcastEnabled = hardwareProfile.getMcastEnabled()
         dbHardwareProfile.cost = hardwareProfile.getCost()
 
         # Add resource adapter
