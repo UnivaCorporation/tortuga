@@ -292,7 +292,7 @@ class AddNicCli(TortugaCli):
         # Check if nic is the default gateway as well...
         self._check_default_gateway_nic(nicName)
 
-        with DbManager.session() as session:
+        with DbManager().session() as session:
             dbNetwork = None
 
             # Attempt to find matching network
