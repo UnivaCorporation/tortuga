@@ -38,11 +38,3 @@ class ResourceAdapterCredential(ModelBase):
 
     resourceadapter = relationship('ResourceAdapter',
                                    uselist=False, backref='credentials')
-
-    def __init__(self, name=None, resourceadapter=None, key=None, value=None):
-        super().__init__()
-
-        self.name = name
-        self.resourceadapter = resourceadapter
-        self.key = key
-        self.value = value

@@ -152,7 +152,8 @@ def install(options):
     # copy upgrade script
     upgrade_script = path('src/install-script/upgrade-tortuga.sh')
     upgrade_script_install = installDir.joinpath(upgrade_script.basename())
-    upgrade_script.link(upgrade_script_install)
+    if not upgrade_script_install.exists():
+        upgrade_script.link(upgrade_script_install)
 
 
 @task
