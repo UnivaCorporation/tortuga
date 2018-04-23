@@ -29,6 +29,8 @@ from tortuga.exceptions.fileNotFound import FileNotFound
 from tortuga.exceptions.kitNotFound import KitNotFound
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.os_utility.tortugaSubprocess import TortugaSubprocess
+from tortuga.config.configManager import ConfigManager
+
 
 logger = getLogger(__name__)
 
@@ -66,11 +68,7 @@ def pip_install_requirements(kit_installer, requirements_path):
         logger.debug('Requirements empty: {}'.format(requirements_path))
         return
 
-    cm = ConfigManager()
-    pip_cmd = [
-        os.path.join(cm.getRoot(), 'bin', 'pip'),
-        'install'
-    ]
+    pip_cmd = ['{}/pip'.format(ConfigManager().getBinDir()), 'install']
 
     kit_python_repo = os.path.join(
         kit_installer.install_path,
