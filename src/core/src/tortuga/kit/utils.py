@@ -24,6 +24,7 @@ import urllib.request
 from logging import getLogger
 
 from .metadata import KitMetadataSchema
+from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.fileNotFound import FileNotFound
 from tortuga.exceptions.kitNotFound import KitNotFound
 from tortuga.exceptions.tortugaException import TortugaException
