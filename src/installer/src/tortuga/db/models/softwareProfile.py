@@ -56,11 +56,6 @@ class SoftwareProfile(ModelBase):
 
     os = relationship('OperatingSystem', lazy=False)
 
-    packages = relationship(
-        'Package',
-        cascade="all,delete-orphan",
-        backref='softwareprofiles')
-
     partitions = relationship('Partition', cascade="all,delete-orphan")
 
     hardwareprofiles = relationship(

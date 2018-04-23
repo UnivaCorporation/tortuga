@@ -280,7 +280,6 @@ class SoftwareProfileController(TortugaController):
             'components': True,
             'nodes': True,
             'os': True,
-            'packages': True,
             'partitions': True,
         }
 

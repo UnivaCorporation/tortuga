@@ -156,25 +156,6 @@ class SoftwareProfileApi(TortugaApi): \
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
 
-    def getPackageList(self, softwareProfileName):
-        """
-        Get package list for a given softwareprofile
-
-            Returns:
-                [package]
-            Throws:
-                SoftwareProfileNotFound
-                TortugaException
-        """
-        try:
-            return self._softwareProfileManager.\
-                getPackageList(softwareProfileName)
-        except TortugaException as ex:
-            raise
-        except Exception as ex:
-            self.getLogger().exception('%s' % ex)
-            raise TortugaException(exception=ex)
-
     def getPartitionList(self, softwareProfileName):
         """
         Get partition list for a given softwareprofile
