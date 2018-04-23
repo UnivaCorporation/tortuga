@@ -23,13 +23,13 @@ import urllib.error
 import urllib.request
 from logging import getLogger
 
-from .metadata import KitMetadataSchema
 from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.fileNotFound import FileNotFound
 from tortuga.exceptions.kitNotFound import KitNotFound
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.os_utility.tortugaSubprocess import TortugaSubprocess
-from tortuga.config.configManager import ConfigManager
+
+from .metadata import KitMetadataSchema
 
 
 logger = getLogger(__name__)
