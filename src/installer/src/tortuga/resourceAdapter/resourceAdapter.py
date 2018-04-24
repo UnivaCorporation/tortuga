@@ -36,6 +36,7 @@ from tortuga.db.models.node import Node
 from tortuga.db.models.softwareProfile import SoftwareProfile
 from tortuga.db.resourceAdapterCredentialsDbHandler import \
     ResourceAdapterCredentialsDbHandler
+from tortuga.exceptions.configurationError import ConfigurationError
 from tortuga.exceptions.nicNotFound import NicNotFound
 from tortuga.exceptions.resourceNotFound import ResourceNotFound
 from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
@@ -51,7 +52,7 @@ class ResourceAdapter(UserDataMixin): \
     This is the base class for all resource adapters to derive from.
     The default actions simply print a debug message to show that the
     subclass did not implement the action.
-    
+
     """
     settings = {}
 
@@ -246,9 +247,7 @@ class ResourceAdapter(UserDataMixin): \
         if sectionName is None:
             sectionName = 'default'
 
-        session = DbManager().openSession()
-
-        try:
+        with DbManager().session() as session:
             self.getLogger().debug('_loadConfigDict()')
 
             result = ResourceAdapterCredentialsDbHandler().get(
@@ -258,8 +257,6 @@ class ResourceAdapter(UserDataMixin): \
 
             for entry in result['configuration']:
                 configDict[entry['key']] = entry['value']
-        finally:
-            DbManager().closeSession()
 
         return configDict
 
