@@ -17,14 +17,15 @@
 import configparser
 import csv
 import logging
+import os.path
 import socket
 import subprocess
 import sys
 import traceback
-from typing import Optional, Union, List, NoReturn
+from typing import List, NoReturn, Optional, Union
 
-import os.path
 from sqlalchemy.orm.session import Session
+
 from tortuga.addhost.addHostManager import AddHostManager
 from tortuga.config.configManager import ConfigManager
 from tortuga.db.dbManager import DbManager
@@ -33,16 +34,18 @@ from tortuga.db.models.network import Network
 from tortuga.db.models.nic import Nic
 from tortuga.db.models.node import Node
 from tortuga.db.models.softwareProfile import SoftwareProfile
-from tortuga.db.resourceAdapterCredentialsDbHandler \
-    import ResourceAdapterCredentialsDbHandler
+from tortuga.db.resourceAdapterCredentialsDbHandler import \
+    ResourceAdapterCredentialsDbHandler
 from tortuga.exceptions.nicNotFound import NicNotFound
 from tortuga.exceptions.resourceNotFound import ResourceNotFound
 from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
 from tortuga.os_utility.osUtility import getOsObjectFactory
 from tortuga.parameter.parameterApi import ParameterApi
 
+from .userDataMixin import UserDataMixin
 
-class ResourceAdapter(object): \
+
+class ResourceAdapter(UserDataMixin): \
         # pylint: disable=too-many-public-methods
     """
     This is the base class for all resource adapters to derive from.
@@ -596,6 +599,23 @@ class ResourceAdapter(object): \
                 ParameterApi().getParameter('DNSZone').getValue()
 
         return self.__private_dns_zone
+
+    def _get_config_file_path(self, filepath):
+        """
+        Raises:
+            ConfigurationError
+        """
+
+        if filepath.startswith('/'):
+            fn = filepath
+        else:
+            fn = os.path.join(self._cm.getKitConfigBase(), filepath)
+
+        if not os.path.exists(fn):
+            raise ConfigurationError(
+                'Configuration file [{0}] does not exist'.format(fn))
+
+        return fn
 
     def get_node_vcpus(self, name: str) -> int: \
             # pylint: disable=unused-argument
