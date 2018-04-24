@@ -107,6 +107,9 @@ setup(
         'pip2pi',
         'passlib',
     ],
+    dependency_links=[
+        "git+ssh://git@github.com/EmmEff/pip2pi.git@pip-10-fix#egg=pip2pi-0.7.0"
+    ],
     zip_safe=False,
     namespace_packages=['tortuga'],
     cmdclass={
