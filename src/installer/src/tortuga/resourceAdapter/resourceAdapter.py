@@ -247,9 +247,7 @@ class ResourceAdapter(UserDataMixin): \
         if sectionName is None:
             sectionName = 'default'
 
-        session = DbManager().openSession()
-
-        try:
+        with DbManager().session() as session:
             self.getLogger().debug('_loadConfigDict()')
 
             result = ResourceAdapterCredentialsDbHandler().get(
@@ -259,8 +257,6 @@ class ResourceAdapter(UserDataMixin): \
 
             for entry in result['configuration']:
                 configDict[entry['key']] = entry['value']
-        finally:
-            DbManager().closeSession()
 
         return configDict
 
