@@ -32,10 +32,11 @@ class UserDataMixin: \
     """
 
     def expand_cloud_init_user_data_template(
-            self, configDict: dict, node: Optional[Union[Node, None]] = None): \
+            self, configDict: dict,
+            node: Optional[Union[Node, None]] = None) -> str: \
             # pylint: disable=unused-argument
         """
-        Return YAML data based on configured cloud-init script template
+        Return cloud-init script template
         """
 
         if 'cloud_init_script_template' not in configDict:
