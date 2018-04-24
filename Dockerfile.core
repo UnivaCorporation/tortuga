@@ -1,9 +1,5 @@
 FROM python:3.6
 
-COPY src/ /install
+COPY src/core /usr/tortuga/src/core
 
-WORKDIR /install
-RUN pip install core/
-
-WORKDIR /
-RUN rm -rf /install
+RUN pip install -e /usr/tortuga/src/core
