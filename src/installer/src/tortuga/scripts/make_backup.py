@@ -83,6 +83,7 @@ class MakeBackup(object):
         timestamp: int = int(time())
         backup_directory: str = 'tortuga-backup-{}'.format(timestamp)
         self.backup_path: str = os.path.join('/tmp', backup_directory)
+        self.backup_archive: str = self.backup_path + '.tar.bz2'
 
         manager: ConfigManager = ConfigManager()
 
@@ -95,22 +96,36 @@ class MakeBackup(object):
 
         self.config: dict = get_database_config(parsed, manager)
 
+        self.manifest: dict = {}
+
     def __call__(self) -> None:
         """
         :return: None
         """
+        os.mkdir(self.backup_path)
         self.backup_database()
         self.backup_config()
-        self.make_manifest()
+        self.write_manifest()
         self.make_archive()
+        shutil.rmtree(self.backup_path)
+        shutil.move(
+            self.backup_archive,
+            os.getcwd()
+        )
 
     def _backup_sqlite(self) -> None:
         """
         :return: None
         """
+        self.manifest['database']['path']: str = \
+            os.path.basename(self.config['path'])
+
         shutil.copy(
             self.config['path'],
-            self.backup_path
+            os.path.join(
+                self.backup_path,
+                os.path.basename(self.config['path'])
+            )
         )
 
     def _backup_mysql(self) -> None:
@@ -128,7 +143,17 @@ class MakeBackup(object):
             'mysql': self._backup_mysql
         }
 
-        database_map[self.config['engine']]()
+        self.manifest['database']: dict = {}
+
+        self.manifest['database']['engine']: str = \
+            self.config['engine']
+
+        if self.config['engine'] in database_map.keys():
+            database_map[self.config['engine']]()
+        else:
+            raise NotImplementedError('{} is not supported'.format(
+                self.config['engine']
+            ))
 
     def backup_config(self) -> None:
         """
@@ -140,29 +165,24 @@ class MakeBackup(object):
                 self.backup_path
             )
 
-    def make_manifest(self) -> None:
+    def write_manifest(self) -> None:
         """
         :return: None
         """
-        manifest: dict = {
-            'database': self.config['engine']
-        }
-
         manifest_path: str = os.path.join(
             self.backup_path,
             'manifest.json'
         )
 
         with open(manifest_path, 'w') as out:
-            json.dump(manifest, out)
+            json.dump(self.manifest, out)
 
     def make_archive(self) -> None:
         """
         :return: None
         """
-        with tarfile.open(
-                self.backup_path + '.tar.bz', 'w:bz2') as out:
-            out.add(self.backup_path)
+        with tarfile.open(self.backup_archive, 'w:bz2') as out:
+            out.add(self.backup_path, arcname='tortuga-backup')
 
 
 def main() -> None:
