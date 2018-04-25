@@ -23,11 +23,14 @@ import urllib.error
 import urllib.request
 from logging import getLogger
 
-from .metadata import KitMetadataSchema
+from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.fileNotFound import FileNotFound
 from tortuga.exceptions.kitNotFound import KitNotFound
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.os_utility.tortugaSubprocess import TortugaSubprocess
+
+from .metadata import KitMetadataSchema
+
 
 logger = getLogger(__name__)
 
@@ -65,7 +68,7 @@ def pip_install_requirements(kit_installer, requirements_path):
         logger.debug('Requirements empty: {}'.format(requirements_path))
         return
 
-    pip_cmd = ['pip', 'install']
+    pip_cmd = ['{}/pip'.format(ConfigManager().getBinDir()), 'install']
 
     kit_python_repo = os.path.join(
         kit_installer.install_path,

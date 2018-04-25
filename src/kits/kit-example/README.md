@@ -15,7 +15,7 @@ In order to create and build a kit, you must have the following installed:
 
 Set the name, version, iteration, and description for your kit.
 
-- Names must be all lowercase, no spaces, and can only use underscores for separating words. Our recommendation is to use a singe lowercase word.
+- Names must be all lowercase, no spaces, and can only use underscores for separating words. Our recommendation is to use a single lowercase word.
 - Versions are required, and must follow semantic versioning (https://semver.org/)
 - Iterations are a single integer, if you don't know what to put here, use '0'.
 

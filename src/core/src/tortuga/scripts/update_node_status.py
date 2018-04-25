@@ -31,7 +31,6 @@ class UpdateNodeStatusCli(TortugaCli):
         nodeName = socket.getfqdn()
 
         self.addOption("--node", dest='nodeName', default=nodeName,
-                       required=True,
                        help='Name of the node for which status is being'
                             ' updated')
 
