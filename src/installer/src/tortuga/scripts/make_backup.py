@@ -160,6 +160,11 @@ class MakeBackup(object):
         :return: None
         """
         if os.path.isfile(self.config_path):
+
+            self.manifest['config']: dict = {}
+            self.manifest['config']['path']: str = \
+                os.path.basename(self.config_path)
+
             shutil.copy(
                 self.config_path,
                 self.backup_path
