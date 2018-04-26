@@ -45,10 +45,7 @@ class RestoreBackup(object):
 
         self.archive_path: str = os.path.abspath(sys.argv[1])
 
-        self.restore_path: str = os.path.join(
-            '/tmp',
-            os.path.basename(self.archive_path).replace('.tar.bz2', '')
-        )
+        self.restore_path: str = '/tmp'
 
         self.restored_path: str = os.path.join(
             self.restore_path,
@@ -164,7 +161,7 @@ class RestoreBackup(object):
         """
         :return: None
         """
-        shutil.rmtree(self.restore_path)
+        shutil.rmtree(self.restored_path)
 
 
 def main() -> None:
