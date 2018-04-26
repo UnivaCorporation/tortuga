@@ -18,6 +18,8 @@ import json
 import shutil
 import tarfile
 from time import time
+from typing import Tuple, Optional
+from subprocess import Popen, PIPE
 from configparser import ConfigParser
 from tortuga.config.configManager import ConfigManager
 
@@ -35,35 +37,35 @@ def get_database_config(parsed: ConfigParser, manager: ConfigManager) -> dict:
     """
     config: dict = {}
 
-    config['engine'] = parsed.get('database', 'engine') if \
+    config['engine']: str = parsed.get('database', 'engine') if \
         parsed.has_option('database', 'engine') else \
         'sqlite'
 
-    config['host'] = parsed.get('database', 'host') if \
+    config['host']: str = parsed.get('database', 'host') if \
         parsed.has_option('database', 'host') else \
         'localhost'
 
-    config['username'] = parsed.get('database', 'username') if \
+    config['username']: str = parsed.get('database', 'username') if \
         parsed.has_option('database', 'username') else \
         manager.getDbUser()
 
-    config['password'] = parsed.get('database', 'password') if \
+    config['password']: str = parsed.get('database', 'password') if \
         parsed.has_option('database', 'password') else \
         manager.getDbPassword()
 
     if config['engine'] == 'sqlite':
-        config['port'] = None
-        config['path'] = parsed.get('database', 'path') if \
+        config['port']: Optional[int] = None
+        config['path']: str = parsed.get('database', 'path') if \
             parsed.has_option('database', 'path') else \
             os.path.join(
                 manager.getEtcDir(),
                 manager.getDbSchema() + '.sqlite'
             )
     elif config['engine'] == 'mysql':
-        config['path'] = None
-        config['port'] = manager.get('database', 'port') if \
+        config['port']: Optional[int] = manager.get('database', 'port') if \
             manager.has_option('database', 'port') else \
             3306
+        config['path']: str = manager.getDbSchema()
     else:
         raise NotImplementedError('{} is not supported'.format(
             config['engine']
@@ -132,7 +134,18 @@ class MakeBackup(object):
         """
         :return: None
         """
-        pass
+        self.manifest['database']['path']: str = \
+            self.config['database']['path'] + '.sql'
+
+        path: str = os.path.join(
+            self.backup_path,
+            self.manifest['database']['path']
+        )
+
+        with open(path, 'w') as dump:
+            with Popen(['mysqldump', self.config['database']['path']],
+                       stdout=dump) as proc:
+                proc.wait()
 
     def backup_database(self) -> None:
         """

@@ -19,6 +19,7 @@ import json
 import shutil
 import tarfile
 from typing import Optional
+from subprocess import Popen, PIPE
 from configparser import ConfigParser
 from .make_backup import get_database_config
 from tortuga.config.configManager import ConfigManager
@@ -113,11 +114,13 @@ class RestoreBackup(object):
         """
         :return: None
         """
+        path: str = os.path.join(
+            self.restored_path,
+            self.manifest['database']['path']
+        )
+
         shutil.copy(
-            os.path.join(
-                self.restored_path,
-                self.manifest['database']['path']
-            ),
+            path,
             self.config['path']
         )
 
@@ -125,7 +128,14 @@ class RestoreBackup(object):
         """
         :return: None
         """
-        pass
+        path: str = os.path.join(
+            self.restore_path,
+            self.manifest['database']['path']
+        )
+
+        with open(path) as dump:
+            with Popen(['mysql'], stdin=dump) as proc:
+                proc.wait()
 
     def restore_database(self) -> None:
         """
