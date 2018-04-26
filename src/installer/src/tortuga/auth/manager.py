@@ -12,20 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-
 from passlib.hash import pbkdf2_sha256
-from tortuga.admin.adminApiFactory import getAdminApi
+
+from tortuga.admin.adminApi import AdminApi
 from tortuga.config.configManager import ConfigManager
-from tortuga.exceptions.userNotAuthorized import UserNotAuthorized
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.types import Singleton
-from tortuga.utility.authPrincipal import AuthPrincipal
-
-
-def authorizeRoot():
-    if os.getuid() != 0:
-        raise UserNotAuthorized('Command must be run as \'root\' user.')
+from .principal import AuthPrincipal
 
 
 class AuthManager(TortugaObjectManager, Singleton):
@@ -67,25 +60,26 @@ class AuthManager(TortugaObjectManager, Singleton):
             {'roles': 'cfm'})
 
         # Add cfm user
-        self.__principals[cfmUser.getName()] = cfmUser
+        self.__principals[cfmUser.get_name()] = cfmUser
 
         # Add users from DB
         if self._configManager.isInstaller():
-            for admin in getAdminApi().getAdminList():
+            for admin in AdminApi().getAdminList():
                 self.__principals[admin.getUsername()] = AuthPrincipal(
-                    admin.getUsername(), admin.getPassword(),
-                    attributeDict={'id': admin.getId()})
+                    admin.getUsername(), admin.get_password(),
+                    attributes={'id': admin.getId()})
 
-    def getPrincipal(self, username, password):
+    def get_principal(self, username: str) -> AuthPrincipal:
         """
-        Get a principal based on a username and password
-        """
+        Get a principal by username.
 
-        principal = self.__principals.get(username)
+        :param str username:   the username of the principal to lookup
+
+        :return AuthPrincipal: the principal, if found, otherwise None
+
+        """
+        principal: AuthPrincipal = self.__principals.get(username)
         if not principal:
-            return None
+            principal = None
 
-        if pbkdf2_sha256.verify(password, principal.getPassword()):
-            return principal
-
-        return None
+        return principal

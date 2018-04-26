@@ -16,7 +16,7 @@
 
 # pylint: disable=no-member
 
-from tortuga.admin.adminCli import AdminCli
+from tortuga.cli.admin import AdminCli
 from tortuga.wsapi import adminWsApi
 
 

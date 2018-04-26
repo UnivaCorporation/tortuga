@@ -31,7 +31,7 @@ from tortuga.web_service.controllers.tortugaController import TortugaController
 from tortuga.web_service.threadManagerPlugin import ThreadManagerPlugin
 from tortuga.web_service.workQueuePlugin import WorkQueuePlugin
 
-from . import app, dbm
+from . import app, dbm, auth
 
 
 # read logging configuration
@@ -65,8 +65,11 @@ if not log_conf_file.exists():
 logger = logging.getLogger('tortuga.web_service')
 
 
-def prepareServer():
-    """ Prepare server. """
+def prepare_server():
+    """
+    Prepare server.
+
+    """
     logger.debug('Loading service configuration')
 
     config = {
@@ -82,36 +85,53 @@ def prepareServer():
     return cherrypy.tree.mount(root=None, config=config)
 
 
-def runServer(daemonize=False, pidfile=None):
+def run_server(daemonize: bool = False, pidfile: str = None):
     logger.debug('Starting service')
 
-    # Set up daemonization
+    #
+    # Initialize plugins
+    #
     if daemonize:
-        # Don't print anything to stdout/sterr.
         plugins.Daemonizer(cherrypy.engine).subscribe()
-
-    # Add workqueue plugin
     WorkQueuePlugin(cherrypy.engine).subscribe()
-
-    # Add-nodes workflow
     ThreadManagerPlugin(cherrypy.engine).subscribe()
-
     if pidfile:
         plugins.PIDFile(cherrypy.engine, pidfile).subscribe()
 
+    #
     # Setup the signal handler to stop the application while running.
+    #
     cherrypy.engine.signals.subscribe()
 
+    #
+    # Setup the database tool
+    #
     DatabaseEnginePlugin(cherrypy.engine).subscribe()
     cherrypy.tools.db = DatabaseTool()
 
+    #
+    # Setup the authentication method chain as a tool. Note that order
+    # matters here, authentication methods will be tested in the order in
+    # which they occur.
+    #
+    authentication_methods = [
+        auth.HttpBasicAuthenticationMethod(),
+        auth.HttpSessionAuthenticationMethod()
+    ]
+    cherrypy.tools.auth = cherrypy.Tool(
+        'before_handler',
+        auth.CherryPyAuthenticator(authentication_methods)
+    )
+
+    #
     # Start the engine.
+    #
     try:
         cherrypy.engine.start()
         cherrypy.engine.block()
+
     except Exception:
         logger.exception('Service exiting')
-
         return 1
 
     return 0
@@ -138,9 +158,7 @@ def handle_error():
 class DatabaseEnginePlugin(plugins.SimplePlugin):
     def __init__(self, bus):
         super(DatabaseEnginePlugin, self).__init__(bus)
-
         self.sa_engine = None
-
         self.bus.subscribe('bind', self.bind)
 
     def start(self):
@@ -159,20 +177,17 @@ class DatabaseTool(cherrypy.Tool):
     def __init__(self):
         super(DatabaseTool, self).__init__(
             'on_start_resource', self.bind_session, priority=20)
-
         self.session = scoped_session(sessionmaker(autoflush=True,
                                                    autocommit=False))
 
     def _setup(self):
         super(DatabaseTool, self)._setup()
-
         cherrypy.request.hooks.attach('on_end_resource',
                                       self.commit_transaction,
                                       priority=80)
 
     def bind_session(self):
         cherrypy.engine.publish('bind', self.session)
-
         cherrypy.request.db = self.session
 
     def commit_transaction(self):
@@ -180,9 +195,11 @@ class DatabaseTool(cherrypy.Tool):
 
         try:
             self.session.commit()
+
         except Exception:
             self.session.rollback()
             raise
+
         finally:
             self.session.remove()
 
@@ -230,7 +247,7 @@ def main():
 
                     sys.exit(1)
 
-    prepareServer()
+    prepare_server()
 
     cfgdict = {
         'server.socket_host': args.listen,
@@ -259,6 +276,6 @@ def main():
             'server.ssl_private_key': args.sslKey,
         })
 
-    ret = runServer(args.daemonize, args.pidfile)
+    ret = run_server(args.daemonize, args.pidfile)
 
     sys.exit(ret)

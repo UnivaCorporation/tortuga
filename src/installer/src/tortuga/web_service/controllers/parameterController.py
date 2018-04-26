@@ -18,7 +18,7 @@ from tortuga.exceptions.parameterAlreadyExists import ParameterAlreadyExists
 from tortuga.exceptions.parameterNotFound import ParameterNotFound
 from tortuga.objects.parameter import Parameter
 from .tortugaController import TortugaController
-from .authController import require
+from ..auth import authentication_required
 from .. import app
 
 
@@ -62,7 +62,7 @@ class ParameterController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def getParameter(self, name):
         """
         Return info for the specified parameter.
@@ -83,7 +83,7 @@ class ParameterController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def getParameterList(self):
         """
         Return all known parameters.
@@ -106,7 +106,7 @@ class ParameterController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def createParameter(self):
         """
         Creates a parameter.
@@ -118,7 +118,7 @@ class ParameterController(TortugaController):
         parameter = Parameter.getFromDict(postdata)
 
         try:
-            app.parameter_api.getParameter(parameter.getName())
+            app.parameter_api.getParameter(parameter.get_name())
             parameter_exists = True
 
         except ParameterNotFound:
@@ -141,7 +141,7 @@ class ParameterController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def updateParameter(self, name):
         """
         Creates or updates a parameter.
@@ -153,7 +153,7 @@ class ParameterController(TortugaController):
         parameter = Parameter.getFromDict(postdata)
 
         try:
-            if name != parameter.getName():
+            if name != parameter.get_name():
                 raise Exception('Parameter name mismatch')
 
             app.parameter_api.upsertParameter(parameter)
@@ -169,7 +169,7 @@ class ParameterController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def deleteParameter(self, name):
         """
         Deletes a parameter.

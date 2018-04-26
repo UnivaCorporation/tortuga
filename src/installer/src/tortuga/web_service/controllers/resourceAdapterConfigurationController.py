@@ -25,7 +25,7 @@ from tortuga.exceptions.resourceAlreadyExists import ResourceAlreadyExists
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.resourceAdapterConfiguration.api import \
     ResourceAdapterConfigurationApi
-from .authController import require
+from ..auth import authentication_required
 from .tortugaController import TortugaController
 
 
@@ -93,7 +93,7 @@ class ResourceAdapterConfigurationController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def create(self, resadapter_name, name):
         postdata = cherrypy.request.json
 
@@ -136,7 +136,7 @@ class ResourceAdapterConfigurationController(TortugaController):
         return self.formatResponse(response)
 
     @cherrypy.tools.json_out()
-    @require()
+    @authentication_required()
     def get(self, resadapter_name, name):
         try:
             response = ResourceAdapterConfigurationApi().get(
@@ -162,7 +162,7 @@ class ResourceAdapterConfigurationController(TortugaController):
         return self.formatResponse(response)
 
     @cherrypy.tools.json_out()
-    @require()
+    @authentication_required()
     def get_profile_names(self, resadapter_name):
         try:
             response = ResourceAdapterConfigurationApi().get_profile_names(
@@ -189,7 +189,7 @@ class ResourceAdapterConfigurationController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def update(self, resadapter_name, name):
         configuration = cherrypy.request.json
 
@@ -219,7 +219,7 @@ class ResourceAdapterConfigurationController(TortugaController):
         return self.formatResponse(response)
 
     @cherrypy.tools.json_out()
-    @require()
+    @authentication_required()
     def delete(self, resadapter_name, name):
         try:
             ResourceAdapterConfigurationApi().delete(

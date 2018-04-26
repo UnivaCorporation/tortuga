@@ -25,7 +25,7 @@ from tortuga.objects.hardwareProfile import HardwareProfile
 from tortuga.objects.osInfo import OsInfo
 from tortuga.objects.tortugaObject import TortugaObjectList
 
-from .authController import require
+from ..auth import authentication_required
 from .common import parse_tag_query_string, make_options_from_query_string
 from .tortugaController import TortugaController
 
@@ -104,7 +104,7 @@ class HardwareProfileController(TortugaController):
         },
     ]
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     def getHardwareProfiles(self, **kwargs):
         tagspec = []
@@ -139,7 +139,7 @@ class HardwareProfileController(TortugaController):
 
         return self.formatResponse(response)
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     def getHardwareProfile(self, hwprofile_id):
         """
@@ -165,7 +165,7 @@ class HardwareProfileController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def createHardwareProfile(self):
         """
         Create hardware profile
@@ -201,7 +201,7 @@ class HardwareProfileController(TortugaController):
 
         return self.formatResponse(response)
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     def deleteHardwareProfile(self, hardwareProfileName):
@@ -226,7 +226,7 @@ class HardwareProfileController(TortugaController):
 
         return self.formatResponse(response)
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     def updateHardwareProfile(self, hardwareProfileId):
@@ -258,7 +258,7 @@ class HardwareProfileController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def getHypervisorNodes(self, hardwareProfileName):
         # self.getLogger().debug(
         #     'getHypervisorNodes: hardwareProfileName [%s]' % (
@@ -282,7 +282,7 @@ class HardwareProfileController(TortugaController):
 
         return self.formatResponse(response)
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     def addAdmin(self, hardwareProfileName, adminUsername):
@@ -304,7 +304,7 @@ class HardwareProfileController(TortugaController):
 
         return self.formatResponse(response)
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     def deleteAdmin(self, hardwareProfileName, adminUsername):
@@ -345,22 +345,7 @@ class HardwareProfileController(TortugaController):
             'User %s is not a manager of %s' % (
                 cherrypy.request.login, hardwareProfileName))
 
-    # @require()
-    # def setProvisioningNic(self, hardwareProfileName, nicId):
-    #     response = None
-    #
-    #     try:
-    #         hpMgr = HardwareProfileManager()
-    #
-    #         hpMgr.setProvisioningNic(hardwareProfileName, int(nicId))
-    #     except Exception, ex:
-    #         self.getLogger().error('%s' % ex)
-    #         self.handleException(ex)
-    #         response = self.errorResponse(str(ex))
-    #
-    #     return self.formatResponse(response)
-
-    @require()
+    @authentication_required()
     def copyHardwareProfile(self, srcHardwareProfileName, dstHardwareProfileName):
         response = None
 

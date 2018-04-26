@@ -28,7 +28,7 @@ from tortuga.utility.helper import str2bool
 
 from .. import app
 from ..threadManager import threadManager
-from .authController import require
+from ..auth import authentication_required
 from .common import make_options_from_query_string, parse_tag_query_string
 from .tortugaController import TortugaController
 
@@ -140,7 +140,7 @@ class NodeController(TortugaController):
     ]
 
     @cherrypy.tools.json_out()
-    @require()
+    @authentication_required()
     def getNodes(self, **kwargs):
         """
         Return list of all available nodes
@@ -185,7 +185,7 @@ class NodeController(TortugaController):
         return self.formatResponse(response)
 
     @cherrypy.tools.json_out()
-    @require()
+    @authentication_required()
     def getNodeById(self, node_id: str, **kwargs):
         """
         Return node information
@@ -215,7 +215,7 @@ class NodeController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def updateNodeRequest(self, name):
         postdata = cherrypy.request.json
 
@@ -242,7 +242,7 @@ class NodeController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def getNodeProvisioningInfo(self, nodeName):
         """
         Return provisioning information for a node
@@ -268,7 +268,7 @@ class NodeController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def setParentNode(self, nodeName, parentNodeName):
         """
         Handle POST to /nodes/:(nodeName)/parentNode
@@ -297,7 +297,7 @@ class NodeController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def idleNode(self, nodeName):
         """
         Idle an active node
@@ -318,7 +318,7 @@ class NodeController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def activateNode(self, nodeName):
         """
         Activate an idle node
@@ -344,7 +344,7 @@ class NodeController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def checkpointNode(self, nodeName):
         """
         Checkpoint a node
@@ -363,7 +363,7 @@ class NodeController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def revertNodeToCheckpoint(self, nodeName):
         """
         Migrate a node
@@ -383,7 +383,7 @@ class NodeController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def migrateNode(self, nodeName: str, remainingNodeString: str,
                     liveMigrate: str):
         """
@@ -408,7 +408,7 @@ class NodeController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def startupNode(self, nodeName, nodeString, bootMethod):
         response = None
 
@@ -431,7 +431,7 @@ class NodeController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def evacuateChildren(self, nodeName):
         response = None
 
@@ -446,7 +446,7 @@ class NodeController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def getChildrenList(self, nodeName):
         """
         Return list of all children nodes
@@ -465,7 +465,7 @@ class NodeController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def shutdownNode(self, nodeName):
         response = None
 
@@ -483,7 +483,7 @@ class NodeController(TortugaController):
         return self.formatResponse(response)
 
     @cherrypy.tools.json_out()
-    @require()
+    @authentication_required()
     def rebootNode(self, nodeName, **kwargs):
         response = None
 
@@ -509,7 +509,7 @@ class NodeController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def transferNode(self, softwareProfileName, nodeName,
                      srcSoftwareProfileName, nodeCount):
         try:
@@ -530,7 +530,7 @@ class NodeController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def addStorageVolume(self, nodeName, volume):
         response = None
 
@@ -549,7 +549,7 @@ class NodeController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def removeStorageVolume(self, nodeName, volume):
         response = None
 
@@ -566,7 +566,7 @@ class NodeController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def getStorageVolumeList(self, nodeName):
         try:
             result = app.node_api.getStorageVolumeList(nodeName)
@@ -581,7 +581,7 @@ class NodeController(TortugaController):
         return self.formatResponse(response)
 
     @cherrypy.tools.json_out()
-    @require()
+    @authentication_required()
     def deleteNode(self, name):
         """
         Handle /nodes/:(name) (DELETE)
