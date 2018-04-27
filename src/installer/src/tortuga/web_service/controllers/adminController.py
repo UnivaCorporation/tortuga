@@ -17,7 +17,7 @@
 import cherrypy
 
 from tortuga.admin.api import AdminApi
-from tortuga.auth.method import UsernamePasswordAuthenticationMethod
+from tortuga.auth.methods import UsernamePasswordAuthenticationMethod
 from tortuga.objects.admin import Admin
 from tortuga.utility.helper import str2bool
 from tortuga.web_service.auth.decorators import authentication_required

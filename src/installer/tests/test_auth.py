@@ -1,7 +1,7 @@
 import pytest
 
 
-from tortuga.auth.method import AuthenticationMethod, MultiAuthentionMethod, \
+from tortuga.auth.methods import AuthenticationMethod, MultiAuthentionMethod, \
     UsernamePasswordAuthenticationMethod
 from tortuga.exceptions.authenticationFailed import AuthenticationFailed
 

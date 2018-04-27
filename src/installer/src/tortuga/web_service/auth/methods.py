@@ -5,7 +5,7 @@ from cherrypy.lib import httpauth
 import pyjwt
 
 from tortuga.auth.manager import AuthManager
-from tortuga.auth.method import AuthenticationMethod, \
+from tortuga.auth.methods import AuthenticationMethod, \
     UsernamePasswordAuthenticationMethod
 from tortuga.auth.principal import AuthPrincipal
 from tortuga.exceptions.authenticationFailed import AuthenticationFailed

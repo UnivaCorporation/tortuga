@@ -1,7 +1,7 @@
 import cherrypy
 
 from tortuga.auth.manager import AuthManager
-from tortuga.auth.method import MultiAuthentionMethod
+from tortuga.auth.methods import MultiAuthentionMethod
 from tortuga.auth.principal import AuthPrincipal
 from tortuga.exceptions.authenticationFailed import AuthenticationFailed
 from .exceptions import TortugaHTTPAuthError
