@@ -2,6 +2,7 @@ from logging import getLogger
 
 import cherrypy
 from cherrypy.lib import httpauth
+import pyjwt
 
 from tortuga.auth.manager import AuthManager
 from tortuga.auth.method import AuthenticationMethod, MultiAuthentionMethod, \
@@ -45,9 +46,10 @@ class CherryPyAuthenticator(MultiAuthentionMethod):
         if cherrypy.request.config.get('auth.required', False):
             self.authenticate(**kwargs)
 
-    def authenticate(self, **kwargs) -> str:
+    def authenticate(self, skip_callbacks: bool = False, **kwargs) -> str:
         try:
-            return super().authenticate(**kwargs)
+            return super().authenticate(skip_callbacks=skip_callbacks,
+                                        **kwargs)
         except AuthenticationFailed:
             raise TortugaHTTPAuthError()
 
@@ -124,3 +126,49 @@ class HttpPostAuthenticatonMethod(UsernamePasswordAuthenticationMethod):
         password = postdata.get('password', None)
 
         return super().do_authentication(username=username, password=password)
+
+
+class HttpJwtAuthenticationMethod(AuthenticationMethod):
+    """
+    Authenticate a user via JWT tokens.
+
+    """
+    ALGORITHMS = ['HS256', 'RS256']
+
+    def do_authentication(self, **kwargs) -> str:
+        if 'authorization' not in cherrypy.request.headers:
+            raise AuthenticationFailed()
+
+        authorization = cherrypy.request.headers['authorization']
+        scheme, value = self._parse_authorization_header(authorization)
+        if not value or not scheme or scheme.lower() != 'bearer':
+            raise AuthenticationFailed()
+
+        decoded = pyjwt.decode(value, self._get_key(),
+                               algorithms=self.ALGORITHMS)
+
+        username = decoded.get('username', None)
+        if not username:
+            raise AuthenticationFailed()
+
+        principal: AuthPrincipal = AuthManager().get_principal(username)
+        if not principal:
+            raise AuthenticationFailed()
+
+        return username
+
+    @staticmethod
+    def _parse_authorization_header(header: str) -> (str, str):
+        scheme = None
+        value = None
+
+        parts = header.split(' ', 1)
+        if parts:
+            scheme = parts[0]
+        if len(parts) > 1:
+            value = parts[1]
+
+        return scheme, value
+
+    def _get_key(self):
+        return 'Abc123'

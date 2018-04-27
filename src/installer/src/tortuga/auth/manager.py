@@ -14,7 +14,6 @@
 
 from passlib.hash import pbkdf2_sha256
 
-from tortuga.admin.adminApi import AdminApi
 from tortuga.config.configManager import ConfigManager
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.types import Singleton
@@ -52,6 +51,7 @@ class AuthManager(TortugaObjectManager, Singleton):
         """
         Load principals for config manager and datastore
         """
+        from tortuga.admin.api import AdminApi
 
         # Create built-in cfm principal
         cfmUser = AuthPrincipal(
@@ -66,7 +66,7 @@ class AuthManager(TortugaObjectManager, Singleton):
         if self._configManager.isInstaller():
             for admin in AdminApi().getAdminList():
                 self.__principals[admin.getUsername()] = AuthPrincipal(
-                    admin.getUsername(), admin.get_password(),
+                    admin.getUsername(), admin.getPassword(),
                     attributes={'id': admin.getId()})
 
     def get_principal(self, username: str) -> AuthPrincipal:

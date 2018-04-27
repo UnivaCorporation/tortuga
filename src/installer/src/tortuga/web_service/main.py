@@ -116,7 +116,8 @@ def run_server(daemonize: bool = False, pidfile: str = None):
     #
     authentication_methods = [
         auth.HttpBasicAuthenticationMethod(),
-        auth.HttpSessionAuthenticationMethod()
+        auth.HttpSessionAuthenticationMethod(),
+        auth.HttpJwtAuthenticationMethod()
     ]
     cherrypy.tools.auth = cherrypy.Tool(
         'before_handler',

@@ -14,7 +14,7 @@
 
 from tortuga.config.configManager import ConfigManager
 from tortuga.node.nodeApi import NodeApi
-from tortuga.admin.adminApi import AdminApi
+from tortuga.admin.api import AdminApi
 from tortuga.network.networkApi import NetworkApi
 from tortuga.parameter.parameterApi import ParameterApi
 

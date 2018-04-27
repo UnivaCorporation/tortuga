@@ -15,9 +15,13 @@ class AuthenticationMethod:
     Base authentication method class.
 
     """
-    def authenticate(self, **kwargs) -> str:
+    def authenticate(self, skip_callbacks: bool = False, **kwargs) -> str:
         """
         Performs the authentication, and returns the username.
+
+        :param bool skip_callbacks: do not call the
+                                    on_authentication_succeeded and
+                                    on_authentication_failed callbacks
 
         :return: the username of the authenticated user.
         :raises AuthenticationFailed:
@@ -31,12 +35,14 @@ class AuthenticationMethod:
                     self.__class__
                 )
             )
-            self.on_authentication_succeeded(username)
+            if not skip_callbacks:
+                self.on_authentication_succeeded(username)
             return username
 
         except AuthenticationFailed:
             logger.debug('Authentication failed: {}'.format(self.__class__))
-            self.on_authentication_failed()
+            if not skip_callbacks:
+                self.on_authentication_failed()
             raise
 
     def do_authentication(self, **kwargs) -> str:
@@ -98,7 +104,12 @@ class MultiAuthentionMethod(AuthenticationMethod):
         username = None
         for method in self._methods:
             try:
-                username = method.authenticate(**kwargs)
+                #
+                # Skip the callbacks so that we can defer calling them
+                # until we know for sure the final result of the
+                # authentication chain
+                #
+                username = method.authenticate(skip_callbacks=True, **kwargs)
                 if username:
                     break
             except AuthenticationFailed:
@@ -148,8 +159,8 @@ class UsernamePasswordAuthenticationMethod(AuthenticationMethod):
         An authentication implementation that requires a username and
         password.
 
-        :param str username: the username to authenticate
-        :param str password: the password to authenticate
+        :param str username:        the username to authenticate
+        :param str password:        the password to authenticate
 
         :return str: the username
         :raises AuthenticationFailed:

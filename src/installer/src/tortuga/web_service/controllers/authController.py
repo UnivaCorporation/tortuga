@@ -43,7 +43,8 @@ class AuthController(TortugaController):
         authentication_methods = [
             auth.HttpPostAuthenticatonMethod(),
             auth.HttpBasicAuthenticationMethod(),
-            auth.HttpSessionAuthenticationMethod()
+            auth.HttpSessionAuthenticationMethod(),
+            auth.HttpJwtAuthenticationMethod()
         ]
         authenticator = auth.CherryPyAuthenticator(authentication_methods)
 
