@@ -25,7 +25,7 @@ from tortuga.exceptions.resourceAlreadyExists import ResourceAlreadyExists
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.resourceAdapterConfiguration.api import \
     ResourceAdapterConfigurationApi
-from ..auth import authentication_required
+from tortuga.web_service.auth.decorators import authentication_required
 from .tortugaController import TortugaController
 
 

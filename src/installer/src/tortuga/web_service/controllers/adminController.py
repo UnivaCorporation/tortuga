@@ -16,14 +16,13 @@
 
 import cherrypy
 
-from tortuga.objects.admin import Admin
-from tortuga.utility.helper import str2bool
-
 from tortuga.admin.api import AdminApi
 from tortuga.auth.method import UsernamePasswordAuthenticationMethod
-from .. import app
-from ..auth import authentication_required
+from tortuga.objects.admin import Admin
+from tortuga.utility.helper import str2bool
+from tortuga.web_service.auth.decorators import authentication_required
 from .tortugaController import TortugaController
+from .. import app
 
 
 class AdminController(TortugaController):

@@ -17,8 +17,8 @@
 import cherrypy
 
 from tortuga.san.sanApi import SanApi
+from tortuga.web_service.auth.decorators import authentication_required
 from .tortugaController import TortugaController
-from ..auth import authentication_required
 
 
 class SanController(TortugaController):

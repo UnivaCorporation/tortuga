@@ -15,10 +15,10 @@
 # pylint: disable=no-name-in-module
 
 import cherrypy
+
 from tortuga.exceptions.kitNotFound import KitNotFound
 from tortuga.kit.manager import KitManager
-
-from ..auth import authentication_required
+from tortuga.web_service.auth.decorators import authentication_required
 from .tortugaController import TortugaController
 
 

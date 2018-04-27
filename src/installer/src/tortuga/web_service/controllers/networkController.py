@@ -16,12 +16,12 @@
 
 import cherrypy
 
-from tortuga.objects.network import Network
 from tortuga.exceptions.networkNotFound import NetworkNotFound
-from tortuga.utility.helper import str2bool
-from .tortugaController import TortugaController
-from ..auth import authentication_required
+from tortuga.objects.network import Network
 from tortuga.objects.tortugaObject import TortugaObjectList
+from tortuga.utility.helper import str2bool
+from tortuga.web_service.auth.decorators import authentication_required
+from .tortugaController import TortugaController
 from .. import app
 
 

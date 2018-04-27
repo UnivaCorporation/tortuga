@@ -5,67 +5,13 @@ from cherrypy.lib import httpauth
 import pyjwt
 
 from tortuga.auth.manager import AuthManager
-from tortuga.auth.method import AuthenticationMethod, MultiAuthentionMethod, \
+from tortuga.auth.method import AuthenticationMethod, \
     UsernamePasswordAuthenticationMethod
 from tortuga.auth.principal import AuthPrincipal
 from tortuga.exceptions.authenticationFailed import AuthenticationFailed
 
 
 logger = getLogger(__name__)
-
-
-class TortugaHTTPAuthError(cherrypy.HTTPError):
-    @staticmethod
-    def set_response():
-        cherrypy.response.headers['Content-Type'] = 'text/plain'
-        cherrypy.response.status = 401
-        cherrypy.response.body = b'Authentication required'
-
-
-def authentication_required():
-    """
-    A decorator that specifies whether or not authentication is required.
-
-    """
-    def decorate(f):
-        if not hasattr(f, '_cp_config'):
-            f._cp_config = dict()
-        if 'auth.required' not in f._cp_config:
-            f._cp_config['auth.required'] = True
-        return f
-
-    return decorate
-
-
-class CherryPyAuthenticator(MultiAuthentionMethod):
-    """
-    An authenticator designed to be run as a CherryPy tool.
-
-    """
-    def __call__(self, *args, **kwargs):
-        if cherrypy.request.config.get('auth.required', False):
-            self.authenticate(**kwargs)
-
-    def authenticate(self, skip_callbacks: bool = False, **kwargs) -> str:
-        try:
-            return super().authenticate(skip_callbacks=skip_callbacks,
-                                        **kwargs)
-        except AuthenticationFailed:
-            raise TortugaHTTPAuthError()
-
-    def on_authentication_succeeded(self, username: str):
-        super().on_authentication_succeeded(username)
-
-        principal: AuthPrincipal = AuthManager().get_principal(username)
-        principal_attributes: dict = principal.get_attributes()
-
-        cherrypy.request.login = username
-        cherrypy.session['admin_id']: int = \
-            principal_attributes.get('id', None)
-
-    def on_authentication_failed(self):
-        cherrypy.request.login: str = None
-        cherrypy.session['admin_id']: int = None
 
 
 class HttpSessionAuthenticationMethod(AuthenticationMethod):

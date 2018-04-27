@@ -13,9 +13,9 @@
 # limitations under the License.
 
 import cherrypy
-from tortuga.sync.syncApi import SyncApi
 
-from ..auth import authentication_required
+from tortuga.sync.syncApi import SyncApi
+from tortuga.web_service.auth.decorators import authentication_required
 from .tortugaController import TortugaController
 
 

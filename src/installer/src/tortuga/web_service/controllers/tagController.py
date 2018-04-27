@@ -17,7 +17,7 @@
 import cherrypy
 
 from tortuga.db.tagsDbHandler import TagsDbHandler
-from ..auth import authentication_required
+from tortuga.web_service.auth.decorators import authentication_required
 from .tortugaController import TortugaController
 
 

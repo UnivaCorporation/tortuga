@@ -14,7 +14,6 @@
 
 # pylint: disable=no-member
 
-from typing import Optional, Union
 import cherrypy
 
 from tortuga.exceptions.hardwareProfileNotFound import HardwareProfileNotFound
@@ -24,8 +23,7 @@ from tortuga.hardwareprofile.hardwareProfileManager import \
 from tortuga.objects.hardwareProfile import HardwareProfile
 from tortuga.objects.osInfo import OsInfo
 from tortuga.objects.tortugaObject import TortugaObjectList
-
-from ..auth import authentication_required
+from tortuga.web_service.auth.decorators import authentication_required
 from .common import parse_tag_query_string, make_options_from_query_string
 from .tortugaController import TortugaController
 

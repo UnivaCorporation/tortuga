@@ -31,7 +31,9 @@ from tortuga.web_service.controllers.tortugaController import TortugaController
 from tortuga.web_service.threadManagerPlugin import ThreadManagerPlugin
 from tortuga.web_service.workQueuePlugin import WorkQueuePlugin
 
-from . import app, dbm, auth
+from .auth.authenticator import CherryPyAuthenticator
+from .auth import methods as auth_methods
+from . import app, dbm
 
 
 # read logging configuration
@@ -115,13 +117,13 @@ def run_server(daemonize: bool = False, pidfile: str = None):
     # which they occur.
     #
     authentication_methods = [
-        auth.HttpBasicAuthenticationMethod(),
-        auth.HttpSessionAuthenticationMethod(),
-        auth.HttpJwtAuthenticationMethod()
+        auth_methods.HttpBasicAuthenticationMethod(),
+        auth_methods.HttpSessionAuthenticationMethod(),
+        auth_methods.HttpJwtAuthenticationMethod()
     ]
     cherrypy.tools.auth = cherrypy.Tool(
         'before_handler',
-        auth.CherryPyAuthenticator(authentication_methods)
+        CherryPyAuthenticator(authentication_methods)
     )
 
     #

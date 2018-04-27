@@ -24,8 +24,7 @@ from tortuga.softwareprofile.softwareProfileApi import SoftwareProfileApi
 from tortuga.softwareprofile.softwareProfileManager import \
     SoftwareProfileManager
 from tortuga.utility.helper import str2bool
-
-from ..auth import authentication_required
+from tortuga.web_service.auth.decorators import authentication_required
 from .common import parse_tag_query_string
 from .tortugaController import TortugaController
 

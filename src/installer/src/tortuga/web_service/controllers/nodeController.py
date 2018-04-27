@@ -25,12 +25,11 @@ from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.schema import NodeSchema
 from tortuga.utility.helper import str2bool
-
-from .. import app
-from ..threadManager import threadManager
-from ..auth import authentication_required
+from tortuga.web_service.auth.decorators import authentication_required
 from .common import make_options_from_query_string, parse_tag_query_string
 from .tortugaController import TortugaController
+from .. import app
+from ..threadManager import threadManager
 
 
 class NodeController(TortugaController):

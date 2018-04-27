@@ -17,8 +17,8 @@ import cherrypy
 from tortuga.exceptions.parameterAlreadyExists import ParameterAlreadyExists
 from tortuga.exceptions.parameterNotFound import ParameterNotFound
 from tortuga.objects.parameter import Parameter
+from tortuga.web_service.auth.decorators import authentication_required
 from .tortugaController import TortugaController
-from ..auth import authentication_required
 from .. import app
 
 

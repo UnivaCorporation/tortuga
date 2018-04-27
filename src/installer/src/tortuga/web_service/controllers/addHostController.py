@@ -26,10 +26,9 @@ from tortuga.db.models.nodeRequest import NodeRequest
 from tortuga.db.nodeRequestsDbHandler import NodeRequestsDbHandler
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.notFound import NotFound
-
-from ..threadManager import threadManager
-from ..auth import authentication_required
+from tortuga.web_service.auth.decorators import authentication_required
 from .tortugaController import TortugaController
+from ..threadManager import threadManager
 
 
 class NodeRequestSchema(Schema):
