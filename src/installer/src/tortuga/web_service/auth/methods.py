@@ -2,7 +2,7 @@ from logging import getLogger
 
 import cherrypy
 from cherrypy.lib import httpauth
-import pyjwt
+import jwt
 
 from tortuga.auth.manager import AuthManager
 from tortuga.auth.methods import AuthenticationMethod, \
@@ -90,8 +90,8 @@ class HttpJwtAuthenticationMethod(AuthenticationMethod):
         if not value or not scheme or scheme.lower() != 'bearer':
             raise AuthenticationFailed()
 
-        decoded = pyjwt.decode(value, self._get_key(),
-                               algorithms=self.ALGORITHMS)
+        decoded = jwt.decode(value, self._get_key(),
+                             algorithms=self.ALGORITHMS)
 
         username = decoded.get('username', None)
         if not username:

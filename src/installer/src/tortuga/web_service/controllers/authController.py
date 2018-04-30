@@ -15,8 +15,10 @@
 import cherrypy
 
 from tortuga.utility import tortugaStatus
+from tortuga.web_service.auth import methods
+from tortuga.web_service.auth.authenticator import CherryPyAuthenticator
+from tortuga.web_service.auth.exceptions import TortugaHTTPAuthError
 from .tortugaController import TortugaController
-from .. import auth
 
 
 class AuthController(TortugaController):
@@ -41,18 +43,18 @@ class AuthController(TortugaController):
         # accept here, in the order that we would like them to be tried
         #
         authentication_methods = [
-            auth.HttpPostAuthenticatonMethod(),
-            auth.HttpBasicAuthenticationMethod(),
-            auth.HttpSessionAuthenticationMethod(),
-            auth.HttpJwtAuthenticationMethod()
+            methods.HttpPostAuthenticatonMethod(),
+            methods.HttpBasicAuthenticationMethod(),
+            methods.HttpSessionAuthenticationMethod(),
+            methods.HttpJwtAuthenticationMethod()
         ]
-        authenticator = auth.CherryPyAuthenticator(authentication_methods)
+        authenticator = CherryPyAuthenticator(authentication_methods)
 
         try:
             authenticator.authenticate()
             self.addTortugaResponseHeaders(tortugaStatus.TORTUGA_OK)
 
-        except auth.TortugaHTTPAuthError:
+        except TortugaHTTPAuthError:
             self.addTortugaResponseHeaders(
                 tortugaStatus.TORTUGA_USER_NOT_AUTHORIZED_ERROR,
                 'Authentication failed'
