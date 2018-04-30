@@ -266,18 +266,14 @@ class HardwareProfileWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/hardwareprofiles/%s/copy' % (srcHardwareProfileName)
-
-        postdata = {
-            'dstHardwareProfileName': dstHardwareProfileName,
-        }
+        url = 'v1/hardwareprofiles/{}/copy/{}'.format(
+            srcHardwareProfileName, dstHardwareProfileName)
 
         try:
-            (response, responseDict) = self.sendSessionRequest(
-                url, method='POST', data=json.dumps(postdata))
+            response, _ = self.sendSessionRequest(url, method='POST')
 
             return response
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             raise TortugaException(exception=ex)

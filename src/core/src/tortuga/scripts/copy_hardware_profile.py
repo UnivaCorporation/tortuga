@@ -30,12 +30,12 @@ class CopyHardwareProfileCli(tortugaCli.TortugaCli):
         self.addOptionToGroup(option_group_name,
                               '--src', required=True,
                               dest='srcHardwareProfileName',
-                              metavar='HARDWAREPROFILENAME',
+                              metavar='NAME',
                               help=_('Name of source hardware profile'))
         self.addOptionToGroup(option_group_name,
                               '--dst', required=True,
                               dest='dstHardwareProfileName',
-                              metavar='HARDWAREPROFILENAME',
+                              metavar='NAME',
                               help=_('Name of destination hardware profile'))
 
         super().parseArgs(usage=usage)
