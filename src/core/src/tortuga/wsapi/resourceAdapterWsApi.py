@@ -15,7 +15,6 @@
 # pylint: disable=no-member
 
 from tortuga.exceptions.tortugaException import TortugaException
-from tortuga.objects.resourceAdapter import ResourceAdapter
 
 from .tortugaWsApi import TortugaWsApi
 
