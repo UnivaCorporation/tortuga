@@ -157,6 +157,8 @@ setup(
             'tortuga-proxy-config=tortuga.scripts.tortuga_proxy_config:main',
             'tortuga-setup=tortuga.scripts.tortuga_setup:main',
             'update_hiera.py=tortuga.scripts.update_hiera:main',
+            'make-backup=tortuga.scripts.make_backup:main',
+            'restore-backup=tortuga.scripts.restore_backup:main'
         ],
     },
     cmdclass={
