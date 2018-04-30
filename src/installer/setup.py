@@ -118,7 +118,7 @@ setup(
     scripts=[str(fn) for fn in walkfiles(Path('bin'))],
     data_files=get_files(),
     install_requires=[
-        'cryptograpy',
+        'cryptography',
         'tortuga-core',
         'Jinja2',
         'CherryPy',
