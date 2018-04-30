@@ -12,9 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=no-member
-
-from tortuga.admin.adminManager import AdminManager
+from tortuga.admin.manager import AdminManager
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.utility.tortugaApi import TortugaApi
 
@@ -99,25 +97,4 @@ class AdminApi(TortugaApi):
             raise
         except Exception as ex:
             self.getLogger().exception('updateAdmin failed')
-            raise TortugaException(exception=ex)
-
-    def authenticate(self, adminUsername, adminPassword):
-        """Check if the credentials are valid.
-
-            Returns:
-                True if username and password match a valid user in the system
-            Throws:
-                UserNotAuthorized
-                TortugaException
-        """
-
-        try:
-            return self._adminManager.authenticate(
-                adminUsername, adminPassword)
-        except TortugaException:
-            raise
-        except Exception as ex:
-            self.getLogger().exception(
-                'Error authenticating admin [{0}]'.format(adminUsername))
-
             raise TortugaException(exception=ex)

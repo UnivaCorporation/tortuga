@@ -16,12 +16,13 @@
 
 import cherrypy
 
+from tortuga.admin.api import AdminApi
+from tortuga.auth.methods import UsernamePasswordAuthenticationMethod
 from tortuga.objects.admin import Admin
 from tortuga.utility.helper import str2bool
-
-from .. import app
-from .authController import require
+from tortuga.web_service.auth.decorators import authentication_required
 from .tortugaController import TortugaController
+from .. import app
 
 
 class AdminController(TortugaController):
@@ -68,7 +69,7 @@ class AdminController(TortugaController):
         },
     ]
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     def getAdmin(self, admin_id):
         """ Get an admin by name """
@@ -86,7 +87,7 @@ class AdminController(TortugaController):
 
         return self.formatResponse(response)
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     def getAdminList(self):
         """ Return list of admin users """
@@ -104,7 +105,7 @@ class AdminController(TortugaController):
 
         return self.formatResponse(response)
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     def addAdmin(self):
@@ -126,7 +127,7 @@ class AdminController(TortugaController):
         try:
             app.admin_api.addAdmin(
                 adminRequestObject.getUsername(),
-                adminRequestObject.getPassword(),
+                adminRequestObject.get_password(),
                 isCrypted,
                 adminRequestObject.getRealname(),
                 adminRequestObject.getDescription())
@@ -137,7 +138,7 @@ class AdminController(TortugaController):
 
         return self.formatResponse(response)
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     def deleteAdmin(self, admin_id):
         """ Delete an existing admin from the system """
@@ -153,7 +154,7 @@ class AdminController(TortugaController):
 
         return self.formatResponse(response)
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     def updateAdmin(self, admin_id):
@@ -181,7 +182,7 @@ class AdminController(TortugaController):
 
         return self.formatResponse(response)
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     def authenticate(self, username, password):
@@ -189,11 +190,12 @@ class AdminController(TortugaController):
         Check if a username / password combo matches a user in the system
         """
 
+        password_auth = UsernamePasswordAuthenticationMethod()
         try:
-            validUser = app.admin_api.authenticate(username, password)
-
+            password_auth.authenticate(username=username, password=password)
+            valid_user = AdminApi.getAdmin(username)
             response = {
-                'authenticate': validUser,
+                'authenticate': valid_user,
             }
         except Exception as ex:
             self.getLogger().error('%s' % ex)

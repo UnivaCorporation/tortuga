@@ -24,18 +24,13 @@ from abc import ABCMeta, abstractmethod
 
 from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.tortugaException import TortugaException
-from tortuga.exceptions.userNotAuthorized import UserNotAuthorized
-from tortuga.utility.authManager import authorizeRoot
 
 
 def check_for_root(cls):
-    try:
-        authorizeRoot()
-    except UserNotAuthorized as exc:
-        sys.stderr.write(str(exc) + '\n')
+    if os.getuid() != 0:
+        sys.stderr.write('Command must be run as \'root\' user.\n')
         sys.stderr.flush()
         sys.exit(1)
-
     return cls
 
 

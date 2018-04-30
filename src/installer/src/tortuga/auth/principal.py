@@ -14,19 +14,29 @@
 
 
 class AuthPrincipal(object):
-    def __init__(self, name, password=None, attributeDict=None):
-        self.__name = name
-        self.__password = password
-        self.__attributeDict = attributeDict or {}
+    def __init__(self, name: str, password: str = None,
+                 attributes: dict =None):
+        self._name = name
+        self._password = password
+        self._attribute_dict: dict = attributes or {}
 
-    def getName(self):
-        """ Return the principals name """
-        return self.__name
+    def get_name(self) -> str:
+        """
+        Return the principals name.
 
-    def getPassword(self):
-        """ Return the principals password """
-        return self.__password
+        """
+        return self._name
 
-    def getAttributes(self):
-        """ Return dictionary of principal's attributes """
-        return self.__attributeDict
+    def get_password(self) -> str:
+        """
+        Return the principals password.
+
+        """
+        return self._password
+
+    def get_attributes(self) -> dict:
+        """
+        Return dictionary of principal's attributes.
+
+        """
+        return self._attribute_dict

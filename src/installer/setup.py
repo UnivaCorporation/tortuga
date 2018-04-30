@@ -118,6 +118,7 @@ setup(
     scripts=[str(fn) for fn in walkfiles(Path('bin'))],
     data_files=get_files(),
     install_requires=[
+        'cryptography',
         'tortuga-core',
         'Jinja2',
         'CherryPy',
@@ -125,6 +126,7 @@ setup(
         'SQLAlchemy',
         'Routes',
         'six',
+        'pyjwt',
         'pyzmq',
         'gevent',
         'marshmallow-sqlalchemy',

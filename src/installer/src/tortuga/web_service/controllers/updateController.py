@@ -13,9 +13,9 @@
 # limitations under the License.
 
 import cherrypy
-from tortuga.sync.syncApi import SyncApi
 
-from .authController import require
+from tortuga.sync.syncApi import SyncApi
+from tortuga.web_service.auth.decorators import authentication_required
 from .tortugaController import TortugaController
 
 
@@ -38,7 +38,7 @@ class UpdateController(TortugaController):
 
         self._syncApi = SyncApi()
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     def scheduleClusterUpdateRequest(self):

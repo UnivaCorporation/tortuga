@@ -20,13 +20,11 @@ from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.softwareProfileNotFound import SoftwareProfileNotFound
 from tortuga.objects.softwareProfile import SoftwareProfile
 from tortuga.objects.tortugaObject import TortugaObjectList
-from tortuga.schema import SoftwareProfileSchema
 from tortuga.softwareprofile.softwareProfileApi import SoftwareProfileApi
 from tortuga.softwareprofile.softwareProfileManager import \
     SoftwareProfileManager
 from tortuga.utility.helper import str2bool
-
-from .authController import require
+from tortuga.web_service.auth.decorators import authentication_required
 from .common import parse_tag_query_string
 from .tortugaController import TortugaController
 
@@ -155,7 +153,7 @@ class SoftwareProfileController(TortugaController):
 
         self._softwareProfileManager = SoftwareProfileManager()
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     def getSoftwareProfiles(self, **kwargs):
         """
@@ -192,7 +190,7 @@ class SoftwareProfileController(TortugaController):
 
         return self.formatResponse(response)
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     def getIdleSoftwareProfiles(self):
@@ -205,7 +203,7 @@ class SoftwareProfileController(TortugaController):
 
         return self.formatResponse(response)
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     def createSoftwareProfile(self):
@@ -241,7 +239,7 @@ class SoftwareProfileController(TortugaController):
 
         return self.formatResponse(response)
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     def deleteSoftwareProfile(self, softwareProfileName):
@@ -267,7 +265,7 @@ class SoftwareProfileController(TortugaController):
 
         return self.formatResponse(response)
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     def getSoftwareProfileById(self, swprofile_id, **kwargs):
         """
@@ -304,7 +302,7 @@ class SoftwareProfileController(TortugaController):
 
         return self.formatResponse(response)
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     def updateSoftwareProfile(self, softwareProfileId):
@@ -333,7 +331,7 @@ class SoftwareProfileController(TortugaController):
 
         return self.formatResponse(response)
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     def getEnabledComponents(self, softwareProfileName):
@@ -358,7 +356,7 @@ class SoftwareProfileController(TortugaController):
 
         return self.formatResponse(response)
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     def addUsableHardwareProfileToSoftwareProfile(self,
                                                   softwareProfileName,
@@ -384,7 +382,7 @@ class SoftwareProfileController(TortugaController):
 
         return self.formatResponse(response)
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     def deleteUsableHardwareProfileFromSoftwareProfile(self,
@@ -409,7 +407,7 @@ class SoftwareProfileController(TortugaController):
 
         return self.formatResponse(response)
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     def addAdmin(self, softwareProfileName, adminUsername):
@@ -428,7 +426,7 @@ class SoftwareProfileController(TortugaController):
 
         return self.formatResponse(response)
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     def deleteAdmin(self, softwareProfileName, adminUsername):
@@ -447,7 +445,7 @@ class SoftwareProfileController(TortugaController):
 
         return self.formatResponse(response)
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     def enableComponent(self, softwareProfileName):
@@ -485,7 +483,7 @@ class SoftwareProfileController(TortugaController):
 
         return self.formatResponse(response)
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     def disableComponent(self, softwareProfileName):
@@ -523,7 +521,7 @@ class SoftwareProfileController(TortugaController):
 
         return self.formatResponse(response)
 
-    @require()
+    @authentication_required()
     def copySoftwareProfile(self, srcSoftwareProfileName,
                             dstSoftwareProfileName):
         response = None
@@ -541,7 +539,7 @@ class SoftwareProfileController(TortugaController):
 
         return self.formatResponse(response)
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     def getUsableNodes(self, softwareProfileName):
@@ -560,7 +558,7 @@ class SoftwareProfileController(TortugaController):
 
         return self.formatResponse(response)
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     def getNodes(self, softwareProfileName):

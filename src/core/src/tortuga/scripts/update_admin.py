@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tortuga.admin.adminCli import AdminCli
+from tortuga.cli.admin import AdminCli
 from tortuga.objects.admin import Admin
 from tortuga.wsapi.adminWsApi import AdminWsApi
 

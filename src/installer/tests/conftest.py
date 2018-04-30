@@ -14,6 +14,7 @@
 
 import socket
 
+from passlib.hash import pbkdf2_sha256
 import pytest
 from sqlalchemy import create_engine
 
@@ -104,7 +105,7 @@ def dbm():
             OperatingSystemFamily.name == 'rhel').one()
 
         admin = Admin(username='admin',
-                      password='password',
+                      password=pbkdf2_sha256.hash('password'),
                       realname='realname',
                       description='description')
 
