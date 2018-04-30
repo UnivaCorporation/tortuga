@@ -16,12 +16,12 @@
 
 import cherrypy
 
-from tortuga.objects.network import Network
 from tortuga.exceptions.networkNotFound import NetworkNotFound
-from tortuga.utility.helper import str2bool
-from .tortugaController import TortugaController
-from .authController import require, AuthController
+from tortuga.objects.network import Network
 from tortuga.objects.tortugaObject import TortugaObjectList
+from tortuga.utility.helper import str2bool
+from tortuga.web_service.auth.decorators import authentication_required
+from .tortugaController import TortugaController
 from .. import app
 
 
@@ -64,7 +64,7 @@ class NetworkController(TortugaController):
     ]
 
     @cherrypy.tools.json_out()
-    @require()
+    @authentication_required()
     def getNetworkList(self, **kwargs):
         """
         Return list of all available networks
@@ -88,7 +88,7 @@ class NetworkController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def getNetwork(self, address, netmask):
         """Return networks"""
 
@@ -113,7 +113,7 @@ class NetworkController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def getNetworkById(self, network_id):
         """Return networks by id"""
 
@@ -132,7 +132,7 @@ class NetworkController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def addNetwork(self, address, netmask):
         '''
         Handle put to networks/:(address)/:(netmask)/)
@@ -159,7 +159,7 @@ class NetworkController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def deleteNetwork(self, network_id):
         '''
         Handle delete to networks/:(id)
@@ -234,7 +234,7 @@ class NetworkController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def updateNetwork(self, network_id):
         '''
         Handle put to networks/:(id)

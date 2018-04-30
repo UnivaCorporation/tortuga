@@ -15,7 +15,7 @@
 # pylint: disable=no-member
 
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
-from tortuga.utility.authManager import AuthManager
+from tortuga.auth.manager import AuthManager
 from tortuga.db.adminDbApi import AdminDbApi
 
 
@@ -51,18 +51,13 @@ class AdminManager(TortugaObjectManager):
         AuthManager().reloadPrincipals()
 
     def updateAdmin(self, adminObject, isCrypted):
-        if adminObject.getPassword() is not None:
+        if adminObject.get_password() is not None:
             # Only consider updating the password if the field is defined
             if not isCrypted:
                 adminObject.setPassword(
                     AuthManager().cryptPassword(
-                        adminObject.getPassword()))
+                        adminObject.get_password()))
 
         self._adminDbApi.updateAdmin(adminObject)
 
         AuthManager().reloadPrincipals()
-
-    def authenticate(self, adminUsername, adminPassword): \
-            # pylint: disable=no-self-use
-        return AuthManager().getPrincipal(
-            adminUsername, adminPassword) is not None

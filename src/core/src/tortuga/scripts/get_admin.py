@@ -15,7 +15,7 @@
 # limitations under the License.
 
 import json
-from tortuga.admin.adminCli import AdminCli
+from tortuga.cli.admin import AdminCli
 from tortuga.wsapi.adminWsApi import AdminWsApi
 
 

@@ -26,11 +26,9 @@ from tortuga.db.models.nodeRequest import NodeRequest
 from tortuga.db.nodeRequestsDbHandler import NodeRequestsDbHandler
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.notFound import NotFound
-
-from .. import dbm
-from ..threadManager import threadManager
-from .authController import AuthController, require
+from tortuga.web_service.auth.decorators import authentication_required
 from .tortugaController import TortugaController
+from ..threadManager import threadManager
 
 
 class NodeRequestSchema(Schema):
@@ -69,7 +67,7 @@ class AddHostController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def addNodes(self):
         response = None
 
@@ -100,7 +98,7 @@ class AddHostController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def getStatus(self, session, **kwargs):
         '''
         Call the addHost manager directly
@@ -129,7 +127,7 @@ class AddHostController(TortugaController):
         return self.formatResponse(response)
 
     @cherrypy.tools.json_out()
-    @require()
+    @authentication_required()
     def getAddHostRequests(self, **kwargs):
         try:
             if 'addHostSession' in kwargs:

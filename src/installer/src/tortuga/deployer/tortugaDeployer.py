@@ -41,7 +41,7 @@ from tortuga.os_utility.osUtility import getOsObjectFactory
 from tortuga.deployer import dbUtility
 from tortuga.exceptions.eulaAcceptanceRequired \
     import EulaAcceptanceRequired
-from tortuga.admin.adminApi import AdminApi
+from tortuga.admin.api import AdminApi
 from tortuga.kit.kitApi import KitApi
 from tortuga.exceptions.configurationError import ConfigurationError
 from tortuga.softwareprofile.softwareProfileApi import SoftwareProfileApi

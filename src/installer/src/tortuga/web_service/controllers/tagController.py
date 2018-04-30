@@ -17,8 +17,7 @@
 import cherrypy
 
 from tortuga.db.tagsDbHandler import TagsDbHandler
-from .. import dbm
-from .authController import AuthController, require
+from tortuga.web_service.auth.decorators import authentication_required
 from .tortugaController import TortugaController
 
 
@@ -50,7 +49,7 @@ class TagController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def get(self, name=None):
         try:
             if name is None:
@@ -84,7 +83,7 @@ class TagController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def delete(self, name):
         try:
             response = None
