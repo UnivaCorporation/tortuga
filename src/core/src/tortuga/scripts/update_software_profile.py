@@ -81,6 +81,7 @@ class UpdateSoftwareProfileCli(TortugaCli):
                        help=_('Options to pass to mount command'))
 
         self.addOption('--preserve', dest='preserve', action='store_true',
+                       default=None,
                        help=_('Format partition in image-based installation'))
 
         self.addOption('--no-preserve', dest='preserve',
@@ -88,7 +89,7 @@ class UpdateSoftwareProfileCli(TortugaCli):
                        help=_('Do not format partition in image-based'
                               ' installation'))
 
-        self.addOption('--boot-loader', dest='bootLoader',
+        self.addOption('--boot-loader', dest='bootLoader', default=None,
                        action='store_true',
                        help=_('Install the bootloader on this partition for'
                               ' image-based installation'))
