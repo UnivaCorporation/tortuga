@@ -12,6 +12,9 @@
     {
       "version_requirement": ">= 1.0.0",
       "name": "puppetlabs/stdlib"
+    },
+    {
+      "name": "puppetlabs/apt"
     }
   ]
 }
