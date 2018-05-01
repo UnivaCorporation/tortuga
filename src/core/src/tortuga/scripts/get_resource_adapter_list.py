@@ -21,8 +21,7 @@ from tortuga.wsapi.resourceAdapterWsApi import ResourceAdapterWsApi
 
 
 class GetResourceAdapterListCli(TortugaCli):
-    def __init__(self):
-        super().__init__()
+    def parseArgs(self, usage=None):
         self.addOption(
             '--settings',
             action='store_true',
@@ -30,6 +29,11 @@ class GetResourceAdapterListCli(TortugaCli):
             dest='show_settings',
             help='Show available settings for each resource adapter'
         )
+
+        self.addOption('--output', default='text',
+                       help='Formatting style for command output')
+
+        super().parseArgs(usage=usage)
 
     def runCommand(self):
         self.parseArgs()
@@ -39,17 +43,28 @@ class GetResourceAdapterListCli(TortugaCli):
                 password=self.getPassword(),
                 baseurl=self.getUrl())
 
-        output = []
+        if self.getArgs().output == 'text':
+            for ra in api.getResourceAdapterList():
+                print(ra['name'])
 
-        for ra in api.getResourceAdapterList():
-            data = {
-                'name': ra['name']
-            }
-            if self.getArgs().show_settings:
-                data['settings'] = ra['settings']
-            output.append(data)
+                if self.getArgs().show_settings:
+                    for key, value in ra['settings'].items():
+                        print('  ' + key)
 
-        print(yaml.safe_dump(output))
+                        for key2, value2 in value.items():
+                            print('    ' + key2, value2)
+        elif self.getArgs().output == 'yaml':
+            output = []
+
+            for ra in api.getResourceAdapterList():
+                data = {
+                    'name': ra['name']
+                }
+                if self.getArgs().show_settings:
+                    data['settings'] = ra['settings']
+                output.append(data)
+
+            print(yaml.safe_dump(output))
 
 
 def main():
