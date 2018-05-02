@@ -233,11 +233,8 @@ class NodeDbApi(TortugaDbApi):
 
             globalParameters = self._globalParameterDbApi.getParameterList()
 
-            # TODO: this is a terrible hack until something better comes
-            # along.
-
-            p = Parameter()
-            p.setName('Installer')
+            # manually inject value for 'installer'
+            p = Parameter(name='Installer')
 
             hostName = socket.gethostname().split('.', 1)[0]
 
