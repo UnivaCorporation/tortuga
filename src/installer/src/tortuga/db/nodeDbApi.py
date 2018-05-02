@@ -101,9 +101,14 @@ class NodeDbApi(TortugaDbApi):
         """
 
         with DbManager().session() as session:
+            nodes = self.__expand_nodespec(session, nodespec)
+
+            # ensure 'resourceadapter' relation is always loaded
+            for node in nodes:
+                self.loadRelation(node.hardwareprofile, 'resourceadapter')
+
             return self.__convert_nodes_to_TortugaObjectList(
-                self.__expand_nodespec(session, nodespec),
-                relations=optionDict)
+                nodes, relations=optionDict)
 
     def getNodeById(self, nodeId: int, optionDict: Optional[Union[dict, None]] = None):
 

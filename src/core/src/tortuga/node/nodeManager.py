@@ -17,7 +17,7 @@
 import os
 import socket
 import time
-from typing import NoReturn, Optional, Union
+from typing import NoReturn, Optional, Union, List
 
 from sqlalchemy.orm.session import Session
 
@@ -185,7 +185,8 @@ class NodeManager(TortugaObjectManager): \
 
     def getNodeList(self, tags=None):
         """Return all nodes"""
-        return self._nodeDbApi.getNodeList(tags=tags)
+
+        return self.__expand_node_vcpus(self._nodeDbApi.getNodeList(tags=tags))
 
     def updateNode(self, nodeName, updateNodeRequest):
         self.getLogger().debug('updateNode(): name=[{0}]'.format(nodeName))
@@ -880,9 +881,27 @@ class NodeManager(TortugaObjectManager): \
 
     def getNodesByNameFilter(self, nodespec: str,
                              optionDict: Optional[Union[dict, None]] = None) -> TortugaObjectList:
-        return self._nodeDbApi.getNodesByNameFilter(
-            nodespec, optionDict=optionDict)
+        return self.__expand_node_vcpus(
+                self._nodeDbApi.getNodesByNameFilter(
+                    nodespec, optionDict=optionDict))
 
     def getNodesByAddHostSession(self, addHostSession: str,
                                  optionDict: Optional[Union[dict, None]] = None) -> TortugaObjectList:
         return self._nodeDbApi.getNodesByAddHostSession(addHostSession, optionDict)
+
+    def __expand_node_vcpus(self, nodes: List[Node]) -> List[Node]:
+        # query resource adapter to get virtual cpus for each Node (TortugaObject)
+
+        for node in nodes:
+            self.getLogger().debug('adapter: {}'.format(node.getHardwareProfile().getResourceAdapter()))
+            adapter_name = node.getHardwareProfile().getResourceAdapter().getName() \
+                if node.getHardwareProfile().getResourceAdapter() else 'default'
+
+            # Query vcpus from resource adapter
+            ResourceAdapterClass = resourceAdapterFactory.get_resourceadapter_class(
+                adapter_name)
+
+            # Update Node object
+            node.setVcpus(ResourceAdapterClass().get_node_vcpus(node.getName()))
+
+        return nodes
