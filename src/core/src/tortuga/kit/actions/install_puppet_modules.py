@@ -41,6 +41,6 @@ class InstallPuppetModulesAction(KitActionBase):
                 'File does not exist: {}'.format(module_path))
 
         cmd = ('/opt/puppetlabs/bin/puppet module install --color false'
-               ' --force {}'.format(module_path))
+               ' {}'.format(module_path))
 
         tortugaSubprocess.executeCommand(cmd)
