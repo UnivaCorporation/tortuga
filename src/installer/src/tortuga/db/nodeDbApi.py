@@ -69,7 +69,7 @@ class NodeDbApi(TortugaDbApi):
             })
 
             return Node.getFromDbDict(dbNode.__dict__)
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
@@ -120,7 +120,7 @@ class NodeDbApi(TortugaDbApi):
             self.loadRelations(dbNode, optionDict)
 
             return Node.getFromDbDict(dbNode.__dict__)
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
@@ -135,7 +135,7 @@ class NodeDbApi(TortugaDbApi):
             node = self._nodesDbHandler.getNodeByIp(session, ip)
 
             return Node.getFromDbDict(node.__dict__)
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
@@ -186,7 +186,7 @@ class NodeDbApi(TortugaDbApi):
         try:
             return self.__convert_nodes_to_TortugaObjectList(
                 self._nodesDbHandler.getNodeList(session, tags=tags))
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
@@ -313,7 +313,7 @@ class NodeDbApi(TortugaDbApi):
                 session, dbNodes, bSoftShutdown)
 
             session.commit()
-        except TortugaException as ex:
+        except TortugaException:
             session.rollback()
             raise
         except Exception as ex:
@@ -379,7 +379,7 @@ class NodeDbApi(TortugaDbApi):
             dbNode = self._nodesDbHandler.getNode(session, nodeName)
 
             return self.getTortugaObjectList(Node, dbNode.children)
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
@@ -397,7 +397,7 @@ class NodeDbApi(TortugaDbApi):
         try:
             self._nodesDbHandler.checkpointNode(session, nodeName)
             session.commit()
-        except TortugaException as ex:
+        except TortugaException:
             session.rollback()
             raise
         except Exception as ex:
@@ -418,7 +418,7 @@ class NodeDbApi(TortugaDbApi):
             self._nodesDbHandler.revertNodeToCheckpoint(session, nodeName)
 
             session.commit()
-        except TortugaException as ex:
+        except TortugaException:
             session.rollback()
             raise
         except Exception as ex:
@@ -440,7 +440,7 @@ class NodeDbApi(TortugaDbApi):
                 session, nodeName, remainingNodeList, liveMigrate)
 
             session.commit()
-        except TortugaException as ex:
+        except TortugaException:
             session.rollback()
             raise
         except Exception as ex:
@@ -466,7 +466,7 @@ class NodeDbApi(TortugaDbApi):
                 session, parentNodeName) if parentNodeName else None
 
             session.commit()
-        except TortugaException as ex:
+        except TortugaException:
             session.rollback()
             raise
         except Exception as ex:
@@ -482,7 +482,7 @@ class NodeDbApi(TortugaDbApi):
         try:
             return self.getTortugaObjectList(
                 Node, self._nodesDbHandler.getNodesByNodeState(session, state))
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % (ex))
