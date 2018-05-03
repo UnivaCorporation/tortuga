@@ -167,9 +167,16 @@ class SoftwareProfileController(TortugaController):
                 tagspec.extend(parse_tag_query_string(kwargs['tag']))
 
             if 'name' in kwargs and kwargs['name']:
+                options = {
+                    'components': True,
+                    'partitions': True,
+                    'hardwareprofiles': True,
+                    'tags': True,
+                }
+
                 softwareProfiles = TortugaObjectList(
                     [self._softwareProfileManager.getSoftwareProfile(
-                        kwargs['name'])])
+                        kwargs['name'], optionDict=options)])
             else:
                 softwareProfiles = self._softwareProfileManager.\
                     getSoftwareProfileList(tags=tagspec)
