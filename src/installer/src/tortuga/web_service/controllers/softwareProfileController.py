@@ -178,9 +178,6 @@ class SoftwareProfileController(TortugaController):
                 'softwareprofiles': softwareProfiles.getCleanDict(),
             }
         except Exception as ex:
-            self.getLogger().exception(
-                'getSoftwareProfiles() WS controller exception')
-
             self.handleException(ex)
 
             http_status = 404 \
