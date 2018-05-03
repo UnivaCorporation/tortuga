@@ -14,14 +14,16 @@
 
 # pylint: disable=no-member
 
-from tortuga.db.tortugaDbApi import TortugaDbApi
-from tortuga.db.kitsDbHandler import KitsDbHandler
-from tortuga.exceptions.tortugaException import TortugaException
-from tortuga.objects.kit import Kit
-from tortuga.objects.component import Component
+from typing import Optional
+
 from tortuga.db.dbManager import DbManager
-from tortuga.objects.kitSource import KitSource
+from tortuga.db.kitsDbHandler import KitsDbHandler
+from tortuga.db.tortugaDbApi import TortugaDbApi
+from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.kit.utils import format_kit_descriptor
+from tortuga.objects.component import Component
+from tortuga.objects.kit import Kit
+from tortuga.objects.kitSource import KitSource
 from tortuga.objects.tortugaObject import TortugaObjectList
 
 
@@ -110,29 +112,27 @@ class KitDbApi(TortugaDbApi):
         finally:
             DbManager().closeSession()
 
-    def getKitList(self):
+    def getKitList(self, os_kits_only: Optional[bool] = False):
         """
-        Get list of all available kits from the db.
+        Get list of all available or os kits only from the db
         """
 
-        session = DbManager().openSession()
+        with DbManager().session() as session:
+            try:
+                kits = []
 
-        try:
-            kits = []
+                for kit in self._kitsDbHandler.getKitList(
+                        session, os_kits_only=os_kits_only):
+                    self.loadRelations(kit, {'components': True})
 
-            for kit in self._kitsDbHandler.getKitList(session):
-                self.loadRelations(kit, {'components': True})
+                    kits.append(Kit.getFromDbDict(kit.__dict__))
 
-                kits.append(Kit.getFromDbDict(kit.__dict__))
-
-            return TortugaObjectList(kits)
-        except TortugaException:
-            raise
-        except Exception as ex:
-            self.getLogger().exception('%s' % (ex))
-            raise
-        finally:
-            DbManager().closeSession()
+                return TortugaObjectList(kits)
+            except TortugaException:
+                raise
+            except Exception as ex:
+                self.getLogger().exception('%s' % (ex))
+                raise
 
     def addKit(self, kit):
         """

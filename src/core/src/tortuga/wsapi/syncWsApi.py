@@ -15,15 +15,17 @@
 # pylint: disable=no-member
 
 import json
+from typing import Optional, Union
 
 from tortuga.exceptions.tortugaException import TortugaException
+
 from .tortugaWsApi import TortugaWsApi
 
 
 class SyncWsApi(TortugaWsApi):
     """Cluster sync WS API class"""
 
-    def scheduleClusterUpdate(self, updateReason=None):
+    def scheduleClusterUpdate(self, updateReason: Optional[Union[str, None]] = None):
         """Schedule cluster update.
 
             Returns:
@@ -62,7 +64,7 @@ class SyncWsApi(TortugaWsApi):
         try:
             _, responseDict = self.sendSessionRequest(url)
 
-            return responseDict.get('running') == 'True'
+            return str2bool(responseDict.get('running'))
         except TortugaException:
             raise
         except Exception as ex:

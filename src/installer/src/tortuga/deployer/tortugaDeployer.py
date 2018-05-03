@@ -41,7 +41,7 @@ from tortuga.os_utility.osUtility import getOsObjectFactory
 from tortuga.deployer import dbUtility
 from tortuga.exceptions.eulaAcceptanceRequired \
     import EulaAcceptanceRequired
-from tortuga.admin.adminApi import AdminApi
+from tortuga.admin.api import AdminApi
 from tortuga.kit.kitApi import KitApi
 from tortuga.exceptions.configurationError import ConfigurationError
 from tortuga.softwareprofile.softwareProfileApi import SoftwareProfileApi
@@ -370,7 +370,7 @@ class TortugaDeployer(object): \
 
         self._logger.info('Running Puppet for post-configuration')
 
-        logFileName = '/tmp/tortuga_setup.log.log'
+        logFileName = '/tmp/tortuga_setup.log'
 
         cmd = ('/opt/puppetlabs/bin/puppet agent --color false --onetime'
                ' --no-daemonize --detailed-exitcodes --verbose 2>&1')
@@ -1004,7 +1004,8 @@ class TortugaDeployer(object): \
             SoftwareProfileApi().enableComponent(
                 installerNode.getSoftwareProfile().getName(),
                 k.getName(), k.getVersion(), k.getIteration(),
-                component.getName(), component.getVersion())
+                component.getName(), component.getVersion(),
+                sync=False)
 
     def promptForAdminCredentials(self):
         # Get admin username and password for use with web service

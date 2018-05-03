@@ -18,7 +18,7 @@ from jinja2 import Template
 
 from tortuga.db.dbManager import DbManager
 from tortuga.db.nodesDbHandler import NodesDbHandler
-from tortuga.db.hardwareProfiles import HardwareProfiles
+from tortuga.db.models.hardwareProfile import HardwareProfile
 from tortuga.os_utility.osUtility import getOsObjectFactory
 from tortuga.db.globalParameterDbApi import GlobalParameterDbApi
 from tortuga.kit.installer import ComponentInstallerBase
@@ -244,8 +244,8 @@ class ComponentInstaller(ComponentInstallerBase):
         :returns: None
         """
 
-        hardware_profiles = session.query(HardwareProfiles).filter(
-            HardwareProfiles.location != 'local'
+        hardware_profiles = session.query(HardwareProfile).filter(
+            HardwareProfile.location != 'local'
         ).all()
 
         for profile in hardware_profiles:

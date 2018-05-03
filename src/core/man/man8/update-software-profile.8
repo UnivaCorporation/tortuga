@@ -1,0 +1,182 @@
+.\" Copyright 2008-2018 Univa Corporation
+.\"
+.\" Licensed under the Apache License, Version 2.0 (the "License");
+.\" you may not use this file except in compliance with the License.
+.\" You may obtain a copy of the License at
+.\"
+.\"    http://www.apache.org/licenses/LICENSE-2.0
+.\"
+.\" Unless required by applicable law or agreed to in writing, software
+.\" distributed under the License is distributed on an "AS IS" BASIS,
+.\" WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+.\" See the License for the specific language governing permissions and
+.\" limitations under the License.
+
+.TH "update-software-profile" "8" "6.3" "Univa" "Tortuga"
+.SH "NAME"
+.LP
+update-software-profile - Update an existing software profile in the Tortuga system.
+.SH "SYNTAX"
+.LP
+\fBupdate-software-profile [--xml-file=\fIXMLFILE\fB|--name=\fISOFTWAREPROFILENAME\fB] [--new-name=\fISOFTWAREPROFILENAME\fB --description=\fIDESCRIPTION\fB --kernel=\fIKERNEL\fB --kernel-parameters=\fIKERNELPARAMETERS\fB  --initrd=\fIINITRD\fB --min-nodes=\fIMINNODES\fB --add-package=\fIPACKAGENAME\fB --delete-package=\fIPACKAGENAME\fB]
+
+\fBupdate-software-profile --name=\fISOFTWAREPROFILENAME\fB --add-partition=\fIPARTITION\fB --device=\fIDEVICE\fB --mount-point=\fIMOUNTPOINT\fB --file-system=\fIFILESYSTEM\fB --size=\fISIZE\fB --options=\fIOPTIONS\fB [ --preserve | --no-preserve ]\fB [ --boot-loader | --no-boot-loader ]\fB
+
+\fBupdate-software-profile --name=\fISOFTWAREPROFILENAME\fB --update-partition=\fIPARTITION\fB [--device=\fIDEVICE\fB --mount-point=\fIMOUNTPOINT\fB --file-system=\fIFILESYSTEM\fB --size=\fISIZE\fB --options=\fIOPTIONS\fB [ --preserve | --no-preserve ]\fB [ --boot-loader | --no-boot-loader ]\fB
+
+\fBupdate-software-profile --name=\fISOFTWAREPROFILENAME\fB --delete-partition=\fIPARTITION\fB
+
+.SH "DESCRIPTION"
+.LP
+The update-software-profile tool updates a single existing software profile in the Tortuga system.  Nodes receive several configuration parameters from the software profile they are associated with.
+.LP
+The update-software-profile tool is structured to first set up all of the options and then look to see if the --xml-file option is specified. If the --xml-file option is specified a profile object is created from the file. If the --xml-file option is not present the tool fetches the profile specified by the --name option.
+.LP
+.SH "OPTIONS"
+.LP
+.TP
+\fB--name=\fISOFTWAREPROFILENAME
+Name of software profile.
+.TP
+\fB--new-name=\fISOFTWAREPROFILENAME
+New name for software profile.
+.TP
+\fB--description=\fIDESCRIPTION
+User description of this software profile.
+.TP
+\fB--kernel=\fIKERNEL
+Kernel for software profile.
+.TP
+\fB--kernel-parameters=\fIKERNELPARAMETERS
+Kernel parameters for software profile.
+.TP
+\fB--initrd=\fIINITRD
+Initrd for software profile.
+.TP
+\fB--min-nodes=\fIMINNODES
+Minimum number of nodes required to remain in this profile
+.TP
+\fB--add-package=\fIPACKAGENAME
+Name of software package to add to the software profile.
+.TP
+\fB--delete-package=\fIPACKAGENAME
+Name of software package to delete from the software profile.
+.TP
+\fB--add-partition=ADDPARTITION
+A new partition to add to the software profile.
+.TP
+\fB--delete-partition=DELETEPARTITION
+A partition to delete from the software profile.
+.TP
+\fB--update-partition=UPDATEPARTITION
+Update an existing partition in the software profile.
+.TP
+\fB--device=DEVICE
+The harddisk and partition to use (ie 1.1).
+.TP
+\fB--mount-point=MOUNTPOINT
+The mount location of the partition.
+.TP
+\fB--file-system=FILESYSTEM
+The filesystem type for the partition.
+.TP
+\fB--size=SIZE
+The size of the partition.  Use \'GB\' suffix for gigabytes or \'MB\' for megabytes.  Default units are megabytes. 
+.TP
+\fB--options=OPTIONS
+Options to pass to the mount command.
+.TP
+\fB--preserve
+Format the partition in image-based installations.
+.TP
+\fB--no-preserve
+Do not format the partition in image-based installations.
+.TP
+\fB--boot-loader
+Install the bootloader on this partition for image-based installations.
+.TP
+\fB--no-boot-loader
+Do not install the bootloader on this partition for image-based installations.
+.TP
+\fB--direct-attachment=\fIDIRECTATTACHMENT
+Storage adapter which connects drive to a node
+.TP
+\fB--indirect-attachment=\fIINDIRECTATTACHMENT
+Storage adapter which indirectly connects drive to a node. eg. How the drive is connected to a hypervisor for a VM.
+.TP
+\fB--disk-size=\fIDISKSIZE
+Size of the disk that this partition will reside on.  Use \'GB\' suffix for gigabytes or \'MB\' for megabytes.  Default units are megabytes.
+.TP
+\fB--san-volume=\fISANVOLUME
+The optional SAN volume to back this device.
+.TP
+\fB--boot-loader=[true|false]
+If true, the bootloader will be installed on this partition for image-based installations.
+.TP
+\fB--xml-file=XMLFILE
+A file pointing to an XML representation of a software profile.
+.LP
+.SH "Common Tortuga Options"
+.LP
+.TP
+\fB-h, --help
+show this help message and exit.
+.TP
+\fB-?
+show this help message and exit.
+.TP
+\fB-v
+print version and exit.
+.TP
+\fB-d \fPCONSOLELOGLEVEL\fB, --debug=\fPCONSOLELOGLEVEL
+set debug level; valid values are: critical, error, warning, info, debug
+.TP
+\fB--username=\fPUSERNAME
+Credential to use when not running as root on the Installer.
+.TP
+\fB--password=\fPPASSWORD
+Credential to use when not running as root on the Installer.
+.SH "EXAMPLES"
+.LP
+\fBUpdate some simple fields 
+.TP
+\fRupdate-software-profile --name SwTest --description "Changed for Demo"  --kernel overridden --initrd overridden
+.LP
+\fBAdd some packages 
+.TP
+\fRupdate-software-profile --name SwTest --add-package SUNWvim --add-package SUNWgcc
+.LP
+\fBDelete a package 
+.TP
+\fRupdate-software-profile --name SwTest --delete-package SUNWvim
+.LP
+\fBDelete a partition 
+.TP
+\fRupdate-software-profile --name SwTest --delete-partition root --delete-partition swap --delete-partition boot
+.LP
+\fBCreate a partition 
+.TP
+\fRupdate-software-profile --name SwTest --add-partition boot --device 1.1 \
+  --mount-point /boot --file-system zfs --size 8000 --options default \
+  --no-preserve --no-boot-loader
+.LP
+The same example using the 'GB' suffix on the --size parameter.
+.LP
+\fRupdate-software-profile --name SwTest --add-partition boot --device 1.1 \
+  --mount-point /boot --file-system zfs --size 8GB --options default \
+  --no-preserve --no-boot-loader
+.LP
+\fBUpdate a partition: 
+.TP
+\fRupdate-software-profile --name SwTest --update-partition boot --size 16000
+.LP
+Again, the same example using the 'GB' suffix on the --size parameter.
+.LP
+\fRupdate-software-profile --name SwTest --update-partition boot --size 16GB
+.LP
+.SH "AUTHORS"
+.LP
+Univa Support <support@univa.com>
+.SH "SEE ALSO"
+.LP
+get-software-profile(8)

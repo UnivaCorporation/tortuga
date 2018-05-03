@@ -14,8 +14,11 @@
 
 import cherrypy
 
+from tortuga.exceptions.parameterAlreadyExists import ParameterAlreadyExists
+from tortuga.exceptions.parameterNotFound import ParameterNotFound
+from tortuga.objects.parameter import Parameter
+from tortuga.web_service.auth.decorators import authentication_required
 from .tortugaController import TortugaController
-from .authController import AuthController, require
 from .. import app
 
 
@@ -33,20 +36,38 @@ class ParameterController(TortugaController):
         },
         {
             'name': 'userParameterList',
-            'path': '/v1/parameters',
+            'path': '/v1/parameters/',
             'action': 'getParameterList',
             'method': ['GET']
+        },
+        {
+            'name': 'createParameter',
+            'path': '/v1/parameters/',
+            'action': 'createParameter',
+            'method': ['POST']
+        },
+        {
+            'name': 'updateParameter',
+            'path': '/v1/parameters/:(name)',
+            'action': 'updateParameter',
+            'method': ['PUT']
+        },
+        {
+            'name': 'deleteParameter',
+            'path': '/v1/parameters/:(name)',
+            'action': 'deleteParameter',
+            'method': ['DELETE']
         },
     ]
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def getParameter(self, name):
-        """ Return info for the specified parameter. """
+        """
+        Return info for the specified parameter.
 
-        # self.getLogger().debug('Retrieving parameter [%s]' % (name))
-
+        """
         try:
             parameter = app.parameter_api.getParameter(name)
 
@@ -54,7 +75,7 @@ class ParameterController(TortugaController):
                 'globalparameter': parameter.getCleanDict(),
             }
         except Exception as ex:
-            self.getLogger().error('%s' % ex)
+            self.getLogger().error(str(ex))
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -62,10 +83,12 @@ class ParameterController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def getParameterList(self):
-        """ Return all known parameters. """
+        """
+        Return all known parameters.
 
+        """
         self.getLogger().debug('Retrieving parameter list')
 
         try:
@@ -75,7 +98,91 @@ class ParameterController(TortugaController):
                 'globalparameters': parameterList.getCleanDict(),
             }
         except Exception as ex:
-            self.getLogger().error('%s' % ex)
+            self.getLogger().error(str(ex))
+            self.handleException(ex)
+            response = self.errorResponse(str(ex))
+
+        return self.formatResponse(response)
+
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.json_in()
+    @authentication_required()
+    def createParameter(self):
+        """
+        Creates a parameter.
+
+        """
+        self.getLogger().debug('Creating parameter')
+
+        postdata = cherrypy.request.json
+        parameter = Parameter.getFromDict(postdata)
+
+        try:
+            app.parameter_api.getParameter(parameter.get_name())
+            parameter_exists = True
+
+        except ParameterNotFound:
+            parameter_exists = False
+
+        try:
+            if parameter_exists:
+                raise ParameterAlreadyExists()
+
+            app.parameter_api.upsertParameter(parameter)
+
+            response = None
+
+        except Exception as ex:
+            self.getLogger().error(str(ex))
+            self.handleException(ex)
+            response = self.errorResponse(str(ex))
+
+        return self.formatResponse(response)
+
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.json_in()
+    @authentication_required()
+    def updateParameter(self, name):
+        """
+        Creates or updates a parameter.
+
+        """
+        self.getLogger().debug('Creating/updating parameter: {}'.format(name))
+
+        postdata = cherrypy.request.json
+        parameter = Parameter.getFromDict(postdata)
+
+        try:
+            if name != parameter.get_name():
+                raise Exception('Parameter name mismatch')
+
+            app.parameter_api.upsertParameter(parameter)
+            response = None
+
+        except Exception as ex:
+            self.getLogger().error(str(ex))
+            self.handleException(ex)
+            response = self.errorResponse(str(ex))
+
+        return self.formatResponse(response)
+
+
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.json_in()
+    @authentication_required()
+    def deleteParameter(self, name):
+        """
+        Deletes a parameter.
+
+        """
+        self.getLogger().debug('Deleting parameter: {}'.format(name))
+
+        try:
+            app.parameter_api.deleteParameter(name)
+            response = None
+
+        except Exception as ex:
+            self.getLogger().error(str(ex))
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 

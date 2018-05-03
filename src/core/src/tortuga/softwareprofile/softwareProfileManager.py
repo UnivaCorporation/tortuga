@@ -12,9 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=nonstandard-exception,no-name-in-module,logging-not-lazy
-# pylint: disable=catching-non-exception,no-member
-
 import os
 import shutil
 from typing import Optional, Union
@@ -27,19 +24,20 @@ from tortuga.db.nodeDbApi import NodeDbApi
 from tortuga.db.softwareProfileDbApi import SoftwareProfileDbApi
 from tortuga.exceptions.componentNotFound import ComponentNotFound
 from tortuga.exceptions.kitNotFound import KitNotFound
-from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.helper import osHelper
 from tortuga.kit.loader import load_kits
 from tortuga.kit.registry import get_kit_installer
+from tortuga.objects.softwareProfile import SoftwareProfile
 from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.os_utility import osUtility
+from tortuga.puppet import Puppet
 from tortuga.types import Singleton
 from tortuga.utility import validation
-from tortuga.objects.softwareProfile import SoftwareProfile
 
 
-class SoftwareProfileManager(TortugaObjectManager, Singleton):
+class SoftwareProfileManager(TortugaObjectManager, Singleton): \
+        # pylint: disable=too-many-public-methods
 
     BASE_KIT_NAME = 'base'
 
@@ -94,27 +92,21 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
         return self._sp_db_api.deleteAdmin(softwareProfileName, adminUsername)
 
     def updateSoftwareProfile(self, softwareProfileObject):
-        try:
-            self.getLogger().debug(
-                'Updating software profile: %s' % (
-                    softwareProfileObject.getName()))
+        self.getLogger().debug(
+            'Updating software profile: %s' % (
+                softwareProfileObject.getName()))
 
-            # First get the object from the db we are updating...
-            existingProfile = self.\
-                getSoftwareProfileById(softwareProfileObject.getId())
+        # First get the object from the db we are updating...
+        existingProfile = self.\
+            getSoftwareProfileById(softwareProfileObject.getId())
 
-            # Set parameters that we will not allow updating
-            softwareProfileObject.setOsInfo(existingProfile.getOsInfo())
-            softwareProfileObject.setOsId(existingProfile.getOsId())
-            softwareProfileObject.setIsIdle(existingProfile.getIsIdle())
-            softwareProfileObject.setType(existingProfile.getType())
+        # Set parameters that we will not allow updating
+        softwareProfileObject.setOsInfo(existingProfile.getOsInfo())
+        softwareProfileObject.setOsId(existingProfile.getOsId())
+        softwareProfileObject.setIsIdle(existingProfile.getIsIdle())
+        softwareProfileObject.setType(existingProfile.getType())
 
-            self._sp_db_api.updateSoftwareProfile(softwareProfileObject)
-        except TortugaException as ex:
-            raise
-        except Exception as ex:
-            self.getLogger().exception('%s' % ex)
-            raise TortugaException(exception=ex)
+        self._sp_db_api.updateSoftwareProfile(softwareProfileObject)
 
     def getSoftwareProfile(
             self,
@@ -161,10 +153,7 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
 
         return comp
 
-    def _get_os_kits(self):
-        return [kit for kit in self._kit_db_api.getKitList() if kit.getIsOs()]
-
-    def _getOsInfo(self, bOsMediaRequired):
+    def _getOsInfo(self, bOsMediaRequired: bool):
         if not bOsMediaRequired:
             # As a placeholder, use the same OS as the installer
 
@@ -178,7 +167,7 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
         # Use available operating system kit; raise exception if
         # multiple available
 
-        os_kits = self._get_os_kits()
+        os_kits = self._kit_db_api.getKitList(os_kits_only=True)
         if not os_kits:
             raise KitNotFound('No operating system kit installed')
 
@@ -229,8 +218,7 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
         validation.validateProfileName(swProfileSpec.getName())
 
         # Insert default description for software profile
-        if not swProfileSpec.getDescription() or \
-                swProfileSpec.getDescription() == '**DEFAULT**':
+        if swProfileSpec.getDescription() is None:
             swProfileSpec.setDescription(
                 '%s Nodes' % (swProfileSpec.getName()))
 
@@ -269,7 +257,6 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
 
             osObjFactory = osUtility.getOsObjectFactory(
                 osConfig.getOsFamilyInfo().getName())
-            compManager = osObjFactory.getComponentManager()
 
             # Need to be fancy with components
             spComponents = swProfileSpec.getComponents()
@@ -337,12 +324,11 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
 
                     components.append(comp)
                 except ComponentNotFound:
-                    self.getLogger().warn(
+                    self.getLogger().warning(
                         'OS [{}] does not have a compatible \'core\' component'.format(
                             osInfo
                         )
                     )
-                    pass
 
                 # Initialize values for kernel, kernelParams, and initrd
                 if not swProfileSpec.getKernel():
@@ -412,8 +398,8 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
             for kit in kit_list
             for component in kit.getComponentList()
             if component.getName() == comp_name and
-               (comp_version is None or
-                component.getVersion() == comp_version)
+            (comp_version is None or
+             component.getVersion() == comp_version)
         ]
         if not kits:
             raise KitNotFound(
@@ -428,7 +414,8 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
         return kits[0]
 
     def enableComponent(self, software_profile_name, kit_name, kit_version,
-                        kit_iteration, comp_name, comp_version=None):
+                        kit_iteration, comp_name, comp_version=None,
+                        sync=True):
         """
         Enable a component on a software profile.
 
@@ -467,6 +454,9 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
                 )
             )
 
+            if sync:
+                Puppet().agent()
+
     def _get_kit_and_component_version(self, kit_name, kit_version,
                                        kit_iteration, comp_name,
                                        comp_version=None):
@@ -499,9 +489,9 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
             for k in self._kit_db_api.getKitList():
                 if k.getName() == kit_name and \
                         (kit_version is None or
-                            k.getVersion() == kit_version) and \
+                         k.getVersion() == kit_version) and \
                         (kit_iteration is None or
-                            k.getIteration() == kit_iteration):
+                         k.getIteration() == kit_iteration):
                     kit = k
                     kits_found += 1
 
@@ -600,7 +590,9 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
         return best_match_component
 
     def disableComponent(self, software_profile_name, kit_name, kit_version,
-                         kit_iteration, comp_name, comp_version=None):
+                         kit_iteration, comp_name, comp_version=None,
+                         sync=True): \
+            # pylint: disable=unused-argument
         """
         Disables a component on a software profile.
 
@@ -634,6 +626,9 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
                 best_match_component, software_profile
             )
         )
+
+        if sync:
+            Puppet().agent()
 
     def _disable_kit_component(self, kit, comp_name, comp_version,
                                software_profile):
@@ -685,7 +680,7 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
 
         """
         return self._remove_component_from_software_profile(
-                kit, comp_name, comp_version, software_profile)
+            kit, comp_name, comp_version, software_profile)
 
     def _remove_component_from_software_profile(self, kit, comp_name,
                                                 comp_version,
@@ -737,16 +732,9 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton):
         """ Get the list of enabled components """
         return self._sp_db_api.getEnabledComponentList(name)
 
-    def getPackageList(self, softwareProfileName):
-        """ Get list of packages. """
-        return self._sp_db_api.getPackageList(softwareProfileName)
-
     def getPartitionList(self, softwareProfileName):
         """ Get list of partitions. """
         return self._sp_db_api.getPartitionList(softwareProfileName)
-
-    def getProvisioningInfo(self, nodeName):
-        return self._sp_db_api.getProvisioningInfo(nodeName)
 
     def addUsableHardwareProfileToSoftwareProfile(self, hardwareProfileName,
                                                   softwareProfileName):

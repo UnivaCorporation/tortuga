@@ -14,19 +14,23 @@
 
 # pylint: disable=no-member
 
-from tortuga.exceptions.invalidArgument import InvalidArgument
+from typing import NoReturn
+
+from tortuga.config.configManager import ConfigManager
 from tortuga.db.dbManager import DbManager
 from tortuga.db.hardwareProfilesDbHandler import HardwareProfilesDbHandler
+from tortuga.db.models.hardwareProfile import HardwareProfile
+from tortuga.db.models.node import Node
+from tortuga.db.models.softwareProfile import SoftwareProfile
 from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
-from tortuga.resourceAdapter import resourceAdapterFactory
+from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.nodeAlreadyExists import NodeAlreadyExists
-from tortuga.db.nodes import Nodes
-from tortuga.exceptions.profileMappingNotAllowed \
-    import ProfileMappingNotAllowed
-from tortuga.config.configManager import ConfigManager
+from tortuga.exceptions.profileMappingNotAllowed import \
+    ProfileMappingNotAllowed
+from tortuga.resourceAdapter import resourceAdapterFactory
 
 
-def validate_addnodes_request(addNodesRequest):
+def validate_addnodes_request(addNodesRequest: dict):
     """
     Raises:
         HardwareProfileNotFound
@@ -141,8 +145,8 @@ def validate_addnodes_request(addNodesRequest):
 
             if hostname:
                 # Ensure host does not already exist
-                existing_node = session.query(Nodes).filter(
-                    Nodes.name == hostname).first()
+                existing_node = session.query(Node).filter(
+                    Node.name == hostname).first()
                 if existing_node:
                     raise NodeAlreadyExists(
                         'Node [%s] already exists' % (hostname))
@@ -158,7 +162,7 @@ def validate_addnodes_request(addNodesRequest):
             raise InvalidArgument(
                 'Missing "rackNumber" for name format [%s] of'
                 ' hardware profile [%s]' % (nameFormat, hp))
-        adapter = resourceAdapterFactory.getApi(hp.resourceadapter.name)
+        adapter = resourceAdapterFactory.get_api(hp.resourceadapter.name)
 
         adapter.validate_start_arguments(
             addNodesRequest, hp, dbSoftwareProfile=sp)
@@ -166,7 +170,7 @@ def validate_addnodes_request(addNodesRequest):
         DbManager().closeSession()
 
 
-def checkProfilesMapped(swProfile, hwProfile):
+def checkProfilesMapped(swProfile: SoftwareProfile, hwProfile: HardwareProfile):
     """
     Raises ProfileMappingNotAllowed if specified profiles are not
     mapped.
@@ -181,7 +185,7 @@ def checkProfilesMapped(swProfile, hwProfile):
         ' profile [%s]' % (swProfile.name, hwProfile.name))
 
 
-def validate_hwprofile(hp):
+def validate_hwprofile(hp: HardwareProfile) -> NoReturn:
     """
     Raises InvalidArgument if specified hardware profile is that of the
     installer node

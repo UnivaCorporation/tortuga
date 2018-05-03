@@ -156,25 +156,6 @@ class SoftwareProfileApi(TortugaApi): \
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
 
-    def getPackageList(self, softwareProfileName):
-        """
-        Get package list for a given softwareprofile
-
-            Returns:
-                [package]
-            Throws:
-                SoftwareProfileNotFound
-                TortugaException
-        """
-        try:
-            return self._softwareProfileManager.\
-                getPackageList(softwareProfileName)
-        except TortugaException as ex:
-            raise
-        except Exception as ex:
-            self.getLogger().exception('%s' % ex)
-            raise TortugaException(exception=ex)
-
     def getPartitionList(self, softwareProfileName):
         """
         Get partition list for a given softwareprofile
@@ -321,7 +302,7 @@ class SoftwareProfileApi(TortugaApi): \
             raise TortugaException(exception=ex)
 
     def enableComponent(self, softwareProfileName, kitName, kitVersion,
-                        kitIteration, compName, compVersion=None):
+                        kitIteration, compName, compVersion=None, sync=True):
         try:
             return self._softwareProfileManager.enableComponent(
                 softwareProfileName,
@@ -329,7 +310,8 @@ class SoftwareProfileApi(TortugaApi): \
                 kitVersion,
                 kitIteration,
                 compName,
-                compVersion)
+                compVersion,
+                sync=sync)
         except Exception as ex:
             if not isinstance(ex, TortugaException):
                 self.getLogger().exception(
@@ -342,7 +324,7 @@ class SoftwareProfileApi(TortugaApi): \
             raise
 
     def disableComponent(self, softwareProfileName, kitName, kitVersion,
-                         kitIteration, compName, compVersion=None):
+                         kitIteration, compName, compVersion=None, sync=True):
         try:
             return self._softwareProfileManager.disableComponent(
                 softwareProfileName,
@@ -350,7 +332,8 @@ class SoftwareProfileApi(TortugaApi): \
                 kitVersion,
                 kitIteration,
                 compName,
-                compVersion)
+                compVersion,
+                sync=sync)
         except TortugaException as ex:
             raise
         except Exception as ex:

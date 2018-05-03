@@ -23,7 +23,6 @@ from tortuga.exceptions.resourceAdapterAlreadyExists import \
     ResourceAdapterAlreadyExists
 from tortuga.hardwareprofile.hardwareProfileFactory import \
     getHardwareProfileApi
-from tortuga.kit.actions import ComponentActionBase, KitActionBase
 from tortuga.kit.installer import ComponentInstallerBase
 from ..utils import pip_install_requirements
 
@@ -57,25 +56,78 @@ class ResourceAdapterMixin:
             # We can assume the adapter registered with the same
             # name is valid...
             #
+            logger.info('Resource adapter already registered, skipping')
             pass
 
-    def unregister_resource_adapter(self, resource_adapter_name):
+    def unregister_resource_adapter(self):
         resource_adapter_api = ResourceAdapterDbApi()
-        resource_adapter_api.deleteResourceAdapter(resource_adapter_name)
+        resource_adapter_api.deleteResourceAdapter(self.resource_adapter_name)
 
-    def action_pre_uninstall(self, *args, **kwargs):
-        KitPreUninstallAction(self)(*args, **kwargs)
+    def action_post_install(self, *args, **kwargs):
+        super().action_post_install(*args, **kwargs)
+        #
+        # Install files to '$TORTUGA_ROOT/config' directory
+        #
+        for config_file in self.config_files:
+            src_file = os.path.join(
+                self.files_path,
+                config_file
+            )
+            dst_file = os.path.join(
+                self.config_manager.getKitConfigBase(),
+                config_file
+            )
+
+            #
+            # Prevent existing file from being overwritten
+            #
+            if os.path.exists(dst_file):
+                dst_file += '.new'
+
+            logger.info(
+                'Writing file: {}'.format(dst_file))
+
+            shutil.copy2(src_file, dst_file)
 
     def action_post_uninstall(self, *args, **kwargs):
-        KitPostUninstallAction(self)(*args, **kwargs)
+        super().action_post_uninstall(*args, **kwargs)
+        for config_file in self.config_files:
+            src_file = os.path.join(
+                self.config_manager.getKitConfigBase(),
+                config_file)
+
+            #
+            # This conditional should always pass, but just in case...
+            # These files are installed by default.
+            #
+            if os.path.exists(src_file):
+                shutil.copy2(src_file, src_file + '.saved')
+                os.unlink(src_file)
 
 
-class KitPreUninstallAction(KitActionBase):
-    def do_action(self, *args, **kwargs):
-        self._unregister_resource_adapter(
-            self.kit_installer.resource_adapter_name)
+class ResourceAdapterManagementComponentInstaller(ComponentInstallerBase):
+    installer_only = True
 
-    def _unregister_resource_adapter(self, resource_adapter_name):
+    def action_enable(self, software_profile_name, *args, **kwargs):
+        super().action_enable(software_profile_name, *args, **kwargs)
+        #
+        # Install required python packages from requirements.txt
+        #
+        requirements_path = os.path.join(
+            self.component_path,
+            'requirements.txt'
+        )
+        pip_install_requirements(self.kit_installer, requirements_path)
+
+    def action_post_enable(self, software_profile_name, *args, **kwargs):
+        super().action_post_enable(software_profile_name, *args, **kwargs)
+        self.kit_installer.register_resource_adapter()
+
+    def action_pre_disable(self, software_profile_name, *args, **kwargs):
+        super().action_pre_disable(software_profile_name, *args, **kwargs)
+        self._unregister_resource_adapter()
+
+    def _unregister_resource_adapter(self):
         hardware_profile_api = getHardwareProfileApi()
 
         adapter_hwp_list = []
@@ -84,7 +136,7 @@ class KitPreUninstallAction(KitActionBase):
                 {'resourceadapter': True}):
             if hardware_profile.getResourceAdapter() and \
                     hardware_profile.getResourceAdapter().getName() == \
-                    resource_adapter_name:
+                    self.kit_installer.resource_adapter_name:
                 adapter_hwp_list.append(hardware_profile)
 
         #
@@ -117,68 +169,5 @@ class KitPreUninstallAction(KitActionBase):
         # Unregister resource adapter
         #
         logger.info('Un-registering resource adapter: {}'.format(
-            resource_adapter_name))
-        self.kit_installer.unregister_resource_adapter(resource_adapter_name)
-
-
-class KitPostUninstallAction(KitActionBase):
-    def do_action(self, *args, **kwargs):
-        for config_file in self.kit_installer.config_files:
-            src_file = os.path.join(
-                self.kit_installer.config_manager.getKitConfigBase(),
-                config_file)
-
-            #
-            # This conditional should always pass, but just in case...
-            # These files are installed by default.
-            #
-            if os.path.exists(src_file):
-                shutil.copy2(src_file, src_file + '.saved')
-                os.unlink(src_file)
-
-
-class ResourceAdapterManagementComponentInstaller(ComponentInstallerBase):
-    installer_only = True
-
-    def action_enable(self, software_profile_name, *args, **kwargs):
-        #
-        # Install required python packages from requirements.txt
-        #
-        requirements_path = os.path.join(
-            self.component_path,
-            'requirements.txt'
-        )
-        pip_install_requirements(self.kit_installer, requirements_path)
-
-    def action_post_install(self, *args, **kwargs):
-        super().action_post_install(*args, **kwargs)
-        ComponentPostInstallAction(self.kit_installer, self)(*args, **kwargs)
-
-
-class ComponentPostInstallAction(ComponentActionBase):
-    def do_action(self, *args, **kwargs):
-        self.kit_installer.register_resource_adapter()
-
-        #
-        # Install files to '$TORTUGA_ROOT/config' directory
-        #
-        for config_file in self.kit_installer.config_files:
-            src_file = os.path.join(
-                self.kit_installer.files_path,
-                config_file
-            )
-            dst_file = os.path.join(
-                self.kit_installer.config_manager.getKitConfigBase(),
-                config_file
-            )
-
-            #
-            # Prevent existing file from being overwritten
-            #
-            if os.path.exists(dst_file):
-                dst_file += '.new'
-
-            logger.info(
-                'Writing file: {}'.format(dst_file))
-
-            shutil.copy2(src_file, dst_file)
+            self.kit_installer.resource_adapter_name))
+        self.kit_installer.unregister_resource_adapter()

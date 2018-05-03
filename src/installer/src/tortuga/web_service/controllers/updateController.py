@@ -15,8 +15,8 @@
 import cherrypy
 
 from tortuga.sync.syncApi import SyncApi
+from tortuga.web_service.auth.decorators import authentication_required
 from .tortugaController import TortugaController
-from .authController import AuthController, require
 
 
 class UpdateController(TortugaController):
@@ -38,18 +38,23 @@ class UpdateController(TortugaController):
 
         self._syncApi = SyncApi()
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     def scheduleClusterUpdateRequest(self):
         # Could be post or get...
         if cherrypy.request.method == 'POST':
+            # POST handler
             return self.scheduleClusterUpdate()
-        else:
-            return self.getUpdateStatus()
 
-    def scheduleClusterUpdate(self):
-        """ Schedule cluster update. """
+        # GET handler
+        return self.getUpdateStatus()
+
+    def scheduleClusterUpdate(self): \
+            # pylint: disable=broad-except
+        """
+        Schedule cluster update
+        """
 
         response = None
 
@@ -61,14 +66,17 @@ class UpdateController(TortugaController):
         try:
             self._syncApi.scheduleClusterUpdate(updateReason)
         except Exception as ex:
-            self.getLogger().error('%s' % ex)
+            self.getLogger().exception('scheduleClusterUpdate() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
         return self.formatResponse(response)
 
-    def getUpdateStatus(self):
-        """ Get cluster update status. """
+    def getUpdateStatus(self): \
+            # pylint: disable=broad-except
+        """
+        Get cluster update status
+        """
 
         try:
             status = self._syncApi.getUpdateStatus()
@@ -77,7 +85,7 @@ class UpdateController(TortugaController):
                 'running': status,
             }
         except Exception as ex:
-            self.getLogger().error('%s' % ex)
+            self.getLogger().exception('getUpdateStatus() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 

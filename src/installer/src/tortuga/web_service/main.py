@@ -14,23 +14,25 @@
 
 # pylint: disable=no-member
 
-import os.path
-import sys
-from optparse import OptionParser
+import argparse
 import json
-from pathlib import Path
-import logging
 import logging.config
 import logging.handlers
+import os.path
+import sys
+from pathlib import Path
 
 import cherrypy
 from cherrypy.process import plugins
 from sqlalchemy.orm import scoped_session, sessionmaker
+
 from tortuga.web_service import adminRouteMapper
-from tortuga.web_service.workQueuePlugin import WorkQueuePlugin
-from tortuga.web_service.controllers.tortugaController \
-    import TortugaController
+from tortuga.web_service.controllers.tortugaController import TortugaController
 from tortuga.web_service.threadManagerPlugin import ThreadManagerPlugin
+from tortuga.web_service.workQueuePlugin import WorkQueuePlugin
+
+from .auth.authenticator import CherryPyAuthenticator
+from .auth import methods as auth_methods
 from . import app, dbm
 
 
@@ -65,8 +67,11 @@ if not log_conf_file.exists():
 logger = logging.getLogger('tortuga.web_service')
 
 
-def prepareServer():
-    """ Prepare server. """
+def prepare_server():
+    """
+    Prepare server.
+
+    """
     logger.debug('Loading service configuration')
 
     config = {
@@ -82,36 +87,54 @@ def prepareServer():
     return cherrypy.tree.mount(root=None, config=config)
 
 
-def runServer(daemonize=False, pidfile=None):
+def run_server(daemonize: bool = False, pidfile: str = None):
     logger.debug('Starting service')
 
-    # Set up daemonization
+    #
+    # Initialize plugins
+    #
     if daemonize:
-        # Don't print anything to stdout/sterr.
         plugins.Daemonizer(cherrypy.engine).subscribe()
-
-    # Add workqueue plugin
     WorkQueuePlugin(cherrypy.engine).subscribe()
-
-    # Add-nodes workflow
     ThreadManagerPlugin(cherrypy.engine).subscribe()
-
     if pidfile:
         plugins.PIDFile(cherrypy.engine, pidfile).subscribe()
 
+    #
     # Setup the signal handler to stop the application while running.
+    #
     cherrypy.engine.signals.subscribe()
 
+    #
+    # Setup the database tool
+    #
     DatabaseEnginePlugin(cherrypy.engine).subscribe()
     cherrypy.tools.db = DatabaseTool()
 
+    #
+    # Setup the authentication method chain as a tool. Note that order
+    # matters here, authentication methods will be tested in the order in
+    # which they occur.
+    #
+    authentication_methods = [
+        auth_methods.HttpBasicAuthenticationMethod(),
+        auth_methods.HttpSessionAuthenticationMethod(),
+        auth_methods.HttpJwtAuthenticationMethod()
+    ]
+    cherrypy.tools.auth = cherrypy.Tool(
+        'before_handler',
+        CherryPyAuthenticator(authentication_methods)
+    )
+
+    #
     # Start the engine.
+    #
     try:
         cherrypy.engine.start()
         cherrypy.engine.block()
+
     except Exception:
         logger.exception('Service exiting')
-
         return 1
 
     return 0
@@ -120,22 +143,25 @@ def runServer(daemonize=False, pidfile=None):
 def error_page_400(status, message, traceback, version): \
         # pylint: disable=unused-argument
     cherrypy.response.headers['Content-Type'] = 'application/json'
-    response = TortugaController().errorResponse(message)
-    return json.dumps(response)
+    return json.dumps(TortugaController().errorResponse(message))
+
+
+def error_page_404(status, message, traceback, version):
+    cherrypy.response.headers['Content-Type'] = 'application/json'
+    return json.dumps(
+        TortugaController().errorResponse(message, http_status=404))
 
 
 def handle_error():
     cherrypy.response.headers['Content-Type'] = 'application/json'
-    cherrypy.response.status = 500
-    return json.dumps(TortugaController().errorResponse('Internal error'))
+    return json.dumps(TortugaController().errorResponse(
+        'Internal error', http_status=500))
 
 
 class DatabaseEnginePlugin(plugins.SimplePlugin):
     def __init__(self, bus):
         super(DatabaseEnginePlugin, self).__init__(bus)
-
         self.sa_engine = None
-
         self.bus.subscribe('bind', self.bind)
 
     def start(self):
@@ -154,20 +180,17 @@ class DatabaseTool(cherrypy.Tool):
     def __init__(self):
         super(DatabaseTool, self).__init__(
             'on_start_resource', self.bind_session, priority=20)
-
         self.session = scoped_session(sessionmaker(autoflush=True,
                                                    autocommit=False))
 
     def _setup(self):
         super(DatabaseTool, self)._setup()
-
         cherrypy.request.hooks.attach('on_end_resource',
                                       self.commit_transaction,
                                       priority=80)
 
     def bind_session(self):
         cherrypy.engine.publish('bind', self.session)
-
         cherrypy.request.db = self.session
 
     def commit_transaction(self):
@@ -175,44 +198,50 @@ class DatabaseTool(cherrypy.Tool):
 
         try:
             self.session.commit()
+
         except Exception:
             self.session.rollback()
             raise
+
         finally:
             self.session.remove()
 
 
 def main():
-    p = OptionParser()
+    p = argparse.ArgumentParser()
 
     wsPort = app.cm.getAdminPort()
 
-    p.add_option('-d', action="store_true",
+    p.add_argument('-d', action="store_true",
                  dest='daemonize', help="run the server as a daemon")
 
-    p.add_option('--debug', action="store_true",
+    p.add_argument('--debug', action="store_true",
                  default=False, help="Enable debug mode")
 
-    p.add_option('--pidfile',
+    p.add_argument('--pidfile',
                  dest='pidfile', default='/var/run/tortugawsd.pid',
                  help="store the process id in the given file")
-    p.add_option('-c', '--ssl-cert', default=None,
+
+    p.add_argument('-c', '--ssl-cert', default=None,
                  dest="sslCert",
                  help=("Path to the SSL certificate to use. "
                        "--ssl-key is also required for SSL operation."))
-    p.add_option('-k', '--ssl-key', default=None,
+
+    p.add_argument('-k', '--ssl-key', default=None,
                  dest="sslKey",
                  help=("Path to the SSL key to use. --ssl-cert "
                        "is also required for SSL operation."))
-    p.add_option('-l', '--listen', default='0.0.0.0',
+
+    p.add_argument('-l', '--listen', default='0.0.0.0',
                  help='IP address to listen on (default: %default)')
-    p.add_option('-p', '--port', type='int', default=wsPort,
+
+    p.add_argument('-p', '--port', type=int, default=wsPort,
                  help="Port to listen on (default: %default)")
 
-    options, args = p.parse_args()
+    args = p.parse_args()
 
-    if os.path.exists(options.pidfile):
-        with open(options.pidfile) as fp:
+    if os.path.exists(args.pidfile):
+        with open(args.pidfile) as fp:
             pid = fp.read().rstrip()
             if pid:
                 if os.access('/proc/{0}'.format(pid), os.F_OK):
@@ -221,34 +250,35 @@ def main():
 
                     sys.exit(1)
 
-    prepareServer()
+    prepare_server()
 
     cfgdict = {
-        'server.socket_host': options.listen,
-        'server.socket_port': options.port,
+        'server.socket_host': args.listen,
+        'server.socket_port': args.port,
         'log.access_file': '/var/log/tortugaws_access_log',
         'log.error_file': '/var/log/tortugaws_error_log',
         'request.error_response': handle_error,
         'error_page.400': error_page_400,
+        'error_page.404': error_page_404,
         'tools.sessions.on': True,
         'tools.auth.on': True,
     }
 
-    if not options.debug:
+    if not args.debug:
         cfgdict['environment'] = 'production'
 
     cherrypy.config.update(cfgdict)
 
-    if options.sslCert and options.sslKey:
+    if args.sslCert and args.sslKey:
         # Enable SSL
         cherrypy.config.update({
             'server.ssl_module': 'builtin',
             'server.ssl_certificate_chain': os.path.join(
                 app.cm.getEtcDir(), 'CA/ca.pem'),
-            'server.ssl_certificate': options.sslCert,
-            'server.ssl_private_key': options.sslKey,
+            'server.ssl_certificate': args.sslCert,
+            'server.ssl_private_key': args.sslKey,
         })
 
-    ret = runServer(options.daemonize, options.pidfile)
+    ret = run_server(args.daemonize, args.pidfile)
 
     sys.exit(ret)

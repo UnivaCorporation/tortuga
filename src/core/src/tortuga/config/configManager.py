@@ -71,6 +71,9 @@ MAX_PROVINFO_LENGTH = 50000
 
 
 def get_default_dns_suffix() -> Union[str, None]:
+    if not os.path.exists('/etc/resolv.conf'):
+        return None
+
     domain_name = None
     search_domain_name = None
 

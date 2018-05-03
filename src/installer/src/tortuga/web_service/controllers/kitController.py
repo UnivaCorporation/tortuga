@@ -16,9 +16,10 @@
 
 import cherrypy
 
+from tortuga.exceptions.kitNotFound import KitNotFound
 from tortuga.kit.manager import KitManager
+from tortuga.web_service.auth.decorators import authentication_required
 from .tortugaController import TortugaController
-from .authController import AuthController, require
 
 
 class KitController(TortugaController):
@@ -29,7 +30,7 @@ class KitController(TortugaController):
     actions = [
         {
             'name': 'userKits',
-            'path': '/v1/kits',
+            'path': '/v1/kits/',
             'action': 'getKitList',
             'method': ['GET']
         },
@@ -52,11 +53,17 @@ class KitController(TortugaController):
             'action': 'kitEulaRequest',
             'method': ['GET']
         },
+        {
+            'name': 'deleteKit',
+            'path': '/v1/kits/:(name)/:(version)',
+            'action': 'deleteKit',
+            'method': ['DELETE'],
+        }
     ]
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def kitRequest(self, name, version, key=None):
         # tmpVersion, iteration = version.rsplit('-', 1)
 
@@ -74,28 +81,12 @@ class KitController(TortugaController):
             # Must be 'GET'
             return self.getKit(name, version_, iteration)
 
-    # @require()
-    # def kitPackageRequest(self, packageUrl, key=None):
-    #     # Must be 'POST'
-    #     return self.installKitPackage(packageUrl, key)
-
-    # @require()
-    # def kitPackageEulaRequest(self, packageUrl):
-    #     # Must be 'GET'
-    #     return self.getKitPackageEula(packageUrl)
-
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def kitEulaRequest(self, name, version):
         # Must be 'GET'
         return self.getKitEula(name, version)
-
-    # @require()
-    # def kitOsRequest(self, mediaUrl):
-    #     # Must be 'POST'
-    #     # Always confirm...can't handle interactive over the web
-    #     return self.installOsKit(mediaUrl, True)
 
     def getKit(self, name, version, iteration=None):
         """ Return info for the specified kit. """
@@ -118,7 +109,7 @@ class KitController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def getKitById(self, kit_id):
         """ Return info for the specified kit by id. """
 
@@ -137,7 +128,7 @@ class KitController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def getKitList(self):
         """ Return list of all available kits. """
 
@@ -167,22 +158,6 @@ class KitController(TortugaController):
 
         return self.formatResponse(response)
 
-    # def installKitPackage(self, packageUrl, key):
-    #     """ Install kit package. """
-
-    #     response = None
-
-    #     packageUrl = base64.b64decode(packageUrl)
-
-    #     try:
-    #         KitManager().installKitPackage(packageUrl, key)
-    #     except Exception, ex:
-    #         self.getLogger().error('%s' % ex)
-    #         self.handleException(ex)
-    #         response = self.errorResponse(str(ex))
-
-    #     return self.formatResponse(response)
-
     def getKitEula(self, name, version, iteration=None):
         """ Get kit Eula. """
 
@@ -198,45 +173,25 @@ class KitController(TortugaController):
 
         return self.formatResponse(response)
 
-    # def getKitPackageEula(self, packageUrl):
-    #     """ Get kit package Eula. """
-
-    #     packageUrl = base64.b64decode(packageUrl)
-
-    #     try:
-    #         eula = KitManager().getKitPackageEula(packageUrl)
-
-    #         response = eula.getCleanDict()
-    #     except Exception, ex:
-    #         self.getLogger().error('%s' % ex)
-    #         self.handleException(ex)
-    #         response = self.errorResponse(str(ex))
-
-    #     return self.formatResponse(response)
-
-    # def installOsKit(self, mediaUrl, bConfirmed):
-    #     """ Install kit package. """
-
-    #     response = None
-
-    #     cherrypy.response.timeout = 3600
-
-    #     try:
-    #         KitManager().installOsKit(mediaUrl, bConfirmed)
-    #     except Exception, ex:
-    #         self.getLogger().error('%s' % ex)
-    #         self.handleException(ex)
-    #         response = self.errorResponse(str(ex))
-
-    #     return self.formatResponse(response)
-
-    def deleteKit(self, name, version, iteration=None):
-        """ Remove kit by name, version and iteration. """
+    @cherrypy.tools.json_out()
+    @authentication_required()
+    def deleteKit(self, name: str, version: str) -> str:
+        """
+        Remove kit by name and version
+        """
 
         response = None
 
+        # 'version' can be formatted as '<version>-<iteration>'
+        if '-' in version:
+            version, iteration = version.split('-', 1)
+        else:
+            iteration = None
+
         try:
             KitManager().deleteKit(name, version, iteration)
+        except KitNotFound:
+            pass
         except Exception as ex:
             self.getLogger().error('%s' % ex)
             self.handleException(ex)

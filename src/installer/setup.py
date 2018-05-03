@@ -58,6 +58,7 @@ def list_files(srcdir: Path) -> List[str]:
 def get_files():
     result = []
 
+    result += list_files(Path('alembic'))
     result += list_files(Path('etc'))
     result += list_files(Path('share'))
     result += list_files(Path('config'))
@@ -117,6 +118,7 @@ setup(
     scripts=[str(fn) for fn in walkfiles(Path('bin'))],
     data_files=get_files(),
     install_requires=[
+        'cryptography',
         'tortuga-core',
         'Jinja2',
         'CherryPy',
@@ -124,14 +126,41 @@ setup(
         'SQLAlchemy',
         'Routes',
         'six',
+        'pyjwt',
         'pyzmq',
         'gevent',
+        'marshmallow-sqlalchemy',
+        'alembic',
     ],
     namespace_packages=['tortuga'],
     entry_points={
         'console_scripts': [
-            'uc-tag=tortuga.scripts.uc_tag:main',
-            'tortugawsd=tortuga.web_service.main:main'
+            'tortugawsd=tortuga.web_service.main:main',
+            'add-nic=tortuga.scripts.add_nic:main',
+            'delete-nic=tortuga.scripts.delete_nic:main',
+            'genconfig=tortuga.scripts.genconfig:main',
+            'get-active-children=tortuga.scripts.get_active_children:main',
+            'get-children=tortuga.scripts.get_children:main',
+            'get-idle-children=tortuga.scripts.get_idle_children:main',
+            'get-nodes-with-component=tortuga.scripts.get_nodes_with_component:main',
+            'get-swprofile-nodes=tortuga.scripts.get_swprofile_nodes:main',
+            'get-tortuga-node=tortuga.scripts.get_tortuga_node:main',
+            'get-usable-hardware-profile-list=tortuga.scripts.get_usable_hardware_profile_list:main',
+            'get-usable-hardware-profiles=tortuga.scripts.get_usable_hardware_profiles:main',
+            'get-usable-idle-nodes=tortuga.scripts.get_usable_idle_nodes:main',
+            'get-usable-idle-nodes-by-low-cost=tortuga.scripts.get_usable_idle_nodes_by_low_cost:main',
+            'get-usable-nodes=tortuga.scripts.get_usable_nodes:main',
+            'install-kit=tortuga.scripts.install_kit:main',
+            'install-os-kit=tortuga.scripts.install_os_kit:main',
+            'pre-add-host=tortuga.scripts.pre_add_host:main',
+            'run-post-install=tortuga.scripts.run_post_install:main',
+            'set-parent-node=tortuga.scripts.set_parent_node:main',
+            'set-private-dns-zone=tortuga.scripts.set_private_dns_zone:main',
+            'tortuga-proxy-config=tortuga.scripts.tortuga_proxy_config:main',
+            'tortuga-setup=tortuga.scripts.tortuga_setup:main',
+            'update_hiera.py=tortuga.scripts.update_hiera:main',
+            'make-backup=tortuga.scripts.make_backup:main',
+            'restore-backup=tortuga.scripts.restore_backup:main'
         ],
     },
     cmdclass={
