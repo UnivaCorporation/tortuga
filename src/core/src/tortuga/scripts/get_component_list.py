@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright 2008-2018 Univa Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,12 +13,15 @@
 # limitations under the License.
 
 # pylint: disable=no-member
+import gettext
 
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.wsapi.kitWsApi import KitWsApi
-from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
-from tortuga.wsapi.nodeWsApi import NodeWsApi
 from tortuga.helper.osHelper import getOsInfo
+from tortuga.wsapi.kitWsApi import KitWsApi
+from tortuga.wsapi.nodeWsApi import NodeWsApi
+from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
+
+_ = gettext.gettext
 
 
 def displayComponent(c, kit):
@@ -37,22 +38,25 @@ class GetComponentList(TortugaCli):
         excl_option_group = group.add_mutually_exclusive_group()
 
         excl_option_group.add_argument(
-            '--software-profile', dest='softwareprofile',
-            help=(_('Display list of components enabled in software'
-                    ' profile.')))
+            '--software-profile',
+            dest='softwareprofile',
+            help=_('Display list of components enabled in software profile.')
+        )
 
         excl_option_group.add_argument(
             '-p',
-            dest='applyToInstaller', action='store_true',
+            dest='applyToInstaller',
+            action='store_true',
             default=False,
             help=_('Display components enabled on installer only')
         )
 
         excl_option_group.add_argument(
-            '--os', dest='os',
+            '--os',
+            dest='os',
             metavar='NAME-VERSION-ARCH',
-            help=_('Display components suitable for'
-                   ' specified OS only'))
+            help=_('Display components suitable for specified OS only')
+        )
 
         super().parseArgs(usage=usage)
 
@@ -61,7 +65,11 @@ class GetComponentList(TortugaCli):
 
         if self.getArgs().applyToInstaller:
             # Get software profile name from installer node
-            node = NodeWsApi(username=self.getUsername(), password=self.getPassword(), baseurl=self.getUrl()).getInstallerNode(
+            node = NodeWsApi(
+                username=self.getUsername(),
+                password=self.getPassword(),
+                baseurl=self.getUrl()
+            ).getInstallerNode(
                 optionDict={
                     'softwareprofile': True,
                 }
