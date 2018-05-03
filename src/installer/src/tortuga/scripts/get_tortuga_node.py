@@ -104,18 +104,18 @@ def get_puppet_node_yaml(session, nodeName):
         # public host name.
         installerHostName = publicInstallerFQDN
 
-    puppetClasses = {}
+    puppet_classes = {}
 
     enabledKits = set()
 
     if dbNode.softwareprofile:
-        for dbComponent in dbNode.softwareprofile.components:
-            if not dbComponent.kit.isOs:
-                compDescr = 'tortuga_kit_%s::%s' % (
-                    dbComponent.kit.name, dbComponent.name)
 
-                # Call the component action for the specific arguments for
-                # this component.
+        for dbComponent in dbNode.softwareprofile.components:
+
+            if not dbComponent.kit.isOs:
+                #
+                # Load the kit and component installers
+                #
                 load_kits()
                 kit_spec = (
                     dbComponent.kit.name,
@@ -126,16 +126,24 @@ def get_puppet_node_yaml(session, nodeName):
                 _component = kit_installer.get_component_installer(
                     dbComponent.name)
 
-                puppetClass = _component.run_action('get_puppet_args',
-                                                    dbNode.softwareprofile,
-                                                    dbNode.hardwareprofile)
+                #
+                # Get the puppet args for the component
+                #
+                puppet_class_args = _component.run_action(
+                    'get_puppet_args',
+                    dbNode.softwareprofile,
+                    dbNode.hardwareprofile
+                )
+                if puppet_class_args is not None:
+                    puppet_classes[_component.puppet_class] = \
+                        puppet_class_args
 
-                if puppetClass is not None:
-                    puppetClasses[compDescr] = puppetClass
             else:
+                #
                 # OS kit component is omitted on installer. The installer
                 # is assumed to have a pre-existing OS repository
                 # configuration.
+                #
                 if bInstaller:
                     continue
 
@@ -143,15 +151,8 @@ def get_puppet_node_yaml(session, nodeName):
 
     dataDict = {}
 
-    classesDict = {}
-
-    for c, args in puppetClasses.items():
-        normalizedClassName = c.replace('-', '_')
-
-        classesDict[normalizedClassName] = args
-
-    if classesDict:
-        dataDict['classes'] = classesDict
+    if puppet_classes:
+        dataDict['classes'] = puppet_classes
 
     parametersDict = {}
     dataDict['parameters'] = parametersDict
