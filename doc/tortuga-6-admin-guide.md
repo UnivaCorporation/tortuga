@@ -265,7 +265,6 @@ the `root` user on the Tortuga installer node.
     
     ``` 
      enable-component -p dns
-     /opt/puppetlabs/bin/puppet agent --verbose --onetime --no-daemonize
     ```
     
     While not required, it is also possible to enable local DNS name
@@ -281,7 +280,6 @@ the `root` user on the Tortuga installer node.
     
     ``` 
      enable-component -p dhcpd
-     /opt/puppetlabs/bin/puppet agent --verbose --onetime --no-daemonize
     ```
 
 5.  (*optional*) Add provisioning network interface
@@ -315,7 +313,6 @@ the `root` user on the Tortuga installer node.
     
     ``` 
      install-os-kit --mirror --media http://<url to CentOS mirror>
-     /opt/puppetlabs/bin/puppet agent --verbose --onetime --no-daemonize
     ```
     
     This will instruct Tortuga to proxy HTTP access to the provided
@@ -560,7 +557,6 @@ the `root` user on the Tortuga installer node.
         
         ``` 
          enable-component -p qmaster
-         /opt/puppetlabs/bin/puppet agent --onetime --verbose --no-daemonize
         ```
     
     4.  Validate installation of `qmaster`
@@ -1641,13 +1637,6 @@ This component must be enabled to provision *local* (non-cloud) nodes.
 Enable the `dhcpd` component with the command:
 
     enable-component -p base-6.3.0-0 dhcpd-6.3
-    /opt/puppetlabs/bin/puppet agent --onetime --no-daemonize --verbose
-
-`/opt/puppetlabs/bin/puppet agent --onetime --no-daemonize` is used to
-synchronize only the Tortuga installer. `schedule-update` could also be
-used (as described above), however since this component is only
-applicable to the installer node, it is unnecessary to schedule an
-entire cluster update.
 
 #### Base component: dns
 
@@ -1665,7 +1654,6 @@ system to its associated IP address.
 Enable the `dns` component with the command:
 
     enable-component -p base-6.3.0-0 dns-6.3
-    /opt/puppetlabs/bin/puppet agent --onetime --no-daemonize
 
 ##### Configuring Tortuga private DNS domain
 

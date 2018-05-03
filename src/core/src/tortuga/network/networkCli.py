@@ -18,6 +18,7 @@ import ipaddress
 
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
+from tortuga.wsapi.networkWsApi import NetworkWsApi
 
 
 class NetworkCli(TortugaCli):
@@ -72,7 +73,7 @@ class NetworkCli(TortugaCli):
 
         self.addOptionToGroup(cmdline_grpname, '--increment',
                               dest='increment',
-                              help=_('Network increment'), type='int')
+                              help=_('Network increment'), type=int)
 
         self.addOptionToGroup(cmdline_grpname,
                               '--dhcp', dest='usingDhcp',
@@ -122,48 +123,48 @@ class NetworkCli(TortugaCli):
         """
 
         # Check for conflicting command-line options
-        if (self.getOptions().netmask or self.getOptions().address) and \
-                self.getOptions().network:
+        if (self.getArgs().netmask or self.getArgs().address) and \
+                self.getArgs().network:
             self.getParser().error(
                 'Specify network using --network/--netmask or --network')
 
-        if self.getOptions().network:
+        if self.getArgs().network:
             # Use 'ipaddr' module to validate network spec
             parsed_network, parsed_netmask = \
-                self.parseNetworkParameter(self.getOptions().network)
+                self.parseNetworkParameter(self.getArgs().network)
 
             network.setAddress(parsed_network)
             network.setNetmask(parsed_netmask)
         else:
-            if self.getOptions().address is not None:
-                self.assertIp(self.getOptions().address, '--address')
-                network.setAddress(self.getOptions().address)
+            if self.getArgs().address is not None:
+                self.assertIp(self.getArgs().address, '--address')
+                network.setAddress(self.getArgs().address)
 
-            if self.getOptions().netmask is not None:
-                self.assertIp(self.getOptions().netmask, '--netmask')
-                network.setNetmask(self.getOptions().netmask)
+            if self.getArgs().netmask is not None:
+                self.assertIp(self.getArgs().netmask, '--netmask')
+                network.setNetmask(self.getArgs().netmask)
 
-        if self.getOptions().suffix is not None:
-            network.setSuffix(self.getOptions().suffix)
+        if self.getArgs().suffix is not None:
+            network.setSuffix(self.getArgs().suffix)
 
-        if self.getOptions().gateway is not None:
-            self.assertIp(self.getOptions().gateway, '--gateway')
-            network.setGateway(self.getOptions().gateway)
+        if self.getArgs().gateway is not None:
+            self.assertIp(self.getArgs().gateway, '--gateway')
+            network.setGateway(self.getArgs().gateway)
 
-        if self.getOptions().name is not None:
-            network.setName(self.getOptions().name)
+        if self.getArgs().name is not None:
+            network.setName(self.getArgs().name)
 
-        if self.getOptions().startIp is not None:
-            self.assertIp(self.getOptions().startIp, '--start-ip')
-            network.setStartIp(self.getOptions().startIp)
+        if self.getArgs().startIp is not None:
+            self.assertIp(self.getArgs().startIp, '--start-ip')
+            network.setStartIp(self.getArgs().startIp)
 
-        if self.getOptions().type is not None:
-            network.setType(self.getOptions().type)
+        if self.getArgs().type is not None:
+            network.setType(self.getArgs().type)
 
-        if self.getOptions().increment is not None:
-            network.setIncrement(self.getOptions().increment)
+        if self.getArgs().increment is not None:
+            network.setIncrement(self.getArgs().increment)
 
-        optionsString = network.getOptions()
+        optionsString = network.getArgs()
         optionsDict = {}
         if optionsString:
             # VLAN info may already exist for this network
@@ -172,7 +173,7 @@ class NetworkCli(TortugaCli):
                 key, value = originalOption.split('=')
                 optionsDict[key] = value
 
-        vlanIdFound = self.getOptions().vlanId is not None or \
+        vlanIdFound = self.getArgs().vlanId is not None or \
             'vlan' in optionsDict
 
         vlanParentNetworkFound = self.\
@@ -185,13 +186,13 @@ class NetworkCli(TortugaCli):
                 _('--vlan-id and --vlan-parent-network must be used'
                   ' together.'))
 
-        if self.getOptions().vlanId:
-            optionsDict['vlan'] = self.getOptions().vlanId
+        if self.getArgs().vlanId:
+            optionsDict['vlan'] = self.getArgs().vlanId
 
-        if self.getOptions().vlanParentNetwork:
+        if self.getArgs().vlanParentNetwork:
             # Match the given parent network to a network in the DB
             networkAddr, subnetMask = self.parseNetworkParameter(
-                self.getOptions().vlanParentNetwork)
+                self.getArgs().vlanParentNetwork)
 
             existingNetworkList = self.getNetworkApi().getNetworkList()
 
@@ -205,13 +206,13 @@ class NetworkCli(TortugaCli):
             if not matchingNetworkId:
                 raise InvalidCliRequest(
                     _('Network [%s] not found') % (
-                        self.getOptions().vlanParentNetwork))
+                        self.getArgs().vlanParentNetwork))
 
             optionsDict['vlanparent'] = matchingNetworkId
 
         newOptions = ''
 
-        if self.getOptions().vlanId or self.getOptions().vlanParentNetwork:
+        if self.getArgs().vlanId or self.getArgs().vlanParentNetwork:
             for entry in list(optionsDict.items()):
                 optionKey, optionValue = entry
                 newOptions += '%s=%s;' % (optionKey, optionValue)
@@ -219,18 +220,18 @@ class NetworkCli(TortugaCli):
             # Take off the last semicolon
             newOptions = newOptions[:-1]
 
-        if self.getOptions().options:
+        if self.getArgs().options:
             if newOptions:
-                newOptions = '%s;%s' % (newOptions, self.getOptions().options)
+                newOptions = '%s;%s' % (newOptions, self.getArgs().options)
             else:
-                newOptions = self.getOptions().options
+                newOptions = self.getArgs().options
 
-        if self.getOptions().options or self.getOptions().vlanId or \
-                self.getOptions().vlanParentNetwork:
+        if self.getArgs().options or self.getArgs().vlanId or \
+                self.getArgs().vlanParentNetwork:
             network.setOptions(newOptions)
 
-        if self.getOptions().usingDhcp is not None:
-            network.setUsingDhcp(self.getOptions().usingDhcp)
+        if self.getArgs().usingDhcp is not None:
+            network.setUsingDhcp(self.getArgs().usingDhcp)
 
     def getNetworkFromXml(self):
         """
@@ -240,9 +241,9 @@ class NetworkCli(TortugaCli):
 
         network = None
 
-        if self.getOptions().xmlFile:
+        if self.getArgs().xmlFile:
             # An XML file was provided as input...start with that...
-            f = open(self.getOptions().xmlFile, 'r')
+            f = open(self.getArgs().xmlFile, 'r')
 
             try:
                 xmlString = f.read()
@@ -258,21 +259,19 @@ class NetworkCli(TortugaCli):
             if network is None:
                 raise InvalidCliRequest(
                     _('File [%s] does not contain a valid network.') % (
-                        self.getOptions().xmlFile))
+                        self.getArgs().xmlFile))
 
         return network
 
     def getNetworkApi(self):
         """
         Caching method for getting a networkApi instance.
+
         """
-
         if self._networkApi is None:
-            from tortuga.network.networkApiFactory import getNetworkApi
-
-            self._networkApi = getNetworkApi(
-                self.getUsername(), self.getPassword())
-
+            self._networkApi = NetworkWsApi(self.getUsername(),
+                                            self.getPassword(),
+                                            baseurl=self.getUrl())
         return self._networkApi
 
     def parseNetworkParameter(self, network): \
@@ -340,19 +339,19 @@ class NetworkCli(TortugaCli):
         # If we didn't have xml but network load the network from the
         # api...otherwise error
 
-        if self.getOptions().address is None and \
-                self.getOptions().network is None or \
-                ((self.getOptions().address or self.getOptions().netmask) and
-                 self.getOptions().network):
+        if self.getArgs().address is None and \
+                self.getArgs().network is None or \
+                ((self.getArgs().address or self.getArgs().netmask) and
+                 self.getArgs().network):
             self.getParser().error(
                 '--address/--netmask OR --network must be specified')
 
-        if self.getOptions().network:
+        if self.getArgs().network:
             _network, _netmask = self.parseNetworkParameter(
-                self.getOptions().network)
+                self.getArgs().network)
         else:
-            _network = self.getOptions().address
-            _netmask = self.getOptions().netmask
+            _network = self.getArgs().address
+            _netmask = self.getArgs().netmask
 
             if _netmask is None:
                 self.getParser().error('--netmask must be specified')

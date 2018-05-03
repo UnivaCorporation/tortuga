@@ -14,32 +14,27 @@
 
 # pylint: disable=not-callable,multiple-statements,no-member
 
-from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import and_, or_
+from sqlalchemy.orm.exc import NoResultFound
 
-from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
-from tortuga.db.softwareProfiles import SoftwareProfiles
-from tortuga.db.hardwareProfiles import HardwareProfiles
-from tortuga.db.packages import Packages
-from tortuga.db.partitions import Partitions
-from tortuga.exceptions.softwareProfileNotFound \
-    import SoftwareProfileNotFound
-from tortuga.exceptions.softwareProfileComponentAlreadyExists \
-    import SoftwareProfileComponentAlreadyExists
-from tortuga.exceptions.softwareProfileComponentNotFound \
-    import SoftwareProfileComponentNotFound
-from tortuga.exceptions.hardwareProfileNotFound \
-    import HardwareProfileNotFound
-from tortuga.exceptions.softwareUsesHardwareAlreadyExists \
-    import SoftwareUsesHardwareAlreadyExists
-from tortuga.exceptions.softwareUsesHardwareNotFound \
-    import SoftwareUsesHardwareNotFound
-from tortuga.exceptions.partitionAlreadyExists \
-    import PartitionAlreadyExists
-from tortuga.exceptions.partitionNotFound import PartitionNotFound
 from tortuga.db.componentsDbHandler import ComponentsDbHandler
-from tortuga.exceptions.packageAlreadyExists import PackageAlreadyExists
-from tortuga.exceptions.packageNotFound import PackageNotFound
+from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
+from tortuga.exceptions.hardwareProfileNotFound import HardwareProfileNotFound
+from tortuga.exceptions.partitionAlreadyExists import PartitionAlreadyExists
+from tortuga.exceptions.partitionNotFound import PartitionNotFound
+from tortuga.exceptions.softwareProfileComponentAlreadyExists import \
+    SoftwareProfileComponentAlreadyExists
+from tortuga.exceptions.softwareProfileComponentNotFound import \
+    SoftwareProfileComponentNotFound
+from tortuga.exceptions.softwareProfileNotFound import SoftwareProfileNotFound
+from tortuga.exceptions.softwareUsesHardwareAlreadyExists import \
+    SoftwareUsesHardwareAlreadyExists
+from tortuga.exceptions.softwareUsesHardwareNotFound import \
+    SoftwareUsesHardwareNotFound
+
+from .models.hardwareProfile import HardwareProfile
+from .models.partition import Partition
+from .models.softwareProfile import SoftwareProfile
 
 
 class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
@@ -60,8 +55,8 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
         self.getLogger().debug('Retrieving software profile [%s]' % (name))
 
         try:
-            return session.query(SoftwareProfiles).filter(
-                SoftwareProfiles.name == name).one()
+            return session.query(SoftwareProfile).filter(
+                SoftwareProfile.name == name).one()
         except NoResultFound:
             raise SoftwareProfileNotFound(
                 'Software profile [%s] not found' % (name))
@@ -77,7 +72,7 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
         self.getLogger().debug(
             'Retrieving software profile ID [%s]' % (_id))
 
-        dbSoftwareProfile = session.query(SoftwareProfiles).get(_id)
+        dbSoftwareProfile = session.query(SoftwareProfile).get(_id)
 
         if not dbSoftwareProfile:
             raise SoftwareProfileNotFound(
@@ -99,13 +94,13 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
             for tag in tags:
                 if len(tag) == 2:
                     searchspec.append(
-                        and_(SoftwareProfiles.tags.any(name=tag[0]),
-                             SoftwareProfiles.tags.any(value=tag[1])))
+                        and_(SoftwareProfile.tags.any(name=tag[0]),
+                             SoftwareProfile.tags.any(value=tag[1])))
                 else:
-                    searchspec.append(SoftwareProfiles.tags.any(name=tag[0]))
+                    searchspec.append(SoftwareProfile.tags.any(name=tag[0]))
 
-        return session.query(SoftwareProfiles).filter(
-            or_(*searchspec)).order_by(SoftwareProfiles.name).all()
+        return session.query(SoftwareProfile).filter(
+            or_(*searchspec)).order_by(SoftwareProfile.name).all()
 
     def getIdleSoftwareProfileList(self, session):
         """
@@ -114,14 +109,14 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
 
         self.getLogger().debug('Retrieving idle software profile list')
 
-        return session.query(SoftwareProfiles).filter(
-            SoftwareProfiles.isIdle == 1).all()
+        return session.query(SoftwareProfile).filter(
+            SoftwareProfile.isIdle == 1).all()
 
     def __getHardwareProfile(self, session, hardwareProfileName): \
             # pylint: disable=no-self-use
         try:
-            return session.query(HardwareProfiles).filter(
-                HardwareProfiles.name == hardwareProfileName).one()
+            return session.query(HardwareProfile).filter(
+                HardwareProfile.name == hardwareProfileName).one()
         except NoResultFound:
             raise HardwareProfileNotFound(
                 'Hardware profile [%s] not found' % (hardwareProfileName))
@@ -269,79 +264,9 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
             'Deleted component [%s] from software profile [%s]' % (
                 compDescr, dbSoftwareProfile.name))
 
-    def __getPackage(self, session, packageName): \
-            # pylint: disable=no-self-use
-        return session.query(Packages).filter(
-            Packages.name == packageName).one()
-
-    def addPackageToSoftwareProfile(self, session, packageName,
-                                    softwareProfileName):
-        """
-        Add package to software profile
-        """
-
-        self.getLogger().debug(
-            'Adding package [%s] to software profile [%s]' % (
-                packageName, softwareProfileName))
-
-        # Check if package record already exists
-        try:
-            dbPackage = self.__getPackage(session, packageName)
-        except NoResultFound:
-            dbPackage = None
-
-        dbSoftwareProfile = self.getSoftwareProfile(
-            session, softwareProfileName)
-
-        if not dbPackage:
-            dbPackage = Packages(packageName)
-
-        if dbPackage in dbSoftwareProfile.packages:
-            raise PackageAlreadyExists(
-                'Package [%s] already exists for software'
-                ' profile [%s]' % (packageName, softwareProfileName))
-
-        self.getLogger().debug(
-            'Adding package [%s] to software profile [%s]' % (
-                packageName, softwareProfileName))
-
-        dbSoftwareProfile.packages.append(dbPackage)
-
-    def deletePackageFromSoftwareProfile(self, session, packageName,
-                                         softwareProfileName):
-        """
-        Delete package from software profile.
-        """
-
-        self.getLogger().debug(
-            'Deleting package [%s] from software profile [%s]' % (
-                packageName, softwareProfileName))
-
-        try:
-            dbPackage = self.__getPackage(session, packageName)
-        except NoResultFound:
-            dbPackage = None
-
-        dbSoftwareProfile = self.getSoftwareProfile(
-            session, softwareProfileName)
-
-        if dbPackage not in dbSoftwareProfile.packages:
-            raise PackageNotFound(
-                'Package [%s] does not exist for software profile [%s]' % (
-                    packageName, softwareProfileName))
-
-        dbSoftwareProfile.packages.remove(dbPackage)
-
-        if not dbPackage.softwareprofiles:
-            session.delete(dbPackage)
-
-        self.getLogger().debug(
-            'Deleted package [%s] from software profile ID [%s]' % (
-                packageName, softwareProfileName))
-
     def __getPartition(self, session, name):  # pylint: disable=no-self-use
-        return session.query(Partitions).filter(
-            Partitions.name == name).one()
+        return session.query(Partition).filter(
+            Partition.name == name).one()
 
     def addPartitionToSoftwareProfile(self, session, partition,
                                       softwareProfileName):
@@ -367,7 +292,7 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
                 ' profile [%s]' % (
                     partition.getName(), softwareProfileName))
 
-        dbPartition = Partitions(
+        dbPartition = Partition(
             name=partition.getName(),
             device=partition.getDevice(),
             mountPoint=partition.getMountPoint(),

@@ -15,40 +15,34 @@
 # pylint: disable=not-callable,multiple-statements,no-member
 
 from typing import Optional, Union
-from tortuga.db.dbManager import DbManager
-
-from tortuga.db.tortugaDbApi import TortugaDbApi
-from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
-from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
-from tortuga.db.nodesDbHandler import NodesDbHandler
-from tortuga.db.adminsDbHandler import AdminsDbHandler
-from tortuga.db.operatingSystemsDbHandler import OperatingSystemsDbHandler
-from tortuga.db.packages import Packages
-from tortuga.db.partitions import Partitions
-from tortuga.db.softwareProfiles import SoftwareProfiles
-from tortuga.db.componentsDbHandler import ComponentsDbHandler
-
-from tortuga.objects.softwareProfile import SoftwareProfile
-from tortuga.objects.tortugaObject import TortugaObjectList
-from tortuga.objects.node import Node
-
-from tortuga.objects.package import Package
-from tortuga.objects.partition import Partition
-from tortuga.objects.component import Component
-
-from tortuga.exceptions.tortugaException import TortugaException
-from tortuga.exceptions.softwareProfileAlreadyExists \
-    import SoftwareProfileAlreadyExists
-from tortuga.exceptions.softwareProfileNotFound \
-    import SoftwareProfileNotFound
-from tortuga.exceptions.updateSoftwareProfileFailed \
-    import UpdateSoftwareProfileFailed
-from tortuga.exceptions.invalidPartitionScheme \
-    import InvalidPartitionScheme
-from tortuga.exceptions.adminNotFound import AdminNotFound
-from tortuga.exceptions.adminAlreadyExists import AdminAlreadyExists
 
 from sqlalchemy import func
+
+from tortuga.db.adminsDbHandler import AdminsDbHandler
+from tortuga.db.componentsDbHandler import ComponentsDbHandler
+from tortuga.db.dbManager import DbManager
+from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
+from tortuga.db.nodesDbHandler import NodesDbHandler
+from tortuga.db.operatingSystemsDbHandler import OperatingSystemsDbHandler
+from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
+from tortuga.db.tortugaDbApi import TortugaDbApi
+from tortuga.exceptions.adminAlreadyExists import AdminAlreadyExists
+from tortuga.exceptions.adminNotFound import AdminNotFound
+from tortuga.exceptions.invalidPartitionScheme import InvalidPartitionScheme
+from tortuga.exceptions.softwareProfileAlreadyExists import \
+    SoftwareProfileAlreadyExists
+from tortuga.exceptions.softwareProfileNotFound import SoftwareProfileNotFound
+from tortuga.exceptions.tortugaException import TortugaException
+from tortuga.exceptions.updateSoftwareProfileFailed import \
+    UpdateSoftwareProfileFailed
+from tortuga.objects.component import Component
+from tortuga.objects.node import Node
+from tortuga.objects.partition import Partition
+from tortuga.objects.softwareProfile import SoftwareProfile
+from tortuga.objects.tortugaObject import TortugaObjectList
+
+from .models.partition import Partition as PartitionModel
+from .models.softwareProfile import SoftwareProfile as SoftwareProfileModel
 
 
 class SoftwareProfileDbApi(TortugaDbApi):
@@ -258,7 +252,7 @@ class SoftwareProfileDbApi(TortugaDbApi):
             dbSoftwareProfile = self.__populateSoftwareProfile(
                 _session, softwareProfile)
 
-            _session.query(func.max(SoftwareProfiles.id)).one()
+            _session.query(func.max(SoftwareProfileModel.id)).one()
 
             softwareProfile.setId(dbSoftwareProfile.id)
 
@@ -501,33 +495,6 @@ class SoftwareProfileDbApi(TortugaDbApi):
         finally:
             DbManager().closeSession()
 
-    def getPackageList(self, softwareProfileName):
-        """
-        Get a list of packages from the db.
-
-            Returns:
-                [package]
-            Throws:
-                SoftwareProfileNotFound
-                DbError
-        """
-
-        session = DbManager().openSession()
-
-        try:
-            dbPackages = self._softwareProfilesDbHandler.\
-                getSoftwareProfile(
-                    session, softwareProfileName).packages
-
-            return self.getTortugaObjectList(Package, dbPackages)
-        except TortugaException as ex:
-            raise
-        except Exception as ex:
-            self.getLogger().exception('%s' % ex)
-            raise
-        finally:
-            DbManager().closeSession()
-
     def getPartitionList(self, softwareProfileName):
         """
         Get a list of software profile partitions from the db.
@@ -549,64 +516,6 @@ class SoftwareProfileDbApi(TortugaDbApi):
         except TortugaException as ex:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
-            raise
-        finally:
-            DbManager().closeSession()
-
-    def addPackage(self, packageName, softwareProfileName):
-        """
-        Add software profile package.
-
-            Returns:
-                packageId
-            Throws:
-                PackageAlreadyExists
-                SoftwareProfileNotFound
-                DbError
-        """
-
-        session = DbManager().openSession()
-
-        try:
-            self._softwareProfilesDbHandler.addPackageToSoftwareProfile(
-                session, packageName, softwareProfileName)
-
-            session.commit()
-        except TortugaException as ex:
-            session.rollback()
-            raise
-        except Exception as ex:
-            session.rollback()
-            self.getLogger().exception('%s' % ex)
-            raise
-        finally:
-            DbManager().closeSession()
-
-    def deletePackage(self, packageName, softwareProfileName):
-        """
-        Delete node from the db.
-
-            Returns:
-                None
-            Throws:
-                PackageNotFound
-                SoftwareProfileNotFound
-                DbError
-        """
-
-        session = DbManager().openSession()
-
-        try:
-            self._softwareProfilesDbHandler.\
-                deletePackageFromSoftwareProfile(
-                    session, packageName, softwareProfileName)
-            session.commit()
-        except TortugaException as ex:
-            session.rollback()
-            raise
-        except Exception as ex:
-            session.rollback()
             self.getLogger().exception('%s' % ex)
             raise
         finally:
@@ -835,7 +744,7 @@ class SoftwareProfileDbApi(TortugaDbApi):
                 'Software profile must have valid operating system')
 
         if dbSoftwareProfile is None:
-            dbSoftwareProfile = SoftwareProfiles()
+            dbSoftwareProfile = SoftwareProfileModel()
 
         dbOs = self._osDbHandler.addOsIfNotFound(session, osInfo)
 
@@ -849,25 +758,11 @@ class SoftwareProfileDbApi(TortugaDbApi):
         dbSoftwareProfile.minNodes = softwareProfile.getMinNodes()
         dbSoftwareProfile.isIdle = softwareProfile.getIsIdle()
 
-        # Add packages
-        packages = {}
-        for package in softwareProfile.getPackages():
-            # This is a new package
-            dbPackage = Packages()
-
-            dbPackage.name = package.getName()
-            if packages.get(dbPackage.name) is not None:
-                # Duplicate package ...error
-                raise UpdateSoftwareProfileFailed(
-                    'Duplicate package [%s] found' % (dbPackage.name))
-
-            packages[dbPackage.name] = dbPackage
-
         # Add partitions
         partitions = {}
         for partition in softwareProfile.getPartitions():
             # This is a new partition
-            dbPartition = Partitions()
+            dbPartition = PartitionModel()
 
             dbPartition.name = partition.getName()
             dbPartition.device = partition.getDevice()
@@ -942,12 +837,10 @@ class SoftwareProfileDbApi(TortugaDbApi):
 
         # Delete out the old ones
         dbSoftwareProfile.partitions = []
-        dbSoftwareProfile.packages = []
 
         session.flush()
 
         dbSoftwareProfile.partitions = list(partitions.values())
-        dbSoftwareProfile.packages = list(packages.values())
 
         session.add(dbSoftwareProfile)
 
@@ -962,7 +855,6 @@ class SoftwareProfileDbApi(TortugaDbApi):
         srcSoftwareProfile = self.getSoftwareProfile(
             srcSoftwareProfileName, {
                 'partitions': True,
-                'packages': True,
                 'components': True,
             })
 
@@ -976,9 +868,6 @@ class SoftwareProfileDbApi(TortugaDbApi):
         # partitions
         dstSoftwareProfile.setPartitions(
             srcSoftwareProfile.getPartitions())
-
-        # packages
-        dstSoftwareProfile.setPackages(srcSoftwareProfile.getPackages())
 
         # Finally add the software profile
         dstSoftwareProfile = self.addSoftwareProfile(

@@ -17,31 +17,33 @@
 import os
 import socket
 import time
-from typing import Optional, NoReturn
+from typing import NoReturn, Optional, Union, List
 
 from sqlalchemy.orm.session import Session
-from tortuga.objects.tortugaObjectManager import TortugaObjectManager
-from tortuga.db.nodeDbApi import NodeDbApi
-from tortuga.db.hardwareProfileDbApi import HardwareProfileDbApi
-from tortuga.os_utility import osUtility
-from tortuga.config.configManager import ConfigManager
-from tortuga.resourceAdapter import resourceAdapterFactory
-from tortuga.san import san
-from tortuga.os_utility import tortugaSubprocess
-from tortuga.addhost.addHostServerLocal import AddHostServerLocal
+
 from tortuga.addhost.addHostManager import AddHostManager
-from tortuga.exceptions.configurationError import ConfigurationError
-from tortuga.db.nodes import Nodes
+from tortuga.addhost.addHostServerLocal import AddHostServerLocal
+from tortuga.config.configManager import ConfigManager
 from tortuga.db.dbManager import DbManager
+from tortuga.db.hardwareProfileDbApi import HardwareProfileDbApi
+from tortuga.db.models.hardwareProfile import HardwareProfile
+from tortuga.db.models.node import Node as NodeModel
+from tortuga.db.models.softwareProfile import SoftwareProfile
+from tortuga.db.nodeDbApi import NodeDbApi
 from tortuga.db.nodesDbHandler import NodesDbHandler
+from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
+from tortuga.exceptions.configurationError import ConfigurationError
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.exceptions.tortugaException import TortugaException
-from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
-from tortuga.kit.actions import KitActionsManager
 from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
 from tortuga.exceptions.volumeDoesNotExist import VolumeDoesNotExist
-from tortuga.db.hardwareProfiles import HardwareProfiles
-from tortuga.db.softwareProfiles import SoftwareProfiles
+from tortuga.kit.actions import KitActionsManager
+from tortuga.objects.node import Node
+from tortuga.objects.tortugaObject import TortugaObjectList
+from tortuga.objects.tortugaObjectManager import TortugaObjectManager
+from tortuga.os_utility import osUtility, tortugaSubprocess
+from tortuga.resourceAdapter import resourceAdapterFactory
+from tortuga.san import san
 
 
 class NodeManager(TortugaObjectManager): \
@@ -76,10 +78,10 @@ class NodeManager(TortugaObjectManager): \
                 'Hardware profile requires host names to be set')
 
     def createNewNode(self, session: Session, addNodeRequest: dict,
-                      dbHardwareProfile: HardwareProfiles,
-                      dbSoftwareProfile: Optional[SoftwareProfiles] = None,
+                      dbHardwareProfile: HardwareProfile,
+                      dbSoftwareProfile: Optional[SoftwareProfile] = None,
                       validateIp: bool = True, bGenerateIp: bool = True,
-                      dns_zone: Optional[str] = None) -> Nodes:
+                      dns_zone: Optional[str] = None) -> NodeModel:
         """
         Convert the addNodeRequest into a Nodes object
 
@@ -97,17 +99,6 @@ class NodeManager(TortugaObjectManager): \
                 dbSoftwareProfile.name if dbSoftwareProfile else '(none)',
                 validateIp, bGenerateIp))
 
-        # This is where the Nodes() object is first created.
-        node = Nodes()
-
-        # Set the default node state
-        node.state = 'Discovered'
-
-        if 'rack' in addNodeRequest:
-            node.rack = addNodeRequest['rack']
-
-        node.addHostSession = addNodeRequest['addHostSession']
-
         hostname = addNodeRequest['name'] \
             if 'name' in addNodeRequest else None
 
@@ -115,7 +106,12 @@ class NodeManager(TortugaObjectManager): \
         # hardware profile in which host names are generated)
         self.__validateHostName(hostname, dbHardwareProfile.nameFormat)
 
-        node.name = hostname
+        node = NodeModel(name=hostname)
+
+        if 'rack' in addNodeRequest:
+            node.rack = addNodeRequest['rack']
+
+        node.addHostSession = addNodeRequest['addHostSession']
 
         # Complete initialization of new node record
         nic_defs = addNodeRequest['nics'] \
@@ -127,7 +123,7 @@ class NodeManager(TortugaObjectManager): \
             dns_zone=dns_zone)
 
         # Set hardware profile of new node
-        node.hardwareProfileId = dbHardwareProfile.id
+        node.hardwareprofile = dbHardwareProfile
 
         # Set software profile of new node; if the software profile is None,
         # attempt to set the software profile to the idle software profile
@@ -158,7 +154,7 @@ class NodeManager(TortugaObjectManager): \
             if hwprofile.getResourceAdapter() else 'default'
 
         # Query vcpus from resource adapter
-        ResourceAdapterClass = resourceAdapterFactory.getResourceAdapterClass(
+        ResourceAdapterClass = resourceAdapterFactory.get_resourceadapter_class(
             adapter_name)
 
         # Update Node object
@@ -166,13 +162,15 @@ class NodeManager(TortugaObjectManager): \
 
         return node
 
-    def getNodeById(self, nodeId, optionDict=None):
+    def getNodeById(self, nodeId: int,
+                    optionDict: Optional[Union[dict, None]] = None) -> Node:
         """
         Get node by node id
 
         Raises:
             NodeNotFound
         """
+
         return self._nodeDbApi.getNodeById(int(nodeId), optionDict)
 
     def getNodeByIp(self, ip):
@@ -187,7 +185,8 @@ class NodeManager(TortugaObjectManager): \
 
     def getNodeList(self, tags=None):
         """Return all nodes"""
-        return self._nodeDbApi.getNodeList(tags=tags)
+
+        return self.__expand_node_vcpus(self._nodeDbApi.getNodeList(tags=tags))
 
     def updateNode(self, nodeName, updateNodeRequest):
         self.getLogger().debug('updateNode(): name=[{0}]'.format(nodeName))
@@ -226,8 +225,7 @@ class NodeManager(TortugaObjectManager): \
         except Exception:
             session.rollback()
 
-            self.getLogger().exception(
-                'Exception updating node [{0}]'.format(nodeName))
+            raise
         finally:
             DbManager().closeSession()
 
@@ -394,14 +392,8 @@ class NodeManager(TortugaObjectManager): \
             self.__scheduleUpdate()
 
             return result
-        except TortugaException:
-            session.rollback()
-
-            raise
         except Exception:
             session.rollback()
-
-            self.getLogger().exception('Exception in NodeManager.deleteNode()')
 
             raise
         finally:
@@ -517,7 +509,7 @@ class NodeManager(TortugaObjectManager): \
         # action as well as populate the nodeTransferDict. This saves
         # having to iterate twice on the same result data.
         for dbHardwareProfile, nodesDict in hwProfileMap.items():
-            adapter = resourceAdapterFactory.getApi(
+            adapter = resourceAdapterFactory.get_api(
                 dbHardwareProfile.resourceadapter.name)
 
             dbNodeTuples = []
@@ -657,15 +649,8 @@ class NodeManager(TortugaObjectManager): \
             self.__scheduleUpdate()
 
             return result_dict
-        except TortugaException as ex:
+        except Exception:
             session.rollback()
-
-            raise
-        except Exception as ex:
-            session.rollback()
-
-            self.getLogger().exception(
-                '[%s] %s' % (self.__class__.__name__, ex))
 
             raise
         finally:
@@ -736,12 +721,9 @@ class NodeManager(TortugaObjectManager): \
             self.__scheduleUpdate()
 
             return results
-        except TortugaException as ex:
+        except Exception:
             session.rollback()
-            raise
-        except Exception as ex:
-            session.rollback()
-            self.getLogger().exception('%s' % ex)
+
             raise
         finally:
             DbManager().closeSession()
@@ -859,7 +841,7 @@ class NodeManager(TortugaObjectManager): \
             raise UnsupportedOperation(
                 'Only persistent volumes can be attached')
 
-        api = resourceAdapterFactory.getApi(
+        api = resourceAdapterFactory.get_api(
             node.getHardwareProfile().getResourceAdapter().getName())
 
         if isDirect == "DEFAULT":
@@ -876,7 +858,7 @@ class NodeManager(TortugaObjectManager): \
 
         node = self.getNode(nodeName, {'hardwareprofile': True})
 
-        api = resourceAdapterFactory.getApi(
+        api = resourceAdapterFactory.get_api(
             node.getHardwareProfile().getResourceAdapter().getName())
 
         vol = self._san.getVolume(volume)
@@ -897,5 +879,29 @@ class NodeManager(TortugaObjectManager): \
     def getNodesByNodeState(self, state: str):
         return self._nodeDbApi.getNodesByNodeState(state)
 
-    def getNodesByNameFilter(self, _filter: str):
-        return self._nodeDbApi.getNodesByNameFilter(_filter)
+    def getNodesByNameFilter(self, nodespec: str,
+                             optionDict: Optional[Union[dict, None]] = None) -> TortugaObjectList:
+        return self.__expand_node_vcpus(
+                self._nodeDbApi.getNodesByNameFilter(
+                    nodespec, optionDict=optionDict))
+
+    def getNodesByAddHostSession(self, addHostSession: str,
+                                 optionDict: Optional[Union[dict, None]] = None) -> TortugaObjectList:
+        return self._nodeDbApi.getNodesByAddHostSession(addHostSession, optionDict)
+
+    def __expand_node_vcpus(self, nodes: List[Node]) -> List[Node]:
+        # query resource adapter to get virtual cpus for each Node (TortugaObject)
+
+        for node in nodes:
+            self.getLogger().debug('adapter: {}'.format(node.getHardwareProfile().getResourceAdapter()))
+            adapter_name = node.getHardwareProfile().getResourceAdapter().getName() \
+                if node.getHardwareProfile().getResourceAdapter() else 'default'
+
+            # Query vcpus from resource adapter
+            ResourceAdapterClass = resourceAdapterFactory.get_resourceadapter_class(
+                adapter_name)
+
+            # Update Node object
+            node.setVcpus(ResourceAdapterClass().get_node_vcpus(node.getName()))
+
+        return nodes

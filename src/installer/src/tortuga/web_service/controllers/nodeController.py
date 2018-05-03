@@ -15,17 +15,22 @@
 # pylint: disable=no-member
 
 import datetime
+
 import cherrypy
 
-from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.addhost.addHostManager import AddHostManager
-from tortuga.db.nodeRequests import NodeRequests
+from tortuga.db.models.nodeRequest import NodeRequest
+from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.nodeNotFound import NodeNotFound
-from ..threadManager import threadManager
-from .common import parse_tag_query_string
-from .authController import AuthController, require
-from .tortugaController import TortugaController
+from tortuga.objects.tortugaObject import TortugaObjectList
+from tortuga.schema import NodeSchema
+from tortuga.utility.helper import str2bool
+from tortuga.web_service.auth.decorators import authentication_required
+
 from .. import app
+from ..threadManager import threadManager
+from .common import make_options_from_query_string, parse_tag_query_string
+from .tortugaController import TortugaController
 
 
 class NodeController(TortugaController):
@@ -35,9 +40,9 @@ class NodeController(TortugaController):
     """
     actions = [
         {
-            'name': 'userNodes',
-            'path': '/v1/nodes',
-            'action': 'nodeListRequest',
+            'name': 'getNodeList',
+            'path': '/v1/nodes/',
+            'action': 'getNodes',
             'method': ['GET']
         },
         {
@@ -47,21 +52,9 @@ class NodeController(TortugaController):
             'method': ['GET']
         },
         {
-            'name': 'userNode',
-            'path': '/v1/nodes/:name',
-            'action': 'nodeRequest',
-            'method': ['GET', 'POST']
-        },
-        {
             'name': 'getNodeById',
-            'path': '/v1/nodes/id/:(id)',
+            'path': '/v1/nodes/:(node_id)',
             'action': 'getNodeById',
-            'method': ['POST']
-        },
-        {
-            'name': 'getNodeByIpRequest',
-            'path': '/v1/nics/:ip/node',
-            'action': 'getNodeByIpRequest',
             'method': ['GET']
         },
         {
@@ -130,7 +123,7 @@ class NodeController(TortugaController):
             'name': 'resetNode',
             'path': '/v1/nodes/:nodeName/reset',
             'action': 'rebootNode',
-            'method': ['GET'],
+            'method': ['PUT'],
         },
         {
             'name': 'deleteNode',
@@ -144,19 +137,15 @@ class NodeController(TortugaController):
             'action': 'updateNodeRequest',
             'method': ['PUT'],
         },
-        {
-            'name': 'getNodeByIpRequest',
-            'path': '/v1/identify-node',
-            'action': 'getNodeByIpRequest',
-            'method': ['GET']
-        },
     ]
 
     @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
-    @require()
-    def nodeListRequest(self, **kwargs):
-        """Return list of all available nodes"""
+    @authentication_required()
+    def getNodes(self, **kwargs):
+        """
+        Return list of all available nodes
+
+        """
 
         tagspec = []
 
@@ -164,26 +153,51 @@ class NodeController(TortugaController):
             tagspec.extend(parse_tag_query_string(kwargs['tag']))
 
         try:
-            nodeList = app.node_api.getNodeList(tags=tagspec)
+            options = make_options_from_query_string(
+                kwargs['include']
+                if 'include' in kwargs else None,
+                ['softwareprofile', 'hardwareprofile'])
+
+            if 'addHostSession' in kwargs and kwargs['addHostSession']:
+                nodeList = app.node_api.getNodesByAddHostSession(
+                    kwargs['addHostSession'], options)
+            elif 'name' in kwargs and kwargs['name']:
+                nodeList = app.node_api.getNodesByNameFilter(
+                    kwargs['name'], optionDict=options)
+            elif 'installer' in kwargs and str2bool(kwargs['installer']):
+                nodeList = TortugaObjectList(
+                    [app.node_api.getInstallerNode()]
+                )
+            elif 'ip' in kwargs:
+                nodeList = TortugaObjectList(
+                    [app.node_api.getNodeByIp(kwargs['ip'])])
+            else:
+                nodeList = app.node_api.getNodeList(tags=tagspec)
 
             response = {
-                'nodes': nodeList.getCleanDict(),
+                'nodes': NodeSchema().dump(nodeList, many=True).data
             }
         except Exception as ex:
-            self.getLogger().exception('node WS API nodeListRequest() failed')
+            self.getLogger().exception('node WS API getNodes() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
         return self.formatResponse(response)
 
     @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
-    @require()
-    def nodeRequest(self, name):
-        """Return node information"""
+    @authentication_required()
+    def getNodeById(self, node_id: str, **kwargs):
+        """
+        Return node information
 
+        """
         try:
-            node = app.node_api.getNode(name)
+            options = make_options_from_query_string(
+                kwargs['include']
+                if 'include' in kwargs else None,
+                ['softwareprofile', 'hardwareprofile'])
+
+            node = app.node_api.getNodeById(node_id, optionDict=options)
 
             response = {
                 'node': node.getCleanDict(),
@@ -192,30 +206,6 @@ class NodeController(TortugaController):
             self.handleException(ex)
             code = self.getTortugaStatusCode(ex)
             response = self.notFoundErrorResponse(str(ex), code)
-        except Exception as ex:
-            self.getLogger().exception('node WS API nodeRequest() failed')
-            self.handleException(ex)
-            response = self.errorResponse(str(ex))
-
-        return self.formatResponse(response)
-
-    @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
-    @require()
-    def getNodeById(self, node_id):
-        postdata = cherrypy.request.json
-
-        optionDict = postdata['optionDict'] \
-            if 'optionDict' in postdata else {}
-
-        try:
-            nodeApi = app.node_api
-
-            node = nodeApi.getNodeById(node_id, optionDict=optionDict)
-
-            response = {
-                'node': node.getCleanDict(),
-            }
         except Exception as ex:
             self.getLogger().exception('node WS API getNodeById() failed')
             self.handleException(ex)
@@ -225,35 +215,8 @@ class NodeController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
-    def getNodeByIpRequest(self):
-        ip = cherrypy.request.remote.ip
-
-        try:
-            if ip == '127.0.0.1' or ip == '::1':
-                node = app.node_api.getInstallerNode()
-            else:
-                node = app.node_api.getNodeByIp(ip)
-
-            response = {'node': node.getCleanDict()}
-        except NodeNotFound as ex:
-            self.handleException(ex)
-            code = self.getTortugaStatusCode(ex)
-            response = self.notFoundErrorResponse(str(ex), code)
-        except Exception as ex:
-            self.getLogger().exception(
-                'node WS API getNodeByIpRequest() failed')
-            self.handleException(ex)
-            response = self.errorResponse(str(ex))
-
-        return self.formatResponse(response)
-
-    @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def updateNodeRequest(self, name):
-        response = None
-
         postdata = cherrypy.request.json
 
         state = postdata['state'] if 'state' in postdata else None
@@ -269,23 +232,6 @@ class NodeController(TortugaController):
             response = {
                 'changed': result,
             }
-
-            # node = app.node_api.getNode(name)
-
-            # Send data to event log
-
-            # d = {
-            #     'type': 'MODIFIED',
-            #     'object': {
-            #         # 'node': node.getCleanDict(),
-            #         'node': {
-            #             'name': node.getName(),
-            #         }
-            #     }
-            # }
-
-            # Workqueue().socket.send_multipart(['node',
-            #                                                json.dumps(d)])
         except Exception as ex:
             self.getLogger().exception(
                 'node WS API updateNodeRequest() failed')
@@ -296,9 +242,11 @@ class NodeController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def getNodeProvisioningInfo(self, nodeName):
-        """ Return provisioning information for a node. """
+        """
+        Return provisioning information for a node
+        """
 
         try:
             info = app.node_api.getProvisioningInfo(nodeName)
@@ -320,13 +268,13 @@ class NodeController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def setParentNode(self, nodeName, parentNodeName):
-        '''
+        """
         Handle POST to /nodes/:(nodeName)/parentNode
 
         Required data: parentNodeName
-        '''
+        """
 
         response = None
 
@@ -349,11 +297,11 @@ class NodeController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def idleNode(self, nodeName):
-        '''
+        """
         Idle an active node
-        '''
+        """
 
         try:
             response = app.node_api.idleNode(nodeName)
@@ -370,19 +318,16 @@ class NodeController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def activateNode(self, nodeName):
-        '''
+        """
         Activate an idle node
-        '''
+        """
 
-        if int(cherrypy.request.headers['Content-Length']):
-            postdata = cherrypy.request.json
+        postdata = cherrypy.request.json
 
-            softwareProfileName = postdata['softwareProfileName'] \
-                if 'softwareProfileName' in postdata else None
-        else:
-            softwareProfileName = None
+        softwareProfileName = postdata['softwareProfileName'] \
+            if 'softwareProfileName' in postdata else None
 
         try:
             response = app.node_api.activateNode(nodeName, softwareProfileName)
@@ -396,11 +341,11 @@ class NodeController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def checkpointNode(self, nodeName):
-        '''
+        """
         Checkpoint a node
-        '''
+        """
 
         response = None
 
@@ -415,11 +360,11 @@ class NodeController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def revertNodeToCheckpoint(self, nodeName):
-        '''
+        """
         Migrate a node
-        '''
+        """
 
         response = None
 
@@ -435,11 +380,12 @@ class NodeController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
-    def migrateNode(self, nodeName, remainingNodeString, liveMigrate):
-        '''
+    @authentication_required()
+    def migrateNode(self, nodeName: str, remainingNodeString: str,
+                    liveMigrate: str):
+        """
         Migrate a node
-        '''
+        """
 
         response = None
 
@@ -448,15 +394,8 @@ class NodeController(TortugaController):
             remainingNodeList = [
                 node for node in remainingNodeString.split('+')]
 
-            liveMigrate = liveMigrate == 'True'
-
-            # self.getLogger().debug(
-            #     'migrateNode: nodeName [%s] remainingNodeList [%s]'
-            #     ' liveMigrate [%s]' % (
-            #         nodeName, remainingNodeList, liveMigrate))
-
             app.node_api.migrateNode(
-                nodeName, remainingNodeList, liveMigrate)
+                nodeName, remainingNodeList, str2bool(liveMigrate))
         except Exception as ex:
             self.getLogger().exception('node WS API migrateNode() failed')
             self.handleException(ex)
@@ -466,7 +405,7 @@ class NodeController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def startupNode(self, nodeName, nodeString, bootMethod):
         response = None
 
@@ -489,7 +428,7 @@ class NodeController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def evacuateChildren(self, nodeName):
         response = None
 
@@ -504,9 +443,11 @@ class NodeController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def getChildrenList(self, nodeName):
-        """Return list of all children nodes"""
+        """
+        Return list of all children nodes
+        """
 
         try:
             nodeList = app.node_api.getChildrenList(nodeName)
@@ -521,11 +462,9 @@ class NodeController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def shutdownNode(self, nodeName):
         response = None
-
-        # self.getLogger().debug('shutdownNode: nodeName [%s]' % (nodeName))
 
         try:
             app.node_api.shutdownNode(nodeName)
@@ -541,16 +480,19 @@ class NodeController(TortugaController):
         return self.formatResponse(response)
 
     @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def rebootNode(self, nodeName, **kwargs):
         response = None
 
-        bSoftReset = not kwargs['hard'].lower() not in ('1', 'y', 't') \
+        soft_reset = not str2bool(kwargs['hard']) \
             if 'hard' in kwargs else True
 
+        reinstall = str2bool(kwargs['reinstall']) \
+            if 'reinstall' in kwargs else False
+
         try:
-            app.node_api.rebootNode(nodeName, bSoftReset=bSoftReset)
+            app.node_api.rebootNode(
+                nodeName, bSoftReset=soft_reset, bReinstall=reinstall)
         except NodeNotFound as ex:
             self.handleException(ex)
             code = self.getTortugaStatusCode(ex)
@@ -564,7 +506,7 @@ class NodeController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def transferNode(self, softwareProfileName, nodeName,
                      srcSoftwareProfileName, nodeCount):
         try:
@@ -585,7 +527,7 @@ class NodeController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def addStorageVolume(self, nodeName, volume):
         response = None
 
@@ -604,7 +546,7 @@ class NodeController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def removeStorageVolume(self, nodeName, volume):
         response = None
 
@@ -621,7 +563,7 @@ class NodeController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def getStorageVolumeList(self, nodeName):
         try:
             result = app.node_api.getStorageVolumeList(nodeName)
@@ -636,9 +578,11 @@ class NodeController(TortugaController):
         return self.formatResponse(response)
 
     @cherrypy.tools.json_out()
-    @require()
+    @authentication_required()
     def deleteNode(self, name):
-        """Handle /nodes/:(name) (DELETE)"""
+        """
+        Handle /nodes/:(name) (DELETE)
+        """
 
         try:
             transaction_id = enqueue_delete_hosts_request(
@@ -680,7 +624,7 @@ def enqueue_delete_hosts_request(session, nodespec):
 
 
 def init_node_request_record(nodespec):
-    request = NodeRequests(nodespec)
+    request = NodeRequest(nodespec)
     request.timestamp = datetime.datetime.utcnow()
     request.addHostSession = AddHostManager().createNewSession()
     request.action = 'DELETE'

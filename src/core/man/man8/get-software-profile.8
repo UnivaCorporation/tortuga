@@ -1,0 +1,84 @@
+.\" Copyright 2008-2018 Univa Corporation
+.\"
+.\" Licensed under the Apache License, Version 2.0 (the "License");
+.\" you may not use this file except in compliance with the License.
+.\" You may obtain a copy of the License at
+.\"
+.\"    http://www.apache.org/licenses/LICENSE-2.0
+.\"
+.\" Unless required by applicable law or agreed to in writing, software
+.\" distributed under the License is distributed on an "AS IS" BASIS,
+.\" WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+.\" See the License for the specific language governing permissions and
+.\" limitations under the License.
+
+.TH "get-software-profile" "8" "6.3" "Univa" "Tortuga"
+.SH "NAME"
+.LP
+get-software-profile - Display details of a software profile.
+.SH "SYNTAX"
+.LP
+\fBget-software-profile --name=\fINAME\fB [--nodes] [--partitions] [--components] [--os] [--admins]
+.SH "DESCRIPTION"
+.LP
+The get-software-profile tool displays information details of a specific software profile.
+.LP
+.SH "OPTIONS"
+.LP
+.TP
+\fB--name=\fINAME
+Software profile name to query
+.TP
+\fB--nodes
+Include list of nodes
+.TP
+\fB--partitions
+Include list of partitions
+.TP
+\fB--components
+Include enabled components
+.TP
+\fB--admins
+Include list of admins
+.LP
+.SH "Output formatting options"
+.LP
+.TP
+\fB--json\fR
+JSON formatted output
+.LP
+.SH "Common Tortuga Options"
+.TP
+.TP
+\fB-h, --help
+show this help message and exit.
+.TP
+\fB-?
+show this help message and exit.
+.TP
+\fB-v
+print version and exit.
+.TP
+\fB-d \fPCONSOLELOGLEVEL\fB, --debug=\fPCONSOLELOGLEVEL
+set debug level; valid values are: critical, error, warning, info, debug
+.TP
+\fB--url=\fPURL
+Tortuga web service URL
+.TP
+\fB--username=\fPUSERNAME
+Tortuga web service username
+.TP
+\fB--password=\fPPASSWORD
+Tortuga web server password
+.LP
+.SH "EXAMPLES"
+.LP
+Display software profile \fBDefaultCompute\fR
+
+   \fBget-software-profile --name DefaultCompute\fR
+.SH "AUTHORS"
+.LP
+Univa Support <support@univa.com>
+.SH "SEE ALSO"
+.LP
+get-software-profile-list(8)

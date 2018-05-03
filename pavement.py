@@ -149,6 +149,12 @@ def install(options):
     if not newPath.exists():
         instScript.link(newPath)
 
+    # copy upgrade script
+    upgrade_script = path('src/install-script/upgrade-tortuga.sh')
+    upgrade_script_install = installDir.joinpath(upgrade_script.basename())
+    if not upgrade_script_install.exists():
+        upgrade_script.link(upgrade_script_install)
+
 
 @task
 def tarball(options):
@@ -169,3 +175,13 @@ def tarball(options):
         sh('tar cjf %s %s/' % (tarball, tarballRootDir))
 
     sh('ls -l dist/%s' % (tarballFileName))
+
+
+@task
+def clean(options):
+    for kit in distKits:
+        cmd = 'build-kit clean'
+        sh('cd src/kits/{} && {}'.format(kit, cmd))
+
+    for dir_name in ['build', 'dist', 'install']:
+        sh('find . -type d -name {} -exec rm -r {{}} +'.format(dir_name))

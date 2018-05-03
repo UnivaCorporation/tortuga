@@ -24,7 +24,7 @@ from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.addhost.addHostManager import AddHostManager
 
 
-logger = logging.getLogger('tortuga.addhost')
+logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 ahm = AddHostManager()

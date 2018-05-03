@@ -18,39 +18,57 @@
 class tortuga_kit_base::core::install::virtualenv::package {
   require tortuga::packages
 
-  if $::osfamily == 'RedHat' {
-#     if $::operatingsystem == 'Amazon' {
-#       $pkgs = ['python27-virtualenv']
-#     } else {
-#       $pkgs = ['python-virtualenv']
-#     }
-#   } else {
-#     $virtualenvpkgname = $::osfamily ? {
-#       'Debian' => 'python-virtualenv',
-#     }
-#
-#     $pkgs = [$virtualenvpkgname]
-#   }
+  if $facts['os']['family'] == 'RedHat' {
+    if $facts['os']['name'] == 'Amazon' {
+      # Amazon Linux has a native python36 package
+      $pkgs = [
+        'python36',
+      ]
+    } else {
+      # python36 must be installed from SCL on RHEL and CentOS
+      $pkgs = [
+        'rh-python36-python-virtualenv',
+      ]
 
-    # Set up SCL repository
-    ensure_packages(['centos-release-scl'], {'ensure' => 'installed'})
+      if $facts['os']['name'] == 'RedHat' {
+        # enable rhscl repository on RHEL
+        exec { 'enable rhscl repository':
+          command => 'yum-config-manager --enable rhui-REGION-rhel-server-rhscl',
+          path    => ['/bin', '/usr/bin'],
+          unless  => 'yum repolist | grep -q rhscl',
+        }
 
-    # Install Python 3.6 from SCL repository
-    $pkgs = [
-      'rh-python36-python-virtualenv',
-    ]
+        Exec['enable rhscl repository']
+          -> Package['rh-python36-python-virtualenv']
+      } elsif $facts['os']['name'] == 'CentOS' {
+        # Set up SCL repository
+        ensure_packages(['centos-release-scl'], {'ensure' => 'installed'})
 
-    Package['centos-release-scl']
-      -> Package['rh-python36-python-virtualenv']
-  } else {
-    if $::osfamily == 'Debian' {
+        # Install Python 3.6 from SCL repository
+        Package['centos-release-scl']
+          -> Package['rh-python36-python-virtualenv']
+      }
+
+      # Install Python 3.6 package and dependencies
+      ensure_packages($pkgs, {'ensure' => 'installed'})
+    }
+  } elsif $facts['os']['name'] == 'Ubuntu' {
+      include apt
+
+      # install PPA containing Python 3.6
+      apt::ppa { 'ppa:deadsnakes/ppa': }
+
+      $pkgs = [
+        'python3.6',
+        'python3.6-venv',
+      ]
+  } elsif $::osfamily == 'Debian' {
       $pkgs = [
         'python3',
         'python3-venv',
       ]
-    } else {
-      $pkgs = []
-    }
+  } else {
+    $pkgs = []
   }
 
   if $pkgs {
@@ -79,11 +97,26 @@ class tortuga_kit_base::core::install::create_tortuga_instroot {
 
   include tortuga::config
 
-  $virtualenv = $::osfamily ? {
-    'RedHat' => '/opt/rh/rh-python36/root/bin/python -m venv',
-    'Debian' => 'python3 -m venv',
-    'Suse'   => 'virtualenv --system-site-packages',
-    default  => undef,
+  if $facts['os']['family'] == 'RedHat' {
+    # Amazon Linux is the exception here since it puts python3 in the
+    # default PATH
+    $virtualenv = $facts['os']['name'] ? {
+      'Amazon' => 'python3 -m venv',
+      default  => '/opt/rh/rh-python36/root/bin/python -m venv',
+    }
+  } elsif $facts['os']['family'] == 'Debian' {
+    if $facts['os']['name'] == 'Ubuntu' {
+      # explicitly specify python3.6 as the Python interpreter on Ubuntu in
+      # the event that 3.5 is also installed
+      $virtualenv = 'python3.6 -m venv'
+    } else {
+      $virtualenv = 'python3 -m venv'
+    }
+  } else {
+    $virtualenv = $::osfamily ? {
+      'Suse'   => 'virtualenv --system-site-packages',
+      default  => undef,
+    }
   }
 
   if $virtualenv == undef {

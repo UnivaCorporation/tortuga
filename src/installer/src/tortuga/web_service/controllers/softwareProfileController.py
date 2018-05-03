@@ -16,47 +16,54 @@
 
 import cherrypy
 
-from tortuga.softwareprofile.softwareProfileManager \
-    import SoftwareProfileManager
-from tortuga.objects.softwareProfile import SoftwareProfile
-from tortuga.softwareprofile.softwareProfileApi import SoftwareProfileApi
-from tortuga.exceptions.softwareProfileNotFound \
-    import SoftwareProfileNotFound
 from tortuga.exceptions.invalidArgument import InvalidArgument
+from tortuga.exceptions.softwareProfileNotFound import SoftwareProfileNotFound
+from tortuga.objects.softwareProfile import SoftwareProfile
+from tortuga.objects.tortugaObject import TortugaObjectList
+from tortuga.softwareprofile.softwareProfileApi import SoftwareProfileApi
+from tortuga.softwareprofile.softwareProfileManager import \
+    SoftwareProfileManager
+from tortuga.utility.helper import str2bool
+from tortuga.web_service.auth.decorators import authentication_required
 from .common import parse_tag_query_string
 from .tortugaController import TortugaController
-from .authController import AuthController, require
 
 
 class SoftwareProfileController(TortugaController):
     actions = [
         {
             'name': 'getSoftwareProfiles',
-            'path': '/v1/softwareProfiles',
+            'path': '/v1/softwareprofiles/',
             'action': 'getSoftwareProfiles',
             'method': ['GET'],
         },
         {
+            'name': 'getSoftwareProfileById',
+            'path': '/v1/softwareprofiles/:(swprofile_id)',
+            'action': 'getSoftwareProfileById',
+            'method': ['GET'],
+        },
+        {
             'name': 'deleteSoftwareProfile',
-            'path': '/v1/softwareProfiles/:(softwareProfileName)',
+            'path': '/v1/softwareprofiles/:(softwareProfileName)',
             'action': 'deleteSoftwareProfile',
             'method': ['DELETE'],
         },
         {
             'name': 'createSoftwareProfile',
-            'path': '/v1/softwareProfiles',
+            'path': '/v1/softwareprofiles/',
             'action': 'createSoftwareProfile',
             'method': ['POST'],
         },
         {
             'name': 'copySoftwareProfile',
-            'path': '/v1/softwareProfiles/:(srcSoftwareProfileName)/copy',
+            'path': '/v1/softwareprofiles/:(srcSoftwareProfileName)/copy/:(dstSoftwareProfileName)',
             'action': 'copySoftwareProfile',
             'method': ['POST'],
         },
         {
             'name': 'getUsableNodes',
-            'path': '/v1/softwareProfiles/:(softwareProfileName)/usable',
+            'path': '/v1/softwareprofiles/:(softwareProfileName)/usable',
             'action': 'getUsableNodes',
             'method': ['GET'],
         },
@@ -68,86 +75,74 @@ class SoftwareProfileController(TortugaController):
         },
         {
             'name': 'updateSoftwareProfile',
-            'path': '/v1/softwareProfiles/:(softwareProfileId)',
+            'path': '/v1/softwareprofiles/:(softwareProfileId)',
             'action': 'updateSoftwareProfile',
             'method': ['PUT'],
         },
         {
-            'name': 'getSoftwareProfile',
-            'path': '/v1/softwareProfiles/:(softwareProfileName)',
-            'action': 'getSoftwareProfile',
-            'method': ['POST'],
-        },
-        {
-            'name': 'getSoftwareProfileById',
-            'path': '/v1/softwareProfiles/id/:(id)',
-            'action': 'getSoftwareProfileById',
-            'method': ['GET'],
-        },
-        {
             'name': 'getSoftwareProfileProvisioningInfo',
-            'path': '/v1/softwareProfiles/:(softwareProfileName)'
+            'path': '/v1/softwareprofiles/:(softwareProfileName)'
                     '/provisioningInfo',
             'action': 'getProvisioningInfo',
             'method': ['GET'],
         },
         {
             'name': 'getSoftwareProfileAdmins',
-            'path': '/v1/softwareProfiles/:(softwareProfileName)/admins',
+            'path': '/v1/softwareprofiles/:(softwareProfileName)/admins',
             'action': 'getAdmins',
             'method': ['GET'],
         },
         {
             'name': 'getEnabledComponents',
-            'path': '/v1/softwareProfiles/:(softwareProfileName)/components',
+            'path': '/v1/softwareprofiles/:(softwareProfileName)/components',
             'action': 'getEnabledComponents',
             'method': ['GET'],
         },
         {
             'name': 'addSwAdmin',
-            'path': '/v1/softwareProfiles/:(softwareProfileName)'
+            'path': '/v1/softwareprofiles/:(softwareProfileName)'
                     '/admin/:(adminUsername)',
             'action': 'addAdmin',
             'method': ['POST'],
         },
         {
             'name': 'deleteSwAdmin',
-            'path': '/v1/softwareProfiles/:(softwareProfileName)'
+            'path': '/v1/softwareprofiles/:(softwareProfileName)'
                     '/admin/:(adminUsername)',
             'action': 'deleteAdmin',
             'method': ['DELETE'],
         },
         {
             'name': 'enableComponent',
-            'path': '/v1/softwareProfiles/:(softwareProfileName)'
+            'path': '/v1/softwareprofiles/:(softwareProfileName)'
                     '/enable_components',
             'action': 'enableComponent',
             'method': ['PUT'],
         },
         {
             'name': 'disableComponent',
-            'path': '/v1/softwareProfiles/:(softwareProfileName)'
+            'path': '/v1/softwareprofiles/:(softwareProfileName)'
                     '/disable_components',
             'action': 'disableComponent',
             'method': ['PUT'],
         },
         {
             'name': 'addUsableHardwareProfileToSoftwareProfile',
-            'path': '/v1/softwareProfiles/:(softwareProfileName)'
+            'path': '/v1/softwareprofiles/:(softwareProfileName)'
                     '/mappings/:(hardwareProfileName)',
             'action': 'addUsableHardwareProfileToSoftwareProfile',
             'method': ['POST'],
         },
         {
             'name': 'deleteUsableHardwareProfileFromSoftwareProfile',
-            'path': '/v1/softwareProfiles/:(softwareProfileName)'
+            'path': '/v1/softwareprofiles/:(softwareProfileName)'
                     '/mappings/:(hardwareProfileName)',
             'action': 'deleteUsableHardwareProfileFromSoftwareProfile',
             'method': ['DELETE'],
         },
         {
             'name': 'softwareProfileNodes',
-            'path': '/v1/softwareProfiles/:(softwareProfileName)/nodes',
+            'path': '/v1/softwareprofiles/:(softwareProfileName)/nodes',
             'action': 'getNodes',
             'method': ['GET'],
         },
@@ -158,25 +153,48 @@ class SoftwareProfileController(TortugaController):
 
         self._softwareProfileManager = SoftwareProfileManager()
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
     def getSoftwareProfiles(self, **kwargs):
-        tagspec = []
+        """
+        TODO: implement support for optionDict through query string
+        """
 
-        if 'tag' in kwargs and kwargs['tag']:
-            tagspec.extend(parse_tag_query_string(kwargs['tag']))
+        try:
+            tagspec = []
 
-        softwareProfiles = self._softwareProfileManager.\
-            getSoftwareProfileList(tags=tagspec)
+            if 'tag' in kwargs and kwargs['tag']:
+                tagspec.extend(parse_tag_query_string(kwargs['tag']))
 
-        response = {
-            'softwareprofiles': softwareProfiles.getCleanDict(),
-        }
+            if 'name' in kwargs and kwargs['name']:
+                options = {
+                    'components': True,
+                    'partitions': True,
+                    'hardwareprofiles': True,
+                    'tags': True,
+                }
+
+                softwareProfiles = TortugaObjectList(
+                    [self._softwareProfileManager.getSoftwareProfile(
+                        kwargs['name'], optionDict=options)])
+            else:
+                softwareProfiles = self._softwareProfileManager.\
+                    getSoftwareProfileList(tags=tagspec)
+
+            response = {
+                'softwareprofiles': softwareProfiles.getCleanDict(),
+            }
+        except Exception as ex:
+            self.handleException(ex)
+
+            http_status = 404 \
+                if isinstance(ex, SoftwareProfileNotFound) else 400
+
+            response = self.errorResponse(str(ex), http_status=http_status)
 
         return self.formatResponse(response)
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     def getIdleSoftwareProfiles(self):
@@ -189,37 +207,7 @@ class SoftwareProfileController(TortugaController):
 
         return self.formatResponse(response)
 
-    @require()
-    @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
-    def getSoftwareProfileById(self, id_):
-        """Get software profile by id"""
-
-        # self.getLogger().debug('getSoftwareProfileById(id=[%s])' % (id))
-
-        try:
-            sp = self._softwareProfileManager.getSoftwareProfileById(
-                id_, {
-                    'admins': True,
-                    'components': True,
-                    'nodes': True,
-                    'os': True,
-                    'packages': True,
-                    'partitions': True,
-                })
-
-            response = {'softwareprofile': sp.getCleanDict()}
-        except Exception as ex:
-            self.getLogger().exception(
-                'software profile WS API getSoftwareProfileById() failed')
-
-            self.handleException(ex)
-
-            response = self.errorResponse(str(ex))
-
-        return self.formatResponse(response)
-
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     def createSoftwareProfile(self):
@@ -255,7 +243,7 @@ class SoftwareProfileController(TortugaController):
 
         return self.formatResponse(response)
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     def deleteSoftwareProfile(self, softwareProfileName):
@@ -281,20 +269,25 @@ class SoftwareProfileController(TortugaController):
 
         return self.formatResponse(response)
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
-    def getSoftwareProfile(self, softwareProfileName):
-        """Get software profile by name"""
+    def getSoftwareProfileById(self, swprofile_id, **kwargs):
+        """
+        Get software profile by name
 
-        postdata = cherrypy.request.json
-
-        optionDict = postdata['optionDict'] \
-            if 'optionDict' in postdata else {}
+        TODO: implement support for optionDict through query string
+        """
+        optionDict = {
+            'admins': True,
+            'components': True,
+            'nodes': True,
+            'os': True,
+            'partitions': True,
+        }
 
         try:
-            sp = self._softwareProfileManager.getSoftwareProfile(
-                softwareProfileName, optionDict)
+            sp = self._softwareProfileManager.getSoftwareProfileById(
+                swprofile_id, optionDict)
 
             response = {
                 'softwareprofile': sp.getCleanDict(),
@@ -313,7 +306,7 @@ class SoftwareProfileController(TortugaController):
 
         return self.formatResponse(response)
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     def updateSoftwareProfile(self, softwareProfileId):
@@ -342,7 +335,7 @@ class SoftwareProfileController(TortugaController):
 
         return self.formatResponse(response)
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     def getEnabledComponents(self, softwareProfileName):
@@ -367,17 +360,14 @@ class SoftwareProfileController(TortugaController):
 
         return self.formatResponse(response)
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
     def addUsableHardwareProfileToSoftwareProfile(self,
                                                   softwareProfileName,
                                                   hardwareProfileName):
-        """ Add hardware profile to software profile. """
-
-        # self.getLogger().debug(
-        #     'Adding hardware profile [%s] to software profile [%s]' % (
-        #         hardwareProfileName, softwareProfileName))
+        """
+        Add hardware profile to software profile
+        """
 
         response = None
 
@@ -396,7 +386,7 @@ class SoftwareProfileController(TortugaController):
 
         return self.formatResponse(response)
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     def deleteUsableHardwareProfileFromSoftwareProfile(self,
@@ -421,7 +411,7 @@ class SoftwareProfileController(TortugaController):
 
         return self.formatResponse(response)
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     def addAdmin(self, softwareProfileName, adminUsername):
@@ -440,7 +430,7 @@ class SoftwareProfileController(TortugaController):
 
         return self.formatResponse(response)
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     def deleteAdmin(self, softwareProfileName, adminUsername):
@@ -459,7 +449,7 @@ class SoftwareProfileController(TortugaController):
 
         return self.formatResponse(response)
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     def enableComponent(self, softwareProfileName):
@@ -481,9 +471,12 @@ class SoftwareProfileController(TortugaController):
             componentName = component['componentName']
             componentVersion = component['componentVersion']
 
+            puppet_sync = str2bool(postdata['sync']) \
+                if 'sync' in postdata else True
+
             self._softwareProfileManager.enableComponent(
                 softwareProfileName, kitName, kitVersion, kitIteration,
-                componentName, comp_version=componentVersion)
+                componentName, comp_version=componentVersion, sync=puppet_sync)
         except Exception as ex:
             self.getLogger().exception(
                 'software profile WS API enableComponent() failed')
@@ -494,7 +487,7 @@ class SoftwareProfileController(TortugaController):
 
         return self.formatResponse(response)
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     def disableComponent(self, softwareProfileName):
@@ -516,9 +509,12 @@ class SoftwareProfileController(TortugaController):
             componentName = component['componentName']
             componentVersion = component['componentVersion']
 
+            puppet_sync = str2bool(postdata['sync']) \
+                if 'sync' in postdata else True
+
             self._softwareProfileManager.disableComponent(
                 softwareProfileName, kitName, kitVersion, kitIteration,
-                componentName, componentVersion)
+                componentName, componentVersion, sync=puppet_sync)
         except Exception as ex:
             self.getLogger().exception(
                 'software profile WS API disableComponent() failed')
@@ -529,9 +525,7 @@ class SoftwareProfileController(TortugaController):
 
         return self.formatResponse(response)
 
-    @require()
-    @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
+    @authentication_required()
     def copySoftwareProfile(self, srcSoftwareProfileName,
                             dstSoftwareProfileName):
         response = None
@@ -549,7 +543,7 @@ class SoftwareProfileController(TortugaController):
 
         return self.formatResponse(response)
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     def getUsableNodes(self, softwareProfileName):
@@ -568,7 +562,7 @@ class SoftwareProfileController(TortugaController):
 
         return self.formatResponse(response)
 
-    @require()
+    @authentication_required()
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     def getNodes(self, softwareProfileName):

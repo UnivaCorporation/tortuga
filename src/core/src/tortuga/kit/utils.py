@@ -23,13 +23,14 @@ import urllib.error
 import urllib.request
 from logging import getLogger
 
-import pip
-
-from .metadata import KitMetadataSchema
+from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.fileNotFound import FileNotFound
 from tortuga.exceptions.kitNotFound import KitNotFound
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.os_utility.tortugaSubprocess import TortugaSubprocess
+
+from .metadata import KitMetadataSchema
+
 
 logger = getLogger(__name__)
 
@@ -67,7 +68,7 @@ def pip_install_requirements(kit_installer, requirements_path):
         logger.debug('Requirements empty: {}'.format(requirements_path))
         return
 
-    pip_arguments = ['install']
+    pip_cmd = ['{}/pip'.format(ConfigManager().getBinDir()), 'install']
 
     kit_python_repo = os.path.join(
         kit_installer.install_path,
@@ -75,16 +76,18 @@ def pip_install_requirements(kit_installer, requirements_path):
         'simple'
     )
     if os.path.exists(kit_python_repo):
-        pip_arguments.extend([
+        pip_cmd.extend([
             '--extra-index-url',
             'file://{}'.format(os.path.abspath(kit_python_repo))
         ])
 
-    pip_arguments.extend([
+    pip_cmd.extend([
         '-r',
         requirements_path
     ])
-    pip.main(pip_arguments)
+
+    logger.debug(' '.join(pip_cmd))
+    subprocess.Popen(pip_cmd).wait()
 
 
 def is_requirements_empty(requirements_file_path):
@@ -221,7 +224,7 @@ def getKitNameVersionIteration(kitpath):
     :raises KitNotFound:
 
     """
-    cmd = 'tar jxfO {} */kit.json'.format(kitpath)
+    cmd = 'tar jxfO {} \*/kit.json'.format(kitpath)
     p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE, bufsize=1)
 

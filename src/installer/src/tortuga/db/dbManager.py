@@ -28,24 +28,14 @@ from tortuga.kit.loader import load_kits
 from tortuga.kit.registry import get_all_kit_installers
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.types import Singleton
-from .tables import get_all_table_mappers
+# from .tables import get_all_table_mappers
+from .sessionContextManager import SessionContextManager
+from .models.base import ModelBase
+
+from . import models  # noqa pylint: disable=unused-import
 
 
 logger = getLogger(__name__)
-
-
-class SessionContextManager(object):
-    def __init__(self, dbm):
-        self.dbm = dbm
-        self.session = None
-
-    def __enter__(self):
-        self.session = self.dbm.openSession()
-
-        return self.session
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.dbm.closeSession()
 
 
 class DbManagerBase(TortugaObjectManager):
@@ -71,6 +61,16 @@ class DbManagerBase(TortugaObjectManager):
 
             engineURI = self.__getDbEngineURI()
 
+            if self._dbConfig['engine'] == 'sqlite' and \
+                    not os.path.exists(self._dbConfig['path']):
+                # Ensure SQLite database file is created with proper permissions
+                try:
+                    fd = os.open(self._dbConfig['path'],
+                                 os.O_CREAT,
+                                 mode=0o600)
+                finally:
+                    os.close(fd)
+
             if self._dbConfig['engine'] == 'mysql':
                 # Set default SQLAlchemy engine arguments for MySQL
                 kwargs = {
@@ -87,9 +87,6 @@ class DbManagerBase(TortugaObjectManager):
         else:
             self._engine = engine
 
-        self._metadata = sqlalchemy.MetaData(self._engine)
-        self._mapped_tables = {}
-
     def _map_db_tables(self):
         #
         # Make sure all kit table mappers have been registered
@@ -101,12 +98,13 @@ class DbManagerBase(TortugaObjectManager):
         #
         # Map all tables that haven't yet been mapped
         #
-        for table_mapper in get_all_table_mappers():
-            key = table_mapper.__name__
-            if key not in self._mapped_tables.keys():
-                logger.debug('Mapping table: {}'.format(key))
-                self._mapped_tables[key] = table_mapper()
-                self._mapped_tables[key].map(self)
+        # for table_mapper in get_all_table_mappers():
+        #     key = table_mapper.__name__
+        #     if key not in self._mapped_tables.keys():
+        #         logger.debug('Mapping table: {}'.format(key))
+        #         self._mapped_tables[key] = table_mapper()
+        #         self._mapped_tables[key].map(self)
+        pass
 
     @property
     def engine(self):
@@ -128,7 +126,7 @@ class DbManagerBase(TortugaObjectManager):
         #
         self._map_db_tables()
         try:
-            self._metadata.create_all(self.engine)
+            ModelBase.metadata.create_all(self.engine)
         except Exception:
             self.getLogger().exception('SQLAlchemy raised exception')
             raise DbError('Check database settings or credentials')

@@ -16,13 +16,13 @@
 
 import time
 
-from tortuga.db.nodes import Nodes
-from tortuga.db.softwareProfiles import SoftwareProfiles
-from tortuga.db.hardwareProfiles import HardwareProfiles
 from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
+from tortuga.db.models.hardwareProfile import HardwareProfile
+from tortuga.db.models.node import Node
+from tortuga.db.models.operatingSystem import OperatingSystem
+from tortuga.db.models.operatingSystemFamily import OperatingSystemFamily
+from tortuga.db.models.softwareProfile import SoftwareProfile
 from tortuga.objects.parameter import Parameter
-from tortuga.db.operatingSystems import OperatingSystems
-from tortuga.db.operatingSystemsFamilies import OperatingSystemsFamilies
 
 
 def primeDb(session, installer_fqdn, osInfo, settings):
@@ -33,18 +33,18 @@ def primeDb(session, installer_fqdn, osInfo, settings):
     # Create Installer Software Profile
     swProfileName = 'Installer'
 
-    dbSoftwareProfile = SoftwareProfiles(swProfileName)
+    dbSoftwareProfile = SoftwareProfile(name=swProfileName)
     dbSoftwareProfile.description = 'Installer software profile'
     dbSoftwareProfile.type = 'installer'
 
-    dbOs = OperatingSystems()
+    dbOs = OperatingSystem()
     dbOs.name = osInfo.getName()
     dbOs.version = osInfo.getVersion()
     dbOs.arch = osInfo.getArch()
 
     session.add(dbOs)
 
-    dbOsFamily = OperatingSystemsFamilies()
+    dbOsFamily = OperatingSystemFamily()
     dbOsFamily.name = osInfo.getOsFamilyInfo().getName()
     dbOsFamily.version = osInfo.getOsFamilyInfo().getVersion()
     dbOsFamily.arch = osInfo.getOsFamilyInfo().getArch()
@@ -60,7 +60,7 @@ def primeDb(session, installer_fqdn, osInfo, settings):
     # Create Installer Hardware Profile
     hwProfileName = 'Installer'
 
-    dbHardwareProfile = HardwareProfiles(hwProfileName)
+    dbHardwareProfile = HardwareProfile(name=hwProfileName)
     dbHardwareProfile.description = 'Installer hardware profile'
     dbHardwareProfile.nameFormat = 'installer'
     dbHardwareProfile.installType = 'package'
@@ -70,7 +70,7 @@ def primeDb(session, installer_fqdn, osInfo, settings):
     session.add(dbHardwareProfile)
 
     # Create node entry for installer
-    dbNode = Nodes(name=installer_fqdn)
+    dbNode = Node(name=installer_fqdn)
     dbNode.softwareprofile = dbSoftwareProfile
     dbNode.hardwareprofile = dbHardwareProfile
     dbNode.state = 'Installed'

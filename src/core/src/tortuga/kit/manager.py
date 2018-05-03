@@ -18,24 +18,24 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from typing import Any, List
 
-from typing import Any
+from tortuga.boot.distro import DistributionFactory
 from tortuga.config.configManager import ConfigManager
 from tortuga.db import componentDbApi
 from tortuga.db.dbManager import DbManager
 from tortuga.db.kitDbApi import KitDbApi
-from tortuga.exceptions.eulaAcceptanceRequired \
-    import EulaAcceptanceRequired
+from tortuga.exceptions.eulaAcceptanceRequired import EulaAcceptanceRequired
 from tortuga.exceptions.kitAlreadyExists import KitAlreadyExists
+from tortuga.exceptions.kitInstallError import KitInstallError
 from tortuga.exceptions.kitNotFound import KitNotFound
 from tortuga.exceptions.osNotSupported import OsNotSupported
-from tortuga.exceptions.softwareProfileComponentAlreadyExists \
-    import SoftwareProfileComponentAlreadyExists
+from tortuga.exceptions.softwareProfileComponentAlreadyExists import \
+    SoftwareProfileComponentAlreadyExists
 from tortuga.exceptions.unrecognizedKitMedia import UnrecognizedKitMedia
 from tortuga.helper import osHelper
 from tortuga.kit import utils
 from tortuga.kit.mountManager import MountManager
-from tortuga.boot.distro import DistributionFactory
 from tortuga.kit.utils import format_kit_descriptor
 from tortuga.objects.component import Component
 from tortuga.objects.kit import Kit
@@ -46,8 +46,8 @@ from tortuga.os_utility.osUtility import getOsObjectFactory, mapOsName
 from tortuga.repo import repoManager
 from tortuga.softwareprofile import softwareProfileFactory
 from tortuga.types import Singleton
-from typing import List
 from tortuga.utility.actionManager import ActionManager
+
 from .eula import BaseEulaValidator
 from .loader import load_kits
 from .registry import get_kit_installer
@@ -67,22 +67,35 @@ class KitManager(TortugaObjectManager, Singleton):
         self._component_db_api = componentDbApi.ComponentDbApi()
 
     def getKitList(self):
-        """ Get all known kits. """
+        """
+        Get all installed kits.
+
+        """
         return self._kit_db_api.getKitList()
 
     def getKit(self, name, version=None, iteration=None):
         """
-        Raises:
-            KitNotFound
-        """
+        Get a single kit by name, and optionally version and/or iteration.
 
+        :param name:      the kit name
+        :param version:   the kit version
+        :param iteration: the kit iteration
+        :return:          the kit instance
+
+        """
         return self._kit_db_api.getKit(name, version, iteration)
 
     def getKitById(self, id_):
+        """
+        Get a single kit by id.
+
+        :param id_: the kit id
+        :return:    the kit instance
+
+        """
         return self._kit_db_api.getKitById(id_)
 
-    def get_kit_url(self, name, version, iteration): \
-            # pylint: disable=no-self-use
+    def get_kit_url(self, name, version, iteration):
         kit = Kit(name, version, iteration)
         native_repo = repoManager.getRepo()
         return os.path.join(
@@ -129,7 +142,7 @@ class KitManager(TortugaObjectManager, Singleton):
         :raisesEulaAcceptanceRequired:
 
         """
-        self.getLogger().debug('Installing kit package:'.format(kit_pkg_url))
+        self.getLogger().debug('Installing kit package: {}'.format(kit_pkg_url))
 
         #
         # Download/copy and unpack kit archive.
@@ -209,7 +222,12 @@ class KitManager(TortugaObjectManager, Singleton):
         #
         # Run post install
         #
-        installer.run_action('post_install')
+        try:
+            installer.run_action('post_install')
+        except Exception as e:
+            self._uninstall_kit(kit, True)
+            raise KitInstallError(
+                'Kit installation failed during post_install: {}'.format(e))
 
         if eula:
             ActionManager().logAction(
@@ -331,10 +349,9 @@ class KitManager(TortugaObjectManager, Singleton):
 
     def _processMediaspec(self, os_media_urls: List[str]) -> List[dict]:
         """
-
-
         :param os_media_urls: List String
         :return: List Dictionary
+
         """
         media_list: List[dict] = []
 
@@ -647,8 +664,7 @@ class KitManager(TortugaObjectManager, Singleton):
             installer = get_kit_installer(kit_spec)()
 
             installer.run_action('pre_uninstall')
-            repo_dir = kit.getKitRepoDir()
-            self._uninstall_kit(kit, repo_dir, force)
+            self._uninstall_kit(kit, force)
             installer.run_action('uninstall_puppet_modules')
             installer.run_action('post_uninstall')
 
@@ -663,17 +679,18 @@ class KitManager(TortugaObjectManager, Singleton):
         osi = kit.getComponentList()[0].getOsInfoList()[0]
         repo_dir = os.path.join(kit.getName(), kit.getVersion(),
                                 osi.getArch())
-        self._uninstall_kit(kit, repo_dir, force)
+        self._uninstall_kit(kit, force)
 
-    def _uninstall_kit(self, kit, repo_dir, force):
+    def _uninstall_kit(self, kit, force):
         """
         Uninstalls the kit and it's file repos.
 
         :param kit:      the Kit instance
-        :param repo_dir: the repo directory
         :param force:    whether or not to force the deletion
 
         """
+        repo_dir = kit.getKitRepoDir()
+
         #
         # Remove the kit from the DB
         #

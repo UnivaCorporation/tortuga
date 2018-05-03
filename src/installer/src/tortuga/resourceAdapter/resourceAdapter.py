@@ -14,36 +14,49 @@
 
 # pylint: disable=logging-not-lazy,no-self-use,no-member,maybe-no-member
 
-import sys
-import socket
-import traceback
-import os.path
 import configparser
-import subprocess
 import csv
 import logging
-import gevent
-from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
-from tortuga.config.configManager import ConfigManager
-from tortuga.os_utility.osUtility import getOsObjectFactory
-from tortuga.exceptions.nicNotFound import NicNotFound
+import os.path
+import socket
+import subprocess
+import sys
+import traceback
+from typing import List, NoReturn, Optional, Union
+
+from sqlalchemy.orm.session import Session
+
 from tortuga.addhost.addHostManager import AddHostManager
+from tortuga.config.configManager import ConfigManager
 from tortuga.db.dbManager import DbManager
-from tortuga.db.resourceAdapterCredentialsDbHandler \
-    import ResourceAdapterCredentialsDbHandler
+from tortuga.db.models.hardwareProfile import HardwareProfile
+from tortuga.db.models.network import Network
+from tortuga.db.models.nic import Nic
+from tortuga.db.models.node import Node
+from tortuga.db.models.softwareProfile import SoftwareProfile
+from tortuga.db.resourceAdapterCredentialsDbHandler import \
+    ResourceAdapterCredentialsDbHandler
+from tortuga.exceptions.configurationError import ConfigurationError
+from tortuga.exceptions.nicNotFound import NicNotFound
 from tortuga.exceptions.resourceNotFound import ResourceNotFound
+from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
+from tortuga.os_utility.osUtility import getOsObjectFactory
 from tortuga.parameter.parameterApi import ParameterApi
 
+from .userDataMixin import UserDataMixin
 
-class ResourceAdapter(object): \
+
+class ResourceAdapter(UserDataMixin): \
         # pylint: disable=too-many-public-methods
-    '''
+    """
     This is the base class for all resource adapters to derive from.
     The default actions simply print a debug message to show that the
     subclass did not implement the action.
-    '''
 
-    def __init__(self, addHostSession=None):
+    """
+    settings = {}
+
+    def __init__(self, addHostSession: Optional[Union[str, None]] = None):
         if '__adaptername__' not in self.__class__.__dict__:
             raise NotImplementedError(
                 'Subclasses of ResourceAdapter must have __adaptername__'
@@ -62,9 +75,6 @@ class ResourceAdapter(object): \
         self.__nodeApi = None
         self.__osObject = None
         self.__sanApi = None
-
-        # Initialize abort flag (to "not" aborting)
-        self.__isAborted = False
 
         self._cm = ConfigManager()
 
@@ -92,132 +102,105 @@ class ResourceAdapter(object): \
         # method.
         pass
 
-    def start(self, addNodesRequest, dbSession, dbHardwareProfile,
-              dbSoftwareProfile=None): \
+    def start(self, addNodesRequest: dict, dbSession: Session,
+              dbHardwareProfile: HardwareProfile,
+              dbSoftwareProfile: Optional[Union[SoftwareProfile, None]] = None): \
             # pylint: disable=unused-argument
         self.__trace(
             addNodesRequest, dbSession, dbHardwareProfile,
             dbSoftwareProfile)
 
-    def validate_start_arguments(self, addNodesRequest, dbHardwareProfile,
-                                 dbSoftwareProfile):
+    def validate_start_arguments(self, addNodesRequest: dict,
+                                 dbHardwareProfile: HardwareProfile,
+                                 dbSoftwareProfile: SoftwareProfile):
         self.__trace(
             addNodesRequest, dbHardwareProfile, dbSoftwareProfile)
 
-    def stop(self, hardwareProfileName, deviceName):
+    def stop(self, hardwareProfileName: str, deviceName: str):
         self.__trace(hardwareProfileName, deviceName)
 
-    def updateNode(self, session, node, updateNodeRequest): \
+    def updateNode(self, session: Session, node: Node, updateNodeRequest: dict): \
             # pylint: disable=unused-argument
         self.__trace(session, node, updateNodeRequest)
 
-    def suspendActiveNode(self, nodeId):
-        '''Change the given active node to an idle node'''
+    def suspendActiveNode(self, nodeId: int):
+        """Change the given active node to an idle node"""
         self.__trace(nodeId)
 
-    def idleActiveNode(self, nodeIds):
-        '''Change the given active node to an idle node'''
+    def idleActiveNode(self, nodeIds: List[int]):
+        """Change the given active node to an idle node"""
         self.__trace(nodeIds)
 
-    def activateIdleNode(self, node, softwareProfileName,
-                         softwareProfileChanged):
-        '''Change the given idle node to an active node'''
+    def activateIdleNode(self, node: Node, softwareProfileName: str,
+                         softwareProfileChanged: bool):
+        """Change the given idle node to an active node"""
         self.__trace(node, softwareProfileName, softwareProfileChanged)
 
-    def deleteNode(self, nodeIds):
-        '''Remove the given node (active or idle) from the system'''
+    def deleteNode(self, nodeIds: List[int]):
+        """Remove the given node (active or idle) from the system"""
         self.__trace(nodeIds)
 
-    def _async_delete_nodes(self, nodes):
-        """
-        Asynchronously delete nodes; calls "ResourceAdapter._delete_node()"
-        method for each deleted nodes
-
-        :param dbNodes: list of Nodes objects
-        :return: None
-        """
-        greenlets = []
-
-        for node in nodes:
-            greenlets.append(gevent.spawn(self._delete_node, node))
-
-        # TODO: implement timeout
-        gevent.joinall(greenlets)
-
-    def _delete_node(self, node):
-        """
-        Abstract method called to delete node from
-        "ResourceAdapter._async_delete_nodes()"
-
-        :param node: Nodes object
-        """
-
     def transferNode(self, nodeIdSoftwareProfileTuples,
-                     newSoftwareProfileName):
-        '''Transfer the given idle node'''
+                     newSoftwareProfileName: str):
+        """Transfer the given idle node"""
         self.__trace(nodeIdSoftwareProfileTuples, newSoftwareProfileName)
 
-    def startupNode(self, nodeIds, remainingNodeList=None,
-                    tmpBootMethod='n'): \
+    def startupNode(self, nodeIds: List[int],
+                    remainingNodeList: Optional[Union[List[str], None]] = None,
+                    tmpBootMethod: Optional[Union[str, None]] = 'n'): \
             # pylint: disable=unused-argument
-        '''Start the given node'''
+        """Start the given node"""
         # By default raise unsupported operation
         raise UnsupportedOperation('Node does not support starting')
 
-    def shutdownNode(self, nodes, bSoftReset=False): \
+    def shutdownNode(self, nodes: List[Node],
+                     bSoftReset: Optional[bool] = False): \
             # pylint: disable=unused-argument
-        '''Shutdown the given node'''
+        """Shutdown the given node"""
         # By default raise unsupported operation
         raise UnsupportedOperation('Node does not support shutdown')
 
-    def rebootNode(self, nodes, bSoftReset=False): \
+    def rebootNode(self, nodes: List[Node],
+                   bSoftReset: Optional[bool] = False): \
             # pylint: disable=unused-argument
-        '''Reboot the given node'''
+        """Reboot the given node"""
         # By default raise unsupported operation
         raise UnsupportedOperation('Node does not support rebooting')
 
-    def checkpointNode(self, nodeId): \
+    def checkpointNode(self, nodeId: int): \
             # pylint: disable=unused-argument
-        '''Checkpoint the given node'''
+        """Checkpoint the given node"""
         # By default raise unsupported operation
         raise UnsupportedOperation('Node does not support checkpointing')
 
-    def revertNodeToCheckpoint(self, nodeId): \
+    def revertNodeToCheckpoint(self, nodeId: int): \
             # pylint: disable=unused-argument
-        '''Revert the given node to the checkpoint'''
+        """Revert the given node to the checkpoint"""
         # By default raise unsupported operation
         raise UnsupportedOperation('Node does not support checkpointing')
 
-    def migrateNode(self, nodeId, remainingNodeList, liveMigrate): \
+    def migrateNode(self, nodeId: int, remainingNodeList: List[str],
+                    liveMigrate: bool): \
             # pylint: disable=unused-argument
-        '''Migrate the given node'''
+        """Migrate the given node"""
         # By default raise unsupported operation
         raise UnsupportedOperation('Node does not support migrating')
 
-    def addVolumeToNode(self, node, volume, isDirect): \
+    def addVolumeToNode(self, node: Node, volume: str, isDirect: bool): \
             # pylint: disable=unused-argument
-        '''Add a disk to a node'''
+        """Add a disk to a node"""
         # By default raise unsupported operation
         raise UnsupportedOperation(
             'Node does not support dynamic disk addition')
 
-    def removeVolumeFromNode(self, node, volume): \
+    def removeVolumeFromNode(self, node: Node, volume: str): \
             # pylint: disable=unused-argument
-        '''Remove a disk from a node'''
+        """Remove a disk from a node"""
         # By default raise unsupported operation
         raise UnsupportedOperation(
             'Node does not support dynamic disk deletion' % (node))
 
-    def abort(self):
-        '''abort node addition'''
-        self._logger.debug('Setting abort flag')
-        self.__isAborted = True
-
-    def isAborted(self):
-        '''Returns status of abort flag'''
-        return self.__isAborted
-
-    def __trace(self, *pargs, **kargs):
+    def __trace(self, *pargs, **kargs) -> NoReturn:
         stack = traceback.extract_stack()
         funcname = stack[-2][2]
 
@@ -228,7 +211,8 @@ class ResourceAdapter(object): \
     def getLogger(self):
         return self._logger
 
-    def getResourceAdapterConfig(self, sectionName=None):
+    def getResourceAdapterConfig(self,
+                                 sectionName: Optional[Union[str, None]] = None) -> dict:
         """
         Raises:
             ResourceNotFound
@@ -254,7 +238,7 @@ class ResourceAdapter(object): \
             list(defaultResourceAdapterConfigDict.items()) +
             list(overrideConfigDict.items()))
 
-    def _loadConfigDict(self, sectionName=None):
+    def _loadConfigDict(self, sectionName: Optional[Union[str, None]] = None):
         """
         Raises:
             ResourceNotFound
@@ -263,9 +247,7 @@ class ResourceAdapter(object): \
         if sectionName is None:
             sectionName = 'default'
 
-        session = DbManager().openSession()
-
-        try:
+        with DbManager().session() as session:
             self.getLogger().debug('_loadConfigDict()')
 
             result = ResourceAdapterCredentialsDbHandler().get(
@@ -275,12 +257,10 @@ class ResourceAdapter(object): \
 
             for entry in result['configuration']:
                 configDict[entry['key']] = entry['value']
-        finally:
-            DbManager().closeSession()
 
         return configDict
 
-    def getResourceAdapterConfigProfileByNodeName(self, name):
+    def getResourceAdapterConfigProfileByNodeName(self, name: str):
         """Get resource adapter configuration for existing node"""
 
         self.getLogger().debug(
@@ -293,7 +273,7 @@ class ResourceAdapter(object): \
                 name, 'resource_adapter_configuration') else None
 
     def __getAddHostApi(self):
-        '''Get and cache the Add Host API'''
+        """Get and cache the Add Host API"""
 
         if self.__addHostApi is None:
             from tortuga.addhost.addHostServerLocal \
@@ -304,7 +284,7 @@ class ResourceAdapter(object): \
         return self.__addHostApi
 
     def __getNodeApi(self):
-        '''Get and cache the Node API'''
+        """Get and cache the Node API"""
 
         if self.__nodeApi is None:
             from tortuga.node.nodeApi import NodeApi
@@ -312,7 +292,7 @@ class ResourceAdapter(object): \
         return self.__nodeApi
 
     def __getOsObject(self):
-        '''Get and cache the OS Object Factory'''
+        """Get and cache the OS Object Factory"""
 
         if self.__osObject is None:
             from tortuga.os_utility import osUtility
@@ -320,7 +300,7 @@ class ResourceAdapter(object): \
         return self.__osObject
 
     def __getSanApi(self):
-        '''Internal: Get and cache the SAN API'''
+        """Internal: Get and cache the SAN API"""
 
         if self.__sanApi is None:
             from tortuga.san import san
@@ -333,7 +313,7 @@ class ResourceAdapter(object): \
     osObject = property(__getOsObject, None, None, None)
     sanApi = property(__getSanApi, None, None, None)
 
-    def statusMessage(self, msg):
+    def statusMessage(self, msg: str) -> NoReturn:
         if self._addHostSession:
             AddHostManager().updateStatus(
                 self._addHostSession, msg)
@@ -343,7 +323,8 @@ class ResourceAdapter(object): \
             sys.stdout.write(msg + '\n')
             sys.stdout.flush()
 
-    def getOptions(self, dbSoftwareProfile, dbHardwareProfile): \
+    def getOptions(self, dbSoftwareProfile: SoftwareProfile,
+                   dbHardwareProfile: HardwareProfile) -> dict: \
             # pylint: disable=unused-argument
         return {}
 
@@ -364,7 +345,8 @@ class ResourceAdapter(object): \
 
         return cfg
 
-    def instanceCacheSet(self, name, metadata=None):
+    def instanceCacheSet(self, name: str,
+                         metadata: Optional[Union[dict, None]] = None):
         self.getLogger().debug(
             'instanceCacheSet(node=[%s], metadata=[%s])' % (name, metadata))
 
@@ -380,7 +362,8 @@ class ResourceAdapter(object): \
 
         self.instanceCacheWrite(cfg)
 
-    def instanceCacheSetBulk(self, instance_ids, nodes=None):
+    def instanceCacheSetBulk(self, instance_ids: List[str],
+                             nodes: Optional[Union[List[Node], None]] = None):
         self.getLogger().debug(
             'instanceCacheSetBulk(instance_ids=[%s], nodes=[%s])' % (
                 ' '.join(instance_ids),
@@ -404,7 +387,7 @@ class ResourceAdapter(object): \
 
         self.instanceCacheWrite(cfg)
 
-    def instanceCacheGet(self, nodeName):
+    def instanceCacheGet(self, nodeName: str) -> dict:
         self.getLogger().debug(
             'instanceCacheGet(nodeName=[%s])' % (nodeName))
 
@@ -422,7 +405,7 @@ class ResourceAdapter(object): \
 
         return result
 
-    def instanceCacheDelete(self, name):
+    def instanceCacheDelete(self, name: str) -> NoReturn:
         # Clear instance from configuration
 
         config = self.instanceCacheRefresh()
@@ -440,7 +423,9 @@ class ResourceAdapter(object): \
 
         self.instanceCacheWrite(config)
 
-    def instanceCacheUpdate(self, name, added=None, deleted=None):
+    def instanceCacheUpdate(self, name: str,
+                            added: Optional[Union[List, None]] = None,
+                            deleted: Optional[Union[List, None]] = None) -> NoReturn:
         """
         'added' is a list of key-value tuples to be added
         'deleted' is a list of keys to be removed from the instance cache
@@ -462,7 +447,8 @@ class ResourceAdapter(object): \
 
         self.instanceCacheWrite(config)
 
-    def __findNicForProvisioningNetwork(self, nics, prov_network):
+    def __findNicForProvisioningNetwork(self, nics: List[Nic],
+                                        prov_network: Network) -> Nic:
         """
         TODO: move this elsewhere
 
@@ -479,8 +465,9 @@ class ResourceAdapter(object): \
 
         return nics[0]
 
-    def writeLocalBootConfiguration(self, node, hardwareprofile,
-                                    softwareprofile):
+    def writeLocalBootConfiguration(self, node: Node,
+                                    hardwareprofile: HardwareProfile,
+                                    softwareprofile: SoftwareProfile):
         """
         Raises:
             NicNotFound
@@ -525,13 +512,14 @@ class ResourceAdapter(object): \
         # Add a DHCP lease
         bhm.addDhcpLease(node, nic)
 
-    def removeLocalBootConfiguration(self, node):
+    def removeLocalBootConfiguration(self, node: Node) -> NoReturn:
         bhm = self.osObject.getOsBootHostManager()
 
         bhm.rmPXEFile(node)
         bhm.removeDhcpLease(node)
 
-    def _pre_add_host(self, name, hwprofilename, swprofilename, ip): \
+    def _pre_add_host(self, name: str, hwprofilename: str, swprofilename: str,
+                      ip: str) -> NoReturn: \
             # pylint: disable=unused-argument
         # Perform "pre-add-host" operation
         command = ('sudo %s/pre-add-host'
@@ -557,7 +545,7 @@ class ResourceAdapter(object): \
         p.wait()
 
     @property
-    def installer_public_hostname(self):
+    def installer_public_hostname(self) -> str:
         if self.__installer_public_hostname is None:
 
             cmd = '/opt/puppetlabs/bin/facter fqdn'
@@ -588,7 +576,7 @@ class ResourceAdapter(object): \
         return self.__installer_public_hostname
 
     @property
-    def installer_public_ipaddress(self):
+    def installer_public_ipaddress(self) -> str:
         # Get installer IP
         if self.__installer_public_ipaddress is None:
             self.getLogger().debug('Looking up installer IP using DNS')
@@ -602,18 +590,35 @@ class ResourceAdapter(object): \
         return self.__installer_public_ipaddress
 
     @property
-    def private_dns_zone(self):
+    def private_dns_zone(self) -> str:
         if self.__private_dns_zone is None:
             self.__private_dns_zone = \
                 ParameterApi().getParameter('DNSZone').getValue()
 
         return self.__private_dns_zone
 
-    def get_node_vcpus(self, name): \
+    def _get_config_file_path(self, filepath):
+        """
+        Raises:
+            ConfigurationError
+        """
+
+        if filepath.startswith('/'):
+            fn = filepath
+        else:
+            fn = os.path.join(self._cm.getKitConfigBase(), filepath)
+
+        if not os.path.exists(fn):
+            raise ConfigurationError(
+                'Configuration file [{0}] does not exist'.format(fn))
+
+        return fn
+
+    def get_node_vcpus(self, name: str) -> int: \
             # pylint: disable=unused-argument
         return 1
 
-    def get_instance_size_mapping(self, value):
+    def get_instance_size_mapping(self, value) -> int:
         """
         Helper method for matching the first field (instance size) in
         the resource adapter specific CSV file

@@ -17,8 +17,8 @@
 import cherrypy
 
 from tortuga.san.sanApi import SanApi
+from tortuga.web_service.auth.decorators import authentication_required
 from .tortugaController import TortugaController
-from .authController import require, AuthController
 
 
 class SanController(TortugaController):
@@ -29,7 +29,7 @@ class SanController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require
+    @authentication_required
     def getVolumeList(self):
         """Return list of all available volumes"""
 
@@ -48,7 +48,7 @@ class SanController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def addVolume(self, storageAdapter, size, nameFormat='*',
                   shared=False):
         """ Add volume to the SAN system"""
@@ -69,7 +69,7 @@ class SanController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def updateVolume(self, volume, shared):
         """Update volume in SAN system"""
 
@@ -88,7 +88,7 @@ class SanController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def deleteVolume(self, volume):
         """Delete Volume from SAN system"""
 

@@ -22,7 +22,6 @@ import tortuga.objects.admin
 import tortuga.objects.component
 import tortuga.objects.node
 import tortuga.objects.osInfo
-import tortuga.objects.package
 import tortuga.objects.partition
 import tortuga.objects.nic
 import tortuga.objects.hardwareProfile
@@ -39,7 +38,6 @@ class SoftwareProfile(TortugaObject): \
             self, {
                 'name': name,
                 'admins': TortugaObjectList(),
-                'packages': TortugaObjectList(),
                 'partitions': TortugaObjectList(),
                 'components': TortugaObjectList(),
                 'nodes': TortugaObjectList(),
@@ -159,14 +157,6 @@ class SoftwareProfile(TortugaObject): \
         """ Get Admins """
         return self.get('admins')
 
-    def setPackages(self, packages):
-        """ set Packages """
-        self['packages'] = packages
-
-    def getPackages(self):
-        """ Get Packages """
-        return self.get('packages')
-
     def setPartitions(self, val):
         self['partitions'] = val
 
@@ -233,9 +223,6 @@ class SoftwareProfile(TortugaObject): \
             softwareProfile.setOsInfo(
                 tortuga.objects.osInfo.OsInfo.getFromDict(osDict))
 
-        softwareProfile.setPackages(
-            tortuga.objects.package.Package.getListFromDict(_dict))
-
         softwareProfile.setPartitions(
             tortuga.objects.partition.Partition.getListFromDict(_dict))
 
@@ -269,9 +256,6 @@ class SoftwareProfile(TortugaObject): \
             softwareProfile.setOsInfo(
                 tortuga.objects.osInfo.OsInfo.getFromDbDict(
                     osDict.__dict__))
-
-        softwareProfile.setPackages(
-            tortuga.objects.package.Package.getListFromDbDict(_dict))
 
         softwareProfile.setPartitions(
             tortuga.objects.partition.Partition.getListFromDbDict(_dict))

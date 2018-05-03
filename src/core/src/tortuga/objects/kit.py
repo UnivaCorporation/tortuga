@@ -33,7 +33,7 @@ class Kit(TortugaObject): \
             'name': name,
             'version': version,
             'iteration': iteration,
-            'componentList': TortugaObjectList(),
+            'components': TortugaObjectList(),
             'sources': TortugaObjectList(),
         }, ['name', 'version', 'iteration', 'id'], Kit.ROOT_TAG)
 
@@ -168,19 +168,19 @@ class Kit(TortugaObject): \
 
     def addComponent(self, component):
         """ Add component. """
-        self['componentList'].append(component)
+        self['components'].append(component)
 
     def setComponentList(self, componentList):
-        self['componentList'] = componentList
+        self['components'] = componentList
 
     def getComponentList(self):
         """ Get component list for a given os. """
-        return self['componentList']
+        return self['components']
 
     def getComponentListByNameVersion(self, name, version):
         """ Get component list for given name and version. """
         cList = []
-        for c in self['componentList']:
+        for c in self['components']:
             if c.getName() == name and c.getVersion() == version:
                 cList.append(c)
         return cList

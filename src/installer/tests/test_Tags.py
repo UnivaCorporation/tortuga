@@ -16,7 +16,7 @@
 
 import unittest
 
-from tortuga.db.tags import Tags
+from tortuga.db.models.tag import Tag
 
 
 class TestTagsTable(unittest.TestCase):
@@ -24,7 +24,7 @@ class TestTagsTable(unittest.TestCase):
         pass
 
     def test_simple(self):
-        t = Tags('mike', 'value')
+        t = Tag('mike', 'value')
 
         assert t.name == 'mike'
         assert t.value == 'value'

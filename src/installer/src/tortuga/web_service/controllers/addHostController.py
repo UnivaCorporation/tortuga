@@ -14,19 +14,33 @@
 
 # pylint: disable=no-member
 
-import json
 import datetime
+import json
+
 import cherrypy
+from marshmallow import Schema, fields
 
 from tortuga.addhost.addHostManager import AddHostManager
+from tortuga.addhost.utility import validate_addnodes_request
+from tortuga.db.models.nodeRequest import NodeRequest
+from tortuga.db.nodeRequestsDbHandler import NodeRequestsDbHandler
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.notFound import NotFound
-from tortuga.addhost.utility import validate_addnodes_request
-from tortuga.db.nodeRequests import NodeRequests
-from ..threadManager import threadManager
+from tortuga.web_service.auth.decorators import authentication_required
 from .tortugaController import TortugaController
-from .authController import AuthController, require
-from .. import dbm
+from ..threadManager import threadManager
+
+
+class NodeRequestSchema(Schema):
+    id = fields.Integer()
+    request = fields.String()
+    timestamp = fields.DateTime()
+    last_update = fields.DateTime()
+    state = fields.String()
+    addHostSession = fields.String()
+    message = fields.String()
+    admin_id = fields.Integer()
+    action = fields.String()
 
 
 class AddHostController(TortugaController):
@@ -39,15 +53,21 @@ class AddHostController(TortugaController):
         },
         {
             'name': 'addNodes',
-            'path': '/v1/nodes',
+            'path': '/v1/nodes/',
             'action': 'addNodes',
             'method': ['POST']
+        },
+        {
+            'name': 'getAddHostRequests',
+            'path': '/v1/addhost/requests/',
+            'action': 'getAddHostRequests',
+            'method': ['GET'],
         },
     ]
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def addNodes(self):
         response = None
 
@@ -78,7 +98,7 @@ class AddHostController(TortugaController):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    @require()
+    @authentication_required()
     def getStatus(self, session, **kwargs):
         '''
         Call the addHost manager directly
@@ -106,6 +126,29 @@ class AddHostController(TortugaController):
 
         return self.formatResponse(response)
 
+    @cherrypy.tools.json_out()
+    @authentication_required()
+    def getAddHostRequests(self, **kwargs):
+        try:
+            if 'addHostSession' in kwargs:
+                add_host_request = \
+                    NodeRequestsDbHandler().get_by_addHostSession(
+                        cherrypy.request.db, kwargs['addHostSession'])
+                if not add_host_request:
+                    return self.formatResponse(response=[])
+
+                result = [add_host_request]
+            else:
+                result = NodeRequestsDbHandler().get_all(cherrypy.request.db)
+
+            response = NodeRequestSchema().dump(result, many=True).data
+        except Exception as ex:
+            self.getLogger().error('Exception retrieving add host request(s)')
+            self.handleException(ex)
+            response = self.errorResponse(str(ex))
+
+        return self.formatResponse(response)
+
 
 def enqueue_addnodes_request(session, addNodesRequest):
     validate_addnodes_request(addNodesRequest['addNodesRequest'])
@@ -127,7 +170,7 @@ def enqueue_addnodes_request(session, addNodesRequest):
 
 
 def init_node_request_record(addNodesRequest):
-    request = NodeRequests(json.dumps(addNodesRequest['addNodesRequest']))
+    request = NodeRequest(json.dumps(addNodesRequest['addNodesRequest']))
     request.timestamp = datetime.datetime.utcnow()
     request.addHostSession = AddHostManager().createNewSession()
     request.action = 'ADD'

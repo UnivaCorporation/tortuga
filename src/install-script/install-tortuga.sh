@@ -731,22 +731,8 @@ fi
 
 installpkgs $pkgs
 
-# Create Puppet modules directory, as necessary
-echo "Installing Puppet modules" | tee -a /tmp/install-tortuga.log
-
-# Install stdlib module from puppetlabs
-if ! $(/opt/puppetlabs/bin/puppet module list | grep -q puppetlabs-stdlb) || \
-        [[ $FORCE -eq 1 ]]; then
-    echo "Installing puppetlabs-stdlib Puppet module..."
-    /opt/puppetlabs/bin/puppet module install puppetlabs-stdlib
-    if [ $? -ne 0 ]; then
-        echo "Error installing Puppet module \"puppetlabs-stdlib\"" | tee -a /tmp/install-tortuga.log
-        exit 1
-    fi
-fi
-
 echo "Installing Tortuga Puppet integration module..." | tee -a /tmp/install-tortuga.log
-/opt/puppetlabs/bin/puppet module install --force univa-tortuga-*.tar.gz
+/opt/puppetlabs/bin/puppet module install univa-tortuga-*.tar.gz
 
 if [ $? -ne 0 ]; then
     echo "Installation failed... unable to proceed" | tee -a /tmp/install-tortuga.log

@@ -12,15 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import List, Type
+
+from tortuga.db import resourceAdaptersDbHandler
 from tortuga.db.dbManager import DbManager
 from tortuga.db.tortugaDbApi import TortugaDbApi
+from tortuga.exceptions.resourceAdapterAlreadyExists import \
+    ResourceAdapterAlreadyExists
+from tortuga.exceptions.resourceAdapterNotFound import ResourceAdapterNotFound
 from tortuga.exceptions.tortugaException import TortugaException
-from tortuga.db import resourceAdaptersDbHandler
 from tortuga.objects.resourceAdapter import ResourceAdapter
-from tortuga.exceptions.resourceAdapterAlreadyExists \
-    import ResourceAdapterAlreadyExists
-from tortuga.exceptions.resourceAdapterNotFound \
-    import ResourceAdapterNotFound
+from tortuga.objects.tortugaObject import TortugaObject, TortugaObjectList
+
+from .models.resourceAdapter import ResourceAdapter as ResourceAdapterModel
 
 
 class ResourceAdapterDbApi(TortugaDbApi):
@@ -31,24 +35,23 @@ class ResourceAdapterDbApi(TortugaDbApi):
             ResourceAdaptersDbHandler()
 
     def getResourceAdapter(self, name):
-        resourceAdapterObj = None
+        ra_obj = None
 
         try:
             session = DbManager().openSession()
+            db_ra = self._resourceAdaptersDbHandler.getResourceAdapter(
+                session, name)
+            self.loadRelations(db_ra, {'kit': True})
+            ra_obj = ResourceAdapter.getFromDbDict(db_ra.__dict__)
+            ra_obj.set_settings(db_ra.settings)
 
-            dbResourceAdapter = self._resourceAdaptersDbHandler.\
-                getResourceAdapter(session, name)
-
-            self.loadRelations(dbResourceAdapter, {'kit': True})
-
-            resourceAdapterObj = ResourceAdapter.getFromDbDict(
-                dbResourceAdapter.__dict__)
         except TortugaException:
             raise
+
         except Exception as ex:
             self.getLogger().exception(str(ex))
 
-        return resourceAdapterObj
+        return ra_obj
 
     def addResourceAdapter(self, name, kitId=None):
         """
@@ -119,24 +122,36 @@ class ResourceAdapterDbApi(TortugaDbApi):
         # Success!
         self.getLogger().info('Deleted resource adapter [%s]' % (name))
 
-    def getResourceAdapterList(self):
-        resourceAdapters = []
-
+    def getResourceAdapterList(self) -> List[ResourceAdapter]:
         try:
             session = DbManager().openSession()
+            db_ra_list: List[ResourceAdapterModel] = \
+                self._resourceAdaptersDbHandler.getResourceAdapterList(
+                    session)
+            ra_list: List[ResourceAdapter] = \
+                self.getTortugaObjectList(ResourceAdapter, db_ra_list)
 
-            try:
-                dbResourceAdapters = self._resourceAdaptersDbHandler.\
-                    getResourceAdapterList(session)
+            return ra_list
 
-                return self.getTortugaObjectList(
-                    ResourceAdapter, dbResourceAdapters)
-            except TortugaException as ex:
-                raise
-            except Exception as ex:
-                self.getLogger().exception('%s' % ex)
-                raise
+        except TortugaException as ex:
+            raise
+
+        except Exception as ex:
+            self.getLogger().exception('%s' % ex)
+            raise
+
         finally:
             DbManager().closeSession()
 
-        return resourceAdapters
+    def getTortugaObjectList(self,
+                             cls: Type[ResourceAdapter],
+                             db_list: List[ResourceAdapterModel]
+                             ) -> List[ResourceAdapter]:
+        item_list: List[ResourceAdapter] = []
+
+        for db_item in db_list:
+            item: ResourceAdapter = cls.getFromDbDict(db_item.__dict__)
+            item.set_settings(db_item.settings)
+            item_list.append(item)
+
+        return TortugaObjectList(item_list)
