@@ -26,10 +26,11 @@ from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.schema import NodeSchema
 from tortuga.utility.helper import str2bool
 from tortuga.web_service.auth.decorators import authentication_required
-from .common import make_options_from_query_string, parse_tag_query_string
-from .tortugaController import TortugaController
+
 from .. import app
 from ..threadManager import threadManager
+from .common import make_options_from_query_string, parse_tag_query_string
+from .tortugaController import TortugaController
 
 
 class NodeController(TortugaController):
@@ -323,13 +324,10 @@ class NodeController(TortugaController):
         Activate an idle node
         """
 
-        if int(cherrypy.request.headers['Content-Length']):
-            postdata = cherrypy.request.json
+        postdata = cherrypy.request.json
 
-            softwareProfileName = postdata['softwareProfileName'] \
-                if 'softwareProfileName' in postdata else None
-        else:
-            softwareProfileName = None
+        softwareProfileName = postdata['softwareProfileName'] \
+            if 'softwareProfileName' in postdata else None
 
         try:
             response = app.node_api.activateNode(nodeName, softwareProfileName)
