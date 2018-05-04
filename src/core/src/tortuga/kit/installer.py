@@ -579,6 +579,31 @@ class ComponentInstallerBase(ConfigurableMixin):
             )
         return component
 
+    @property
+    def puppet_class(self) -> str:
+        """
+        Returns the puppet module for this component, typically as follows:
+
+            puppet_module::component_name
+
+        :return str: the puppet class name for this component
+
+        """
+        default_module = 'tortuga_kit_{}'.format(
+            self.kit_installer.name.lower().replace('-', '_'))
+        if self.kit_installer.puppet_modules:
+            #
+            # Puppet modules are defined as:
+            #
+            #     univa-module_name
+            #
+            # So we want to split off the prefix before the hyphen to get
+            # the actual module name
+            #
+            default_module = \
+                self.kit_installer.puppet_modules[0].split('-')[-1]
+        return '{}::{}'.format(default_module, self.name.lower())
+
     def action_add_host(self, hardware_profile_name, software_profile_name,
                         nodes, *args, **kwargs):
         """
