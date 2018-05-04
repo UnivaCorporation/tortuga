@@ -132,18 +132,21 @@ class GlobalParameterDbApi(TortugaDbApi):
                 DbError
         """
 
-        session = DbManager().openSession()
+        with DbManager().session() as session:
+            try:
+                p = self._globalParametersDbHandler.getParameter(session, name)
 
-        try:
-            self._globalParametersDbHandler.deleteParameter(session, name)
+                self.getLogger().debug('Deleting parameter [%s]' % (name))
 
-            session.commit()
-        except TortugaException:
-            session.rollback()
-            raise
-        except Exception as ex:
-            session.rollback()
-            self.getLogger().exception('%s' % ex)
-            raise
-        finally:
-            DbManager().closeSession()
+                session.delete(p)
+
+                session.commit()
+
+                self.getLogger().info('Deleted parameter [%s]' % name)
+            except TortugaException:
+                session.rollback()
+                raise
+            except Exception as ex:
+                session.rollback()
+                self.getLogger().exception('%s' % ex)
+                raise
