@@ -52,7 +52,7 @@ class NetworkDbApi(TortugaDbApi):
             dbList = self._networksDbHandler.getNetworkList(session)
 
             return self.getTortugaObjectList(Network, dbList)
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
@@ -72,7 +72,7 @@ class NetworkDbApi(TortugaDbApi):
                 session, address, netmask)
 
             return Network.getFromDbDict(network.__dict__)
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
@@ -91,7 +91,7 @@ class NetworkDbApi(TortugaDbApi):
             network = self._networksDbHandler.getNetworkById(session, id_)
 
             return Network.getFromDbDict(network.__dict__)
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
@@ -119,7 +119,7 @@ class NetworkDbApi(TortugaDbApi):
             session.commit()
 
             return dbNetwork.id
-        except TortugaException as ex:
+        except TortugaException:
             session.rollback()
             raise
         except Exception as ex:
@@ -151,7 +151,7 @@ class NetworkDbApi(TortugaDbApi):
             session.commit()
 
             return newNetwork
-        except TortugaException as ex:
+        except TortugaException:
             session.rollback()
             raise
         except Exception as ex:
@@ -179,7 +179,7 @@ class NetworkDbApi(TortugaDbApi):
             self._networksDbHandler.deleteNetwork(session, id_)
 
             session.commit()
-        except TortugaException as ex:
+        except TortugaException:
             session.rollback()
             raise
         except IntegrityError as ex:
@@ -208,7 +208,7 @@ class NetworkDbApi(TortugaDbApi):
                 getNetworkListByType(session, type_)
 
             return self.getTortugaObjectList(Network, dbNetworks)
-        except TortugaException as ex:
+        except TortugaException:
             session.rollback()
             raise
         except Exception as ex:
