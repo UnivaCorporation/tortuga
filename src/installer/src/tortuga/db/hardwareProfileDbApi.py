@@ -92,7 +92,7 @@ class HardwareProfileDbApi(TortugaDbApi):
 
             return HardwareProfile.getFromDbDict(
                 dbHardwareProfile.__dict__)
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
@@ -122,7 +122,7 @@ class HardwareProfileDbApi(TortugaDbApi):
 
             return HardwareProfile.getFromDbDict(
                 dbHardwareProfile.__dict__)
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
@@ -163,7 +163,7 @@ class HardwareProfileDbApi(TortugaDbApi):
                         dbHardwareProfile.__dict__))
 
             return hardwareProfileList
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
@@ -198,7 +198,7 @@ class HardwareProfileDbApi(TortugaDbApi):
                 dbHardwareProfile, dbSoftwareProfile)
 
             session.commit()
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
@@ -248,7 +248,7 @@ class HardwareProfileDbApi(TortugaDbApi):
 
             self.getLogger().info(
                 'Added hardware profile [%s]' % (dbHardwareProfile.name))
-        except TortugaException as ex:
+        except TortugaException:
             _session.rollback()
             raise
         except Exception as ex:
@@ -291,7 +291,7 @@ class HardwareProfileDbApi(TortugaDbApi):
             session.delete(hwProfile)
 
             session.commit()
-        except TortugaException as ex:
+        except TortugaException:
             session.rollback()
             raise
         except Exception as ex:
@@ -353,7 +353,7 @@ class HardwareProfileDbApi(TortugaDbApi):
 
         try:
             return self._nodesDbHandler.getNode(session, name)
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
@@ -378,7 +378,7 @@ class HardwareProfileDbApi(TortugaDbApi):
             self._nodesDbHandler.deleteNode(session, name)
 
             session.commit()
-        except TortugaException as ex:
+        except TortugaException:
             session.rollback()
             raise
         except Exception as ex:
@@ -413,7 +413,7 @@ class HardwareProfileDbApi(TortugaDbApi):
             dbHardwareProfile.admins.append(dbAdmin)
 
             session.commit()
-        except TortugaException as ex:
+        except TortugaException:
             session.rollback()
             raise
         except Exception as ex:
@@ -447,7 +447,7 @@ class HardwareProfileDbApi(TortugaDbApi):
             dbHardwareProfile.admins.remove(dbAdmin)
 
             session.commit()
-        except TortugaException as ex:
+        except TortugaException:
             session.rollback()
             raise
         except Exception as ex:
@@ -471,7 +471,7 @@ class HardwareProfileDbApi(TortugaDbApi):
                 session, hardwareProfileObject, dbHardwareProfile)
 
             session.commit()
-        except TortugaException as ex:
+        except TortugaException:
             session.rollback()
             raise
         except Exception as ex:
@@ -668,7 +668,7 @@ class HardwareProfileDbApi(TortugaDbApi):
 
             return self.getTortugaObjectList(
                 Node, dbHardwareProfile.hypervisor.nodes)
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
@@ -693,7 +693,7 @@ class HardwareProfileDbApi(TortugaDbApi):
             self.getLogger().debug(
                 'setProvisioningNic(): entry already exists for'
                 ' hwProfile=%s, nicId=%d' % (hardwareProfileName, nicId))
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
@@ -723,7 +723,7 @@ class HardwareProfileDbApi(TortugaDbApi):
                     ' netmask [%s]' % (network, netmask))
 
             return tortuga.objects.nic.Nic.getFromDbDict(nics[0].__dict__)
-        except TortugaException as ex:
+        except TortugaException:
             self.getLogger().exception('%s' % ex)
             raise
         finally:
