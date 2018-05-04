@@ -3,24 +3,26 @@ python:
   - '3.6'
 services:
   - docker
-env:
-  - TORTUGA_BUILD_DOCKER="true"
 before_install:
-  - docker pull puppet/puppet-agent
+  - docker pull univa/tortuga-builder
 install:
-  - pip install tox
-  - pip install -r requirements.txt
-  - paver build
+  - docker run -it --rm -v `pwd`:/tortuga univa/tortuga-builder
 script:
-  - tox -c src/core/tox.ini
-  - tox -c src/installer/tox.ini
+  - docker run -it --rm -v `pwd`:/tortuga univa/tortuga-builder tox -c src/core/tox.ini
+  - docker run -it --rm -v `pwd`:/tortuga univa/tortuga-builder tox -c src/installer/tox.ini
+  - docker build -t univa/tortuga-build-kit:$TRAVIS_BUILD_NUMBER -f docker/Dockerfile.build-kit .
 deploy:
-  provider: releases
-  api_key:
-    secure: Ucz+HFtz24ZcAh1cjhxRYF48QOs+XcoNfjHmTfSCNCnPl5AL8A4W7XqYu6UACiiId6LbzR3rvR3/gGrQAlWe0sMR1BNtJoXslNKPvXl0SpOJPYsGYhszQ3l8q3FmLnL1Ttwww1H/iodjY9mtgK4AUwXkDZnRgpKSvvEZ2IQ2vXbuK/DSWngOriNVOWUjQMGhPohZhCGeN5hmyVaYIwMJXyhEpg2HdF6E0bkhkHrMi8e22siKIfwU1dnwZ0eKTjvTI2lNEvIV2iTR7Pg5c4B/6inN1FrsoGjHJfttdHiHZht/Wuis8u97rALallW9VOr9G4IN7a1lRNyKP7I4HnJZhbRObPZtuwbIrgf+EOyhu4l2BJQzpGJ31+GiUlH+w4g1zqEbIIF4jiFkVqkyqm1xPErEcpScO5WkWdMj4VRrU7THHlzG41QFgEj+un+Q+FHHc8UIWaA7+Dh6zdu1e1YZHhKYuuDmFZGy7PKVUUgQTHdHiCeMY7Kq2ejDzh93INmkdSKOpYdt6Gw7PJHJ6ohtcuJtjyPIdRW9weHL3oxxZJI7lIWCsppX8fWmu8yQfXD2QJQJsR1vmXjQYPXwJeUC72kIMFC9Rj+UihdHHX7OoE0A24mZnORJcbuJOTvbzqdWpaJVjt5hRwsZkqeyBnj1nKsiz2MsGuS9X6DW31zUAHc=
-  file_glob: true
-  file: "dist/tortuga*.tar.bz2"
-  skip_cleanup: true
-  on:
-    all_branches: true
-    tags: true
+  - provider: script
+    skip_cleanup: true
+    script: bash scripts/docker_push.sh
+    on:
+      all_branches: true
+  - provider: releases
+    api_key:
+      secure: Ucz+HFtz24ZcAh1cjhxRYF48QOs+XcoNfjHmTfSCNCnPl5AL8A4W7XqYu6UACiiId6LbzR3rvR3/gGrQAlWe0sMR1BNtJoXslNKPvXl0SpOJPYsGYhszQ3l8q3FmLnL1Ttwww1H/iodjY9mtgK4AUwXkDZnRgpKSvvEZ2IQ2vXbuK/DSWngOriNVOWUjQMGhPohZhCGeN5hmyVaYIwMJXyhEpg2HdF6E0bkhkHrMi8e22siKIfwU1dnwZ0eKTjvTI2lNEvIV2iTR7Pg5c4B/6inN1FrsoGjHJfttdHiHZht/Wuis8u97rALallW9VOr9G4IN7a1lRNyKP7I4HnJZhbRObPZtuwbIrgf+EOyhu4l2BJQzpGJ31+GiUlH+w4g1zqEbIIF4jiFkVqkyqm1xPErEcpScO5WkWdMj4VRrU7THHlzG41QFgEj+un+Q+FHHc8UIWaA7+Dh6zdu1e1YZHhKYuuDmFZGy7PKVUUgQTHdHiCeMY7Kq2ejDzh93INmkdSKOpYdt6Gw7PJHJ6ohtcuJtjyPIdRW9weHL3oxxZJI7lIWCsppX8fWmu8yQfXD2QJQJsR1vmXjQYPXwJeUC72kIMFC9Rj+UihdHHX7OoE0A24mZnORJcbuJOTvbzqdWpaJVjt5hRwsZkqeyBnj1nKsiz2MsGuS9X6DW31zUAHc=
+    file_glob: true
+    file: "dist/tortuga*.tar.bz2"
+    skip_cleanup: true
+    on:
+      all_branches: true
+      tags: true
