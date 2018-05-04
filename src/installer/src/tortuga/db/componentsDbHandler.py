@@ -135,16 +135,12 @@ class ComponentsDbHandler(TortugaDbObjectHandler):
         Get list of components from the db.
         """
 
-        self.getLogger().debug('Retrieving component list')
-
         return session.query(Component).all()
 
     def getEnabledComponentList(self, session):
         """
         Get list of components from the db that are enabled.
         """
-
-        self.getLogger().debug('Retrieving enabled component list')
 
         return session.query(
             Component).filter(Component.softwareprofiles.any()).all()

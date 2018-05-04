@@ -164,6 +164,8 @@ class ComponentDbApi(TortugaDbApi):
                     session, softwareProfile).components
 
             # List all components
+            self.getLogger().debug('Retrieving component list')
+
             dbComps = self._componentsDbHandler.getComponentList(session)
 
             return self.getTortugaObjectList(Component, dbComps)

@@ -343,21 +343,19 @@ class SoftwareProfileDbApi(TortugaDbApi):
                 DbError
         """
 
-        session = DbManager().openSession()
+        self.getLogger().debug('Retrieving enabled component list')
 
-        try:
-            handler = ComponentsDbHandler()
+        with DbManager().session() as session:
+            try:
+                dbComponents = \
+                    ComponentsDbHandler().getEnabledComponentList(session)
 
-            dbComponents = handler.getEnabledComponentList(session)
-
-            return self.getTortugaObjectList(Component, dbComponents)
-        except TortugaException:
-            raise
-        except Exception as ex:
-            self.getLogger().exception('%s' % ex)
-            raise
-        finally:
-            DbManager().closeSession()
+                return self.getTortugaObjectList(Component, dbComponents)
+            except TortugaException:
+                raise
+            except Exception as ex:
+                self.getLogger().exception('%s' % ex)
+                raise
 
     def getEnabledComponentList(self, name):
         """
