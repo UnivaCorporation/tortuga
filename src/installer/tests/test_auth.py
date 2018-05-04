@@ -6,7 +6,7 @@ from tortuga.auth.methods import AuthenticationMethod, MultiAuthentionMethod, \
 from tortuga.exceptions.authenticationFailed import AuthenticationFailed
 
 
-class TestAuthenticationMethod(AuthenticationMethod):
+class _TestAuthenticationMethod(AuthenticationMethod):
     """
     Test authentication method base class.
 
@@ -23,7 +23,7 @@ class TestAuthenticationMethod(AuthenticationMethod):
         self.on_authentication_failed_called = True
 
 
-class SuccessAuthenticationMethod(TestAuthenticationMethod):
+class SuccessAuthenticationMethod(_TestAuthenticationMethod):
     """
     An authentication method that always succeeds.
 
@@ -36,7 +36,7 @@ class SuccessAuthenticationMethod(TestAuthenticationMethod):
         return username
 
 
-class FailedAuthenticationMethod(TestAuthenticationMethod):
+class FailedAuthenticationMethod(_TestAuthenticationMethod):
     """
     An authentication method that always fails.
 
