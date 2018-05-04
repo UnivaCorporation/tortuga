@@ -22,7 +22,6 @@ from tortuga.db.adminsDbHandler import AdminsDbHandler
 from tortuga.db.componentsDbHandler import ComponentsDbHandler
 from tortuga.db.dbManager import DbManager
 from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
-from tortuga.db.nodesDbHandler import NodesDbHandler
 from tortuga.db.operatingSystemsDbHandler import OperatingSystemsDbHandler
 from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
 from tortuga.db.tortugaDbApi import TortugaDbApi
@@ -54,7 +53,6 @@ class SoftwareProfileDbApi(TortugaDbApi):
         TortugaDbApi.__init__(self)
 
         self._softwareProfilesDbHandler = SoftwareProfilesDbHandler()
-        self._nodesDbHandler = NodesDbHandler()
         self._globalParametersDbHandler = GlobalParametersDbHandler()
         self._adminsDbHandler = AdminsDbHandler()
         self._osDbHandler = OperatingSystemsDbHandler()
@@ -335,29 +333,6 @@ class SoftwareProfileDbApi(TortugaDbApi):
         finally:
             DbManager().closeSession()
 
-    def getNode(self, name):
-        """
-        Get node from the db.
-
-            Returns:
-                node
-            Throws:
-                NodeNotFound
-                DbError
-        """
-
-        session = DbManager().openSession()
-
-        try:
-            return self._nodesDbHandler.getNode(session, name)
-        except TortugaException:
-            raise
-        except Exception as ex:
-            self.getLogger().exception('%s' % ex)
-            raise
-        finally:
-            DbManager().closeSession()
-
     def getAllEnabledComponentList(self):
         """
         Get a list of all enabled components in the system
@@ -464,32 +439,6 @@ class SoftwareProfileDbApi(TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
-            raise
-        finally:
-            DbManager().closeSession()
-
-    def deleteNode(self, name):
-        """
-        Delete node from the db.
-
-            Returns:
-                None
-            Throws:
-                NodeNotFound
-                DbError
-        """
-
-        session = DbManager().openSession()
-
-        try:
-            self._nodesDbHandler.deleteNode(session, name)
-            session.commit()
-        except TortugaException:
-            session.rollback()
-            raise
-        except Exception as ex:
-            session.rollback()
             self.getLogger().exception('%s' % ex)
             raise
         finally:
