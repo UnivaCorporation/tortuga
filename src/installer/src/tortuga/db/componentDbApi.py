@@ -13,12 +13,12 @@
 # limitations under the License.
 
 from typing import Optional, Union
-from tortuga.db.tortugaDbApi import TortugaDbApi
-from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
-from tortuga.db.componentsDbHandler import ComponentsDbHandler
 
-from tortuga.exceptions.tortugaException import TortugaException
+from tortuga.db.componentsDbHandler import ComponentsDbHandler
 from tortuga.db.dbManager import DbManager
+from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
+from tortuga.db.tortugaDbApi import TortugaDbApi
+from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.objects.component import Component
 from tortuga.objects.osInfo import OsInfo
 
