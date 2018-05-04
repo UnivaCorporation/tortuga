@@ -14,14 +14,18 @@
 
 # pylint: disable=not-callable,multiple-statements,no-member,no-self-use
 
+from typing import Optional, Union
+
 from sqlalchemy import and_
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.orm.session import Session
 
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
 from tortuga.exceptions.deleteNetworkFailed import DeleteNetworkFailed
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.networkAlreadyExists import NetworkAlreadyExists
 from tortuga.exceptions.networkNotFound import NetworkNotFound
+from tortuga.objects.network import Network as NetworkObj
 
 from .models.network import Network
 
@@ -31,9 +35,12 @@ class NetworksDbHandler(TortugaDbObjectHandler):
     This class handles networks table.
     """
 
-    def getNetwork(self, session, address, netmask):
+    def getNetwork(self, session: Session, address: str, netmask: str):
         """
         Return network.
+
+        Raises:
+            NetworkNotFound
         """
 
         self.getLogger().debug(
@@ -47,9 +54,12 @@ class NetworksDbHandler(TortugaDbObjectHandler):
             raise NetworkNotFound(
                 'Network [%s/%s] not found.' % (address, netmask))
 
-    def getNetworkById(self, session, _id):
+    def getNetworkById(self, session: Session, _id: int):
         """
         Return network.
+
+        Raises:
+            NetworkNotFound
         """
 
         if not _id:
@@ -64,27 +74,31 @@ class NetworksDbHandler(TortugaDbObjectHandler):
 
         return dbNetwork
 
-    def getNetworkList(self, session):
+    def getNetworkList(self, session: Session,
+                       network_type: Optional[Union[str, None]] = None):
         """
         Get list of networks from the db.
         """
+
+        if network_type:
+            return session.query(Network).filter(
+                Network.type == network_type).all()
 
         self.getLogger().debug('getNetworkList()')
 
         return session.query(Network).all()
 
-    def getNetworkListByType(self, session, network_type):
+    def getNetworkListByType(self, session: Session, network_type: str):
         """
         Get all networks that are of type type.
         """
 
-        self.getLogger().\
-            debug('getNetworkListByType(type=%s)' % (network_type))
+        self.getLogger().debug(
+            'getNetworkListByType(type=%s)' % (network_type))
 
-        return session.query(
-            Network).filter(Network.type == network_type).all()
+        return self.getNetworkList(session, network_type=network_type)
 
-    def addNetwork(self, session, network):
+    def addNetwork(self, session: Session, network: NetworkObj):
         """
         Insert network into the db.
 
@@ -112,7 +126,7 @@ class NetworksDbHandler(TortugaDbObjectHandler):
 
         return dbNetwork
 
-    def updateNetwork(self, session, network):
+    def updateNetwork(self, session: Session, network: NetworkObj):
         """
         Update network in DB.
         """
@@ -131,7 +145,8 @@ class NetworksDbHandler(TortugaDbObjectHandler):
 
         return dbNetwork
 
-    def __populateNetwork(self, network, dbNetwork=None):
+    def __populateNetwork(self, network: NetworkObj,
+                          dbNetwork: Optional[Union[Network, None]] = None):
         if not dbNetwork:
             dbNetwork = Network()
 
@@ -148,7 +163,7 @@ class NetworksDbHandler(TortugaDbObjectHandler):
 
         return dbNetwork
 
-    def deleteNetwork(self, session, _id):
+    def deleteNetwork(self, session: Session, _id: int):
         """
         Delete network from the db.
 
