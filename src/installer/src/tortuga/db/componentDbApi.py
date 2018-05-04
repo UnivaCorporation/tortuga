@@ -53,7 +53,7 @@ class ComponentDbApi(TortugaDbApi):
                 self.loadRelations(dbComponent, optionDict)
 
                 return Component.getFromDbDict(dbComponent.__dict__)
-            except TortugaException as ex:
+            except TortugaException:
                 raise
             except Exception as ex:
                 self.getLogger().exception('%s' % ex)
@@ -85,7 +85,7 @@ class ComponentDbApi(TortugaDbApi):
             })
 
             return Component.getFromDbDict(dbComponent.__dict__)
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
@@ -113,7 +113,7 @@ class ComponentDbApi(TortugaDbApi):
                 session, componentId, softwareProfileId)
 
             session.commit()
-        except TortugaException as ex:
+        except TortugaException:
             session.rollback()
             raise
         except Exception as ex:
@@ -145,7 +145,7 @@ class ComponentDbApi(TortugaDbApi):
                     session, componentId, softwareProfileId)
 
             session.commit()
-        except TortugaException as ex:
+        except TortugaException:
             session.rollback()
             raise
         except Exception as ex:

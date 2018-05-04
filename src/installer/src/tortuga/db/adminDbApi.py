@@ -12,13 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tortuga.db.tortugaDbApi import TortugaDbApi
 from tortuga.db.adminsDbHandler import AdminsDbHandler
-
-from tortuga.exceptions.tortugaException import TortugaException
-from tortuga.objects.admin import Admin
 from tortuga.db.dbManager import DbManager
+from tortuga.db.tortugaDbApi import TortugaDbApi
 from tortuga.exceptions.adminNotFound import AdminNotFound
+from tortuga.objects.admin import Admin
 
 
 class AdminDbApi(TortugaDbApi):
@@ -107,10 +105,6 @@ class AdminDbApi(TortugaDbApi):
                 session, name, password, realname, description)
 
             session.commit()
-        except TortugaException:
-            session.rollback()
-
-            raise
         except Exception:
             session.rollback()
 
@@ -135,10 +129,6 @@ class AdminDbApi(TortugaDbApi):
             self._adminsDbHandler.deleteAdmin(session, name)
 
             session.commit()
-        except TortugaException:
-            session.rollback()
-
-            raise
         except Exception:
             session.rollback()
 
@@ -188,10 +178,6 @@ class AdminDbApi(TortugaDbApi):
             self._adminsDbHandler.updateAdmin(session, dbAdmin)
 
             session.commit()
-        except TortugaException:
-            session.rollback()
-
-            raise
         except Exception:
             session.rollback()
 

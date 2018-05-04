@@ -92,7 +92,7 @@ class GlobalParameterDbApi(TortugaDbApi):
                 session, parameter)
 
             session.commit()
-        except TortugaException as ex:
+        except TortugaException:
             session.rollback()
             raise
         except Exception as ex:
@@ -138,7 +138,7 @@ class GlobalParameterDbApi(TortugaDbApi):
             self._globalParametersDbHandler.deleteParameter(session, name)
 
             session.commit()
-        except TortugaException as ex:
+        except TortugaException:
             session.rollback()
             raise
         except Exception as ex:

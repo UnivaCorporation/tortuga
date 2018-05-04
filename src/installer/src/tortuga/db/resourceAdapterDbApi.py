@@ -133,7 +133,7 @@ class ResourceAdapterDbApi(TortugaDbApi):
 
             return ra_list
 
-        except TortugaException as ex:
+        except TortugaException:
             raise
 
         except Exception as ex:
