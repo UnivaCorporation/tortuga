@@ -159,8 +159,8 @@ class KitsDbHandler(TortugaDbObjectHandler):
         except NoResultFound:
             # Unable to find matching component, add a new one
             dbComponent = Component(name=c.getName(),
-                                     version=c.getVersion(),
-                                     description=c.getDescription())
+                                    version=c.getVersion(),
+                                    description=c.getDescription())
 
             dbComponent.kit = dbKit
 
@@ -214,11 +214,11 @@ class KitsDbHandler(TortugaDbObjectHandler):
         self.getLogger().debug('Installing kit [%s]' % (kit))
 
         dbKit = Kit(name=kit.getName(),
-                     version=kit.getVersion(),
-                     iteration=kit.getIteration(),
-                     description=kit.getDescription(),
-                     isOs=kit.getIsOs(),
-                     isRemovable=kit.getIsRemovable())
+                    version=kit.getVersion(),
+                    iteration=kit.getIteration(),
+                    description=kit.getDescription(),
+                    isOs=kit.getIsOs(),
+                    isRemovable=kit.getIsRemovable())
 
         # Add components.
         for c in kit.getComponentList():
