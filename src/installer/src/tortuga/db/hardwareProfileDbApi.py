@@ -338,56 +338,6 @@ class HardwareProfileDbApi(TortugaDbApi):
         finally:
             DbManager().closeSession()
 
-    def getNode(self, name):
-        """
-        Get node from the db.
-
-            Returns:
-                node
-            Throws:
-                NodeNotFound
-                DbError
-        """
-
-        session = DbManager().openSession()
-
-        try:
-            return self._nodesDbHandler.getNode(session, name)
-        except TortugaException:
-            raise
-        except Exception as ex:
-            self.getLogger().exception('%s' % ex)
-            raise
-        finally:
-            DbManager().closeSession()
-
-    def deleteNode(self, name):
-        """
-        Delete node from the db.
-
-            Returns:
-                None
-            Throws:
-                NodeNotFound
-                DbError
-        """
-
-        session = DbManager().openSession()
-
-        try:
-            self._nodesDbHandler.deleteNode(session, name)
-
-            session.commit()
-        except TortugaException:
-            session.rollback()
-            raise
-        except Exception as ex:
-            session.rollback()
-            self.getLogger().exception('%s' % ex)
-            raise
-        finally:
-            DbManager().closeSession()
-
     def addAdmin(self, hardwareProfileName, adminUsername):
         """
         Add an admin to this hardware profile
