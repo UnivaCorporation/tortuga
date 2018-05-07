@@ -137,6 +137,12 @@ class NodeController(TortugaController):
             'action': 'updateNodeRequest',
             'method': ['PUT'],
         },
+        {
+            'name': 'getNodeByIpRequest',
+            'path': '/v1/identify-node',
+            'action': 'getNodeByIpRequest',
+            'method': ['GET']
+        },
     ]
 
     @cherrypy.tools.json_out()
@@ -208,6 +214,31 @@ class NodeController(TortugaController):
             response = self.notFoundErrorResponse(str(ex), code)
         except Exception as ex:
             self.getLogger().exception('node WS API getNodeById() failed')
+            self.handleException(ex)
+            response = self.errorResponse(str(ex))
+
+        return self.formatResponse(response)
+
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.json_in()
+    @authentication_required()
+    def getNodeByIpRequest(self):
+        ip = cherrypy.request.remote.ip
+
+        try:
+            if ip == '127.0.0.1' or ip == '::1':
+                node = app.node_api.getInstallerNode()
+            else:
+                node = app.node_api.getNodeByIp(ip)
+
+            response = {'node': node.getCleanDict()}
+        except NodeNotFound as ex:
+            self.handleException(ex)
+            code = self.getTortugaStatusCode(ex)
+            response = self.notFoundErrorResponse(str(ex), code)
+        except Exception as ex:
+            self.getLogger().exception(
+                'node WS API gRequest() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
