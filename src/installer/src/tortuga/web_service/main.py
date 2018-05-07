@@ -77,6 +77,7 @@ def prepare_server():
     config = {
         '/': {
             'tools.db.on': True,
+            'response.headers.server': 'Tortuga web service',
         },
         '/v1': {
             'request.dispatch': adminRouteMapper.setupRoutes()
