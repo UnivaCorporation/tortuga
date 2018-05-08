@@ -13,12 +13,12 @@
 # limitations under the License.
 
 from typing import Optional, Union
-from tortuga.db.tortugaDbApi import TortugaDbApi
-from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
-from tortuga.db.componentsDbHandler import ComponentsDbHandler
 
-from tortuga.exceptions.tortugaException import TortugaException
+from tortuga.db.componentsDbHandler import ComponentsDbHandler
 from tortuga.db.dbManager import DbManager
+from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
+from tortuga.db.tortugaDbApi import TortugaDbApi
+from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.objects.component import Component
 from tortuga.objects.osInfo import OsInfo
 
@@ -53,7 +53,7 @@ class ComponentDbApi(TortugaDbApi):
                 self.loadRelations(dbComponent, optionDict)
 
                 return Component.getFromDbDict(dbComponent.__dict__)
-            except TortugaException as ex:
+            except TortugaException:
                 raise
             except Exception as ex:
                 self.getLogger().exception('%s' % ex)
@@ -85,7 +85,7 @@ class ComponentDbApi(TortugaDbApi):
             })
 
             return Component.getFromDbDict(dbComponent.__dict__)
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
@@ -113,7 +113,7 @@ class ComponentDbApi(TortugaDbApi):
                 session, componentId, softwareProfileId)
 
             session.commit()
-        except TortugaException as ex:
+        except TortugaException:
             session.rollback()
             raise
         except Exception as ex:
@@ -145,7 +145,7 @@ class ComponentDbApi(TortugaDbApi):
                     session, componentId, softwareProfileId)
 
             session.commit()
-        except TortugaException as ex:
+        except TortugaException:
             session.rollback()
             raise
         except Exception as ex:
@@ -164,6 +164,8 @@ class ComponentDbApi(TortugaDbApi):
                     session, softwareProfile).components
 
             # List all components
+            self.getLogger().debug('Retrieving component list')
+
             dbComps = self._componentsDbHandler.getComponentList(session)
 
             return self.getTortugaObjectList(Component, dbComps)

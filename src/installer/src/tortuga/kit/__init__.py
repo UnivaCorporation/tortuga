@@ -12,11 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tortuga.db.kitDbApi import KitDbApi
-from tortuga.objects.tortugaObject import TortugaObjectList
-
-
-def test_getKitList():
-    result = KitDbApi().getKitList()
-
-    assert isinstance(result, TortugaObjectList)
+__import__('pkg_resources').declare_namespace(__name__)

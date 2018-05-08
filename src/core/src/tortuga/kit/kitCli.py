@@ -16,7 +16,7 @@
 
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.exceptions.componentNotFound import ComponentNotFound
-from tortuga.kit import kitApiFactory
+from tortuga.wsapi.kitWsApi import KitWsApi
 
 
 class KitCli(TortugaCli):
@@ -60,7 +60,9 @@ class KitCli(TortugaCli):
             ComponentNotFound
         """
 
-        kitApi = kitApiFactory.getKitApi()
+        kitApi = KitWsApi(username=self.getUsername(),
+                          password=self.getPassword(),
+                          baseurl=self.getUrl())
 
         k = kitApi.getKit(kitName, kitVersion, kitIteration)
 

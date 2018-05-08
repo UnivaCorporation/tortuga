@@ -12,17 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=not-callable,multiple-statements,no-self-use,no-name-in-module
-# pylint: disable=no-member,maybe-no-member
+from typing import Optional, Union
 
 from sqlalchemy import and_
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.orm.session import Session
 
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
-from tortuga.exceptions.osAlreadyExists import OsAlreadyExists
 from tortuga.exceptions.osNotFound import OsNotFound
 from tortuga.helper import osHelper
 from tortuga.objects.osFamilyInfo import OsFamilyInfo
+from tortuga.objects.osInfo import OsInfo
 
 from .models.operatingSystem import OperatingSystem
 from .models.operatingSystemFamily import OperatingSystemFamily
@@ -33,9 +33,15 @@ class OperatingSystemsDbHandler(TortugaDbObjectHandler):
     This class handles OS table.
     """
 
-    def getOsInfo(self, session, name, vers=None, arch=None):
+    def getOsInfo(self, session: Session, name: str,
+                  vers: Optional[Union[str, None]] = None,
+                  arch: Optional[Union[str, None]] = None) -> OperatingSystem: \
+            # pylint: disable=no-self-use
         """
         Return osInfo for specified name/version/arch
+
+        Raises:
+            OsNotFound
         """
 
         if name and vers and arch:
@@ -55,36 +61,16 @@ class OperatingSystemsDbHandler(TortugaDbObjectHandler):
                 'Operating system [%s-%s-%s] not found.' % (
                     name, vers, arch))
 
-    def getOsId(self, session, name, version, arch):
+    def getOsId(self, session: Session, name: str, version: str,
+                arch: str) -> int:
         """
         Return id for the specified operating system.
         """
         return self.getOsInfo(session, name, version, arch).id
 
-    def addOs(self, session, osInfo):
-        """
-        Insert operating system into the db.
-        """
-
-        try:
-            self.getOsId(
-                session, osInfo.getName(), osInfo.getVersion(),
-                osInfo.getArch())
-
-            raise OsAlreadyExists('OS %s already exists' % (osInfo))
-        except OsNotFound:
-            # OK.
-            pass
-
-        dbOs = OperatingSystem(
-            name=osInfo.getName(), version=osInfo.getVersion(),
-            arch=osInfo.getArch())
-
-        session.add(dbOs)
-
-        return dbOs
-
-    def _getOsFamily(self, session, osFamilyInfo):
+    def _getOsFamily(self, session: Session,
+                     osFamilyInfo: OsFamilyInfo) -> OperatingSystemFamily: \
+            # pylint: disable=no-self-use
         if osFamilyInfo.getName() and osFamilyInfo.getVersion() and \
                 osFamilyInfo.getArch():
             osFamilyFilter = and_(
@@ -115,12 +101,14 @@ class OperatingSystemsDbHandler(TortugaDbObjectHandler):
 
         return None
 
-    def __addOsFamilyRoot(self, session):
+    def __addOsFamilyRoot(self, session: Session) -> OperatingSystemFamily: \
+            # pylint: disable=no-self-use
         dbOsFamily = OperatingSystemFamily(name='root')
         session.add(dbOsFamily)
         return dbOsFamily
 
-    def addOsFamilyIfNotFound(self, session, osFamilyInfo):
+    def addOsFamilyIfNotFound(self, session: Session,
+                              osFamilyInfo: OsFamilyInfo) -> OperatingSystemFamily:
         familyName = osFamilyInfo.getName()
         familyVers = osFamilyInfo.getVersion()
         familyArch = osFamilyInfo.getArch()
@@ -170,7 +158,7 @@ class OperatingSystemsDbHandler(TortugaDbObjectHandler):
 
         return dbOsFamily
 
-    def addOsIfNotFound(self, session, osInfo):
+    def addOsIfNotFound(self, session: Session, osInfo: OsInfo):
         """
         Insert operating system into the db if it is not found.
         """
