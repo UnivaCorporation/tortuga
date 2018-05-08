@@ -170,6 +170,7 @@ setup(
             'uc-tag=tortuga.scripts.uc_tag:main',
             'ucparam=tortuga.scripts.ucparam:main',
             'update-hardware-profile=tortuga.scripts.update_hardware_profile:main',
+            'update-network=tortuga.scripts.update_network:main',
             'update-node-status=tortuga.scripts.update_node_status:main',
             'update-software-profile=tortuga.scripts.update_software_profile:main',
             'update-admin=tortuga.scripts.update_admin:main',
