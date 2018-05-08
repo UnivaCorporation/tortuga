@@ -23,7 +23,6 @@ class tortuga_kit_base::core {
   contain tortuga::packages
   contain tortuga::compute
   contain tortuga_kit_base::core::cfmsecret
-  contain tortuga_kit_base::core::ntpd
   contain tortuga_kit_base::core::ssh_server
   contain tortuga_kit_base::core::links
   contain tortuga_kit_base::common::nfs
