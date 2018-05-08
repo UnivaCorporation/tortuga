@@ -31,9 +31,9 @@ from tortuga.web_service.controllers.tortugaController import TortugaController
 from tortuga.web_service.threadManagerPlugin import ThreadManagerPlugin
 from tortuga.web_service.workQueuePlugin import WorkQueuePlugin
 
-from .auth.authenticator import CherryPyAuthenticator
-from .auth import methods as auth_methods
 from . import app, dbm
+from .auth import methods as auth_methods
+from .auth.authenticator import CherryPyAuthenticator
 
 
 # read logging configuration
@@ -63,6 +63,7 @@ if not log_conf_file.exists():
 
     # add ch to logger
     root_logger.addHandler(ch)
+
 
 logger = logging.getLogger('tortuga.web_service')
 
@@ -147,7 +148,8 @@ def error_page_400(status, message, traceback, version): \
     return json.dumps(TortugaController().errorResponse(message))
 
 
-def error_page_404(status, message, traceback, version):
+def error_page_404(status, message, traceback, version): \
+        # pylint: disable=unused-argument
     cherrypy.response.headers['Content-Type'] = 'application/json'
     return json.dumps(
         TortugaController().errorResponse(message, http_status=404))
@@ -214,30 +216,30 @@ def main():
     wsPort = app.cm.getAdminPort()
 
     p.add_argument('-d', action="store_true",
-                 dest='daemonize', help="run the server as a daemon")
+                   dest='daemonize', help="run the server as a daemon")
 
     p.add_argument('--debug', action="store_true",
-                 default=False, help="Enable debug mode")
+                   default=False, help="Enable debug mode")
 
     p.add_argument('--pidfile',
-                 dest='pidfile', default='/var/run/tortugawsd.pid',
-                 help="store the process id in the given file")
+                   dest='pidfile', default='/var/run/tortugawsd.pid',
+                   help="store the process id in the given file")
 
     p.add_argument('-c', '--ssl-cert', default=None,
-                 dest="sslCert",
-                 help=("Path to the SSL certificate to use. "
-                       "--ssl-key is also required for SSL operation."))
+                   dest="sslCert",
+                   help=("Path to the SSL certificate to use. "
+                         "--ssl-key is also required for SSL operation."))
 
     p.add_argument('-k', '--ssl-key', default=None,
-                 dest="sslKey",
-                 help=("Path to the SSL key to use. --ssl-cert "
-                       "is also required for SSL operation."))
+                   dest="sslKey",
+                   help=("Path to the SSL key to use. --ssl-cert "
+                         "is also required for SSL operation."))
 
     p.add_argument('-l', '--listen', default='0.0.0.0',
-                 help='IP address to listen on (default: %default)')
+                   help='IP address to listen on (default: %default)')
 
     p.add_argument('-p', '--port', type=int, default=wsPort,
-                 help="Port to listen on (default: %default)")
+                   help="Port to listen on (default: %default)")
 
     args = p.parse_args()
 
@@ -247,7 +249,8 @@ def main():
             if pid:
                 if os.access('/proc/{0}'.format(pid), os.F_OK):
                     sys.stderr.write(
-                        'tortugawsd is already running (pid: {})\n'.format(pid))
+                        'tortugawsd is already running (pid: {})\n'.format(
+                            pid))
 
                     sys.exit(1)
 
