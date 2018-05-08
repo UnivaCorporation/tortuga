@@ -153,7 +153,7 @@ class NetworkWsApi(TortugaWsApi):
 
         url = 'v1/networks/%s' % (network.getId())
 
-        postdata = json.dumps(network.getCleanDict())
+        postdata = json.dumps({'network': network.getCleanDict()})
 
         try:
             self.sendSessionRequest(url, method='PUT', data=postdata)

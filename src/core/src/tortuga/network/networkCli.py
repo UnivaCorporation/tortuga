@@ -164,7 +164,7 @@ class NetworkCli(TortugaCli):
         if self.getArgs().increment is not None:
             network.setIncrement(self.getArgs().increment)
 
-        optionsString = network.getArgs()
+        optionsString = network.getOptions()
         optionsDict = {}
         if optionsString:
             # VLAN info may already exist for this network
@@ -176,8 +176,8 @@ class NetworkCli(TortugaCli):
         vlanIdFound = self.getArgs().vlanId is not None or \
             'vlan' in optionsDict
 
-        vlanParentNetworkFound = self.\
-            _options.vlanParentNetwork is not None or \
+        vlanParentNetworkFound = \
+            self.getArgs().vlanParentNetwork is not None or \
             'vlanparent' in optionsDict
 
         if (vlanIdFound and not vlanParentNetworkFound) or \

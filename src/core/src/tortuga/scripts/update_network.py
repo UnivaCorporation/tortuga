@@ -22,11 +22,11 @@ class UpdateNetworkCli(NetworkCli):
     update-network command line interface
 
     """
-    def __init__(self):
-        super().__init__()
-
+    def parseArgs(self, usage=None):
         # Now add in the default options
         self.setupDefaultOptions()
+
+        super().parseArgs(usage=usage)
 
     def runCommand(self):
         self.parseArgs(_('Updates existing network definition in Tortuga'))

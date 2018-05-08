@@ -34,7 +34,7 @@ class RebootNodeCli(TortugaCli):
             action='store_true', default=False,
             help=_('Toggle reinstallation of specified nodes'))
 
-        self.parseArgs(usage=usage)
+        super().parseArgs(usage=usage)
 
     def runCommand(self):
         self.parseArgs(_("""
