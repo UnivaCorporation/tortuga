@@ -214,23 +214,28 @@ class GetSoftwareProfileCli(TortugaCli):
                                 part_size += ' (Max: {0})'.format(
                                     partition.getMaxSize())
 
+                        device_label = None
+
                         if partition.getFsType() == 'swap':
                             device_label = '{0} (swap)'.format(
                                 partition.getDevice())
-                        else:
-                            if partition.getMountPoint():
+                        elif partition.getMountPoint():
                                 device_label = '{0} ({1})'.format(
                                     partition.getDevice(),
                                     partition.getMountPoint())
+                        else:
+                            device_label = '<no mountpoint>'
 
                         if partition.getFsType() == 'swap':
                             buf = '{0}: Size: {1}'.format(
                                 device_label, part_size)
                         else:
-                            buf = '{0}: Name: {1}, Type: {2}, Size: {3}'.\
-                                format(
-                                    device_label, partition.getName(),
-                                    partition.getFsType(), part_size)
+                            buf = ('{0}: Name: {1}, Type: {2},'
+                                   ' Size: {3}'.format(
+                                       device_label,
+                                       partition.getName(),
+                                       partition.getFsType(),
+                                       part_size))
 
                         print(' ' * 8 + '- {0}'.format(buf))
         else:
