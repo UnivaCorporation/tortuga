@@ -47,7 +47,7 @@ class NicDbApi(TortugaDbApi):
                 dbNics.ip = ip
                 session.commit()
                 return
-            except TortugaException as ex:
+            except TortugaException:
                 session.rollback()
                 raise
             except Exception as ex:
@@ -72,7 +72,7 @@ class NicDbApi(TortugaDbApi):
                 session.commit()
 
                 return
-            except TortugaException as ex:
+            except TortugaException:
                 session.rollback()
                 raise
             except Exception as ex:

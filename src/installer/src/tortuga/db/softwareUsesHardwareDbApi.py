@@ -58,7 +58,7 @@ class SoftwareUsesHardwareDbApi(TortugaDbApi):
                                     dbMapping.hardwareProfileId))
 
             return mappingList
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
@@ -90,7 +90,7 @@ class SoftwareUsesHardwareDbApi(TortugaDbApi):
                 mappingList.append(dbMapping.hardwareProfileId)
 
             return mappingList
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)

@@ -14,8 +14,8 @@
 
 import socket
 
-from passlib.hash import pbkdf2_sha256
 import pytest
+from passlib.hash import pbkdf2_sha256
 from sqlalchemy import create_engine
 
 from tortuga.config.configManager import ConfigManager
@@ -26,6 +26,7 @@ from tortuga.db.dbManager import DbManagerBase
 from tortuga.db.models.admin import Admin
 from tortuga.db.models.component import Component
 from tortuga.db.models.hardwareProfile import HardwareProfile
+from tortuga.db.models.hardwareProfileNetwork import HardwareProfileNetwork
 from tortuga.db.models.kit import Kit
 from tortuga.db.models.network import Network
 from tortuga.db.models.networkDevice import NetworkDevice
@@ -35,7 +36,6 @@ from tortuga.db.models.operatingSystem import OperatingSystem
 from tortuga.db.models.operatingSystemFamily import OperatingSystemFamily
 from tortuga.db.models.resourceAdapter import ResourceAdapter
 from tortuga.db.models.softwareProfile import SoftwareProfile
-from tortuga.db.models.hardwareProfileNetwork import HardwareProfileNetwork
 from tortuga.deployer.dbUtility import init_global_parameters, primeDb
 from tortuga.node import nodeManager
 from tortuga.objects import osFamilyInfo, osInfo
@@ -69,9 +69,9 @@ def cm_class(request, cm):
 
 @pytest.fixture(scope='session')
 def dbm():
-    dbm = DbManagerBase(create_engine('sqlite:///:memory:', echo=False))
+    dbmgr = DbManagerBase(create_engine('sqlite:///:memory:', echo=False))
 
-    dbm.init_database()
+    dbmgr.init_database()
 
     os_info = osInfo.OsInfo('centos', '7.4', 'x86_64')
     os_info.setOsFamilyInfo(osFamilyInfo.OsFamilyInfo('rhel', '7', 'x86_64'))
@@ -90,7 +90,7 @@ def dbm():
 
     installer_fqdn = socket.getfqdn()
 
-    with dbm.session() as session:
+    with dbmgr.session() as session:
         primeDb(session, installer_fqdn, os_info, settings)
 
         init_global_parameters(session, settings)
@@ -232,7 +232,7 @@ def dbm():
 
         session.commit()
 
-    return dbm
+    return dbmgr
 
 
 @pytest.fixture(scope='class')

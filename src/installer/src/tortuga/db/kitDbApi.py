@@ -104,7 +104,7 @@ class KitDbApi(TortugaDbApi):
             dbKit = self._kitsDbHandler.getKitById(session, id_)
             kit = Kit.getFromDbDict(dbKit.__dict__)
             return self.__retrieveAllKitData(dbKit, kit)
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
@@ -220,7 +220,7 @@ class KitDbApi(TortugaDbApi):
             self._kitsDbHandler.addComponentsToKit(session, kit, compList)
 
             session.commit()
-        except TortugaException as ex:
+        except TortugaException:
             session.rollback()
             raise
         except Exception as ex:

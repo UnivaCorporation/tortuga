@@ -22,7 +22,6 @@ from tortuga.db.adminsDbHandler import AdminsDbHandler
 from tortuga.db.componentsDbHandler import ComponentsDbHandler
 from tortuga.db.dbManager import DbManager
 from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
-from tortuga.db.nodesDbHandler import NodesDbHandler
 from tortuga.db.operatingSystemsDbHandler import OperatingSystemsDbHandler
 from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
 from tortuga.db.tortugaDbApi import TortugaDbApi
@@ -54,7 +53,6 @@ class SoftwareProfileDbApi(TortugaDbApi):
         TortugaDbApi.__init__(self)
 
         self._softwareProfilesDbHandler = SoftwareProfilesDbHandler()
-        self._nodesDbHandler = NodesDbHandler()
         self._globalParametersDbHandler = GlobalParametersDbHandler()
         self._adminsDbHandler = AdminsDbHandler()
         self._osDbHandler = OperatingSystemsDbHandler()
@@ -84,7 +82,7 @@ class SoftwareProfileDbApi(TortugaDbApi):
 
             return SoftwareProfile.getFromDbDict(
                 dbSoftwareProfile.__dict__)
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
@@ -115,7 +113,7 @@ class SoftwareProfileDbApi(TortugaDbApi):
 
             return SoftwareProfile.getFromDbDict(
                 dbSoftwareProfile.__dict__)
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
@@ -154,7 +152,7 @@ class SoftwareProfileDbApi(TortugaDbApi):
                         dbSoftwareProfile.__dict__))
 
             return softwareProfileList
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
@@ -180,7 +178,7 @@ class SoftwareProfileDbApi(TortugaDbApi):
 
             return self.getTortugaObjectList(
                 SoftwareProfile, dbSoftwareProfileList)
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
@@ -211,7 +209,7 @@ class SoftwareProfileDbApi(TortugaDbApi):
             dbSoftwareProfile.isIdle = state
 
             session.commit()
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
@@ -263,7 +261,7 @@ class SoftwareProfileDbApi(TortugaDbApi):
                 'Added software profile [%s]' % (dbSoftwareProfile.name))
 
             return dbSoftwareProfile
-        except TortugaException as ex:
+        except TortugaException:
             _session.rollback()
             raise
         except Exception as ex:
@@ -325,34 +323,11 @@ class SoftwareProfileDbApi(TortugaDbApi):
             session.delete(dbSwProfile)
 
             session.commit()
-        except TortugaException as ex:
+        except TortugaException:
             session.rollback()
             raise
         except Exception as ex:
             session.rollback()
-            self.getLogger().exception('%s' % ex)
-            raise
-        finally:
-            DbManager().closeSession()
-
-    def getNode(self, name):
-        """
-        Get node from the db.
-
-            Returns:
-                node
-            Throws:
-                NodeNotFound
-                DbError
-        """
-
-        session = DbManager().openSession()
-
-        try:
-            return self._nodesDbHandler.getNode(session, name)
-        except TortugaException as ex:
-            raise
-        except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise
         finally:
@@ -368,21 +343,19 @@ class SoftwareProfileDbApi(TortugaDbApi):
                 DbError
         """
 
-        session = DbManager().openSession()
+        self.getLogger().debug('Retrieving enabled component list')
 
-        try:
-            handler = ComponentsDbHandler()
+        with DbManager().session() as session:
+            try:
+                dbComponents = \
+                    ComponentsDbHandler().getEnabledComponentList(session)
 
-            dbComponents = handler.getEnabledComponentList(session)
-
-            return self.getTortugaObjectList(Component, dbComponents)
-        except TortugaException as ex:
-            raise
-        except Exception as ex:
-            self.getLogger().exception('%s' % ex)
-            raise
-        finally:
-            DbManager().closeSession()
+                return self.getTortugaObjectList(Component, dbComponents)
+            except TortugaException:
+                raise
+            except Exception as ex:
+                self.getLogger().exception('%s' % ex)
+                raise
 
     def getEnabledComponentList(self, name):
         """
@@ -406,7 +379,7 @@ class SoftwareProfileDbApi(TortugaDbApi):
                 componentList.append(Component.getFromDbDict(c.__dict__))
 
             return componentList
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
@@ -438,7 +411,7 @@ class SoftwareProfileDbApi(TortugaDbApi):
                 nodeList.append(Node.getFromDbDict(dbNode.__dict__))
 
             return nodeList
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
@@ -461,35 +434,9 @@ class SoftwareProfileDbApi(TortugaDbApi):
                     session, nodeState, softwareProfileName)
 
             return self.getTortugaObjectList(Node, dbNodes)
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
-            raise
-        finally:
-            DbManager().closeSession()
-
-    def deleteNode(self, name):
-        """
-        Delete node from the db.
-
-            Returns:
-                None
-            Throws:
-                NodeNotFound
-                DbError
-        """
-
-        session = DbManager().openSession()
-
-        try:
-            self._nodesDbHandler.deleteNode(session, name)
-            session.commit()
-        except TortugaException as ex:
-            session.rollback()
-            raise
-        except Exception as ex:
-            session.rollback()
             self.getLogger().exception('%s' % ex)
             raise
         finally:
@@ -513,7 +460,7 @@ class SoftwareProfileDbApi(TortugaDbApi):
                 getSoftwareProfile(session, softwareProfileName)
             return self.getTortugaObjectList(
                 Partition, dbSoftwareProfile.partitions)
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
@@ -541,7 +488,7 @@ class SoftwareProfileDbApi(TortugaDbApi):
                     session, partitionName, softwareProfileName)
 
             session.commit()
-        except TortugaException as ex:
+        except TortugaException:
             session.rollback()
             raise
         except Exception as ex:
@@ -570,7 +517,7 @@ class SoftwareProfileDbApi(TortugaDbApi):
                 deletePartitionFromSoftwareProfile(
                     session, partitionName, softwareProfileName)
             session.commit()
-        except TortugaException as ex:
+        except TortugaException:
             session.rollback()
             raise
         except Exception as ex:
@@ -602,7 +549,7 @@ class SoftwareProfileDbApi(TortugaDbApi):
                     session, hardwareProfileName, softwareProfileName)
             session.commit()
             return swUsesHwId
-        except TortugaException as ex:
+        except TortugaException:
             session.rollback()
             raise
         except Exception as ex:
@@ -634,7 +581,7 @@ class SoftwareProfileDbApi(TortugaDbApi):
                     session, hardwareProfileName, softwareProfileName)
 
             session.commit()
-        except TortugaException as ex:
+        except TortugaException:
             session.rollback()
             raise
         except Exception as ex:
@@ -662,7 +609,7 @@ class SoftwareProfileDbApi(TortugaDbApi):
                     'Admin [%s] already associated with %s' % (
                         adminUsername, softwareProfileName))
             session.commit()
-        except TortugaException as ex:
+        except TortugaException:
             session.rollback()
             raise
         except Exception as ex:
@@ -691,7 +638,7 @@ class SoftwareProfileDbApi(TortugaDbApi):
                     ' [%s]' % (adminUsername, softwareProfileName))
 
             session.commit()
-        except TortugaException as ex:
+        except TortugaException:
             session.rollback()
             raise
         except Exception as ex:
@@ -713,7 +660,7 @@ class SoftwareProfileDbApi(TortugaDbApi):
             self.__populateSoftwareProfile(
                 session, softwareProfileObject, dbSoftwareProfile)
             session.commit()
-        except TortugaException as ex:
+        except TortugaException:
             session.rollback()
             raise
         except Exception as ex:
@@ -902,7 +849,7 @@ class SoftwareProfileDbApi(TortugaDbApi):
                 for dbNode in dbHardwareProfile.nodes]
 
             return self.getTortugaObjectList(Node, nodes)
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
