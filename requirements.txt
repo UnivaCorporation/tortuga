@@ -4,7 +4,6 @@ wheel
 pylint
 pyflakes
 pycodestyle
-flake8
 marshmallow
 passlib
 Paver
