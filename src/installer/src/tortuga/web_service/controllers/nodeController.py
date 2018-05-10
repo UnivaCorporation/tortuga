@@ -29,7 +29,6 @@ from tortuga.utility.helper import str2bool
 from tortuga.web_service.auth.decorators import authentication_required
 
 from .. import app
-from ..threadManager import threadManager
 from .common import make_options_from_query_string, parse_tag_query_string
 from .tortugaController import TortugaController
 

@@ -12,24 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-class tortuga::installer (
-  $puppet_server = $::puppet_server,
-  $activemq_enable = true,
-) {
-  contain tortuga::installer::puppetmaster
-  contain tortuga::envscript
-  contain tortuga::installer::ssh
-  contain tortuga::installer::redis::enable
 
-  if $activemq_enable {
-    class { 'tortuga::installer::activemq':
-      enable => $activemq_enable,
-    }
-    contain tortuga::installer::activemq
+class MockRedis:
+    def __init__(self):
+        self._data_store = {}
 
-    class { 'tortuga::installer::mcollective':
-      puppet_server => $puppet_server,
-    }
-    contain tortuga::installer::mcollective
-  }
-}
+    def hmset(self, key: str, value: dict):
+        self._data_store[key] = value
+
+    def hgetall(self, key: str) -> dict:
+        return self._data_store.get(key, None)
+
+    def delete(self, key: str):
+        try:
+            self._data_store.pop(key)
+        except KeyError:
+            pass
+
+    def exists(self, key: str) -> bool:
+        return key in self._data_store.keys()

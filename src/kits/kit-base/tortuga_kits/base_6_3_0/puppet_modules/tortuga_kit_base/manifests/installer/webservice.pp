@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 class tortuga_kit_base::installer::webservice::config {
   include tortuga::config
 
@@ -30,6 +29,7 @@ class tortuga_kit_base::installer::webservice::config {
 
 class tortuga_kit_base::installer::webservice::server {
   require tortuga_kit_base::installer::webservice::config
+  require tortuga_kit_base::installer::celery
 
   service { 'tortugawsd':
     ensure    => running,

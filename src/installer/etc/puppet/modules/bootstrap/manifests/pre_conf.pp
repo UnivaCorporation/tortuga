@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 class bootstrap::pre_conf {
   require bootstrap::packages
 
@@ -77,6 +76,11 @@ class bootstrap::pre_conf {
   } else {
     file { '/usr/lib/systemd/system/tortugawsd.service':
       source => "${tortuga::config::instroot}/etc/tortugawsd.service",
+      mode   => '0644',
+    }
+
+    file { '/usr/lib/systemd/system/celery.service':
+      source => "${tortuga::config::instroot}/etc/celery.service",
       mode   => '0644',
     }
   }
