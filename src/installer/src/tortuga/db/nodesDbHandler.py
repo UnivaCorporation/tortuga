@@ -161,7 +161,7 @@ class NodesDbHandler(TortugaDbObjectHandler):
         """
 
         filter_spec_list = [filter_spec] \
-            if type(filter_spec) is not list else filter_spec
+            if not isinstance(filter_spec, list) else filter_spec
 
         node_filter = []
 
@@ -871,7 +871,7 @@ class NodesDbHandler(TortugaDbObjectHandler):
     def startupNode(self, session, nodespec, remainingNodeList=None,
                     bootMethod='n'): \
             # pylint: disable=unused-argument
-        nodes = nodespec if type(nodespec) == list else [nodespec]
+        nodes = nodespec if isinstance(nodespec, list) else [nodespec]
 
         # Break list of nodes into dict keyed on hardware profile
         nodes_dict = self.__processNodeList(nodes)
@@ -888,7 +888,7 @@ class NodesDbHandler(TortugaDbObjectHandler):
 
     def shutdownNode(self, session, nodespec, bSoftShutdown=False): \
             # pylint: disable=unused-argument
-        nodeList = nodespec if type(nodespec) == list else [nodespec]
+        nodeList = nodespec if isinstance(nodespec, list) else [nodespec]
 
         d = self.__processNodeList(nodeList)
 
@@ -901,7 +901,7 @@ class NodesDbHandler(TortugaDbObjectHandler):
 
     def rebootNode(self, session, nodespec, bSoftReset=False): \
             # pylint: disable=unused-argument
-        nodeList = nodespec if type(nodespec) == list else [nodespec]
+        nodeList = nodespec if isinstance(nodespec, list) else [nodespec]
 
         d = self.__processNodeList(nodeList)
 

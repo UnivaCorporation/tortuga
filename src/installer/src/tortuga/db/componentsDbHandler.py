@@ -135,16 +135,12 @@ class ComponentsDbHandler(TortugaDbObjectHandler):
         Get list of components from the db.
         """
 
-        self.getLogger().debug('Retrieving component list')
-
         return session.query(Component).all()
 
     def getEnabledComponentList(self, session):
         """
         Get list of components from the db that are enabled.
         """
-
-        self.getLogger().debug('Retrieving enabled component list')
 
         return session.query(
             Component).filter(Component.softwareprofiles.any()).all()
@@ -162,52 +158,3 @@ class ComponentsDbHandler(TortugaDbObjectHandler):
                     session, Component.name == component.getName(),
                     Component.version == component.getVersion(),
                     osFamilyInfo)
-
-    def addComponent(self, session, component):
-        """
-        Insert component into the db.
-        """
-
-        self.getLogger().info('Inserting component [%s]' % (component))
-
-        try:
-            # Check if component already exists...
-            self.getComponentFromComponentObject(session, component)
-
-            raise ComponentAlreadyExists(
-                'Component %s already exists' % (component))
-        except NoResultFound:
-            # OK.
-            pass
-
-        dbComponent = Component(
-            name=component.getName(),
-            version=component.getVersion(),
-            kitId=component.getKitId(),
-            description=component.getDescription())
-
-        # Components can have either an associated operating system or
-        # an association with an operating system family
-        for osInfo in component.getOsInfoList():
-            dbComponent.os.append(
-                OperatingSystem(
-                    name=osInfo.getName(),
-                    version=osInfo.getVersion(),
-                    arch=osInfo.getArch()
-                )
-            )
-
-        for osFamilyInfo in component.getOsFamilyInfoList():
-            dbComponent.family.append(
-                OperatingSystemFamily(
-                    name=osFamilyInfo.getName(),
-                    version=osFamilyInfo.getVersion(),
-                    arch=osFamilyInfo.getArch()
-                )
-            )
-
-        session.add(dbComponent)
-        session.query(func.max(Component.id)).one()
-        self.getLogger().info('Inserted component id %s' % dbComponent.id)
-
-        return dbComponent

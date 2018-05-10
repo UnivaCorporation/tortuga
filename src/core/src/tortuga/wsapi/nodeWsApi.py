@@ -348,7 +348,7 @@ class NodeWsApi(TortugaWsApi):
         reboot node
         """
 
-        url = 'v1/nodes/{}/reboot?hard={}&reinstall={}'.format(
+        url = 'v1/nodes/{}/reset?hard={}&reinstall={}'.format(
             urllib.parse.quote_plus(nodespec),
             '0' if bSoftReset else '1',
             '1' if bReinstall else '0')

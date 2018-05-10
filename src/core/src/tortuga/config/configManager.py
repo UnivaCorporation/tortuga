@@ -13,12 +13,13 @@
 # limitations under the License.
 
 import os
+import shlex
 import socket
 import subprocess
-import shlex
 from typing import Union
-from tortuga.types import Singleton
+
 from tortuga.objects.provisioningInfo import ProvisioningInfo
+from tortuga.types import Singleton
 
 
 # Defaults.
@@ -48,7 +49,7 @@ DEFAULT_TORTUGA_CFM_PASSWORD = "not-set"
 DEFAULT_TORTUGA_RELEASE = 'development'
 DEFAULT_TORTUGA_WEB_ROOT = '/tortuga'
 DEFAULT_TORTUGA_KIT_DIR = 'kits'
-DEFAULT_TORTUGA_DEPOT_DIR = '/depot'
+DEFAULT_TORTUGA_DEPOT_DIR = DEFAULT_TORTUGA_ROOT + '/depot'
 DEFAULT_TORTUGA_RULES_SUBDIRECTORY = 'var/rules'
 DEFAULT_TORTUGA_RULES_DIR = os.path.join(DEFAULT_TORTUGA_ROOT,
                                          DEFAULT_TORTUGA_RULES_SUBDIRECTORY)
@@ -195,8 +196,6 @@ class ConfigManager(dict, Singleton): \
             'cfmPassword', DEFAULT_TORTUGA_CFM_SECRET_FILE)
 
     def __init__(self):
-        # Note: the order of these operations *probably* matters
-
         super(ConfigManager, self).__init__()
 
         self.__init_system_user()

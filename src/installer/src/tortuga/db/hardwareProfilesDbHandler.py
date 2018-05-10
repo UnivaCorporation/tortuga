@@ -17,7 +17,6 @@
 from sqlalchemy import and_, or_
 from sqlalchemy.orm.exc import NoResultFound
 
-from tortuga.db import networkDevicesDbHandler, networksDbHandler
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
 from tortuga.exceptions.hardwareProfileNotFound import HardwareProfileNotFound
 from tortuga.exceptions.invalidArgument import InvalidArgument
@@ -30,13 +29,6 @@ class HardwareProfilesDbHandler(TortugaDbObjectHandler):
     """
     This class handles hardwareProfiles table.
     """
-
-    def __init__(self):
-        TortugaDbObjectHandler.__init__(self)
-
-        self._networksDbHandler = networksDbHandler.NetworksDbHandler()
-        self._networkDevicesDbHandler = networkDevicesDbHandler.\
-            NetworkDevicesDbHandler()
 
     def getHardwareProfile(self, session, name):
         """

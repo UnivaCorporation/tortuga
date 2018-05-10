@@ -73,8 +73,8 @@ class NetworkManager(TortugaObjectManager, Singleton):
             raise InvalidArgument('Network mask not set')
 
         # Get all of the network options
-        if network.getArgs():
-            for option in network.getArgs().split(';'):
+        if network.getOptions():
+            for option in network.getOptions().split(';'):
                 tokens = option.split('=')
                 if len(tokens) == 2:
                     key, value = tokens

@@ -20,20 +20,21 @@ import subprocess
 from textwrap import dedent
 from typing import NoReturn
 
+from tortuga.db.models.hardwareProfile import HardwareProfile
+from tortuga.db.models.node import Node
+from tortuga.db.models.softwareProfile import SoftwareProfile
 from tortuga.exceptions.nicNotFound import NicNotFound
 from tortuga.exceptions.osNotSupported import OsNotSupported
 from tortuga.objects.osFamilyInfo import OsFamilyInfo
-from tortuga.os_objects.osBootHostManagerCommon \
-    import OsBootHostManagerCommon
+from tortuga.os_objects.osBootHostManagerCommon import OsBootHostManagerCommon
 from tortuga.resourceAdapter.utility import get_provisioning_nic
 from tortuga.utility.bootParameters import getBootParameters
-from tortuga.db.models.node import Node
-from tortuga.db.models.softwareProfile import SoftwareProfile
-from tortuga.db.models.hardwareProfile import HardwareProfile
 
 
 class BootHostManager(OsBootHostManagerCommon):
-    """Methods for manipulating PXE files"""
+    """
+    Methods for manipulating PXE files
+    """
 
     def __getPxelinuxBootFilePath(self, mac):
         pxeconfigDir = os.path.join(self.getTftproot(), 'tortuga/pxelinux.cfg')
@@ -41,13 +42,8 @@ class BootHostManager(OsBootHostManagerCommon):
         return os.path.join(
             pxeconfigDir, '01-%s' % (mac.replace(':', '-')))
 
-    def __get_kickstart_file_path(self, node):
-        return os.path.join(self._cm.getKickstartsDir(),
-                            self.__get_kickstart_file_name(node))
-
-    def __get_kickstart_file_name(self, node): \
-            # pylint: disable=no-self-use
-        return node.name + '.ks'
+    def __get_kickstart_file_path(self, node: Node):
+        return os.path.join(self._cm.getKickstartsDir(), node.name + '.ks')
 
     def __getPXEFiles(self, dbNode):
         '''
@@ -168,7 +164,7 @@ label Reinstall
                 # Find the best IP address to use
                 ksurl = 'http://%s:%d/kickstarts/%s' % (
                     installerIp, self._cm.getIntWebPort(),
-                    self.__get_kickstart_file_name(node))
+                    node.name + '.ks')
 
                 # Call the external support module
                 try:

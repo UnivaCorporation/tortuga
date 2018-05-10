@@ -102,19 +102,3 @@ class GlobalParametersDbHandler(TortugaDbObjectHandler):
             dbParameter.description = None
 
         return dbParameter
-
-    def deleteParameter(self, session, name: str) -> NoReturn:
-        """
-        Delete parameter from the db.
-
-        Raises:
-            ParameterNotFound
-        """
-
-        self.getLogger().debug('Deleting parameter [%s]' % (name))
-
-        dbParameter = self.getParameter(session, name)
-
-        session.delete(dbParameter)
-
-        self.getLogger().info('Deleted parameter [%s]' % name)
