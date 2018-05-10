@@ -22,6 +22,7 @@ from tortuga.db.models.tag import Tag
 from tortuga.db.nodeDbApi import NodeDbApi
 from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
 from tortuga.db.tagsDbHandler import TagsDbHandler
+from tortuga.objectstore.redis import RedisObjectStore
 from tortuga.exceptions.notFound import NotFound
 from tortuga.exceptions.resourceAdapterNotFound import ResourceAdapterNotFound
 from tortuga.kit.actions import KitActionsManager
@@ -39,8 +40,8 @@ class AddHostManager(TortugaObjectManager, Singleton):
 
         # Now do the class specific variable initialization
         self._addHostLock = threading.RLock()
-        self._sessions = {}
         self._nodeDbApi = NodeDbApi()
+        self._sessions = RedisObjectStore(namespace='add-host-manager')
 
     def addHosts(self, session, addHostRequest):
         """
@@ -136,14 +137,14 @@ class AddHostManager(TortugaObjectManager, Singleton):
         self._addHostLock.acquire()
 
         try:
-            if addHostSession not in self._sessions:
+            if not self._sessions.exists(addHostSession):
                 self.getLogger().warning(
                     'updateStatus(): unknown session ID [%s]' % (
                         addHostSession))
 
                 return
 
-            addHostStatus = self._sessions[addHostSession]['status']
+            addHostStatus = self._sessions.get(addHostSession)['status']
 
             addHostStatus.getMessageList().append(msg)
         finally:
@@ -160,7 +161,7 @@ class AddHostManager(TortugaObjectManager, Singleton):
                 if getNodes else TortugaObjectList()
 
             # Lock and copy for data consistency
-            if session not in self._sessions:
+            if not in self._sessions.exists(session):
                 raise NotFound('Invalid add host session ID [%s]' % (session))
 
             sessionDict = self._sessions.get(session)
@@ -188,9 +189,10 @@ class AddHostManager(TortugaObjectManager, Singleton):
             # Create new add nodes session
             session_id = str(uuid.uuid4())
 
-            self._sessions[session_id] = {
-                'status': AddHostStatus(),
-            }
+            self._sessions.set(
+                session_id,
+                {'status': AddHostStatus().getCleanDict()}
+            )
 
             return session_id
 
@@ -211,7 +213,7 @@ class AddHostManager(TortugaObjectManager, Singleton):
                     self.getLogger().debug(
                         'Deleting session [{0}]'.format(session_id))
 
-                    del self._sessions[session_id]
+                    self._sessions.delete(session_id)
 
     def update_session(self, session_id, running=None):
         self.getLogger().debug(

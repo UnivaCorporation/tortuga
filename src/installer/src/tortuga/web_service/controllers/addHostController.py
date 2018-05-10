@@ -26,9 +26,9 @@ from tortuga.db.models.nodeRequest import NodeRequest
 from tortuga.db.nodeRequestsDbHandler import NodeRequestsDbHandler
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.notFound import NotFound
+from tortuga.resourceAdapter.tasks import add_nodes
 from tortuga.web_service.auth.decorators import authentication_required
 from .tortugaController import TortugaController
-from ..threadManager import threadManager
 
 
 class NodeRequestSchema(Schema):
@@ -156,15 +156,12 @@ def enqueue_addnodes_request(session, addNodesRequest):
     request = init_node_request_record(addNodesRequest)
 
     session.add(request)
-
     session.commit()
 
-    threadManager.queue.put({
-        'action': 'ADD',
-        'data': {
-            'addHostSession': request.addHostSession,
-        },
-    })
+    #
+    # Run async task
+    #
+    add_nodes.delay(request.addHostSession)
 
     return request.addHostSession
 

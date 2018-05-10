@@ -23,6 +23,7 @@ from tortuga.db.models.nodeRequest import NodeRequest
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.objects.tortugaObject import TortugaObjectList
+from tortuga.resourceAdapter.tasks import delete_nodes
 from tortuga.schema import NodeSchema
 from tortuga.utility.helper import str2bool
 from tortuga.web_service.auth.decorators import authentication_required
@@ -640,16 +641,12 @@ def enqueue_delete_hosts_request(session, nodespec):
     request = init_node_request_record(nodespec)
 
     session.add(request)
-
     session.commit()
 
-    threadManager.queue.put({
-        'action': 'DELETE',
-        'data': {
-            'transaction_id': request.addHostSession,
-            'nodespec': nodespec,
-        },
-    })
+    #
+    # Run async task
+    #
+    delete_nodes.delay(request.addHostSession, nodespec)
 
     return request.addHostSession
 
