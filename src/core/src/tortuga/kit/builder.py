@@ -14,14 +14,15 @@
 
 import copy
 import json
-from logging import getLogger
 import os
 import shutil
+from logging import getLogger
 
-from .metadata import KitMetadataSchema
 from tortuga.exceptions.commandFailed import CommandFailed
 from tortuga.exceptions.kitBuildError import KitBuildError
 from tortuga.os_utility.tortugaSubprocess import executeCommand
+
+from .metadata import KitMetadataSchema
 
 
 logger = getLogger('KitBuilder')
