@@ -140,6 +140,22 @@ class ResourceAdapter(UserDataMixin): \
         """Remove the given node (active or idle) from the system"""
         self.__trace(nodeIds)
 
+    def _async_delete_nodes(self, nodes):
+        """
+        Asynchronously delete nodes; calls "ResourceAdapter._delete_node()"
+        method for each deleted nodes
+
+        :param dbNodes: list of Nodes objects
+        :return: None
+        """
+        greenlets = []
+
+        for node in nodes:
+            greenlets.append(gevent.spawn(self._delete_node, node))
+
+        # TODO: implement timeout
+        gevent.joinall(greenlets)
+
     def transferNode(self, nodeIdSoftwareProfileTuples,
                      newSoftwareProfileName: str):
         """Transfer the given idle node"""
