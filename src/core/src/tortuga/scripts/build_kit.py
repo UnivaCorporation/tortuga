@@ -15,7 +15,8 @@
 import logging
 
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.kit.builder import (KitBuilder, logger as kit_builder_logger)
+from tortuga.kit.builder import KitBuilder
+from tortuga.kit.builder import logger as kit_builder_logger
 
 
 class BuildKit(TortugaCli):
@@ -30,11 +31,6 @@ class BuildKit(TortugaCli):
         console_formatter = logging.Formatter('%(name)s: %(message)s')
         console_handler.setFormatter(console_formatter)
         kit_builder_logger.addHandler(console_handler)
-
-        #
-        # Initialize the kit builder
-        #
-        self._kit_builder = KitBuilder()
 
     def parseArgs(self, usage=None):
 
@@ -56,11 +52,16 @@ class BuildKit(TortugaCli):
     def runCommand(self):
         self.parseArgs()
 
+        #
+        # Initialize the kit builder
+        #
+        _kit_builder = KitBuilder()
+
         command = self.getArgs().subcommand
         if command == 'build':
-            self._kit_builder.build()
+            _kit_builder.build()
         elif command == 'clean':
-            self._kit_builder.clean()
+            _kit_builder.clean()
 
 
 def main():
