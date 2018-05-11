@@ -14,6 +14,7 @@
 
 # pylint: disable=logging-not-lazy,no-self-use,no-member,maybe-no-member
 
+import gevent
 import configparser
 import csv
 import logging
