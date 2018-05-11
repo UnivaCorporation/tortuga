@@ -21,6 +21,7 @@ import cherrypy
 from marshmallow import Schema, fields
 
 from tortuga.addhost.addHostManager import AddHostManager
+from tortuga.addhost.events import AddNodeRequestQueued
 from tortuga.addhost.utility import validate_addnodes_request
 from tortuga.db.models.nodeRequest import NodeRequest
 from tortuga.db.nodeRequestsDbHandler import NodeRequestsDbHandler
@@ -157,6 +158,11 @@ def enqueue_addnodes_request(session, addNodesRequest):
 
     session.add(request)
     session.commit()
+
+    #
+    # Fire the add node request queued event
+    #
+    AddNodeRequestQueued.fire(request_id=request.id)
 
     #
     # Run async task

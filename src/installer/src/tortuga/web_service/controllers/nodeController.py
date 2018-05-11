@@ -19,6 +19,7 @@ import datetime
 import cherrypy
 
 from tortuga.addhost.addHostManager import AddHostManager
+from tortuga.addhost.events import DeleteNodeRequestQueued
 from tortuga.db.models.nodeRequest import NodeRequest
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.nodeNotFound import NodeNotFound
@@ -641,6 +642,11 @@ def enqueue_delete_hosts_request(session, nodespec):
 
     session.add(request)
     session.commit()
+
+    #
+    # Fire the delete node request queued event
+    #
+    DeleteNodeRequestQueued.fire(transaction_id=request.addHostSession)
 
     #
     # Run async task
