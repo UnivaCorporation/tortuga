@@ -944,7 +944,7 @@ The kit filename has the following format:
 
 The `get-kit-list` command will display all installed kits (application + operating system):
 
-``` shell`
+``` shell
 [root@tortuga ~]# get-kit-list
 awsadapter-6.3.0-0
 base-6.3.0-0
