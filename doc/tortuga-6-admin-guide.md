@@ -327,11 +327,11 @@ Commands listed in this "Quickstart" section are intended to be run as the `root
             update-hardware-profile --name execd-aws \
                 --resource-adapter aws --location remote
 
-    When running with an EC2-based Tortuga installer, it is *also* necessary to set the hardware profile name format so EC2-assigned host names are used:
+        When running with an EC2-based Tortuga installer, it is *also* necessary to set the hardware profile name format so EC2-assigned host names are used:
 
             update-hardware-profile --name execd-aws --name-format "*"
 
-    1.  Map hardware and software profiles
+    2.  Map hardware and software profiles
 
         Because the software profile "execd" was previously created and can be shared between local nodes/virtual machines and EC2-based instances, it is not necessary to create another software profile.
 
@@ -341,9 +341,11 @@ Commands listed in this "Quickstart" section are intended to be run as the `root
 
 12. Install Univa Grid Engine
 
-    Now that the Tortuga base installation is complete, it is necessary to install Univa Grid Engine.
+        Now that the Tortuga base installation is complete, it is necessary to
+        install Univa Grid Engine.
 
-    In this example, the Grid Engine `qmaster` will be run on the Tortuga installer node.
+        In this example, the Grid Engine `qmaster` will be run on the Tortuga
+        installer node.
 
     1.  Install UGE kit
 
@@ -369,9 +371,9 @@ Commands listed in this "Quickstart" section are intended to be run as the `root
 
         It is recommended to validate the installation of the `qmaster`.
 
-    Check the version of UGE kit that was installed, either by looking for the version in the kit's file name or by running
+        Check the version of UGE kit that was installed, either by looking for the version in the kit's file name or by running
 
-        ls -ld /opt/uge-*
+            ls -ld /opt/uge-*
 
        Supposing the version that was installed is `8.5.4`, source the UGE environment by running
 
