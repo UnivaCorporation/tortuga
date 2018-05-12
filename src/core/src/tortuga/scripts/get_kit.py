@@ -28,21 +28,6 @@ class GetKitCli(KitCli):
 
     """
     def parseArgs(self, usage=None):
-        kit_attr_group = _('Kit Attribute Options')
-
-        self.addOptionGroup(kit_attr_group,
-                            _('Kit name/version must be specified.'))
-
-        self.addOptionToGroup(kit_attr_group,
-                              '--name', dest='name', help=_('kit name'))
-
-        self.addOptionToGroup(kit_attr_group, '--version',
-                              dest='version', help=_('kit version'))
-
-        self.addOptionToGroup(kit_attr_group, '--iteration',
-                              dest='iteration', default=None,
-                              help=_('kit iteration'))
-
         cmd_options_group = _('Command Options')
 
         self.addOptionGroup(cmd_options_group, '')
@@ -74,14 +59,15 @@ class GetKitCli(KitCli):
 Returns details of the specified kit
 """))
 
-        name, version, iteration = self.get_name_version_iteration()
+        name, version, iteration = \
+            self.getKitNameVersionIteration(self.getArgs().kitspec)
 
         api = KitWsApi(username=self.getUsername(),
                        password=self.getPassword(),
                        baseurl=self.getUrl())
 
         try:
-            kit = api.getKit(name, version, iteration)
+            kit = api.getKit(name, version=version, iteration=iteration)
 
             if not self.getArgs().bQuiet:
                 if self.getArgs().xml:

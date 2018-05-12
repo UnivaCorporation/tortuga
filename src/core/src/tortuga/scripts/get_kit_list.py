@@ -12,18 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=no-member
+from typing import Optional
 
-from tortuga.kit.kitCli import KitCli
+from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.wsapi.kitWsApi import KitWsApi
 
 
-class GetKitListCli(KitCli):
+class GetKitListCli(TortugaCli):
     """
     Get kit command line interface.
     """
 
-    def runCommand(self):
+    def parseArgs(self, usage: Optional[str] = None):
         self.addOptionGroup('Display Options', '')
 
         self.addOptionToGroup('Display Options', '--os',
@@ -32,7 +32,10 @@ class GetKitListCli(KitCli):
                               default=False,
                               dest='osonly')
 
-        self.parseArgs(_("""
+        super().parseArgs(usage=usage)
+
+    def runCommand(self):
+        self.parseArgs(usage=_("""
 Returns the list of kits available in the system.
 """))
 
