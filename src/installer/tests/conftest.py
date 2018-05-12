@@ -85,7 +85,7 @@ def dbm():
         'intWebServicePort': '8444',
         'adminPort': '8443',
         'eulaAccepted': 'true',
-        'depotpath': '/depot',
+        'depotpath': '/opt/tortuga/depot',
     }
 
     installer_fqdn = socket.getfqdn()

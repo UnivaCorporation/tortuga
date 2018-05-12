@@ -1,6 +1,6 @@
 % Tortuga 6.3.0 Installation and Administration Guide
 % Univa Corporation &lt;support@univa.com&gt;
-% March 2018 -- Version 1.23
+% May 2018 -- Version 1.24
 
 \newpage
 
@@ -821,7 +821,7 @@ To run setup:
 
 After accepting the software EULA (required to proceed), answer the following questions:
 
-1. What location should be used as the depot directory? (default `/depot`)
+1. What location should be used as the depot directory? (default `/opt/tortuga/depot`)
 1. What administrative username and password should be used?
 
 The 'depot directory' is used by Tortuga to store (mostly package) files required by compute nodes provisioned by Tortuga. Multiple YUM repositories will be created in this directory. The disk space required depends on the number of operating systems installed for provisioning, as well as what optional software kits are added.
@@ -1420,7 +1420,7 @@ The media accepted includes file directories, such as the mount point of a physi
 
 Symbolic linking is supported only for directories, and not ISOs or web repositories. Tortuga *does not verify or check* that the files are always available after a reboot, so this option should only be used if you have a permanent copy of the files on the local system, or you automatically mount it upon every reboot. If these files are not present when you attempt to provision a node, it will fail and your only indication will be at the node's attached terminal screen.
 
-The files copied when you install an OS kit are placed into the depot directory, selected during installation, defaulting to `/depot`.
+The files copied when you install an OS kit are placed into the depot directory, selected during installation, defaulting to `/opt/tortuga/depot`.
 
 Note that symbolic linking is supported only for directories, where the files are always available. You cannot symlink an ISO or proxied location.
 
@@ -1854,11 +1854,11 @@ Cons:
 
 #### Scenario 3: Manually managed patches
 
-When a compute node is provisioned by Tortuga, it installs the base operating system from the OS media as provided by 'install-os-kit'. Packages which constitute the Tortuga "base" kit are installed from '/depot/kits/base/6.3.0-0/noarch'.
+When a compute node is provisioned by Tortuga, it installs the base operating system from the OS media as provided by 'install-os-kit'. Packages which constitute the Tortuga "base" kit are installed from '/opt/tortuga/depot/kits/base/6.3.0-0/noarch'.
 
 Updated packages can be dropped into this directory and will be automatically available to Tortuga provisioned compute nodes.
 
-**Note: after updating packages in `/depot/kits/base/6.3.0-0/noarch`, it is required to run `createrepo` to update the Tortuga **base** kit YUM repository metadata.**
+**Note: after updating packages in `/opt/tortuga/depot/kits/base/6.3.0-0/noarch`, it is required to run `createrepo` to update the Tortuga **base** kit YUM repository metadata.**
 
 The key packages are `puppet-*`, `mcollective-*`, and the `ruby` dependencies.
 
@@ -2550,7 +2550,8 @@ The following software profile templates are supplied with the base installation
 
 # Appendix C: Uninstalling Tortuga {#appendix_c}
 
-Tortuga is mostly contained within the `/opt/tortuga` and `/depot` directories, however there are files elsewhere within the filesystem.
+Tortuga itself is contained within the `/opt/tortuga` directory, however there
+are configuration and support files elsewhere within the filesystem.
 
 **Note**: make a backup of of the entire filesystem prior to performing these uninstallation steps!
 
@@ -2565,7 +2566,6 @@ systemctl stop mcollective
 systemctl stop tortugawsd
 rm -f /etc/httpd/conf.d/{tortuga.conf,passenger.conf,puppetmaster.conf}
 mv /opt/tortuga /opt/tortuga.orig
-mv /depot /depot.orig
 ~~~
 
 On RHEL/CentOS 6, substitute calls to `systemctl stop <name>` to `service <name> stop`.
