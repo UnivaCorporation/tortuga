@@ -1100,7 +1100,9 @@ On Tortuga versions prior to 6.3.0, use `ucparam` to get the current (private) D
 
 Use `set-private-dns-zone <DOMAIN>` to set (private) DNS domain. For example:
 
-        set-private-dns-zone cloud.mydomain.com
+``` shell
+set-private-dns-zone cloud.mydomain.com
+```
 
 **Note:** do not use `ucparam set` to set the privte DNS domain as this does not perform all of the necessary configuration to apply the change in Tortuga.
 
