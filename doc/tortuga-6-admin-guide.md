@@ -375,14 +375,13 @@ Commands listed in this "Quickstart" section are intended to be run as the `root
 
             ls -ld /opt/uge-*
 
-       Supposing the version that was installed is `8.5.4`, source the UGE environment by running
+        For example, if the installed version is `8.5.4`, source the environment by running:
 
             . /opt/uge-8.5.4/default/common/settings.sh
 
-        **Hint:** Use the UGE `qhost` command to display list of hosts known
-        to the UGE cluster.
+        **Hint:** Use the UGE `qhost` command to display list of hosts known to the UGE cluster.
 
-    1. NFS export the default Grid Engine spool directory
+    5.  NFS export the default Grid Engine spool directory
 
         Install NFS support, if necessary:
 
@@ -406,18 +405,17 @@ Commands listed in this "Quickstart" section are intended to be run as the `root
 
             exportfs -a
 
-    1. Enable `execd` component on software profile(s)
+    6.  Enable `execd` component on software profile(s)
 
-        Enabling the `execd` component will make nodes in the "execd" software
-        profile automatically part of the UGE cluster.
+        Enabling the `execd` component will make nodes in the "execd" software profile automatically part of the UGE cluster.
 
             enable-component --software-profile execd execd
 
-    1. Update UGE cluster configuration
+    7.  Update UGE cluster configuration
 
             uge-cluster update default --add-execd-swprofile execd
 
-1.  Adding compute nodes
+13. Adding compute nodes
 
     To add nodes to the on-premise Tortuga/UGE cluster or physical nodes in hybrid installation use the `add-nodes` command as follows:
 

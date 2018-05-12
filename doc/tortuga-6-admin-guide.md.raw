@@ -470,7 +470,8 @@ Commands listed in this "Quickstart" section are intended to be run as the
 
             ls -ld /opt/uge-*
 
-        Supposing the version that was installed is `8.5.4`, source the UGE environment by running
+        For example, if the installed version is `8.5.4`, source the environment
+        by running:
 
             . /opt/uge-8.5.4/default/common/settings.sh
 
