@@ -395,7 +395,7 @@ Commands listed in this "Quickstart" section are intended to be run as the
 
     `adapter-mgmt update` can be used to manage resource adapter configuration
     profile settings. Erroneous/invalid settings can be removed by using
-    `adapter-mgmt update PROFILENAME --delete NAME`, where `NAME` is the 
+    `adapter-mgmt update PROFILENAME --delete NAME`, where `NAME` is the
     setting name.
 
     1. Create hardware profile to represent EC2 nodes
@@ -416,7 +416,7 @@ Commands listed in this "Quickstart" section are intended to be run as the
             update-hardware-profile --name execd-aws \
                 --resource-adapter aws --location remote
 
-	When running with an EC2-based Tortuga installer, it is _also_
+        When running with an EC2-based Tortuga installer, it is _also_
         necessary to set the hardware profile name format so EC2-assigned host
         names are used:
 
@@ -434,11 +434,11 @@ Commands listed in this "Quickstart" section are intended to be run as the
 
 1. Install Univa Grid Engine
 
-    Now that the Tortuga base installation is complete, it is necessary to
-    install Univa Grid Engine.
+        Now that the Tortuga base installation is complete, it is necessary to
+        install Univa Grid Engine.
 
-    In this example, the Grid Engine `qmaster` will be run on the Tortuga
-    installer node.
+        In this example, the Grid Engine `qmaster` will be run on the Tortuga
+        installer node.
 
     1. Install UGE kit
 
@@ -465,10 +465,10 @@ Commands listed in this "Quickstart" section are intended to be run as the
 
         It is recommended to validate the installation of the `qmaster`.
 
-	Check the version of UGE kit that was installed, either by looking for 
-	the version in the kit's file name or by running
+        Check the version of UGE kit that was installed, either by looking for
+        the version in the kit's file name or by running
 
-	    ls -ld /opt/uge-*
+            ls -ld /opt/uge-*
 
         Supposing the version that was installed is `8.5.4`, source the UGE environment by running
 
@@ -530,7 +530,7 @@ Commands listed in this "Quickstart" section are intended to be run as the
     Once the node has reached **Installed** state, it is available to be used.
 
     Nodes will be created momentarily and automatically added to the UGE
-    cluster.  Use `qhost` to display UGE cluster host list. It can take a few 
+    cluster.  Use `qhost` to display UGE cluster host list. It can take a few
     minutes until load values show up for newly added nodes.
 
     Tortuga automatically configures key-based authentication for managed nodes
