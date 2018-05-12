@@ -35,10 +35,7 @@ class Node(ModelBase):
     softwareProfileId = Column(Integer, ForeignKey('softwareprofiles.id'))
     lockedState = Column(String(20), nullable=False, default='Unlocked')
     parentNodeId = Column(Integer, ForeignKey('nodes.id'))
-    # maxChildUnits = Column(Integer, default=0)
-    # myUnits = Column(Integer, default=1)
     isIdle = Column(Boolean, nullable=False, default=True)
-    # destSPId = Column(Integer)
     addHostSession = Column(String(36))
 
     nodes_parentNodeId = index_property(
