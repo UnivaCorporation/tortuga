@@ -59,10 +59,5 @@ class Node(ModelBase):
         backref='nodes'
     )
 
-    def __init__(self, name=None):
-        super().__init__()
-
-        self.name = name
-
     def __repr__(self):
         return 'Node(name=%s)' % (self.name)
