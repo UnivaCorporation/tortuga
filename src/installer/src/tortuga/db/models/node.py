@@ -47,7 +47,8 @@ class Node(ModelBase):
     nodes_addHostSession = index_property(
         'addHostSession', 'Nodes_addHostSession')
 
-    nics = relationship('Nic', backref='node', lazy=False)
+    nics = relationship('Nic', backref='node', lazy=False,
+                        cascade='all, delete-orphan')
 
     children = relationship('Node',
                             backref=backref('parentnode',
