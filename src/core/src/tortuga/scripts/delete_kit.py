@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
+from typing import Optional
 from tortuga.kit.kitCli import KitCli
 from tortuga.wsapi.kitWsApi import KitWsApi
 
@@ -24,24 +24,6 @@ class DeleteKitCli(KitCli):
     """
 
     def parseArgs(self, usage=None):
-        kit_attr_group = _('Kit Attribute Options')
-
-        self.addOptionGroup(
-            kit_attr_group, _('Kit name/version must be specified.'))
-
-        self.addOptionToGroup(
-            kit_attr_group, '--name', dest='name', help=_('kit name'))
-
-        self.addOptionToGroup(
-            kit_attr_group, '--version', dest='version', help=_('kit version'))
-
-        self.addOptionToGroup(
-            kit_attr_group, '--iteration', dest='iteration',
-            help=_('kit iteration'))
-
-        self.addOptionToGroup(
-            kit_attr_group, 'kitspec', help=argparse.SUPPRESS, nargs='?')
-
         options_attr_group = _('Options')
 
         self.addOptionGroup(options_attr_group, '')

@@ -14,11 +14,15 @@
 
 # pylint: disable=no-name-in-module
 
+from typing import Optional
+
 import cherrypy
 
 from tortuga.exceptions.kitNotFound import KitNotFound
 from tortuga.kit.manager import KitManager
+from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.web_service.auth.decorators import authentication_required
+
 from .tortugaController import TortugaController
 
 
@@ -31,15 +35,8 @@ class KitController(TortugaController):
         {
             'name': 'userKits',
             'path': '/v1/kits/',
-            'action': 'getKitList',
-            'method': ['GET']
-        },
-
-        {
-            'name': 'userKit',
-            'path': '/v1/kits/:name/:version',
-            'action': 'kitRequest',
-            'method': ['GET']
+            'action': 'kitsAction',
+            'method': ['GET', 'DELETE']
         },
         {
             'name': 'userKitId',
@@ -53,33 +50,7 @@ class KitController(TortugaController):
             'action': 'kitEulaRequest',
             'method': ['GET']
         },
-        {
-            'name': 'deleteKit',
-            'path': '/v1/kits/:(name)/:(version)',
-            'action': 'deleteKit',
-            'method': ['DELETE'],
-        }
     ]
-
-    @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
-    @authentication_required()
-    def kitRequest(self, name, version, key=None):
-        # tmpVersion, iteration = version.rsplit('-', 1)
-
-        vals = version.rsplit('-', 1)
-
-        iteration = vals[1] if len(vals) == 2 else None
-
-        version_ = vals[0]
-
-        if cherrypy.request.method == 'POST':
-            return self.installKit(name, version_, iteration, key)
-        elif cherrypy.request.method == 'DELETE':
-            return self.deleteKit(name, version_, iteration)
-        else:
-            # Must be 'GET'
-            return self.getKit(name, version_, iteration)
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
@@ -88,24 +59,19 @@ class KitController(TortugaController):
         # Must be 'GET'
         return self.getKitEula(name, version)
 
-    def getKit(self, name, version, iteration=None):
-        """ Return info for the specified kit. """
+    def getKit(self, name: str, version: Optional[str], iteration: Optional[str]):
+        """
+        Return info for the specified kit.
+
+        Raises:
+            KitNotFound
+        """
 
         self.getLogger().debug(
-            '[%s] getKit(): name=[%s], version=[%s], iteration=[%s]' % (
-                self.__module__, name, version, iteration))
+            'getKit(): name=[%s], version=[%s], iteration=[%s]' % (
+                name, version, iteration))
 
-        try:
-            kit = KitManager().getKit(
-                name, version, iteration)
-
-            response = {'kit': kit.getCleanDict()}
-        except Exception as ex:
-            self.getLogger().error('%s' % ex)
-            self.handleException(ex)
-            response = self.errorResponse(str(ex))
-
-        return self.formatResponse(response)
+        return KitManager().getKit(name, version=version, iteration=iteration)
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
@@ -129,13 +95,38 @@ class KitController(TortugaController):
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     @authentication_required()
-    def getKitList(self):
-        """ Return list of all available kits. """
+    def kitsAction(self, **kwargs):
+        """
+        Return list of all available kits.
+        """
+
+        response = None
 
         try:
-            kitList = KitManager().getKitList()
+            name = kwargs.get('name')
+            version = kwargs.get('version')
+            iteration = kwargs.get('iteration')
 
-            response = {'kits': kitList.getCleanDict()}
+            if cherrypy.request.method == 'DELETE':
+                KitManager().deleteKit(name, version, iteration)
+            else:
+                # GET method
+                if name:
+                    # get kit by name
+                    kitList = TortugaObjectList(
+                        [self.getKit(name,
+                                     version=version,
+                                     iteration=iteration)]
+                    )
+                else:
+                    # get all kits
+                    kitList = KitManager().getKitList()
+
+                response = {'kits': kitList.getCleanDict()}
+        except KitNotFound as ex:
+            self.handleException(ex)
+            code = self.getTortugaStatusCode(ex)
+            response = self.notFoundErrorResponse(str(ex), code)
         except Exception as ex:
             self.getLogger().error('%s' % ex)
             self.handleException(ex)
@@ -166,32 +157,6 @@ class KitController(TortugaController):
                 name, version, iteration)
 
             response = eula.getCleanDict()
-        except Exception as ex:
-            self.getLogger().error('%s' % ex)
-            self.handleException(ex)
-            response = self.errorResponse(str(ex))
-
-        return self.formatResponse(response)
-
-    @cherrypy.tools.json_out()
-    @authentication_required()
-    def deleteKit(self, name: str, version: str) -> str:
-        """
-        Remove kit by name and version
-        """
-
-        response = None
-
-        # 'version' can be formatted as '<version>-<iteration>'
-        if '-' in version:
-            version, iteration = version.split('-', 1)
-        else:
-            iteration = None
-
-        try:
-            KitManager().deleteKit(name, version, iteration)
-        except KitNotFound:
-            pass
         except Exception as ex:
             self.getLogger().error('%s' % ex)
             self.handleException(ex)

@@ -16,8 +16,10 @@
 
 import base64
 import json
-from typing import List, Optional, Union, NoReturn
+import urllib.parse
+from typing import List, NoReturn, Optional, Union
 
+from tortuga.exceptions.kitNotFound import KitNotFound
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.objects.eula import Eula
 from tortuga.objects.kit import Kit
@@ -30,28 +32,44 @@ class KitWsApi(TortugaWsApi):
     Kit WS API class.
     """
 
-    def getKit(self, name, version, iteration=None):
+    def getKit(self, name: str, version: Optional[str] = None,
+               iteration: Optional[str] = None) -> Kit:
         """
         Get kit info.
 
-            Returns:
-                kit
-            Throws:
-                KitNotFound
-                TortugaException
+        Raises:
+            KitNotFound
         """
 
-        dbVersion = '%s-%s' % (version, iteration)
+        url = 'v1/kits/?name={}'.format(urllib.parse.quote_plus(name))
 
-        if not iteration:
-            dbVersion = '%s' % (version)
+        if version is not None:
+            url += '&version={}'.format(
+                urllib.parse.quote_plus(version))
 
-        url = 'v1/kits/%s/%s' % (name, dbVersion)
+        if iteration is not None:
+            url += '&iteration={}'.format(
+                urllib.parse.quote_plus(iteration))
 
         try:
             _, responseDict = self.sendSessionRequest(url)
 
-            return Kit.getFromDict(responseDict.get('kit'))
+            # response is a list, so reference first item in list
+            kits = responseDict.get('kits')
+            if not kits:
+                kit_spec_str = name
+
+                if version:
+                    kit_spec_str += '-{}'.format(version)
+
+                if iteration:
+                    kit_spec_str += '-{}'.format(iteration)
+
+                raise KitNotFound(
+                    'Kit matching specification [{}] not found'.format(
+                            kit_spec_str))
+
+            return Kit.getFromDict(kits[0])
         except TortugaException:
             raise
         except Exception as ex:
@@ -207,25 +225,25 @@ class KitWsApi(TortugaWsApi):
         except Exception as ex:
             raise TortugaException(exception=ex)
 
-    def deleteKit(self, name: str, version: str,
-                  iteration: Optional[Union[str, None]] = None,
-                  force: Optional[bool] = False) -> NoReturn: \
-            # pylint: disable=unused-argument
+    def deleteKit(self, name: str, version: Optional[str] = None,
+                  iteration: Optional[str] = None,
+                  force: Optional[bool] = False) -> NoReturn:
         """
         Delete kit using kit name/version/iteration.
 
-            Returns:
-                None
-            Throws:
-                UserNotAuthorized
-                KitNotFound
-                KitInUse
-                TortugaException
+        Raises:
+            KitNotFound
+
         """
+        url = 'v1/kits/?name={}'.format(urllib.parse.quote_plus(name))
 
-        db_version = '%s-%s' % (version, iteration) if iteration else version
+        if version:
+            url += '&version={}'.format(urllib.parse.quote_plus(version))
 
-        url = 'v1/kits/%s/%s' % (name, db_version)
+        if iteration:
+            url += '&iteration={}'.format(urllib.parse.quote_plus(iteration))
+
+        url += '&force={}'.format(1 if force else 0)
 
         try:
             self.sendSessionRequest(url, method='DELETE')
