@@ -464,10 +464,10 @@ Commands listed in this "Quickstart" section are intended to be run as the
     1. Validate installation of `qmaster`
 
         It is recommended to validate the installation of the `qmaster`.
-	
+
 	Check the version of UGE kit that was installed, either by looking for 
 	the version in the kit's file name or by running
-	
+
 	    ls -ld /opt/uge-*
 
         Supposing the version that was installed is `8.5.4`, source the UGE environment by running
