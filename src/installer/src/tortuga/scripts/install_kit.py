@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tortuga.kit.kitCli import KitCli
+from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.kit.kitApiFactory import getKitApi
 
 
-class InstallKitCli(KitCli):
+class InstallKitCli(TortugaCli):
     """
     Install kit command line interface.
     """

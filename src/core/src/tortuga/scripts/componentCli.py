@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tortuga.kit.kitCli import KitCli
+from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.wsapi.nodeWsApi import NodeWsApi
 from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
 
 
-class ComponentCli(KitCli):
+class ComponentCli(TortugaCli):
     def __init__(self):
         super().__init__()
 
