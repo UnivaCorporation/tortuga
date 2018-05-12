@@ -14,7 +14,6 @@
 
 # pylint: disable=logging-not-lazy,no-self-use,no-member,maybe-no-member
 
-import gevent
 import configparser
 import csv
 import logging
@@ -25,6 +24,7 @@ import sys
 import traceback
 from typing import List, NoReturn, Optional, Union
 
+import gevent
 from sqlalchemy.orm.session import Session
 
 from tortuga.addhost.addHostManager import AddHostManager
@@ -124,22 +124,34 @@ class ResourceAdapter(UserDataMixin): \
             # pylint: disable=unused-argument
         self.__trace(session, node, updateNodeRequest)
 
-    def suspendActiveNode(self, nodeId: int):
-        """Change the given active node to an idle node"""
-        self.__trace(nodeId)
+    def suspendActiveNode(self, node: Node) -> bool:
+        """
+        Change the given active node to an idle node
+        """
 
-    def idleActiveNode(self, nodeIds: List[int]):
-        """Change the given active node to an idle node"""
-        self.__trace(nodeIds)
+        self.__trace(node)
+
+    def idleActiveNode(self, nodes: List[Node]) -> str:
+        """
+        Change the given active node to an idle node
+        """
+
+        self.__trace(nodes)
 
     def activateIdleNode(self, node: Node, softwareProfileName: str,
                          softwareProfileChanged: bool):
-        """Change the given idle node to an active node"""
+        """
+        Change the given idle node to an active node
+        """
+
         self.__trace(node, softwareProfileName, softwareProfileChanged)
 
-    def deleteNode(self, nodeIds: List[int]):
-        """Remove the given node (active or idle) from the system"""
-        self.__trace(nodeIds)
+    def deleteNode(self, nodes: List[Node]) -> NoReturn:
+        """
+        Remove the given node (active or idle) from the system
+        """
+
+        self.__trace(nodes)
 
     def _async_delete_nodes(self, nodes):
         """
@@ -162,11 +174,14 @@ class ResourceAdapter(UserDataMixin): \
         """Transfer the given idle node"""
         self.__trace(nodeIdSoftwareProfileTuples, newSoftwareProfileName)
 
-    def startupNode(self, nodeIds: List[int],
-                    remainingNodeList: Optional[Union[List[str], None]] = None,
-                    tmpBootMethod: Optional[Union[str, None]] = 'n'): \
+    def startupNode(self, nodes: List[Node],
+                    remainingNodeList: Optional[str] = None,
+                    tmpBootMethod: Optional[str] = 'n'): \
             # pylint: disable=unused-argument
-        """Start the given node"""
+        """
+        Start nodes
+        """
+
         # By default raise unsupported operation
         raise UnsupportedOperation('Node does not support starting')
 
@@ -196,11 +211,13 @@ class ResourceAdapter(UserDataMixin): \
         # By default raise unsupported operation
         raise UnsupportedOperation('Node does not support checkpointing')
 
-    def migrateNode(self, nodeId: int, remainingNodeList: List[str],
+    def migrateNode(self, node: Node, remainingNodeList: List[str],
                     liveMigrate: bool): \
             # pylint: disable=unused-argument
-        """Migrate the given node"""
-        # By default raise unsupported operation
+        """
+        Migrate the given node
+        """
+
         raise UnsupportedOperation('Node does not support migrating')
 
     def addVolumeToNode(self, node: Node, volume: str, isDirect: bool): \

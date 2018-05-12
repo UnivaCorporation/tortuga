@@ -56,7 +56,7 @@ class bootstrap::pre_conf {
   }
 
   # Expose "<rootdir>/repos/3rdparty" through internal httpd server by
-  # symlinking into "/depot/kits/" directory.
+  # symlinking into depot kits directory.
   file { "${tortuga::config::depot}/kits/3rdparty":
     ensure => symlink,
     target => "${tortuga::config::instroot}/repos/3rdparty",

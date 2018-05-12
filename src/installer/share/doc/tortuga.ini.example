@@ -32,7 +32,7 @@
 ; Location of file repository used by Tortuga for storing OS distribution
 ; media and other files required for provisioning.
 ;
-; depotpath = /depot
+; depotpath = /opt/tortuga/depot
 ;
 
 ;

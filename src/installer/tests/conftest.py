@@ -85,7 +85,7 @@ def dbm():
         'intWebServicePort': '8444',
         'adminPort': '8443',
         'eulaAccepted': 'true',
-        'depotpath': '/depot',
+        'depotpath': '/opt/tortuga/depot',
     }
 
     installer_fqdn = socket.getfqdn()
@@ -215,7 +215,7 @@ def dbm():
 
         # create compute (compute-01, compute-02, ...) nodes
         for n in range(1, 11):
-            compute_node = Node('compute-{0:02d}.private'.format(n))
+            compute_node = Node(name='compute-{0:02d}.private'.format(n))
             compute_node.softwareprofile = compute_swprofile
             compute_node.hardwareprofile = localiron_hwprofile
 

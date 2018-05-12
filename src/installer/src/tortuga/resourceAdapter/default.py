@@ -18,7 +18,7 @@ import configparser
 import os
 import select
 import signal
-from typing import Dict, List
+from typing import Dict, List, NoReturn, Optional
 
 from tortuga.db.dbManager import DbManager
 from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
@@ -32,11 +32,11 @@ from tortuga.exceptions.nodeAlreadyExists import NodeAlreadyExists
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.exceptions.parameterNotFound import ParameterNotFound
 from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
+from tortuga.objects import resourceadapter_settings
 from tortuga.os_utility import osUtility, tortugaSubprocess
 from tortuga.resourceAdapter.resourceAdapter import ResourceAdapter
-from tortuga.resourceAdapter.utility import get_provisioning_nic, \
-    get_provisioning_nics
-from tortuga.objects import resourceadapter_settings
+from tortuga.resourceAdapter.utility import (get_provisioning_nic,
+                                             get_provisioning_nics)
 
 
 def initialize_nics(installer_provisioning_nic, hardwareprofilenetworks,
@@ -146,50 +146,48 @@ class Default(ResourceAdapter):
 
         self.rebootNode([dbNode for dbNode, _ in nodeIdSoftwareProfileTuples])
 
-    def suspendActiveNode(self, nodeId): \
+    def suspendActiveNode(self, node: Node) -> bool: \
             # pylint: disable=no-self-use,unused-argument
+        # not supported
         return False
 
-    def idleActiveNode(self, dbNodes):
+    def idleActiveNode(self, nodes: List[Node]) -> str:
         # Shutdown nodes
-        self.shutdownNode(dbNodes)
+        self.shutdownNode(nodes)
 
         return 'Discovered'
 
-    def activateIdleNode(self, dbNode, softwareProfileName,
-                         softwareProfileChanged): \
+    def activateIdleNode(self, node: Node, softwareProfileName: str,
+                         softwareProfileChanged: bool):
             # pylint: disable=no-self-use
         bhm = osUtility.getOsObjectFactory().getOsBootHostManager()
 
-        session = DbManager().openSession()
-
-        try:
+        with DbManager().session() as session:
             if softwareProfileChanged:
                 softwareprofile = SoftwareProfilesDbHandler().\
                     getSoftwareProfile(session, softwareProfileName)
 
                 # Mark node for network boot if software profile changed
-                dbNode.bootFrom = 0
+                node.bootFrom = 0
             else:
                 softwareprofile = None
 
-            bhm.writePXEFile(dbNode,
+            bhm.writePXEFile(node,
                              localboot=not softwareProfileChanged,
                              softwareprofile=softwareprofile)
-        finally:
-            DbManager().closeSession()
 
     def abort(self):
         self.looping = False
 
-    def deleteNode(self, dbNodes):
-        self.hookAction('delete', [dbNode.name for dbNode in dbNodes])
+    def deleteNode(self, nodes: List[Node]) -> NoReturn:
+        self.hookAction('delete', [node.name for node in nodes])
 
-    def rebootNode(self, dbNodes, bSoftReset=False):
+    def rebootNode(self, nodes: List[Node],
+                   bSoftReset: Optional[bool] = False):
         self.getLogger().debug('rebootNode()')
 
         # Call the reboot script hook
-        self.hookAction('reset', [dbNode.name for dbNode in dbNodes],
+        self.hookAction('reset', [node.name for node in nodes],
                         'soft' if bSoftReset else 'hard')
 
     def __is_duplicate_mac_in_session(self, mac, session_nodes): \
@@ -572,16 +570,22 @@ class Default(ResourceAdapter):
             # Unmap Map the volume to a driveNumber
             self.sanApi.unmapDrive(node, volume=volume)
 
-    def shutdownNode(self, dbNodes, bSoftShutdown=False):
-        '''Shutdown specified node(s)'''
+    def shutdownNode(self, nodes: List[Node],
+                     bSoftReset: Optional[bool] = False):
+        """
+        Shutdown specified node(s)
+        """
 
         self.hookAction(
-            'shutdown', [dbNode.name for dbNode in dbNodes],
-            'soft' if bSoftShutdown else 'hard')
+            'shutdown', [node.name for node in nodes],
+            'soft' if bSoftReset else 'hard')
 
-    def startupNode(self, dbNodes, remainingNodeList=None,
-                    tmpBootMethod='n'): \
+    def startupNode(self, nodes: List[Node],
+                    remainingNodeList: Optional[str] = None,
+                    tmpBootMethod: Optional[str] = 'n'): \
             # pylint: disable=unused-argument
-        '''Start the given node(s)'''
+        """
+        Start the given node(s)
+        """
 
-        self.hookAction('start', [dbNode.name for dbNode in dbNodes])
+        self.hookAction('start', [node.name for node in nodes])
