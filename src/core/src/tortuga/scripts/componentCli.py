@@ -108,6 +108,25 @@ class ComponentCli(TortugaCli):
             baseurl=self.getUrl()
         )
 
+    def getKitNameVersionIteration(self, pkgname):
+        if pkgname:
+            a = pkgname.split('-')
+
+            name = a[0]
+            version = None
+            iteration = None
+
+            if len(a) == 3:
+                version = '-'.join(a[1:-1])
+                iteration = a[-1]
+            elif len(a) == 2:
+                version = a[1]
+        else:
+            name = self.getArgs().kitName
+            version = self.getArgs().kitVersion
+            iteration = self.getArgs().kitIteration
+
+        return name, version, iteration
 
     def __get_software_profile_name(self):
         """
