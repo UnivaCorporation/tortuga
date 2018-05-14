@@ -15,17 +15,17 @@
 # pylint: disable=no-member
 
 from functools import cmp_to_key
-from tortuga.objects.tortugaObject \
-    import TortugaObject, toBool, TortugaObjectList
 
 import tortuga.objects.admin
 import tortuga.objects.component
+import tortuga.objects.hardwareProfile
+import tortuga.objects.kitSource
+import tortuga.objects.nic
 import tortuga.objects.node
 import tortuga.objects.osInfo
 import tortuga.objects.partition
-import tortuga.objects.nic
-import tortuga.objects.hardwareProfile
-import tortuga.objects.kitSource
+from tortuga.objects.tortugaObject import TortugaObject, TortugaObjectList
+from tortuga.utility.helper import str2bool
 
 
 class SoftwareProfile(TortugaObject): \
@@ -175,10 +175,10 @@ class SoftwareProfile(TortugaObject): \
         return self.get('nodes')
 
     def setIsIdle(self, val):
-        self['isIdle'] = toBool(val)
+        self['isIdle'] = str2bool(val)
 
     def getIsIdle(self):
-        return toBool(self.get('isIdle'))
+        return str2bool(self.get('isIdle'))
 
     def setUsableHardwareProfiles(self, val):
         self['hardwareprofiles'] = val

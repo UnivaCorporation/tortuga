@@ -331,8 +331,3 @@ class TortugaObjectList(list):
         for obj in self:
             if isinstance(obj, TortugaObject):
                 obj.decode()
-
-
-def toBool(value):
-    return value[0].lower() in ('1', 't', 'y') \
-        if type(value) == str or type(value) == str else bool(value)

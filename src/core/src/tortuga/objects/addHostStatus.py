@@ -14,9 +14,9 @@
 
 # pylint: disable=no-member
 
-from tortuga.objects.tortugaObject \
-    import TortugaObject, TortugaObjectList, toBool
 from tortuga.objects import node
+from tortuga.objects.tortugaObject import TortugaObject, TortugaObjectList
+from tortuga.utility.helper import str2bool
 
 
 class AddHostStatus(TortugaObject): \
@@ -45,10 +45,10 @@ class AddHostStatus(TortugaObject): \
         return self.get('strings')
 
     def setIsRunning(self, val):
-        self['running'] = toBool(val)
+        self['running'] = str2bool(val)
 
     def getIsRunning(self):
-        return toBool(self.get('running'))
+        return str2bool(self.get('running'))
 
     @staticmethod
     def getKeys():
