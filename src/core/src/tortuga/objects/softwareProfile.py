@@ -198,6 +198,12 @@ class SoftwareProfile(TortugaObject): \
     def setTags(self, tags):
         self['tags'] = tags
 
+    def getMetadata(self):
+        return self.get('metadata')
+
+    def setMetadata(self, value):
+        self['metadata'] = value
+
     @staticmethod
     def getKeys():
         return ['id', 'name', 'osId', 'description', 'kernel', 'initrd',

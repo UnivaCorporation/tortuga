@@ -160,6 +160,8 @@ class SoftwareProfileSchema(ModelSchema):
     tags = fields.Nested('TagSchema',
                          only=('id', 'name', 'value'), many=True)
 
+    metadata = fields.Nested('MetadataSchema', many=True)
+
     class Meta:
         model = SoftwareProfileModel
 

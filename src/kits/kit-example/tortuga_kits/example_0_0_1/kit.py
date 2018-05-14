@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Optional
+
 from tortuga.kit.installer import KitInstallerBase
 
 
@@ -56,3 +58,13 @@ class ExampleKitInstaller(KitInstallerBase):
         """
         pass
 
+    def action_get_metadata(self,
+                            hardware_profile_name: Optional[str] = None,
+                            software_profile_name: Optional[str] = None,
+                            node_name: Optional[str] = None) -> dict:
+        """
+        This hook is invoked to query for read-only metadata related to the
+        specified object(s).
+
+        """
+        pass
