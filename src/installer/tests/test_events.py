@@ -64,3 +64,18 @@ def test_event_list(event_store):
                 events_in.remove(evt_in)
                 break
     assert events_in == []
+
+
+def test_event_list_filter(event_store):
+    ExampleEvent.fire(integer=3, string='testing'),
+    ExampleEvent.fire(integer=4, string='testing2'),
+    ExampleEvent.fire(integer=5, string='abc123')
+
+    #
+    # Ensure that events can be filtered and sorted
+    #
+    integers = []
+    for evt in event_store.list(order_by='integer', order_desc=True,
+                                integer__gt=3):
+        integers.append(evt.integer)
+    assert integers == [5, 4]

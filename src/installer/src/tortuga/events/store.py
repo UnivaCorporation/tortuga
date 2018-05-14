@@ -1,7 +1,11 @@
+from logging import getLogger
 from typing import Iterator, Optional
 
 from .base import BaseEvent, get_event_class
-from tortuga.objectstore.base import ObjectStore
+from tortuga.objectstore.base import matches_filters, ObjectStore
+
+
+logger = getLogger(__name__)
 
 
 class EventStore:
@@ -29,9 +33,22 @@ class EventStore:
         """
         raise NotImplementedError()
 
-    def list(self) -> Iterator[BaseEvent]:
+    def list(
+            self,
+            order_by: Optional[str] = None,
+            order_desc: bool = False,
+            order_alpha: bool = False,
+            limit: Optional[int] = None,
+            **filters) -> Iterator[BaseEvent]:
         """
         Gets a iterator of events from the event store.
+
+        :param str order_by:     the name of the object attribute to order by
+        :param bool order_desc:  sort in descending order
+        :param bool order_alpha: order alphabetically (instead of numerically)
+        :param int limit:        the number of objects to limit in the
+                                 iterator
+        :param filters:          one or more filters to apply to the list
 
         :return: an iterator of events
 
@@ -85,12 +102,34 @@ class ObjectStoreEventStore(EventStore):
         unmarshalled = event_class.schema().load(event_dict)
         return event_class(**unmarshalled.data)
 
-    def list(self) -> Iterator[BaseEvent]:
+    def list(
+            self,
+            order_by: Optional[str] = None,
+            order_desc: bool = False,
+            order_alpha: bool = False,
+            limit: Optional[int] = None,
+            **filters) -> Iterator[BaseEvent]:
         """
         See superclass.
 
         :return Iterator[BaseEvent]:
 
         """
-        for _, event_dict in self._store.list():
-            yield self._unmarshall(event_dict)
+        logger.debug(
+            'list(order_by={}, order_desc={}, limit, filters={}) -> ...'.format(
+                order_by, order_desc, limit, filters
+            )
+        )
+
+        count = 0
+        for _, event_dict in self._store.list_sorted(order_by=order_by,
+                                                     order_desc=order_desc,
+                                                     order_alpha=order_alpha):
+            obj = self._unmarshall(event_dict)
+            if matches_filters(obj, filters):
+                count += 1
+                if limit and count == limit:
+                    yield obj
+                    return
+
+                yield obj

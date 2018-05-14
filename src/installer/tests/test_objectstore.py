@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import types
+
+from tortuga.objectstore.base import matches_filters
 from tortuga.objectstore.redis import RedisObjectStore
 
 
@@ -180,6 +183,59 @@ def test_list_sort(redis):
                            order_desc=True):
         names.append(v['name'])
     assert names == ['zeph', 'joe', 'fred', 'bob', 'alice']
+
+
+def test_filter_matches():
+    my_dict = {
+        'number': 45,
+        'name': 'bob',
+        'stats': {
+            'age': 32
+        }
+    }
+
+    my_obj = types.SimpleNamespace()
+    my_obj.number = 45
+    my_obj.name = 'bob'
+    my_obj.stats = types.SimpleNamespace()
+    my_obj.stats.age = 32
+    
+    #
+    # Test equality
+    #
+    filters = {
+        'number': 45,
+        'name': 'bob'
+    }
+    assert matches_filters(my_dict, filters)
+    assert matches_filters(my_obj, filters)
+    
+    #
+    # Test less than
+    #
+    filters = {
+        'number__lt': 46,
+    }
+    assert matches_filters(my_dict, filters)
+    assert matches_filters(my_obj, filters)
+    
+    #
+    # Test greater than
+    #
+    filters = {
+        'name__gt': 'abba',
+    }
+    assert matches_filters(my_dict, filters)
+    assert matches_filters(my_obj, filters)
+
+    #
+    # Test nested attributes
+    #
+    filters = {
+        'stats__age__gt': 30,
+    }
+    assert matches_filters(my_dict, filters)
+    assert matches_filters(my_obj, filters)
 
 
 def test_list_filter(redis):

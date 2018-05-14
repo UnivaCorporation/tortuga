@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from logging import getLogger
-from typing import Any, Dict, Iterator, Optional, Tuple
+from typing import Any, Dict, Iterator, Optional, Tuple, Union
 
 
 logger = getLogger(__name__)
@@ -38,7 +38,8 @@ COMPARATORS = {
 }
 
 
-def matches_filters(obj: dict, filters: Dict[str, Any]) -> bool:
+def matches_filters(obj: Union[object, dict],
+                    filters: Dict[str, Any]) -> bool:
     """
     Determines whether or not an object matches a list of filters. Filters
     look like this:
@@ -52,8 +53,8 @@ def matches_filters(obj: dict, filters: Dict[str, Any]) -> bool:
     a comparator (see COMPARATORS). If no comparator is provided, then
     equality is assumed.
 
-    :param dict obj:               the object to test
-    :param Dict[str, Any] filters: the list of filters to test
+    :param Union[object, dict] obj: the object or dict to test
+    :param Dict[str, Any] filters:  the list of filters to test
 
     :raises KeyError: if the attribute does not exist
 
@@ -72,7 +73,10 @@ def matches_filters(obj: dict, filters: Dict[str, Any]) -> bool:
 
         left = obj
         for attr in parts:
-            left = obj[attr]
+            if isinstance(left, dict):
+                left = left[attr]
+            else:
+                left = getattr(left, attr)
 
         if not COMPARATORS[comparator](left, right):
             result = False
@@ -135,7 +139,8 @@ class ObjectStore:
         :param str order_by:     the name of the object attribute to order by
         :param bool order_desc:  sort in descending order
         :param bool order_alpha: order alphabetically (instead of numerically)
-        :param int limit:        the number of objects to limit in the iterator
+        :param int limit:        the number of objects to limit in the
+                                 iterator
         :param filters:          one or more filters to apply to the list
 
         :return List[Tuple[str, dict]]: an iterator of tuples, containing
@@ -155,7 +160,7 @@ class ObjectStore:
             if matches_filters(obj, filters):
                 count += 1
                 if limit and count == limit:
-                    yield key, obj
+                    yield (key, obj)
                     return
 
                 yield (key, obj)
