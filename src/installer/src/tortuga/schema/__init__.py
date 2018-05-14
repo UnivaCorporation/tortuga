@@ -153,7 +153,7 @@ class SoftwareProfileSchema(ModelSchema):
                                exclude=('softwareprofiles',))
 
     hardwareprofiles = fields.Nested('HardwareProfileSchema',
-                                     only=('id', 'name'), many=True)
+                                     only=('id', 'name', 'resourceadapter'), many=True)
 
     os = fields.Nested('OperatingSystemSchema')
 
@@ -174,7 +174,7 @@ class HardwareProfileSchema(ModelSchema):
     tags = fields.Nested('TagSchema',
                          only=('id', 'name', 'value'), many=True)
 
-    resourceadapter = fields.Nested('ResourceAdapterSchema')
+    resourceadapter = fields.Nested('ResourceAdapterSchema', only=('id', 'name'))
 
     class Meta:
         model = HardwareProfileModel
