@@ -12,7 +12,72 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Optional
+from logging import getLogger
+from typing import Any, Dict, Iterator, Optional, Tuple
+
+
+logger = getLogger(__name__)
+
+
+def cmp_equals(left: Any, right: Any):
+    return left == right
+
+
+def cmp_greater_than(left: Any, right: Any):
+    return left > right
+
+
+def cmp_less_than(left: Any, right: Any):
+    return left < right
+
+
+COMPARATORS = {
+    'eq': cmp_equals,
+    'gt': cmp_greater_than,
+    'lt': cmp_less_than,
+}
+
+
+def matches_filters(obj: dict, filters: Dict[str, Any]) -> bool:
+    """
+    Determines whether or not an object matches a list of filters. Filters
+    look like this:
+
+        attr=value
+        attr__lt=valiue
+        attr__attr__gt=value
+
+    Where attr is an attribute name on the object (dict), which can be
+    nested using multiple levels of "__". The last part of the filter is
+    a comparator (see COMPARATORS). If no comparator is provided, then
+    equality is assumed.
+
+    :param dict obj:               the object to test
+    :param Dict[str, Any] filters: the list of filters to test
+
+    :raises KeyError: if the attribute does not exist
+
+    :return bool: True if all filters match (or no filters provided),
+                  False otherwise
+
+    """
+    result = True
+
+    for k, right in filters.items():
+        parts = k.split('__')
+        if parts[-1] in COMPARATORS.keys():
+            comparator = parts.pop()
+        else:
+            comparator = 'eq'
+
+        left = obj
+        for attr in parts:
+            left = obj[attr]
+
+        if not COMPARATORS[comparator](left, right):
+            result = False
+
+    return result
 
 
 class ObjectStore:
@@ -27,7 +92,7 @@ class ObjectStore:
 
     def get_key_name(self, key: str) -> str:
         """
-        Builds the objecdt store key name to be used for storing the object.
+        Builds the object store key name to be used for storing the object.
 
         :param str key: the key name to use as the base
 
@@ -53,6 +118,64 @@ class ObjectStore:
         :param str key: the key of the object to get
 
         :return: the object, None if not found
+
+        """
+        raise NotImplementedError()
+
+    def list(
+            self,
+            order_by: Optional[str] = None,
+            order_desc: bool = False,
+            order_alpha: bool = False,
+            limit: Optional[int] = None,
+            **filters) -> Iterator[Tuple[str, dict]]:
+        """
+        Gets a list of objects from the object store.
+
+        :param str order_by:     the name of the object attribute to order by
+        :param bool order_desc:  sort in descending order
+        :param bool order_alpha: order alphabetically (instead of numerically)
+        :param int limit:        the number of objects to limit in the iterator
+        :param filters:          one or more filters to apply to the list
+
+        :return List[Tuple[str, dict]]: an iterator of tuples, containing
+                                        (key, object)
+
+        """
+        logger.debug(
+            'list(order_by={}, order_desc={}, limit, filters={}) -> ...'.format(
+                order_by, order_desc, limit, filters
+            )
+        )
+
+        count = 0
+        for key, obj in self.list_sorted(order_by=order_by,
+                                         order_desc=order_desc,
+                                         order_alpha=order_alpha):
+            if matches_filters(obj, filters):
+                count += 1
+                if limit and count == limit:
+                    yield key, obj
+                    return
+
+                yield (key, obj)
+
+    def list_sorted(
+            self,
+            order_by: Optional[str] = None,
+            order_desc: bool = False,
+            order_alpha: bool = False) -> Iterator[Tuple[str, dict]]:
+        """
+        Returns a sorted iterator of objects. This method is designed to be
+        called by the list() method, which is responsible for applying
+        the limits and filters.
+
+        :param int order_by:     the name of the object attribue to order by
+        :param bool order_desc:  sort in descending order
+        :param bool order_alpha: order alphabetically (instead of numerically)
+
+        :return List[Tuple[str, dict]]: a sorted iterator of tuples,
+                                        containing (key, object)
 
         """
         raise NotImplementedError()

@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Iterator, Optional
 
 from .base import BaseEvent, get_event_class
 from tortuga.objectstore.base import ObjectStore
@@ -25,6 +25,15 @@ class EventStore:
         :param str event_id: the id of the event to retrieve
 
         :return: the event instance, if found, otherwise None
+
+        """
+        raise NotImplementedError()
+
+    def list(self) -> Iterator[BaseEvent]:
+        """
+        Gets a iterator of events from the event store.
+
+        :return: an iterator of events
 
         """
         raise NotImplementedError()
@@ -60,9 +69,28 @@ class ObjectStoreEventStore(EventStore):
 
         """
         event_dict = self._store.get(event_id)
-        print(event_dict)
         if event_dict is None:
             return None
+        return self._unmarshall(event_dict)
+
+    def _unmarshall(self, event_dict: dict) -> BaseEvent:
+        """
+        Unmarshalls an event dict into an event class instance.
+
+        :param dict event_dict:
+        :return BaseEvent: the unmarshalled base event
+
+        """
         event_class = get_event_class(event_dict['name'])
         unmarshalled = event_class.schema().load(event_dict)
         return event_class(**unmarshalled.data)
+
+    def list(self) -> Iterator[BaseEvent]:
+        """
+        See superclass.
+
+        :return Iterator[BaseEvent]:
+
+        """
+        for _, event_dict in self._store.list():
+            yield self._unmarshall(event_dict)

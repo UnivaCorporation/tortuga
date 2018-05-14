@@ -45,3 +45,22 @@ def test_event_storage(event_store):
     e = ExampleEvent.fire(integer=3, string='testing')
     e1 = event_store.get(e.id)
     assert e == e1
+
+
+def test_event_list(event_store):
+    #
+    # Ensure that when a multiple events fire, that the same events are
+    # retrieved via the event store's list method
+    #
+    events_in = [
+        ExampleEvent.fire(integer=3, string='testing'),
+        ExampleEvent.fire(integer=4, string='testing2'),
+        ExampleEvent.fire(integer=5, string='abc123')
+    ]
+
+    for evt_out in event_store.list():
+        for evt_in in events_in:
+            if evt_in == evt_out:
+                events_in.remove(evt_in)
+                break
+    assert events_in == []

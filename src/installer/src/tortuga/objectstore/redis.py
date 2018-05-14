@@ -14,7 +14,7 @@
 
 import json
 from logging import getLogger
-from typing import Optional
+from typing import Iterator, Optional, Tuple
 
 from .base import ObjectStore
 
@@ -28,6 +28,11 @@ class RedisObjectStore(ObjectStore):
     KV store.
 
     """
+    #
+    # A list of reserved keys, that are required for internal use
+    #
+    RESERVED_KEYS = ['INDEX']
+
     def __init__(self, namespace: str, redis_client):
         """
         Initialization.
@@ -39,6 +44,15 @@ class RedisObjectStore(ObjectStore):
         super().__init__(namespace)
         self._redis = redis_client
 
+    def _get_index_key_name(self) -> str:
+        """
+        Gets the key name for the Redis index set.
+
+        :return str: the key name
+
+        """
+        return self.get_key_name('INDEX')
+
     def set(self, key: str, value: dict):
         """
         See superclass.
@@ -47,10 +61,13 @@ class RedisObjectStore(ObjectStore):
         :param value:
 
         """
+        if key in self.RESERVED_KEYS:
+            raise Exception('Key reserved for internal use: {}'.format(key))
+
         if not value:
             value = {}
 
-        logger.debug('set: {} -> {}'.format(key, value))
+        logger.debug('set({}, {})'.format(key, value))
 
         #
         # If any of the keys are more complex data structures, store them
@@ -63,7 +80,13 @@ class RedisObjectStore(ObjectStore):
             else:
                 to_store[k] = v
 
-        self._redis.hmset(self.get_key_name(key), to_store)
+        key = self.get_key_name(key)
+        self._redis.hmset(key, to_store)
+
+        #
+        # Create a Redis set for the purposes of indexing, sorting, etc.
+        #
+        self._redis.sadd(self._get_index_key_name(), key)
 
     def get(self, key: str) -> Optional[dict]:
         """
@@ -71,31 +94,88 @@ class RedisObjectStore(ObjectStore):
 
         :param key:
 
-        :return:
+        :return Optional[dict]:
 
         """
-        result = self._redis.hgetall(self.get_key_name(key))
+        return self._get(self.get_key_name(key))
+
+    def _get(self, key: str) -> Optional[dict]:
+        """
+        This is the same as the get() method, except it expects the key
+        prefix to already prepended to the key.
+
+        :param key: the key, namespace prefixed
+
+        :return: the object, if found, None otherwise
+
+        """
+        result = self._redis.hgetall(key)
 
         if not result:
             return None
 
-        #
-        # Deserialize any values that were serialized as JSON
-        #
-        to_return = {}
-        for k, v in result.items():
+        logger.debug('get() -> {}'.format(key, result))
+        return self._deserialize(result)
+
+    def _deserialize(self, hsh: dict) -> dict:
+        """
+        Reconstitutes a Redis hash.
+
+        :param dict hsh: the Redis hash to deserialize
+
+        :return dict: the deserialized result
+
+        """
+        deserialized = {}
+        for k, v in hsh.items():
             if isinstance(k, bytes):
                 k = k.decode()
             if isinstance(v, bytes):
                 v = v.decode()
             if isinstance(v, str) and v.startswith('JSON:'):
-                to_return[k] = json.loads(v[5:])
+                deserialized[k] = json.loads(v[5:])
             else:
-                to_return[k] = v
+                deserialized[k] = v
 
-        logger.debug('get: {} -> {}'.format(key, to_return))
+        return deserialized
 
-        return to_return
+    def list_sorted(
+            self,
+            order_by: Optional[str] = None,
+            order_desc: bool = False,
+            order_alpha: bool = False) -> Iterator[Tuple[str, dict]]:
+        """
+        See superclass.
+
+        :param str order_by:
+        :param bool order_desc:
+        :param bool order_alpha:
+
+        :return Iterator[dict]:
+
+        """
+        if order_by:
+            sort_by = '*->{}'.format(order_by)
+
+            for key in self._redis.sort(self._get_index_key_name(),
+                                        by=sort_by, desc=order_desc,
+                                        alpha=order_alpha):
+                yield (self._remove_namespace(key), self._get(key))
+        else:
+            for key in self._redis.smembers(self._get_index_key_name()):
+                yield (self._remove_namespace(key), self._get(key))
+
+    def _remove_namespace(self, key: str) -> str:
+        """
+        Removes the namespace prefix from a key.
+
+        :param str key: the key from which the namespace prefix will be
+                        removed
+
+        :return str: the key without the namespace prefix
+
+        """
+        return key.replace('{}:'.format(self._namespace), '')
 
     def delete(self, key: str):
         """
