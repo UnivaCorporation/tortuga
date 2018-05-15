@@ -892,7 +892,6 @@ class NodeManager(TortugaObjectManager): \
         # query resource adapter to get virtual cpus for each Node (TortugaObject)
 
         for node in nodes:
-            self.getLogger().debug('adapter: {}'.format(node.getHardwareProfile().getResourceAdapter()))
             adapter_name = node.getHardwareProfile().getResourceAdapter().getName() \
                 if node.getHardwareProfile().getResourceAdapter() else 'default'
 
