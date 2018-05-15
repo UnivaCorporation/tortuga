@@ -50,3 +50,8 @@ class Component(ModelBase):
 
     def __repr__(self):
         return format_component_descriptor(self.name, self.version)
+
+    def __eq__(self, other):
+        return self.name == other.name and \
+            self.version == other.version and \
+            self.arch == other.arch
