@@ -14,7 +14,7 @@
 
 # pylint: disable=not-callable,multiple-statements,no-member
 
-from typing import Optional, Union
+from typing import Optional, Dict
 
 from sqlalchemy import func
 
@@ -59,7 +59,7 @@ class SoftwareProfileDbApi(TortugaDbApi):
 
     def getSoftwareProfile(
             self, name: str,
-            optionDict: Optional[Union[dict, None]] = None) -> SoftwareProfile:
+            optionDict: Optional[Dict[str, bool]] = None) -> SoftwareProfile:
         """
         Get softwareProfile from the db.
 
@@ -92,7 +92,7 @@ class SoftwareProfileDbApi(TortugaDbApi):
 
     def getSoftwareProfileById(
             self, softwareProfileId: int,
-            optionDict: Optional[Union[dict, None]] = None) -> SoftwareProfile:
+            optionDict: Optional[Dict[str, bool]] = None) -> SoftwareProfile:
         """
         Get softwareProfile from the db.
 
