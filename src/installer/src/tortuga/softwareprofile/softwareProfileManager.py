@@ -55,7 +55,15 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
         in this softwareprofile
         """
 
-        return self._sp_db_api.getSoftwareProfileList(tags=tags)
+        results = self._sp_db_api.getSoftwareProfileList(tags=tags)
+
+        for software_profile_obj in results:
+            # load any available software profile metadata
+            software_profile_obj.setMetadata(
+                self.get_software_profile_metadata(
+                    software_profile_obj.getName()))
+
+        return results
 
     def getIdleSoftwareProfileList(self):
         """ Return all of the idle softwareprofiles """
@@ -114,8 +122,16 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
             optionDict: Optional[Dict[str, bool]] = None) -> SoftwareProfile:
         """
         Retrieve software profile by name
+
         """
-        return self._sp_db_api.getSoftwareProfile(name, optionDict=optionDict)
+        software_profile_obj = self._sp_db_api.getSoftwareProfile(
+            name, optionDict=optionDict)
+
+        # load any available software profile metadata
+        software_profile_obj.setMetadata(
+            self.get_software_profile_metadata(name))
+
+        return software_profile_obj
 
     def getSoftwareProfileById(
             self,
@@ -123,9 +139,16 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
             optionDict: Optional[Dict[str, bool]] = None) -> SoftwareProfile:
         """
         Retrieve software profile by id
+
         """
-        return self._sp_db_api.getSoftwareProfileById(
+        software_profile_obj = self._sp_db_api.getSoftwareProfileById(
             id_, optionDict=optionDict)
+
+        # load any available software profile metadata
+        software_profile_obj.setMetadata(
+            self.get_software_profile_metadata(software_profile_obj.getName()))
+
+        return software_profile_obj
 
     def _getCoreComponentForOsInfo(self, osInfo):
         # Find core component
@@ -774,3 +797,25 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
 
     def getUsableNodes(self, softwareProfileName):
         return self._sp_db_api.getUsableNodes(softwareProfileName)
+
+    def get_software_profile_metadata(self, name: str) -> Dict[str, str]:
+        """
+        Call action_get_metadata() method for all kits
+        """
+
+        metadata = {}
+
+        load_kits()
+
+        kits = self._kit_db_api.getKitList()
+
+        for kit in kits:
+            installer_ = get_kit_installer(
+                (kit.getName(), kit.getVersion(), kit.getIteration()))
+
+            # we are only interested in software profile metadata
+            item = installer_().action_get_metadata(software_profile_name=name)
+            if item:
+                metadata.update(item)
+
+        return metadata

@@ -14,7 +14,7 @@
 
 # pylint: disable=not-callable,multiple-statements,no-member
 
-from typing import Optional, Dict
+from typing import Dict, Optional
 
 from sqlalchemy import func
 
@@ -34,9 +34,6 @@ from tortuga.exceptions.softwareProfileNotFound import SoftwareProfileNotFound
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.exceptions.updateSoftwareProfileFailed import \
     UpdateSoftwareProfileFailed
-from tortuga.kit.kitApi import KitApi
-from tortuga.kit.loader import load_kits
-from tortuga.kit.registry import get_kit_installer
 from tortuga.objects.component import Component
 from tortuga.objects.node import Node
 from tortuga.objects.partition import Partition
@@ -100,10 +97,6 @@ class SoftwareProfileDbApi(TortugaDbApi):
 
         software_profile_obj = SoftwareProfile.getFromDbDict(
             software_profile.__dict__)
-
-        # load any available software profile metadata
-        software_profile_obj.setMetadata(
-            get_software_profile_metadata(software_profile.name))
 
         return software_profile_obj
 
@@ -867,26 +860,3 @@ class SoftwareProfileDbApi(TortugaDbApi):
             raise
         finally:
             DbManager().closeSession()
-
-
-def get_software_profile_metadata(name: str) -> Dict[str, str]:
-    """
-    Query all kits for metadata
-    """
-
-    metadata = {}
-
-    load_kits()
-
-    kits = KitApi().getKitList()
-
-    for kit in kits:
-        installer_ = get_kit_installer(
-            (kit.getName(), kit.getVersion(), kit.getIteration()))
-
-        # we are only interested in software profile metadata
-        item = installer_().action_get_metadata(software_profile_name=name)
-        if item:
-            metadata.update(item)
-
-    return metadata
