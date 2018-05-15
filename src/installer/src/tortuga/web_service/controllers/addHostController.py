@@ -21,14 +21,13 @@ import cherrypy
 from marshmallow import Schema, fields
 
 from tortuga.addhost.addHostManager import AddHostManager
-from tortuga.addhost.utility import validate_addnodes_request
-from tortuga.db.models.nodeRequest import NodeRequest
+
 from tortuga.db.nodeRequestsDbHandler import NodeRequestsDbHandler
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.notFound import NotFound
 from tortuga.web_service.auth.decorators import authentication_required
 from .tortugaController import TortugaController
-from ..threadManager import threadManager
+from tortuga.addhost.task import enqueue_addnodes_request
 
 
 class NodeRequestSchema(Schema):
@@ -148,35 +147,3 @@ class AddHostController(TortugaController):
             response = self.errorResponse(str(ex))
 
         return self.formatResponse(response)
-
-
-def enqueue_addnodes_request(session, addNodesRequest):
-    validate_addnodes_request(addNodesRequest['addNodesRequest'])
-
-    request = init_node_request_record(addNodesRequest)
-
-    session.add(request)
-
-    session.commit()
-
-    threadManager.queue.put({
-        'action': 'ADD',
-        'data': {
-            'addHostSession': request.addHostSession,
-        },
-    })
-
-    return request.addHostSession
-
-
-def init_node_request_record(addNodesRequest):
-    request = NodeRequest(json.dumps(addNodesRequest['addNodesRequest']))
-    request.timestamp = datetime.datetime.utcnow()
-    request.addHostSession = AddHostManager().createNewSession()
-    request.action = 'ADD'
-
-    if 'metadata' in addNodesRequest and \
-            'admin_id' in addNodesRequest['metadata']:
-        request.admin_id = addNodesRequest['metadata']['admin_id']
-
-    return request
