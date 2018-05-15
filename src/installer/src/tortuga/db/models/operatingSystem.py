@@ -38,3 +38,8 @@ class OperatingSystem(ModelBase):
         uselist=False,
         primaryjoin='OperatingSystem.familyId==OperatingSystemFamily.id'
     )
+
+    def __repr__(self):
+        return '<OperatingSystem(name=[{}], version=[{}], arch=[{}])>'.format(
+            self.name, self.version, self.arch
+        )
