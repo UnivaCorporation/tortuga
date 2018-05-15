@@ -24,9 +24,8 @@ from .models.resourceAdapter import ResourceAdapter
 
 
 class ResourceAdaptersDbHandler(TortugaDbObjectHandler):
-    def addResourceAdapter(self, session, name, kitId): \
-            # pylint: disable=unused-argument,no-self-use
-        dbResourceAdapter = ResourceAdapter(name, kitId)
+    def addResourceAdapter(self, session, name, kitId):
+        dbResourceAdapter = ResourceAdapter(name=name, kitId=kitId)
         session.add(dbResourceAdapter)
         return dbResourceAdapter
 
