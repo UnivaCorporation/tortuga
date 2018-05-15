@@ -43,7 +43,7 @@ class Kit(ModelBase):
                               passive_deletes=True)
 
     def get_osfamily_component(self, name: str,
-                               operating_system_family: OperatingSystemFamily):
+                               osfamily: OperatingSystemFamily):
         """
         Get compatible component.
 
@@ -53,7 +53,9 @@ class Kit(ModelBase):
         for component in self.components:
             if component.name == name:
                 for component_osfamily in component.osfamily_components:
-                    if operating_system_family == component_osfamily.family:
+                    if osfamily.name == component_osfamily.family.name and \
+                            osfamily.version == component_osfamily.family.version and \
+                            osfamily.arch == component_osfamily.family.arch:
                         break
                 else:
                     continue
