@@ -96,26 +96,50 @@ Tortuga runs on Red Hat Enterprise Linux (RHEL) or CentOS version 6 or 7 (7 is
 preferred). Installation packages for it can be built on most Linux modern
 distributions or macOS.
 
+#### Python 3
+
 Python 3.6 or higher is required and can be installed from [The Software Collections
 (SCL) repository](https://wiki.centos.org/AdditionalResources/Repositories/SCL).
 
-CentOS 6 and 7:
+##### Enable SCL repository on CentOS
 
 ```shell
 yum install centos-release-scl
+```
+
+##### Enable SCL repository on RHEL
+
+On Red Hat Enterprise Linux (RHEL), the `rh-python36` package is made available
+through the RHSCL channel:
+
+```shell
+yum-config-manager --enable rhel-server-rhscl-7-rpms
+```
+
+Use the following `yum-config-manager` invocation if running the official RHEL
+AMI on AWS:
+
+```shell
+yum-config-manager --enable rhui-REGION-rhel-server-rhscl
+```
+
+##### Install Python 3
+
+After installing the SCL package repository, run the following command to install Python 3.
+
+```shell
 yum install rh-python36
 ```
 
-Source the environment to add `python3` to the system `PATH`:
+After installing `rh-python36`, source the environment to add `python3` to the system `PATH`:
 
 ```shell
 . /opt/rh/rh-python36/enable
 ```
 
-On Red Hat Enterprise Linux (RHEL), the `rh-python36` package is made available
-through the RHSCL channel.
+#### Puppet
 
-[Puppet 5](https://puppet.com) is also required to build the Puppet modules used by
+[Puppet 5.x](https://puppet.com) is also required to build the Puppet modules used by
 Tortuga. It can be installed on RHEL/CentOS by installing the distribution
 version specific YUM repository package `puppet5-release` from
 [http://yum.puppetlabs.com/puppet5](http://yum.puppetlabs.com/puppet5/) and
