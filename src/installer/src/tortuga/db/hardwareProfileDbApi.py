@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Optional, Union
+from typing import Optional
 
 import sqlalchemy.exc
 from sqlalchemy.orm.session import Session
@@ -66,7 +66,7 @@ class HardwareProfileDbApi(TortugaDbApi):
         self._networksDbHandler = NetworksDbHandler()
 
     def getHardwareProfile(self, name: str,
-                           optionDict: Optional[Union[dict, None]] = None):
+                           optionDict: Optional[dict] = None):
         """
         Get hardwareProfile from the db.
 
@@ -98,7 +98,7 @@ class HardwareProfileDbApi(TortugaDbApi):
             DbManager().closeSession()
 
     def getHardwareProfileById(self, hardwareProfileId: int,
-                               optionDict: Optional[Union[dict, None]] = None):
+                               optionDict: Optional[dict] = None):
         """
         Get hardwareProfile from the db.
 
@@ -127,8 +127,8 @@ class HardwareProfileDbApi(TortugaDbApi):
         finally:
             DbManager().closeSession()
 
-    def getHardwareProfileList(self, optionDict: Optional[Union[dict, None]] = None,
-                               tags: Optional[Union[dict, None]] = None):
+    def getHardwareProfileList(self, optionDict: Optional[dict] = None,
+                               tags: Optional[dict] = None):
         """
         Get list of all available hardwareProfiles from the db.
 
@@ -444,7 +444,7 @@ class HardwareProfileDbApi(TortugaDbApi):
 
     def __populateHardwareProfile(self, session: Session,
                                   hardwareProfile: HardwareProfileModel,
-                                  dbHardwareProfile: Optional[Union[HardwareProfileModel, None]] = None) -> HardwareProfileModel:
+                                  dbHardwareProfile: Optional[HardwareProfileModel] = None) -> HardwareProfileModel:
         """
         Helper function for creating / updating hardware profiles. If
         'dbHardwareProfile' is specified, this is an update (vs. add)
