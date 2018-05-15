@@ -14,7 +14,7 @@
 
 import os
 import shutil
-from typing import Optional
+from typing import Dict, Optional
 
 from tortuga.config.configManager import ConfigManager
 from tortuga.db.componentDbApi import ComponentDbApi
@@ -111,7 +111,7 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
     def getSoftwareProfile(
             self,
             name: str,
-            optionDict: Optional[dict] = None) -> SoftwareProfile:
+            optionDict: Optional[Dict[str, bool]] = None) -> SoftwareProfile:
         """
         Retrieve software profile by name
         """
@@ -120,7 +120,7 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
     def getSoftwareProfileById(
             self,
             id_: int,
-            optionDict: Optional[dict] = None) -> SoftwareProfile:
+            optionDict: Optional[Dict[str, bool]] = None) -> SoftwareProfile:
         """
         Retrieve software profile by id
         """
