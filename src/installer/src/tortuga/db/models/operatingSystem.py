@@ -38,10 +38,3 @@ class OperatingSystem(ModelBase):
         uselist=False,
         primaryjoin='OperatingSystem.familyId==OperatingSystemFamily.id'
     )
-
-    def __init__(self, name=None, version=None, arch=None):
-        super().__init__()
-
-        self.name = name
-        self.version = version
-        self.arch = arch
