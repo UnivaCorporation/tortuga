@@ -12,9 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=multiple-statements,no-member,no-name-in-module
-# pylint: disable=maybe-no-member,not-callable
-
 from typing import Optional, Union
 
 import sqlalchemy.exc
@@ -673,8 +670,8 @@ class HardwareProfileDbApi(TortugaDbApi):
                     ' netmask [%s]' % (network, netmask))
 
             return tortuga.objects.nic.Nic.getFromDbDict(nics[0].__dict__)
-        except TortugaException:
-            self.getLogger().exception('%s' % ex)
+        except TortugaException as exc:
+            self.getLogger().exception('%s' % exc)
             raise
         finally:
             DbManager().closeSession()
