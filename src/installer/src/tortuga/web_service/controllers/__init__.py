@@ -11,9 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import cherrypy
 
-from .registry import register_ws_controller, get_all_ws_controllers
-
+from tortuga.kit.loader import load_kits
+from tortuga.kit.registry import get_all_kit_installers
 from .addHostController import AddHostController
 from .adminController import AdminController
 from .authController import AuthController
@@ -22,6 +23,7 @@ from .kitController import KitController
 from .networkController import NetworkController
 from .nodeController import NodeController
 from .parameterController import ParameterController
+from .registry import register_ws_controller, get_all_ws_controllers
 from .resourceAdapterConfigurationController import \
     ResourceAdapterConfigurationController
 from .softwareProfileController import SoftwareProfileController
@@ -29,6 +31,9 @@ from .tagController import TagController
 from .updateController import UpdateController
 
 
+#
+# Register web service controllers
+#
 register_ws_controller(AddHostController)
 register_ws_controller(AdminController)
 register_ws_controller(AuthController)
@@ -41,3 +46,31 @@ register_ws_controller(ResourceAdapterConfigurationController)
 register_ws_controller(SoftwareProfileController)
 register_ws_controller(TagController)
 register_ws_controller(UpdateController)
+
+
+def setup_routes():
+    """
+    Used to setup RESTFul resources.
+
+    """
+    #
+    # Ensure all kits are loaded, and their web services are registered
+    #
+    load_kits()
+    for kit_installer_class in get_all_kit_installers():
+        kit_installer = kit_installer_class()
+        kit_installer.register_web_service_controllers()
+
+    dispatcher = cherrypy.dispatch.RoutesDispatcher()
+    dispatcher.mapper.explicit = False
+    for controller_class in get_all_ws_controllers():
+        controller = controller_class()
+        for action in controller.actions:
+            dispatcher.connect(
+                action['name'],
+                action['path'],
+                action=action['action'],
+                controller=controller,
+                conditions=dict(method=action['method'])
+            )
+    return dispatcher

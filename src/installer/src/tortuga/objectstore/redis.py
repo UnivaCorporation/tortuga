@@ -16,6 +16,8 @@ import json
 from logging import getLogger
 from typing import Iterator, Optional, Tuple
 
+from redis.exceptions import ResponseError
+
 from .base import ObjectStore
 
 
@@ -114,7 +116,7 @@ class RedisObjectStore(ObjectStore):
         if not result:
             return None
 
-        logger.debug('get() -> {}'.format(key, result))
+        logger.debug('get({}) -> {}'.format(key, result))
         return self._deserialize(result)
 
     def _deserialize(self, hsh: dict) -> dict:
@@ -154,16 +156,41 @@ class RedisObjectStore(ObjectStore):
         :return Iterator[dict]:
 
         """
-        if order_by:
-            sort_by = '*->{}'.format(order_by)
+        #
+        # Un-ordered list
+        #
+        if not order_by:
+            for key in self._redis.smembers(self._get_index_key_name()):
+                key = key.decode()
+                yield (self._remove_namespace(key), self._get(key))
 
+            return
+
+        #
+        # Ordered list
+        #
+        try:
+            sort_by = '*->{}'.format(order_by)
             for key in self._redis.sort(self._get_index_key_name(),
                                         by=sort_by, desc=order_desc,
                                         alpha=order_alpha):
+                key = key.decode()
                 yield (self._remove_namespace(key), self._get(key))
-        else:
-            for key in self._redis.smembers(self._get_index_key_name()):
-                yield (self._remove_namespace(key), self._get(key))
+
+            return
+
+        except ResponseError as e:
+            #
+            # This error means that Redis can't sort this attribute
+            # as a double, which is it's default behavior. We need to
+            # specify order_alpha instead
+            #
+            if str(e) == "One or more scores can't be converted into double":
+                raise Exception(
+                    '{} must be sorted using order_alpha'.format(order_by)
+                )
+            else:
+                raise
 
     def _remove_namespace(self, key: str) -> str:
         """
@@ -184,7 +211,7 @@ class RedisObjectStore(ObjectStore):
         :param key:
 
         """
-        logger.debug('delete: {}'.format(key))
+        logger.debug('delete({})'.format(key))
         self._redis.delete(self.get_key_name(key))
 
     def exists(self, key: str) -> bool:
@@ -195,5 +222,5 @@ class RedisObjectStore(ObjectStore):
 
         """
         result = self._redis.exists(self.get_key_name(key))
-        logger.debug('get: {} -> {}'.format(key, result))
+        logger.debug('exists({}) -> {}'.format(key, result))
         return result

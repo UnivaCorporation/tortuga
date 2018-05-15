@@ -166,6 +166,7 @@ setup(
             'set-profile-mapping=tortuga.scripts.set_profile_mapping:main',
             'shutdown-node=tortuga.scripts.shutdown_node:main',
             'schedule-update=tortuga.scripts.schedule_update:main',
+            'tortuga=tortuga.scripts.tortuga:main',
             'transfer-node=tortuga.scripts.transfer_node:main',
             'uc-tag=tortuga.scripts.uc_tag:main',
             'ucparam=tortuga.scripts.ucparam:main',

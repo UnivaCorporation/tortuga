@@ -26,7 +26,7 @@ import cherrypy
 from cherrypy.process import plugins
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-from tortuga.web_service import adminRouteMapper
+from tortuga.web_service import controllers, controllers_v2
 from tortuga.web_service.controllers.tortugaController import TortugaController
 from tortuga.web_service.threadManagerPlugin import ThreadManagerPlugin
 from tortuga.web_service.workQueuePlugin import WorkQueuePlugin
@@ -81,7 +81,10 @@ def prepare_server():
             'response.headers.server': 'Tortuga web service',
         },
         '/v1': {
-            'request.dispatch': adminRouteMapper.setupRoutes()
+            'request.dispatch': controllers.setup_routes()
+        },
+        '/v2': {
+            'request.dispatch': controllers_v2.setup_routes()
         }
     }
 

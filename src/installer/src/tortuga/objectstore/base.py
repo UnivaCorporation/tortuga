@@ -148,8 +148,8 @@ class ObjectStore:
 
         """
         logger.debug(
-            'list(order_by={}, order_desc={}, limit, filters={}) -> ...'.format(
-                order_by, order_desc, limit, filters
+            'list(order_by={}, order_desc={}, order_alpha={}, limit={}, filters={}) -> ...'.format(
+                order_by, order_desc, order_alpha, limit, filters
             )
         )
 
