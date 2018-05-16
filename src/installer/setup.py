@@ -118,6 +118,7 @@ setup(
     scripts=[str(fn) for fn in walkfiles(Path('bin'))],
     data_files=get_files(),
     install_requires=[
+        'celery',
         'cryptography',
         'tortuga-core',
         'Jinja2',
@@ -128,6 +129,7 @@ setup(
         'six',
         'pyjwt',
         'pyzmq',
+        'redis',
         'gevent',
         'marshmallow-sqlalchemy',
         'alembic',

@@ -11,25 +11,3 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-class tortuga::installer (
-  $puppet_server = $::puppet_server,
-  $activemq_enable = true,
-) {
-  contain tortuga::installer::puppetmaster
-  contain tortuga::envscript
-  contain tortuga::installer::ssh
-  contain tortuga::installer::redis::enable
-
-  if $activemq_enable {
-    class { 'tortuga::installer::activemq':
-      enable => $activemq_enable,
-    }
-    contain tortuga::installer::activemq
-
-    class { 'tortuga::installer::mcollective':
-      puppet_server => $puppet_server,
-    }
-    contain tortuga::installer::mcollective
-  }
-}

@@ -19,7 +19,7 @@ from sqlalchemy.orm.session import Session
 
 from tortuga.addhost.utility import validate_addnodes_request
 from tortuga.db.models.nodeRequest import NodeRequest
-from tortuga.web_service.threadManager import threadManager
+from tortuga.resourceAdapter.tasks import add_nodes
 
 from .addHostManager import AddHostManager
 
@@ -30,15 +30,12 @@ def enqueue_addnodes_request(session: Session, addNodesRequest: dict):
     request = init_node_request_record(addNodesRequest)
 
     session.add(request)
-
     session.commit()
 
-    threadManager.queue.put({
-        'action': 'ADD',
-        'data': {
-            'addHostSession': request.addHostSession,
-        },
-    })
+    #
+    # Run async task
+    #
+    add_nodes.delay(request.addHostSession)
 
     return request.addHostSession
 

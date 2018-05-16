@@ -49,7 +49,10 @@ DEFAULT_EXCLUDE_FILES = [
     '.svn',
     '.gitignore',
     '.cvsignore',
-    'puppet_modules'
+    'puppet_modules',
+    '.mypy_cache',
+    '.pytest_cache',
+    '.gitlab-ci.yml',
 ]
 
 

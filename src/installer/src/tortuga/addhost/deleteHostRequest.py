@@ -30,31 +30,30 @@ logger.addHandler(logging.NullHandler())
 ahm = AddHostManager()
 
 
-def process_delete_host_request(request):
+def process_delete_host_request(transaction_id, nodespec):
     session = DbManager().openSession()
 
     try:
         req = NodeRequestsDbHandler().get_by_addHostSession(
-            session, request['transaction_id'])
+            session, transaction_id)
         if req is None:
             # Session was deleted prior to being process. Nothing to do...
             return
 
-        ahm.update_session(request['transaction_id'], running=True)
+        ahm.update_session(transaction_id, running=True)
 
         logger.debug(
             'process_delete_host_request(): transaction_id=[{0}],'
-            ' nodespec=[{1}]'.format(
-                request['transaction_id'], request['nodespec']))
+            ' nodespec=[{1}]'.format(transaction_id, nodespec))
 
         try:
-            NodeApi().deleteNode(request['nodespec'])
+            NodeApi().deleteNode(nodespec)
 
-            ahm.delete_session(request['transaction_id'])
+            ahm.delete_session(transaction_id)
 
             session.delete(req)
         except NodeNotFound:
-            ahm.delete_session(request['transaction_id'])
+            ahm.delete_session(transaction_id)
 
             session.delete(req)
         except TortugaException as exc:
@@ -66,7 +65,7 @@ def process_delete_host_request(request):
 
             req.last_update = datetime.datetime.utcnow()
         finally:
-            ahm.update_session(request['transaction_id'], running=False)
+            ahm.update_session(transaction_id, running=False)
     finally:
         session.commit()
 

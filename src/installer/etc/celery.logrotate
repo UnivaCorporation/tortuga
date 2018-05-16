@@ -1,0 +1,9 @@
+/var/log/celery/*.log {
+    missingok
+    notifempty
+    sharedscripts
+    delaycompress
+    postrotate
+        /usr/sbin/service celery restart >/dev/null 2>/dev/null || true
+    endscript
+}
