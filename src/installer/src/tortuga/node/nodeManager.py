@@ -17,7 +17,7 @@
 import os
 import socket
 import time
-from typing import NoReturn, Optional, Union, List
+from typing import Dict, List, NoReturn, Optional
 
 from sqlalchemy.orm.session import Session
 
@@ -137,7 +137,7 @@ class NodeManager(TortugaObjectManager): \
         # Return the new node
         return node
 
-    def getNode(self, name, optionDict=None):
+    def getNode(self, name, optionDict: Optional[Dict[str, bool]] = None):
         """Get node by name"""
 
         optionDict_ = optionDict.copy() if optionDict else {}
@@ -153,8 +153,8 @@ class NodeManager(TortugaObjectManager): \
             if hwprofile.getResourceAdapter() else 'default'
 
         # Query vcpus from resource adapter
-        ResourceAdapterClass = resourceAdapterFactory.get_resourceadapter_class(
-            adapter_name)
+        ResourceAdapterClass = \
+            resourceAdapterFactory.get_resourceadapter_class(adapter_name)
 
         # Update Node object
         node.setVcpus(ResourceAdapterClass().get_node_vcpus(node.getName()))
@@ -162,7 +162,7 @@ class NodeManager(TortugaObjectManager): \
         return node
 
     def getNodeById(self, nodeId: int,
-                    optionDict: Optional[Union[dict, None]] = None) -> Node:
+                    optionDict: Optional[Dict[str, bool]] = None) -> Node:
         """
         Get node by node id
 
@@ -251,8 +251,8 @@ class NodeManager(TortugaObjectManager): \
         try:
             dbNode = NodesDbHandler().getNode(session, nodeName)
 
-            # Bitfield representing node changes (0 = state change, 1 = bootFrom
-            # change)
+            # Bitfield representing node changes (0 = state change,
+            # 1 = bootFrom # change)
             changed = 0
 
             if state is not None and state != dbNode.state:
@@ -289,7 +289,8 @@ class NodeManager(TortugaObjectManager): \
             result = bool(changed)
 
             # Only change local boot configuration if the hardware profile is
-            # not marked as 'remote' and we're not acting on the installer node.
+            # not marked as 'remote' and we're not acting on the installer
+            # node.
             if dbNode.softwareprofile and \
                     dbNode.softwareprofile.type != 'installer' and \
                     dbNode.hardwareprofile.location != 'remote':
@@ -475,13 +476,12 @@ class NodeManager(TortugaObjectManager): \
         tortugaSubprocess.executeCommand(
             os.path.join(self._cm.getRoot(), 'bin/schedule-update'))
 
-    def getInstallerNode(self, optionDict=None):
+    def getInstallerNode(self, optionDict: Optional[Dict[str, bool]] = None):
         return self._nodeDbApi.getNode(
             self._cm.getInstaller(), optionDict=optionDict)
 
     def getProvisioningInfo(self, nodeName):
         return self._nodeDbApi.getProvisioningInfo(nodeName)
-
 
     def __transferNodeCommon(self, session, dbDstSoftwareProfile,
                              results): \
@@ -879,27 +879,34 @@ class NodeManager(TortugaObjectManager): \
         return self._nodeDbApi.getNodesByNodeState(state)
 
     def getNodesByNameFilter(self, nodespec: str,
-                             optionDict: Optional[Union[dict, None]] = None) -> TortugaObjectList:
+                             optionDict: Optional[Dict[str, bool]] = None) \
+            -> TortugaObjectList:
         return self.__expand_node_vcpus(
-                self._nodeDbApi.getNodesByNameFilter(
-                    nodespec, optionDict=optionDict))
+            self._nodeDbApi.getNodesByNameFilter(
+                nodespec, optionDict=optionDict))
 
     def getNodesByAddHostSession(self, addHostSession: str,
-                                 optionDict: Optional[Union[dict, None]] = None) -> TortugaObjectList:
-        return self._nodeDbApi.getNodesByAddHostSession(addHostSession, optionDict)
+                                 optionDict: Optional[Dict[str, bool]] = None) \
+            -> TortugaObjectList:
+        return self._nodeDbApi.getNodesByAddHostSession(
+            addHostSession, optionDict)
 
     def __expand_node_vcpus(self, nodes: List[Node]) -> List[Node]:
-        # query resource adapter to get virtual cpus for each Node (TortugaObject)
+        # query resource adapter to get virtual cpus for each Node
 
         for node in nodes:
-            adapter_name = node.getHardwareProfile().getResourceAdapter().getName() \
-                if node.getHardwareProfile().getResourceAdapter() else 'default'
+            adapter_name = \
+                node.getHardwareProfile().getResourceAdapter().getName() \
+                if node.getHardwareProfile().getResourceAdapter() else \
+                'default'
 
             # Query vcpus from resource adapter
-            ResourceAdapterClass = resourceAdapterFactory.get_resourceadapter_class(
-                adapter_name)
+            ResourceAdapterClass = \
+                resourceAdapterFactory.get_resourceadapter_class(
+                    adapter_name)
 
             # Update Node object
-            node.setVcpus(ResourceAdapterClass().get_node_vcpus(node.getName()))
+            node.setVcpus(
+                ResourceAdapterClass().get_node_vcpus(node.getName()))
 
         return nodes

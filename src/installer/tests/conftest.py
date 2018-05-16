@@ -146,9 +146,7 @@ def dbm():
         kit.iteration = '0'
         kit.description = 'Sample base kit'
 
-        installer_component = Component()
-        installer_component.name = 'installer'
-        installer_component.version = '6.3'
+        installer_component = Component(name='installer', version='6.3')
         installer_component.family = [os_family]
         installer_component.kit = kit
 

@@ -14,10 +14,10 @@
 
 # pylint: disable=no-self-use,no-member
 
-from tortuga.objects.tortugaObject import TortugaObject, toBool
-from tortuga.objects.tortugaObject import TortugaObjectList
 import tortuga.objects.component
 import tortuga.objects.kitSource
+from tortuga.objects.tortugaObject import TortugaObject, TortugaObjectList
+from tortuga.utility.helper import str2bool
 
 
 class Kit(TortugaObject): \
@@ -71,19 +71,19 @@ class Kit(TortugaObject): \
 
     def setIsOs(self, isOs):
         """ Set isOs flag."""
-        self['isOs'] = toBool(isOs)
+        self['isOs'] = str2bool(isOs)
 
     def getIsOs(self):
         """ Return isOs flag. """
-        return toBool(self.get('isOs'))
+        return str2bool(self.get('isOs'))
 
     def setIsRemovable(self, isRemovable):
         """ Set isRemovable flag."""
-        self['isRemovable'] = toBool(isRemovable)
+        self['isRemovable'] = str2bool(isRemovable)
 
     def getIsRemovable(self):
         """ Return removable flag. """
-        return toBool(self.get('isRemovable'))
+        return str2bool(self.get('isRemovable'))
 
     def getFullName(self):
         """ Get full name. """

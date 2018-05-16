@@ -14,7 +14,7 @@
 
 # pylint: disable=not-callable,multiple-statements,no-member
 
-from typing import Optional, Union
+from typing import Dict, Optional
 
 from sqlalchemy import func
 
@@ -59,7 +59,7 @@ class SoftwareProfileDbApi(TortugaDbApi):
 
     def getSoftwareProfile(
             self, name: str,
-            optionDict: Optional[Union[dict, None]] = None) -> SoftwareProfile:
+            optionDict: Optional[Dict[str, bool]] = None) -> SoftwareProfile:
         """
         Get softwareProfile from the db.
 
@@ -70,29 +70,39 @@ class SoftwareProfileDbApi(TortugaDbApi):
                 DbError
         """
 
-        session = DbManager().openSession()
+        with DbManager().session() as session:
+            try:
+                dbSoftwareProfile = \
+                    self._softwareProfilesDbHandler.getSoftwareProfile(
+                        session, name)
 
-        try:
-            dbSoftwareProfile = self._softwareProfilesDbHandler.\
-                getSoftwareProfile(session, name)
+                return self.__get_software_profile_obj(
+                    dbSoftwareProfile, options=optionDict)
+            except TortugaException:
+                raise
+            except Exception as ex:
+                self.getLogger().exception('%s' % ex)
+                raise
 
-            self.loadRelations(dbSoftwareProfile, optionDict)
+    def __get_software_profile_obj(self,
+                                   software_profile: SoftwareProfileModel,
+                                   options: Optional[dict] = None) \
+            -> SoftwareProfile:
+        """
+        Deserialize SQLAlchemy object to TortugaObject
+        """
+        self.loadRelations(software_profile, options)
 
-            self.loadRelations(dbSoftwareProfile, dict(tags=True))
+        self.loadRelations(software_profile, dict(tags=True))
 
-            return SoftwareProfile.getFromDbDict(
-                dbSoftwareProfile.__dict__)
-        except TortugaException:
-            raise
-        except Exception as ex:
-            self.getLogger().exception('%s' % ex)
-            raise
-        finally:
-            DbManager().closeSession()
+        software_profile_obj = SoftwareProfile.getFromDbDict(
+            software_profile.__dict__)
+
+        return software_profile_obj
 
     def getSoftwareProfileById(
             self, softwareProfileId: int,
-            optionDict: Optional[Union[dict, None]] = None) -> SoftwareProfile:
+            optionDict: Optional[Dict[str, bool]] = None) -> SoftwareProfile:
         """
         Get softwareProfile from the db.
 
@@ -103,23 +113,19 @@ class SoftwareProfileDbApi(TortugaDbApi):
                 DbError
         """
 
-        session = DbManager().openSession()
+        with DbManager().session() as session:
+            try:
+                dbSoftwareProfile = \
+                    self._softwareProfilesDbHandler.getSoftwareProfileById(
+                        session, softwareProfileId)
 
-        try:
-            dbSoftwareProfile = self._softwareProfilesDbHandler.\
-                getSoftwareProfileById(session, softwareProfileId)
-
-            self.loadRelations(dbSoftwareProfile, optionDict)
-
-            return SoftwareProfile.getFromDbDict(
-                dbSoftwareProfile.__dict__)
-        except TortugaException:
-            raise
-        except Exception as ex:
-            self.getLogger().exception('%s' % ex)
-            raise
-        finally:
-            DbManager().closeSession()
+                return self.__get_software_profile_obj(
+                    dbSoftwareProfile, options=optionDict)
+            except TortugaException:
+                raise
+            except Exception as ex:
+                self.getLogger().exception('%s' % ex)
+                raise
 
     def getSoftwareProfileList(self, tags=None):
         """
@@ -131,34 +137,30 @@ class SoftwareProfileDbApi(TortugaDbApi):
                 DbError
         """
 
-        session = DbManager().openSession()
+        with DbManager().session() as session:
+            try:
+                dbSoftwareProfileList = \
+                    self._softwareProfilesDbHandler.getSoftwareProfileList(
+                        session, tags=tags)
 
-        try:
-            dbSoftwareProfileList = self._softwareProfilesDbHandler.\
-                getSoftwareProfileList(session, tags=tags)
+                softwareProfileList = TortugaObjectList()
 
-            softwareProfileList = TortugaObjectList()
+                for dbSoftwareProfile in dbSoftwareProfileList:
+                    softwareProfileList.append(
+                        self.__get_software_profile_obj(
+                            dbSoftwareProfile, options={
+                                'components': True,
+                                'partitions': True,
+                                'hardwareprofiles': True,
+                                'tags': True,
+                            }))
 
-            for dbSoftwareProfile in dbSoftwareProfileList:
-                self.loadRelations(dbSoftwareProfile, {
-                    'components': True,
-                    'partitions': True,
-                    'hardwareprofiles': True,
-                    'tags': True,
-                })
-
-                softwareProfileList.append(
-                    SoftwareProfile.getFromDbDict(
-                        dbSoftwareProfile.__dict__))
-
-            return softwareProfileList
-        except TortugaException:
-            raise
-        except Exception as ex:
-            self.getLogger().exception('%s' % ex)
-            raise
-        finally:
-            DbManager().closeSession()
+                return softwareProfileList
+            except TortugaException:
+                raise
+            except Exception as ex:
+                self.getLogger().exception('%s' % ex)
+                raise
 
     def getIdleSoftwareProfileList(self):
         """
@@ -170,21 +172,23 @@ class SoftwareProfileDbApi(TortugaDbApi):
                 DbError
         """
 
-        session = DbManager().openSession()
+        with DbManager().session() as session:
+            try:
+                dbSoftwareProfileList = \
+                    self._softwareProfilesDbHandler.getIdleSoftwareProfileList(
+                        session)
 
-        try:
-            dbSoftwareProfileList = self._softwareProfilesDbHandler.\
-                getIdleSoftwareProfileList(session)
+                result = TortugaObjectList()
 
-            return self.getTortugaObjectList(
-                SoftwareProfile, dbSoftwareProfileList)
-        except TortugaException:
-            raise
-        except Exception as ex:
-            self.getLogger().exception('%s' % ex)
-            raise
-        finally:
-            DbManager().closeSession()
+                for software_profile in dbSoftwareProfileList:
+                    self.__get_software_profile_obj(software_profile)
+
+                return result
+            except TortugaException:
+                raise
+            except Exception as ex:
+                self.getLogger().exception('%s' % ex)
+                raise
 
     def setIdleState(self, softwareProfileName, state):
         """

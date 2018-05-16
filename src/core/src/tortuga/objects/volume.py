@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tortuga.objects.tortugaObject import TortugaObject, toBool
+from tortuga.objects.tortugaObject import TortugaObject
+from tortuga.utility.helper import str2bool
 
 
 class Volume(TortugaObject): \
@@ -56,16 +57,16 @@ class Volume(TortugaObject): \
         return self.get('storageadapter')
 
     def setPersistent(self, val):
-        self['persistent'] = toBool(val)
+        self['persistent'] = str2bool(val)
 
     def getPersistent(self):
-        return toBool(self.get('persistent'))
+        return str2bool(self.get('persistent'))
 
     def setShared(self, val):
-        self['shared'] = toBool(val)
+        self['shared'] = str2bool(val)
 
     def getShared(self):
-        return toBool(self.get('shared'))
+        return str2bool(self.get('shared'))
 
     @staticmethod
     def getKeys():
