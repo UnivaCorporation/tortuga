@@ -97,8 +97,11 @@ def run_server(daemonize: bool = False, pidfile: str = None):
     #
     if daemonize:
         plugins.Daemonizer(cherrypy.engine).subscribe()
+
     WorkQueuePlugin(cherrypy.engine).subscribe()
+
     ThreadManagerPlugin(cherrypy.engine).subscribe()
+
     if pidfile:
         plugins.PIDFile(cherrypy.engine, pidfile).subscribe()
 
@@ -131,13 +134,8 @@ def run_server(daemonize: bool = False, pidfile: str = None):
     #
     # Start the engine.
     #
-    try:
-        cherrypy.engine.start()
-        cherrypy.engine.block()
-
-    except Exception:
-        logger.exception('Service exiting')
-        return 1
+    cherrypy.engine.start()
+    cherrypy.engine.block()
 
     return 0
 
