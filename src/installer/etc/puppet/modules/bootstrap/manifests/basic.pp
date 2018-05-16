@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 class bootstrap::basic {
   include tortuga::config
 
@@ -24,4 +23,9 @@ class bootstrap::basic {
   file { '/etc/logrotate.d/tortugawsd':
     source => "file://${tortuga::config::instroot}/etc/tortugawsd.logrotate",
   }
+
+  file { '/etc/logrotate.d/celery':
+    source => "file://${tortuga::config::instroot}/etc/celery.logrotate",
+  }
+
 }

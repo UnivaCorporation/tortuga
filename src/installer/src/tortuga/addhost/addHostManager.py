@@ -22,6 +22,7 @@ from tortuga.db.models.tag import Tag
 from tortuga.db.nodeDbApi import NodeDbApi
 from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
 from tortuga.db.tagsDbHandler import TagsDbHandler
+from tortuga.objectstore.manager import ObjectStoreManager
 from tortuga.exceptions.notFound import NotFound
 from tortuga.exceptions.resourceAdapterNotFound import ResourceAdapterNotFound
 from tortuga.kit.actions import KitActionsManager
@@ -39,8 +40,8 @@ class AddHostManager(TortugaObjectManager, Singleton):
 
         # Now do the class specific variable initialization
         self._addHostLock = threading.RLock()
-        self._sessions = {}
         self._nodeDbApi = NodeDbApi()
+        self._sessions = ObjectStoreManager.get(namespace='add-host-manager')
 
     def addHosts(self, session, addHostRequest):
         """
@@ -136,14 +137,15 @@ class AddHostManager(TortugaObjectManager, Singleton):
         self._addHostLock.acquire()
 
         try:
-            if addHostSession not in self._sessions:
+            if not self._sessions.exists(addHostSession):
                 self.getLogger().warning(
                     'updateStatus(): unknown session ID [%s]' % (
                         addHostSession))
 
                 return
 
-            addHostStatus = self._sessions[addHostSession]['status']
+            addHostStatus = AddHostStatus.getFromDict(
+                self._sessions.get(addHostSession)['status'])
 
             addHostStatus.getMessageList().append(msg)
         finally:
@@ -160,26 +162,27 @@ class AddHostManager(TortugaObjectManager, Singleton):
                 if getNodes else TortugaObjectList()
 
             # Lock and copy for data consistency
-            if session not in self._sessions:
+            if not self._sessions.exists(session):
                 raise NotFound('Invalid add host session ID [%s]' % (session))
 
-            sessionDict = self._sessions.get(session)
+            session = self._sessions.get(session)
 
-            statusCopy = AddHostStatus()
+            status_copy = AddHostStatus()
 
             # Copy simple data
-            for key in sessionDict['status'].getKeys():
-                statusCopy.set(key, sessionDict['status'].get(key))
+            status = AddHostStatus.getFromDict(session['status'])
+            for key in status.getKeys():
+                status_copy.set(key, status.get(key))
 
             # Get slice of status messages
-            messages = sessionDict['status'].getMessageList()[startMessage:]
+            messages = status.getMessageList()[startMessage:]
 
-            statusCopy.setMessageList(messages)
+            status_copy.setMessageList(messages)
 
             if nodeList:
-                statusCopy.getNodeList().extend(nodeList)
+                status_copy.getNodeList().extend(nodeList)
 
-            return statusCopy
+            return status_copy
 
     def createNewSession(self) -> str:
         self.getLogger().debug('createNewSession()')
@@ -188,9 +191,10 @@ class AddHostManager(TortugaObjectManager, Singleton):
             # Create new add nodes session
             session_id = str(uuid.uuid4())
 
-            self._sessions[session_id] = {
-                'status': AddHostStatus(),
-            }
+            self._sessions.set(
+                session_id,
+                {'status': AddHostStatus().getCleanDict()}
+            )
 
             return session_id
 
@@ -207,11 +211,11 @@ class AddHostManager(TortugaObjectManager, Singleton):
 
         with self._addHostLock:
             for session_id in session_ids:
-                if session_id in self._sessions:
+                if self._sessions.exists(session_id):
                     self.getLogger().debug(
                         'Deleting session [{0}]'.format(session_id))
 
-                    del self._sessions[session_id]
+                    self._sessions.delete(session_id)
 
     def update_session(self, session_id, running=None):
         self.getLogger().debug(
@@ -219,7 +223,10 @@ class AddHostManager(TortugaObjectManager, Singleton):
                 session_id, str(running)))
 
         with self._addHostLock:
-            self._sessions[session_id]['status'].setIsRunning(running)
+            session = self._sessions.get(session_id)
+            status = AddHostStatus.getFromDict(session['status'])
+            session['status'] = status.getCleanDict()
+            self._sessions.set(session_id, session)
 
 
 def get_tags(session, tagdict):
