@@ -75,18 +75,6 @@ def test_get_from_dict():
     assert tmpnode.getSoftwareProfile().getName() == 'Compute'
 
 
-def test_node_getFromJson():
-    nodedict = {
-        'name': 'mike',
-    }
-
-    jsonstr = json.dumps(nodedict)
-
-    tmpnode = Node.getFromJson(jsonstr)
-
-    assert tmpnode.getName() == 'mike'
-
-
 def test_node_getFromXml():
     xmlstr = '<node name="mike"/>'
 

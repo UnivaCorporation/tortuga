@@ -102,16 +102,6 @@ class TortugaObject(dict): \
             return cls.getFromDict(objectDict)
         return None
 
-    @classmethod
-    def getFromJson(cls, jsonString, skipElements=None): \
-            # pylint: disable=unused-argument
-        objectDict = json.loads(jsonString)
-
-        if objectDict is not None:
-            return cls.getFromDict(objectDict)
-
-        return None
-
     @staticmethod
     def getKeys():
         return []
