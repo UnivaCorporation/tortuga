@@ -775,15 +775,14 @@ class NodeManager(TortugaObjectManager): \
         return NodesDbHandler().getNodesByNameFilter(
             session, self.build_node_filterspec(nodespec))
 
-    def rebootNode(self, nodespec, bSoftReset=False, bReinstall=False):
+    def rebootNode(self, nodespec: str, bSoftReset: bool = False,
+                   bReinstall: bool = False):
         """
         Raises:
             NodeNotFound
         """
 
-        session = DbManager().openSession()
-
-        try:
+        with DbManager().session() as session:
             nodes = self.__expand_nodespec(session, nodespec)
             if not nodes:
                 raise NodeNotFound(
@@ -793,14 +792,9 @@ class NodeManager(TortugaObjectManager): \
                 for dbNode in nodes:
                     self._bhm.setNodeForNetworkBoot(dbNode)
 
-            results = NodesDbHandler().rebootNode(
-                session, nodes, bSoftReset)
+            NodesDbHandler().rebootNode(session, nodes, bSoftReset)
 
             session.commit()
-
-            return results
-        finally:
-            DbManager().closeSession()
 
     def checkpointNode(self, nodeName):
         return self._nodeDbApi.checkpointNode(nodeName)
