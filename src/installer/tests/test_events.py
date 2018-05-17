@@ -2,7 +2,7 @@ from marshmallow import fields
 import pytest
 
 from tortuga.events.types.base import BaseEvent, BaseEventSchema
-from tortuga.events.manager import EventStoreManager
+from tortuga.events.manager import EventStoreManager, PubSubManager
 from tortuga.events.store import ObjectStoreEventStore
 from tortuga.objectstore.redis import RedisObjectStore
 
@@ -34,6 +34,11 @@ def event_store(redis):
     # return the same instance
     #
     EventStoreManager._event_store = store
+    #
+    # Manually set the redis instance on the pub/sub manager so that it
+    # is there for any internal calls to the manager
+    #
+    PubSubManager._redis_client = redis
     return store
 
 
@@ -67,8 +72,8 @@ def test_event_list(event_store):
 
 
 def test_event_list_filter(event_store):
-    ExampleEvent.fire(integer=3, string='testing'),
-    ExampleEvent.fire(integer=4, string='testing2'),
+    ExampleEvent.fire(integer=3, string='testing')
+    ExampleEvent.fire(integer=4, string='testing2')
     ExampleEvent.fire(integer=5, string='abc123')
 
     #
@@ -79,3 +84,22 @@ def test_event_list_filter(event_store):
                                 integer__gt=3):
         integers.append(evt.integer)
     assert integers == [5, 4]
+
+
+def test_event_pubsub(event_store):
+    pubsub = PubSubManager.get()
+    pubsub.subscribe()
+
+    events = [
+        ExampleEvent.fire(integer=3, string='testing'),
+        ExampleEvent.fire(integer=4, string='testing2'),
+        ExampleEvent.fire(integer=5, string='abc123')
+    ]
+
+    #
+    # Assert that the subscription gets the events back in order
+    #
+    for evt in events:
+        evt_sub = pubsub.get_message()
+        print(evt_sub)
+        assert evt == evt_sub
