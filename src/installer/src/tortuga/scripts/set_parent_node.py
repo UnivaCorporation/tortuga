@@ -14,15 +14,11 @@
 
 # pylint: disable=no-member
 
-from tortuga.kit.kitCli import KitCli
+from tortuga.cli.tortugaCli import TortugaCli
 
 
-class SetParentNode(KitCli):
-    def __init__(self):
-        super(SetParentNode, self).__init__(validArgCount=2)
-
+class SetParentNode(TortugaCli):
     def runCommand(self):
-
         self.parseArgs('''
 Sets the parent of a specified node. This relationship is currently used for
 virtual machine nodes where the parent is equivalent to the current

@@ -14,7 +14,8 @@
 
 # pylint: disable=no-member
 
-from tortuga.objects.tortugaObject import TortugaObject, toBool
+from tortuga.objects.tortugaObject import TortugaObject
+from tortuga.utility.helper import str2bool
 
 
 class Partition(TortugaObject): \
@@ -102,19 +103,19 @@ class Partition(TortugaObject): \
 
     def setPreserve(self, preserve):
         """ Set preserve."""
-        self['preserve'] = toBool(preserve)
+        self['preserve'] = str2bool(preserve)
 
     def getPreserve(self):
         """ Return preserve. """
-        return toBool(self.get('preserve'))
+        return str2bool(self.get('preserve'))
 
     def setBootLoader(self, bootLoader):
         """ Set boot loader flag."""
-        self['bootLoader'] = toBool(bootLoader)
+        self['bootLoader'] = str2bool(bootLoader)
 
     def getBootLoader(self):
         """ Return boot loader flag. """
-        return toBool(self.get('bootLoader'))
+        return str2bool(self.get('bootLoader'))
 
     def setDiskSize(self, diskSize):
         """ Set disk size."""
@@ -149,10 +150,10 @@ class Partition(TortugaObject): \
         return self.get('sanVolume')
 
     def setGrow(self, value=True):
-        self['grow'] = toBool(value)
+        self['grow'] = str2bool(value)
 
     def getGrow(self):
-        return toBool(self.get('grow'))
+        return str2bool(self.get('grow'))
 
     def setMaxSize(self, value):
         self['maxSize'] = value

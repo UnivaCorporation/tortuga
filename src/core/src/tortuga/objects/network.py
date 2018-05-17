@@ -14,8 +14,9 @@
 
 # pylint: disable=no-member
 
-from tortuga.objects.tortugaObject import TortugaObject, toBool
 from tortuga.objects.networkDevice import NetworkDevice
+from tortuga.objects.tortugaObject import TortugaObject
+from tortuga.utility.helper import str2bool
 
 
 class Network(TortugaObject): \
@@ -129,11 +130,11 @@ class Network(TortugaObject): \
 
     def setUsingDhcp(self, usingDhcp):
         """ Set using dhcp flag. """
-        self['usingDhcp'] = toBool(usingDhcp)
+        self['usingDhcp'] = str2bool(usingDhcp)
 
     def getUsingDhcp(self):
         """ Get using dhcp flag. """
-        return toBool(self.get('usingDhcp'))
+        return str2bool(self.get('usingDhcp'))
 
     @staticmethod
     def getKeys():

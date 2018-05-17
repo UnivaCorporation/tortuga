@@ -12,21 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
 from typing import List
 
+from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.kit.kitApiFactory import getKitApi
-from tortuga.kit.kitCli import KitCli
 from tortuga.puppet import Puppet
 
 
-class InstallOsKitCli(KitCli):
+class InstallOsKitCli(TortugaCli):
     """
     Install kit command line interface.
     """
-
-    def __init__(self):
-        super(InstallOsKitCli, self).__init__()
 
     def parseArgs(self, usage=None):
         self.addOption('-m', '--media', dest='osMediaUrl',

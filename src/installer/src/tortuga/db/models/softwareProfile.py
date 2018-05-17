@@ -88,8 +88,5 @@ class SoftwareProfile(ModelBase):
         backref='softwareprofiles'
     )
 
-    def __init__(self, name=None):
-        self.name = name
-
     def __repr__(self):
         return '<SoftwareProfile(name=%s)>' % (self.name)

@@ -102,16 +102,6 @@ class TortugaObject(dict): \
             return cls.getFromDict(objectDict)
         return None
 
-    @classmethod
-    def getFromJson(cls, jsonString, skipElements=None): \
-            # pylint: disable=unused-argument
-        objectDict = json.loads(jsonString)
-
-        if objectDict is not None:
-            return cls.getFromDict(objectDict)
-
-        return None
-
     @staticmethod
     def getKeys():
         return []
@@ -331,8 +321,3 @@ class TortugaObjectList(list):
         for obj in self:
             if isinstance(obj, TortugaObject):
                 obj.decode()
-
-
-def toBool(value):
-    return value[0].lower() in ('1', 't', 'y') \
-        if type(value) == str or type(value) == str else bool(value)

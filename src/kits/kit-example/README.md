@@ -6,7 +6,7 @@ This is an example kit layout that can be used as a basis for writing your own T
 
 In order to create and build a kit, you must have the following installed:
 
-- Python 3.4+
+- Python 3.5+
 - [tortuga-core](https://github.com/UnivaCorporation/tortuga)
 
 ## Quickstart

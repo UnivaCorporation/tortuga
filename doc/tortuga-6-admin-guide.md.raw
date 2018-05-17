@@ -1,6 +1,6 @@
 % Tortuga 6.3.0 Installation and Administration Guide
 % Univa Corporation &lt;support@univa.com&gt;
-% March 2018 -- Version 1.23
+% May 2018 -- Version 1.24
 
 \newpage
 
@@ -395,7 +395,7 @@ Commands listed in this "Quickstart" section are intended to be run as the
 
     `adapter-mgmt update` can be used to manage resource adapter configuration
     profile settings. Erroneous/invalid settings can be removed by using
-    `adapter-mgmt update PROFILENAME --delete NAME`, where `NAME` is the 
+    `adapter-mgmt update PROFILENAME --delete NAME`, where `NAME` is the
     setting name.
 
     1. Create hardware profile to represent EC2 nodes
@@ -416,7 +416,7 @@ Commands listed in this "Quickstart" section are intended to be run as the
             update-hardware-profile --name execd-aws \
                 --resource-adapter aws --location remote
 
-	When running with an EC2-based Tortuga installer, it is _also_
+        When running with an EC2-based Tortuga installer, it is _also_
         necessary to set the hardware profile name format so EC2-assigned host
         names are used:
 
@@ -434,11 +434,11 @@ Commands listed in this "Quickstart" section are intended to be run as the
 
 1. Install Univa Grid Engine
 
-    Now that the Tortuga base installation is complete, it is necessary to
-    install Univa Grid Engine.
+        Now that the Tortuga base installation is complete, it is necessary to
+        install Univa Grid Engine.
 
-    In this example, the Grid Engine `qmaster` will be run on the Tortuga
-    installer node.
+        In this example, the Grid Engine `qmaster` will be run on the Tortuga
+        installer node.
 
     1. Install UGE kit
 
@@ -464,13 +464,14 @@ Commands listed in this "Quickstart" section are intended to be run as the
     1. Validate installation of `qmaster`
 
         It is recommended to validate the installation of the `qmaster`.
-	
-	Check the version of UGE kit that was installed, either by looking for 
-	the version in the kit's file name or by running
-	
-	    ls -ld /opt/uge-*
 
-        Supposing the version that was installed is `8.5.4`, source the UGE environment by running
+        Check the version of UGE kit that was installed, either by looking for
+        the version in the kit's file name or by running
+
+            ls -ld /opt/uge-*
+
+        For example, if the installed version is `8.5.4`, source the environment
+        by running:
 
             . /opt/uge-8.5.4/default/common/settings.sh
 
@@ -530,7 +531,7 @@ Commands listed in this "Quickstart" section are intended to be run as the
     Once the node has reached **Installed** state, it is available to be used.
 
     Nodes will be created momentarily and automatically added to the UGE
-    cluster.  Use `qhost` to display UGE cluster host list. It can take a few 
+    cluster.  Use `qhost` to display UGE cluster host list. It can take a few
     minutes until load values show up for newly added nodes.
 
     Tortuga automatically configures key-based authentication for managed nodes
@@ -821,7 +822,7 @@ To run setup:
 
 After accepting the software EULA (required to proceed), answer the following questions:
 
-1. What location should be used as the depot directory? (default `/depot`)
+1. What location should be used as the depot directory? (default `/opt/tortuga/depot`)
 1. What administrative username and password should be used?
 
 The 'depot directory' is used by Tortuga to store (mostly package) files required by compute nodes provisioned by Tortuga. Multiple YUM repositories will be created in this directory. The disk space required depends on the number of operating systems installed for provisioning, as well as what optional software kits are added.
@@ -1075,7 +1076,7 @@ The kit filename has the following format:
 
 The `get-kit-list` command will display all installed kits (application + operating system):
 
-```shell`
+```shell
 [root@tortuga ~]# get-kit-list
 awsadapter-6.3.0-0
 base-6.3.0-0
@@ -1267,7 +1268,9 @@ cloud.univa.com
 Use `set-private-dns-zone <DOMAIN>` to set (private) DNS domain. For
 example:
 
-        set-private-dns-zone cloud.mydomain.com
+```shell
+set-private-dns-zone cloud.mydomain.com
+```
 
 **Note:** do not use `ucparam set` to set the privte DNS domain as this does
 not perform all of the necessary configuration to apply the change in Tortuga.
@@ -1420,7 +1423,7 @@ The media accepted includes file directories, such as the mount point of a physi
 
 Symbolic linking is supported only for directories, and not ISOs or web repositories. Tortuga *does not verify or check* that the files are always available after a reboot, so this option should only be used if you have a permanent copy of the files on the local system, or you automatically mount it upon every reboot. If these files are not present when you attempt to provision a node, it will fail and your only indication will be at the node's attached terminal screen.
 
-The files copied when you install an OS kit are placed into the depot directory, selected during installation, defaulting to `/depot`.
+The files copied when you install an OS kit are placed into the depot directory, selected during installation, defaulting to `/opt/tortuga/depot`.
 
 Note that symbolic linking is supported only for directories, where the files are always available. You cannot symlink an ISO or proxied location.
 
@@ -1854,11 +1857,11 @@ Cons:
 
 #### Scenario 3: Manually managed patches
 
-When a compute node is provisioned by Tortuga, it installs the base operating system from the OS media as provided by 'install-os-kit'. Packages which constitute the Tortuga "base" kit are installed from '/depot/kits/base/6.3.0-0/noarch'.
+When a compute node is provisioned by Tortuga, it installs the base operating system from the OS media as provided by 'install-os-kit'. Packages which constitute the Tortuga "base" kit are installed from '/opt/tortuga/depot/kits/base/6.3.0-0/noarch'.
 
 Updated packages can be dropped into this directory and will be automatically available to Tortuga provisioned compute nodes.
 
-**Note: after updating packages in `/depot/kits/base/6.3.0-0/noarch`, it is required to run `createrepo` to update the Tortuga **base** kit YUM repository metadata.**
+**Note: after updating packages in `/opt/tortuga/depot/kits/base/6.3.0-0/noarch`, it is required to run `createrepo` to update the Tortuga **base** kit YUM repository metadata.**
 
 The key packages are `puppet-*`, `mcollective-*`, and the `ruby` dependencies.
 
@@ -2550,7 +2553,8 @@ The following software profile templates are supplied with the base installation
 
 # Appendix C: Uninstalling Tortuga {#appendix_c}
 
-Tortuga is mostly contained within the `/opt/tortuga` and `/depot` directories, however there are files elsewhere within the filesystem.
+Tortuga itself is contained within the `/opt/tortuga` directory, however there
+are configuration and support files elsewhere within the filesystem.
 
 **Note**: make a backup of of the entire filesystem prior to performing these uninstallation steps!
 
@@ -2565,7 +2569,6 @@ systemctl stop mcollective
 systemctl stop tortugawsd
 rm -f /etc/httpd/conf.d/{tortuga.conf,passenger.conf,puppetmaster.conf}
 mv /opt/tortuga /opt/tortuga.orig
-mv /depot /depot.orig
 ~~~
 
 On RHEL/CentOS 6, substitute calls to `systemctl stop <name>` to `service <name> stop`.

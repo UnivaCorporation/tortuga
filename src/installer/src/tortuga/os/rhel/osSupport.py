@@ -66,7 +66,7 @@ class OSSupport(OsSupportBase):
                 self._globalParameterDbApi.getParameter('depot').getValue()
         except ParameterNotFound:
             # Fallback to legacy default
-            depot_dir = '/depot'
+            depot_dir = '/opt/tortuga/depot'
 
         self._cm.setDepotDir(depot_dir)
 

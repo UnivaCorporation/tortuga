@@ -33,6 +33,7 @@ from .metadata import KitMetadataSchema
 
 
 logger = getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 
 def pip_install_requirements(kit_installer, requirements_path):
@@ -127,8 +128,6 @@ def copy(srcFile, destDir):
     :raises FileNotFound:
 
     """
-    logger = logging.getLogger('tortuga.kit.utils')
-    logger.addHandler(logging.NullHandler())
 
     destFile = '%s/%s' % (destDir, os.path.basename(srcFile))
 
@@ -178,9 +177,6 @@ def download(urlList, dest):
     TODO: this should use a curl/wget download module
 
     """
-    logger = logging.getLogger('tortuga.kit.utils')
-    logger.addHandler(logging.NullHandler())
-
     for url in urlList:
         i = url.rfind('/')
 
@@ -260,9 +256,6 @@ def unpack(filePath, destrootdir):
     :raises InvalidArgument:
 
     """
-    logger = logging.getLogger('tortuga.kit.utils')
-    logger.addHandler(logging.NullHandler())
-
     kit_name, kit_version, kit_iteration = \
         getKitNameVersionIteration(filePath)
 
@@ -299,9 +292,6 @@ def unpack_archive(kit_archive_path, dest_root_dir):
     :raises InvalidArgument:
 
     """
-    logger = logging.getLogger('tortuga.kit.utils')
-    logger.addHandler(logging.NullHandler())
-
     kit_name, kit_version, kit_iteration = \
         getKitNameVersionIteration(kit_archive_path)
 

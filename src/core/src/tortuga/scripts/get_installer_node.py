@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Copyright 2008-2018 Univa Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,10 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
-import pytest
+from tortuga.cli.tortugaCli import TortugaCli
+from tortuga.config.configManager import ConfigManager
 
 
-def test_instantiation(dbm):
-    with dbm.session() as session:
-        pass
+class GetInstallerNodeCLI(TortugaCli):
+    def runCommand(self):
+        self.parseArgs()
+
+        print(ConfigManager().getInstaller())
+
+
+def main():
+    GetInstallerNodeCLI().run()

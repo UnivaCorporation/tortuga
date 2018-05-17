@@ -14,16 +14,15 @@
 
 # pylint: disable=no-member
 
-from tortuga.objects.tortugaObject \
-    import TortugaObject, TortugaObjectList, toBool
-
 import tortuga.objects.admin
 import tortuga.objects.module
 import tortuga.objects.network
-import tortuga.objects.node
 import tortuga.objects.networkDevice
+import tortuga.objects.node
 import tortuga.objects.resourceAdapter
 from tortuga.exceptions.configurationError import ConfigurationError
+from tortuga.objects.tortugaObject import TortugaObject, TortugaObjectList
+from tortuga.utility.helper import str2bool
 
 
 class HardwareProfile(TortugaObject): \
@@ -146,11 +145,11 @@ class HardwareProfile(TortugaObject): \
 
     def setSoftwareOverrideAllowed(self, allowed):
         """ Set hardware profile override allowed flag."""
-        self['softwareOverrideAllowed'] = toBool(allowed)
+        self['softwareOverrideAllowed'] = str2bool(allowed)
 
     def getSoftwareOverrideAllowed(self):
         """ Return hardware profile override allowed flag. """
-        return toBool(self.get('softwareOverrideAllowed'))
+        return str2bool(self.get('softwareOverrideAllowed'))
 
     def setIdleSoftwareProfileId(self, swId):
         """ Set idle software profile ID. """

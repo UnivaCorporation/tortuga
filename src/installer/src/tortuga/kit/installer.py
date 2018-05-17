@@ -16,20 +16,23 @@ import configparser
 import copy
 import importlib
 import inspect
-from logging import getLogger
 import json
 import os
 import pkgutil
+from logging import getLogger
+from typing import Optional
+
+from tortuga.config.configManager import ConfigManager
+from tortuga.exceptions.configurationError import ConfigurationError
+from tortuga.objects.component import Component
+from tortuga.objects.eula import Eula
+from tortuga.objects.kit import Kit
+from tortuga.objects.osFamilyInfo import OsFamilyInfo
 
 from .metadata import KIT_METADATA_FILE, KitMetadataSchema
 from .registry import register_kit_installer
 from .utils import pip_install_requirements
-from tortuga.config.configManager import ConfigManager
-from tortuga.exceptions.configurationError import ConfigurationError
-from tortuga.objects.eula import Eula
-from tortuga.objects.component import Component
-from tortuga.objects.osFamilyInfo import OsFamilyInfo
-from tortuga.objects.kit import Kit
+
 
 logger = getLogger(__name__)
 
@@ -482,6 +485,12 @@ class KitInstallerBase(ConfigurableMixin, metaclass=KitInstallerMeta):
         #
         from .actions import UninstallPuppetModulesAction
         return UninstallPuppetModulesAction(self)(*args, **kwargs)
+
+    def action_get_metadata(self,
+                            hardware_profile_name: Optional[str] = None,
+                            software_profile_name: Optional[str] = None,
+                            node_name: Optional[str] = None) -> dict:
+        pass
 
 
 class ComponentInstallerBase(ConfigurableMixin):

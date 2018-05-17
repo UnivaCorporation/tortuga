@@ -14,6 +14,8 @@
 
 # pylint: disable=no-member,maybe-no-member
 
+from typing import Optional
+
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.exceptions.componentNotFound import ComponentNotFound
 from tortuga.wsapi.kitWsApi import KitWsApi
@@ -24,30 +26,45 @@ class KitCli(TortugaCli):
     Base kit command line interface class.
     """
 
-    def get_name_version_iteration(self):
-        if self.getArgs().kitspec:
-            pkgname = self.getArgs().kitspec
-            a = pkgname.split('-')
-            name = a[0]
-            version = '-'.join(a[1:-1])
-            iteration = a[-1]
-        else:
-            name = self.getArgs().name
-            version = self.getArgs().version
-            iteration = self.getArgs().iteration
+    def parseArgs(self, usage: Optional[str] = None):
+        kit_attr_group = _('Kit Attribute Options')
 
-        return name, version, iteration
+        self.addOptionGroup(
+            kit_attr_group, _('Kit name/version must be specified.'))
+
+        self.addOptionToGroup(
+            kit_attr_group, '--name', help=_('kit name'))
+
+        self.addOptionToGroup(
+            kit_attr_group, '--version', help=_('kit version'))
+
+        self.addOptionToGroup(
+            kit_attr_group, '--iteration', help=_('kit iteration'))
+
+        self.getParser().add_argument('kitspec', nargs='?')
+
+        return super().parseArgs(usage=usage)
+
+    def get_name_version_iteration(self):
+        return self.getKitNameVersionIteration(self.getArgs().kitspec)
 
     def getKitNameVersionIteration(self, pkgname):
         if pkgname:
             a = pkgname.split('-')
+
             name = a[0]
-            version = '-'.join(a[1:-1])
-            iteration = a[-1]
+            version = None
+            iteration = None
+
+            if len(a) == 3:
+                version = '-'.join(a[1:-1])
+                iteration = a[-1]
+            elif len(a) == 2:
+                version = a[1]
         else:
-            name = self.getArgs().kitName
-            version = self.getArgs().kitVersion
-            iteration = self.getArgs().kitIteration
+            name = self.getArgs().name
+            version = self.getArgs().version
+            iteration = self.getArgs().iteration
 
         return name, version, iteration
 

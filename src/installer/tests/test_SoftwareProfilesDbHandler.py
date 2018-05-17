@@ -98,12 +98,12 @@ def get_tags():
 
 
 def get_software_profiles():
-    osInfo = OperatingSystem('centos', '7', 'x86_64')
+    osInfo = OperatingSystem(name='centos', version='7', arch='x86_64')
 
-    softwareprofile1 = SoftwareProfile('profile1')
+    softwareprofile1 = SoftwareProfile(name='profile1')
     softwareprofile1.os = osInfo
     softwareprofile1.type = 'compute'
-    softwareprofile2 = SoftwareProfile('profile2')
+    softwareprofile2 = SoftwareProfile(name='profile2')
     softwareprofile2.os = osInfo
     softwareprofile2.type = 'compute'
 

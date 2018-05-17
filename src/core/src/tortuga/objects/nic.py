@@ -14,9 +14,10 @@
 
 # pylint: disable=no-member
 
-from tortuga.objects.tortugaObject import TortugaObject, toBool
 from tortuga.objects.network import Network
 from tortuga.objects.networkDevice import NetworkDevice
+from tortuga.objects.tortugaObject import TortugaObject
+from tortuga.utility.helper import str2bool
 
 
 class Nic(TortugaObject): \
@@ -91,11 +92,11 @@ class Nic(TortugaObject): \
 
     def setBoot(self, boot):
         """ Set boot."""
-        self['boot'] = toBool(boot)
+        self['boot'] = str2bool(boot)
 
     def getBoot(self):
         """ Return boot. """
-        return toBool(self.get('boot'))
+        return str2bool(self.get('boot'))
 
     def setNetwork(self, network):
         self['network'] = network

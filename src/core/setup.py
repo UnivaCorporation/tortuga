@@ -150,6 +150,7 @@ setup(
             'get-hardware-profile=tortuga.scripts.get_hardware_profile:main',
             'get-hardware-profile-list=tortuga.scripts.get_hardware_profile_list:main',
             'get-idle-software-profile-list=tortuga.scripts.get_idle_software_profile_list:main',
+            'get-installer-node=tortuga.scripts.get_installer_node:main',
             'get-kit=tortuga.scripts.get_kit:main',
             'get-kit-list=tortuga.scripts.get_kit_list:main',
             'get-network=tortuga.scripts.get_network:main',

@@ -100,7 +100,7 @@ def dbm():
         'intWebServicePort': '8444',
         'adminPort': '8443',
         'eulaAccepted': 'true',
-        'depotpath': '/depot',
+        'depotpath': '/opt/tortuga/depot',
     }
 
     installer_fqdn = socket.getfqdn()
@@ -161,9 +161,7 @@ def dbm():
         kit.iteration = '0'
         kit.description = 'Sample base kit'
 
-        installer_component = Component()
-        installer_component.name = 'installer'
-        installer_component.version = '6.3'
+        installer_component = Component(name='installer', version='6.3')
         installer_component.family = [os_family]
         installer_component.kit = kit
 
@@ -230,7 +228,7 @@ def dbm():
 
         # create compute (compute-01, compute-02, ...) nodes
         for n in range(1, 11):
-            compute_node = Node('compute-{0:02d}.private'.format(n))
+            compute_node = Node(name='compute-{0:02d}.private'.format(n))
             compute_node.softwareprofile = compute_swprofile
             compute_node.hardwareprofile = localiron_hwprofile
 

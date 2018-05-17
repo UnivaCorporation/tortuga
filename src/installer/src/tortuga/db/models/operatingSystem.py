@@ -39,9 +39,7 @@ class OperatingSystem(ModelBase):
         primaryjoin='OperatingSystem.familyId==OperatingSystemFamily.id'
     )
 
-    def __init__(self, name=None, version=None, arch=None):
-        super().__init__()
-
-        self.name = name
-        self.version = version
-        self.arch = arch
+    def __repr__(self):
+        return '<OperatingSystem(name=[{}], version=[{}], arch=[{}])>'.format(
+            self.name, self.version, self.arch
+        )

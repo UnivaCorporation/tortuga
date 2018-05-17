@@ -57,15 +57,14 @@ class KitsDbHandler(TortugaDbObjectHandler):
         return dbKit
 
     def getKit(self, session: Session, name: str,
-               version: Optional[Union[str, None]] = None,
-               iteration: Optional[Union[str, None]] = None) -> Kit:
+               version: Optional[str] = None,
+               iteration: Optional[str] = None) -> Kit:
         """
         Get kit from the db.
 
         Raises:
             KitNotFound
         """
-        self.getLogger().debug('Retrieving kit [%s]' % (name))
 
         try:
             if version is not None and version is not None and \
@@ -82,7 +81,16 @@ class KitsDbHandler(TortugaDbObjectHandler):
 
             return dbKitQuery.one()
         except NoResultFound:
-            raise KitNotFound('Kit [%s] not found' % (name))
+                kit_spec_str = name
+
+                if version:
+                    kit_spec_str += '-{}'.format(version)
+
+                if iteration:
+                    kit_spec_str += '-{}'.format(iteration)
+
+                raise KitNotFound(
+                    'Kit [{}] not found'.format(kit_spec_str))
         except MultipleResultsFound:
             raise KitNotFound(
                 'Ambiguous kit specification. Specify version and/or'

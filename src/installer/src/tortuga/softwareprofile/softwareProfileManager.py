@@ -14,7 +14,7 @@
 
 import os
 import shutil
-from typing import Optional, Union
+from typing import Dict, Optional
 
 from tortuga.config.configManager import ConfigManager
 from tortuga.db.componentDbApi import ComponentDbApi
@@ -55,7 +55,15 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
         in this softwareprofile
         """
 
-        return self._sp_db_api.getSoftwareProfileList(tags=tags)
+        results = self._sp_db_api.getSoftwareProfileList(tags=tags)
+
+        for software_profile_obj in results:
+            # load any available software profile metadata
+            software_profile_obj.setMetadata(
+                self.get_software_profile_metadata(
+                    software_profile_obj.getName()))
+
+        return results
 
     def getIdleSoftwareProfileList(self):
         """ Return all of the idle softwareprofiles """
@@ -111,15 +119,36 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
     def getSoftwareProfile(
             self,
             name: str,
-            optionDict: Optional[Union[dict, None]] = None) -> SoftwareProfile:
-        return self._sp_db_api.getSoftwareProfile(name, optionDict=optionDict)
+            optionDict: Optional[Dict[str, bool]] = None) -> SoftwareProfile:
+        """
+        Retrieve software profile by name
+
+        """
+        software_profile_obj = self._sp_db_api.getSoftwareProfile(
+            name, optionDict=optionDict)
+
+        # load any available software profile metadata
+        software_profile_obj.setMetadata(
+            self.get_software_profile_metadata(name))
+
+        return software_profile_obj
 
     def getSoftwareProfileById(
             self,
             id_: int,
-            optionDict: Optional[Union[dict, None]] = None) -> SoftwareProfile:
-        return self._sp_db_api.getSoftwareProfileById(
+            optionDict: Optional[Dict[str, bool]] = None) -> SoftwareProfile:
+        """
+        Retrieve software profile by id
+
+        """
+        software_profile_obj = self._sp_db_api.getSoftwareProfileById(
             id_, optionDict=optionDict)
+
+        # load any available software profile metadata
+        software_profile_obj.setMetadata(
+            self.get_software_profile_metadata(software_profile_obj.getName()))
+
+        return software_profile_obj
 
     def _getCoreComponentForOsInfo(self, osInfo):
         # Find core component
@@ -325,9 +354,8 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
                     components.append(comp)
                 except ComponentNotFound:
                     self.getLogger().warning(
-                        'OS [{}] does not have a compatible \'core\' component'.format(
-                            osInfo
-                        )
+                        'OS [{}] does not have a compatible \'core\''
+                        ' component'.format(osInfo)
                     )
 
                 # Initialize values for kernel, kernelParams, and initrd
@@ -769,3 +797,25 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
 
     def getUsableNodes(self, softwareProfileName):
         return self._sp_db_api.getUsableNodes(softwareProfileName)
+
+    def get_software_profile_metadata(self, name: str) -> Dict[str, str]:
+        """
+        Call action_get_metadata() method for all kits
+        """
+
+        metadata = {}
+
+        load_kits()
+
+        kits = self._kit_db_api.getKitList()
+
+        for kit in kits:
+            installer_ = get_kit_installer(
+                (kit.getName(), kit.getVersion(), kit.getIteration()))
+
+            # we are only interested in software profile metadata
+            item = installer_().action_get_metadata(software_profile_name=name)
+            if item:
+                metadata.update(item)
+
+        return metadata
