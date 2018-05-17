@@ -14,7 +14,7 @@
 
 # pylint: disable=not-callable,no-member,multiple-statements,no-self-use
 
-from typing import List, Union
+from typing import List, NoReturn, Union
 
 from sqlalchemy import and_, func, or_
 from sqlalchemy.orm.exc import NoResultFound
@@ -899,7 +899,7 @@ class NodesDbHandler(TortugaDbObjectHandler):
             # Call shutdown action extension
             adapter.shutdownNode(detailsDict['nodes'], bSoftShutdown)
 
-    def rebootNode(self, session, nodespec, bSoftReset=False): \
+    def rebootNode(self, session, nodespec, bSoftReset=False) -> NoReturn: \
             # pylint: disable=unused-argument
         nodeList = nodespec if isinstance(nodespec, list) else [nodespec]
 
