@@ -104,8 +104,10 @@ setup(
     ],
     install_requires=[
         'marshmallow',
-        'pip2pi',
         'passlib',
+        'pip2pi',
+        'PyYAML',
+        'websockets',
     ],
     dependency_links=[
         "git+ssh://git@github.com/EmmEff/pip2pi.git@pip-10-fix#egg=pip2pi-0.7.0"

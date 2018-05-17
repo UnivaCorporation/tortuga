@@ -12,7 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from redis import Redis
+
+
 from tortuga.objectstore.manager import ObjectStoreManager
+from .pubsub import EventPubSub, RedisEventPubSub
 from .store import EventStore, ObjectStoreEventStore
 
 
@@ -35,3 +39,26 @@ class EventStoreManager:
             object_store = ObjectStoreManager.get('events')
             cls._event_store = ObjectStoreEventStore(object_store)
         return cls._event_store
+
+
+class PubSubManager:
+    """
+    Pub/Sub service manager.
+
+    """
+    _redis_client: Redis = None
+
+    @classmethod
+    def get(cls) -> EventPubSub:
+        """
+        Get an event pubsub service instance.
+
+        :return EventPubSub: the pub/sub service instance
+
+        """
+        if not cls._redis_client:
+            cls._redis_client = Redis()
+        return RedisEventPubSub(
+            redis_client=cls._redis_client,
+            event_store=EventStoreManager.get()
+        )

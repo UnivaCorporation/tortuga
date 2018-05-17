@@ -1,10 +1,27 @@
+# Copyright 2008-2018 Univa Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import argparse
+import asyncio
 import configparser
+import json
 import logging
 import os
 import sys
 from typing import Dict, List
 
+import websockets
 import yaml
 
 from tortuga.config.configManager import ConfigManager
@@ -26,6 +43,10 @@ class Tortuga:
         self._cm: ConfigManager = ConfigManager()
 
     def initialize_options(self):
+        """
+        Initialize command line arguments/options.
+
+        """
         self._parser.add_argument(
             'cmd',
             type=str,
@@ -72,7 +93,13 @@ class Tortuga:
             help='Tortuga web service password'
         )
 
-    def parse_args(self):
+    def parse_args(self) -> argparse.Namespace:
+        """
+        Parse command line.
+
+        :return argparse.Namespace: the parsed arguments.
+
+        """
         try:
             self._args = self._parser.parse_args()
         except SystemExit as rc:
@@ -87,6 +114,10 @@ class Tortuga:
         return self._args
 
     def _version(self):
+        """
+        Implements the --version argument.
+
+        """
         if self._args.version:
             print(
                 '{0} version: {1}'.format(
@@ -97,6 +128,10 @@ class Tortuga:
             sys.exit(0)
 
     def _set_log_level(self):
+        """
+        Implements the --debug argument.
+
+        """
         if self._args.debug:
             root_logger = logging.getLogger('tortuga')
             root_logger.setLevel(logging.DEBUG)
@@ -110,6 +145,10 @@ class Tortuga:
             root_logger.addHandler(ch)
 
     def _set_web_service_params(self):
+        """
+        Processes the --username --password and --url arguments.
+
+        """
         url, username, password = self._get_web_service_options()
         self._url = url
         self._username = username
@@ -121,7 +160,7 @@ class Tortuga:
         or command-line. Command-line overrides either config file or
         environment.
 
-        :return: tuple of (url, username, password)
+        :return tuple: (url, username, password)
 
         """
         username = password = url = None
@@ -166,6 +205,10 @@ class Tortuga:
         return url, username, password
 
     def run(self):
+        """
+        Runs the command-line utility.
+
+        """
         try:
             self._run()
         except Exception as ex:
@@ -175,6 +218,10 @@ class Tortuga:
             raise
 
     def _run(self):
+        """
+        Really runs the command-line utility.
+
+        """
         self.initialize_options()
         args = self.parse_args()
 
@@ -183,11 +230,23 @@ class Tortuga:
             self._run_cmd(cmd, args.query)
 
     def _run_cmd(self, cmd: List[str], query: List[str]):
+        """
+        Runs the command list passed in to the command line utility.
+
+        :param List[str] cmd:   the list of positional command line arguments
+        :param List[str] query: the list of query arguments passed in via
+                                the --query option
+
+        """
         if not cmd:
             cmd = []
 
         if not query:
             query = []
+
+        if cmd and cmd[0] == 'listen':
+            self._listen()
+            sys.exit(0)
 
         if len(cmd) == 1:
             print('Command action is required')
@@ -196,20 +255,65 @@ class Tortuga:
         ws = TortugaWsApiClient(endpoint=cmd[0])
         params = self._parse_params(query)
         if cmd[1] == 'list':
-            self._pretty_print(ws.list(**params))
-        if cmd[1] == 'show':
-            self._pretty_print(ws.get(cmd[2]))
-
-    def _pretty_print(self, data):
-        print(yaml.safe_dump(data, default_flow_style=False))
+            pretty_print(ws.list(**params))
+        elif cmd[1] == 'show':
+            pretty_print(ws.get(cmd[2]))
 
     def _parse_params(self, query: List[str]) -> Dict[str, str]:
+        """
+        Takes a list of --query parameters and turns them into a dict
+        suitable for passing to a funtion as **kwargs
+
+        :param List[str] query: a list of "key=value" query arguments to
+                                to parse
+
+        :return Dict[str, str]: a dictionary of {key: value} pairs
+
+        """
         params = {}
         for q in query:
             parts = q.split('=')
             params[parts[0]] = parts[1]
+
         return params
+
+    def _listen(self):
+        """
+        Listen for events on the Tortuga websocket and print them to
+        stdout.
+
+        :param params:
+
+        """
+        try:
+            asyncio.get_event_loop().run_until_complete(websocket_client())
+        except KeyboardInterrupt:
+            sys.exit(0)
+
+
+def pretty_print(self, data):
+    """
+    Outputs data as nicely formatted YAML.
+
+    :param data: A Python data structure
+
+    """
+    print(yaml.safe_dump(data, default_flow_style=False))
+
+
+@asyncio.coroutine
+def websocket_client():
+    websocket = yield from websockets.connect('ws://localhost:9443/')
+
+    while True:
+        msg = yield from websocket.recv()
+        data = json.loads(msg)
+        print(yaml.safe_dump(data, default_flow_style=False))
 
 
 def main():
+    """
+    Main.
+
+    """
     Tortuga().run()

@@ -19,7 +19,7 @@ import datetime
 import cherrypy
 
 from tortuga.addhost.addHostManager import AddHostManager
-from tortuga.addhost.events import DeleteNodeRequestQueued
+from tortuga.events.types import DeleteNodeRequestQueued
 from tortuga.db.models.nodeRequest import NodeRequest
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.nodeNotFound import NodeNotFound

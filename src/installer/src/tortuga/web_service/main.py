@@ -24,16 +24,17 @@ from pathlib import Path
 
 import cherrypy
 from cherrypy.process import plugins
-from sqlalchemy.orm import scoped_session, sessionmaker
 
-from tortuga.web_service import controllers, controllers_v2
-from tortuga.web_service.controllers.tortugaController import TortugaController
-from tortuga.web_service.threadManagerPlugin import ThreadManagerPlugin
-from tortuga.web_service.workQueuePlugin import WorkQueuePlugin
-
-from . import app, dbm
+from . import app
+from . import controllers, controllers_v2
 from .auth import methods as auth_methods
 from .auth.authenticator import CherryPyAuthenticator
+from .controllers.tortugaController import TortugaController
+from .plugins.database import DatabasePlugin
+from .plugins.websocket import WebsocketPlugin
+from .threadManagerPlugin import ThreadManagerPlugin
+from .tools.database import DatabaseTool
+from .workQueuePlugin import WorkQueuePlugin
 
 
 # read logging configuration
@@ -104,6 +105,8 @@ def run_server(daemonize: bool = False, pidfile: str = None):
     ThreadManagerPlugin(cherrypy.engine).subscribe()
     if pidfile:
         plugins.PIDFile(cherrypy.engine, pidfile).subscribe()
+    DatabasePlugin(cherrypy.engine).subscribe()
+    WebsocketPlugin(cherrypy.engine).subscribe()
 
     #
     # Setup the signal handler to stop the application while running.
@@ -111,16 +114,9 @@ def run_server(daemonize: bool = False, pidfile: str = None):
     cherrypy.engine.signals.subscribe()
 
     #
-    # Setup the database tool
+    # Initialize tools
     #
-    DatabaseEnginePlugin(cherrypy.engine).subscribe()
     cherrypy.tools.db = DatabaseTool()
-
-    #
-    # Setup the authentication method chain as a tool. Note that order
-    # matters here, authentication methods will be tested in the order in
-    # which they occur.
-    #
     authentication_methods = [
         auth_methods.HttpBasicAuthenticationMethod(),
         auth_methods.HttpSessionAuthenticationMethod(),
@@ -162,55 +158,6 @@ def handle_error():
     cherrypy.response.headers['Content-Type'] = 'application/json'
     return json.dumps(TortugaController().errorResponse(
         'Internal error', http_status=500))
-
-
-class DatabaseEnginePlugin(plugins.SimplePlugin):
-    def __init__(self, bus):
-        super(DatabaseEnginePlugin, self).__init__(bus)
-        self.sa_engine = None
-        self.bus.subscribe('bind', self.bind)
-
-    def start(self):
-        self.sa_engine = dbm.engine
-
-    def stop(self):
-        if self.sa_engine:
-            self.sa_engine.dispose()
-            self.sa_engine = None
-
-    def bind(self, session):
-        session.configure(bind=self.sa_engine)
-
-
-class DatabaseTool(cherrypy.Tool):
-    def __init__(self):
-        super(DatabaseTool, self).__init__(
-            'on_start_resource', self.bind_session, priority=20)
-        self.session = scoped_session(sessionmaker(autoflush=True,
-                                                   autocommit=False))
-
-    def _setup(self):
-        super(DatabaseTool, self)._setup()
-        cherrypy.request.hooks.attach('on_end_resource',
-                                      self.commit_transaction,
-                                      priority=80)
-
-    def bind_session(self):
-        cherrypy.engine.publish('bind', self.session)
-        cherrypy.request.db = self.session
-
-    def commit_transaction(self):
-        cherrypy.request.db = None
-
-        try:
-            self.session.commit()
-
-        except Exception:
-            self.session.rollback()
-            raise
-
-        finally:
-            self.session.remove()
 
 
 def main():

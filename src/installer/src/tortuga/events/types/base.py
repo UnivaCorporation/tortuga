@@ -1,10 +1,24 @@
+# Copyright 2008-2018 Univa Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import datetime
 from typing import Dict, Type
 import uuid
 
 from marshmallow import Schema, fields
 
-from .exceptions import EventNotFoundError
+from ..exceptions import EventNotFoundError
 
 
 #
@@ -56,6 +70,7 @@ class BaseEventSchema(Schema):
     name: fields.Field = fields.String(dump_only=True)
     id: fields.Field = fields.String()
     timestamp: fields.Field = fields.DateTime()
+    message: fields.Field = fields.String(required=False)
 
 
 class BaseEvent(metaclass=EventMeta):
@@ -73,7 +88,7 @@ class BaseEvent(metaclass=EventMeta):
     #
     schema: Type[BaseEventSchema] = None
 
-    def __init__(self, **kwargs):
+    def __init__(self, message=None, **kwargs):
         """
         Initialization.
 
@@ -83,6 +98,7 @@ class BaseEvent(metaclass=EventMeta):
         """
         self.id: str = None
         self.timestamp: datetime.datetime = None
+        self.message = message
 
         for k, v in kwargs.items():
             setattr(self, k, v)
@@ -103,7 +119,7 @@ class BaseEvent(metaclass=EventMeta):
         :return: the new event instance
 
         """
-        from .manager import EventStoreManager
+        from ..manager import EventStoreManager, PubSubManager
 
         event = cls(**kwargs)
         event.id = str(uuid.uuid4())
@@ -111,5 +127,8 @@ class BaseEvent(metaclass=EventMeta):
 
         store = EventStoreManager.get()
         store.save(event)
+
+        pubsub = PubSubManager.get()
+        pubsub.publish(event)
 
         return event

@@ -1,7 +1,7 @@
 from marshmallow import fields
 import pytest
 
-from tortuga.events.base import BaseEvent, BaseEventSchema
+from tortuga.events.types.base import BaseEvent, BaseEventSchema
 from tortuga.events.manager import EventStoreManager
 from tortuga.events.store import ObjectStoreEventStore
 from tortuga.objectstore.redis import RedisObjectStore
