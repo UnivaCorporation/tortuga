@@ -45,7 +45,9 @@ def process_delete_host_request(transaction_id, nodespec):
         # Save this data so that we have it for firing the event below
         #
         evt_req_id = req.id
-        evt_req_request = nodespec
+        evt_req_request = {
+            'name': nodespec
+        }
 
         ahm.update_session(transaction_id, running=True)
 
