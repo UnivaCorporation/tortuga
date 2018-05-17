@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 class tortuga_kit_base::installer::post_install {
   require tortuga::installer
 
@@ -50,6 +49,7 @@ class tortuga_kit_base::installer (
 
   contain tortuga_kit_base::installer::apache
 
+  contain tortuga_kit_base::installer::celery
   contain tortuga_kit_base::installer::webservice
   contain tortuga_kit_base::installer::ssh
 
@@ -58,7 +58,4 @@ class tortuga_kit_base::installer (
   }
   contain tortuga::installer::database
 
-  # contain tortuga_kit_base::post_install
-
-  # Class['tortuga::installer'] -> Class['tortuga_kit_base::post_install']
 }

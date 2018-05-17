@@ -15,11 +15,14 @@
 # pylint: disable=no-member
 
 import json
-import urllib.request, urllib.parse, urllib.error
+import urllib.error
+import urllib.parse
+import urllib.request
 
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.objects.admin import Admin
-from tortuga.objects.tortugaObject import toBool
+from tortuga.utility.helper import str2bool
+
 from .tortugaWsApi import TortugaWsApi
 
 
@@ -206,7 +209,7 @@ class AdminWsApi(TortugaWsApi):
             _, responseDict = self.sendSessionRequest(
                 url, method='POST', data=postdata)
 
-            return toBool(responseDict.get('authenticate'))
+            return str2bool(responseDict.get('authenticate'))
         except TortugaException:
             raise
         except Exception as ex:

@@ -39,6 +39,8 @@ from tortuga.db.models.softwareProfile import SoftwareProfile
 from tortuga.deployer.dbUtility import init_global_parameters, primeDb
 from tortuga.node import nodeManager
 from tortuga.objects import osFamilyInfo, osInfo
+from tortuga.objectstore import manager as objectstore_manager
+from .mocks.redis import MockRedis
 
 
 @pytest.fixture(autouse=True)
@@ -55,6 +57,19 @@ def disable_DbManager(monkeypatch, dbm):
     monkeypatch.setattr(networkDbApi, 'DbManager', mockreturn)
     monkeypatch.setattr(kitDbApi, 'DbManager', mockreturn)
     monkeypatch.setattr(nodeManager, 'DbManager', mockreturn)
+
+
+@pytest.fixture(autouse=True)
+def mock_redis(monkeypatch, redis):
+    def mockreturn():
+        return redis
+
+    monkeypatch.setattr(objectstore_manager, 'Redis', mockreturn)
+
+
+@pytest.fixture(scope='session')
+def redis():
+    return MockRedis()
 
 
 @pytest.fixture(scope='session')
@@ -146,9 +161,7 @@ def dbm():
         kit.iteration = '0'
         kit.description = 'Sample base kit'
 
-        installer_component = Component()
-        installer_component.name = 'installer'
-        installer_component.version = '6.3'
+        installer_component = Component(name='installer', version='6.3')
         installer_component.family = [os_family]
         installer_component.kit = kit
 

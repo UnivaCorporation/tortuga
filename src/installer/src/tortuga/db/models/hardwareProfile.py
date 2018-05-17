@@ -67,8 +67,3 @@ class HardwareProfile(ModelBase):
         secondary='hardwareprofile_tags',
         backref='hardwareprofiles'
     )
-
-    def __init__(self, name=None):
-        super().__init__()
-
-        self.name = name

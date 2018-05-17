@@ -48,14 +48,5 @@ class Component(ModelBase):
                                        cascade='all, delete-orphan',
                                        passive_deletes=True)
 
-    def __init__(self, name=None, version=None, description=None,
-                 kitId=None):
-        super().__init__()
-
-        self.name = name
-        self.version = version
-        self.description = description
-        self.kitId = kitId
-
     def __repr__(self):
         return format_component_descriptor(self.name, self.version)

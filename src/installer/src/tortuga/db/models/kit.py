@@ -17,7 +17,10 @@
 from sqlalchemy import Boolean, Column, Integer, String, UniqueConstraint
 from sqlalchemy.orm import relationship
 
+from tortuga.exceptions.componentNotFound import ComponentNotFound
+
 from .base import ModelBase
+from .operatingSystemFamily import OperatingSystemFamily
 
 
 class Kit(ModelBase):
@@ -38,3 +41,26 @@ class Kit(ModelBase):
     components = relationship('Component', backref='kit',
                               cascade='all, delete-orphan',
                               passive_deletes=True)
+
+    def get_osfamily_component(self, name: str,
+                               osfamily: OperatingSystemFamily):
+        """
+        Get compatible component.
+
+        Raises:
+           ComponentNotFound
+        """
+        for component in self.components:
+            if component.name == name:
+                for component_osfamily in component.osfamily_components:
+                    if osfamily.name == component_osfamily.family.name and \
+                            osfamily.version == component_osfamily.family.version and \
+                            osfamily.arch == component_osfamily.family.arch:
+                        break
+                else:
+                    continue
+
+                return component
+        else:
+            raise ComponentNotFound(
+               'Component [{}] not found'.format(name))

@@ -97,8 +97,8 @@ def get_tags():
 
 
 def get_hardware_profiles():
-    hardwareprofile1 = HardwareProfile('profile1')
-    hardwareprofile2 = HardwareProfile('profile2')
+    hardwareprofile1 = HardwareProfile(name='profile1')
+    hardwareprofile2 = HardwareProfile(name='profile2')
 
     return [hardwareprofile1, hardwareprofile2]
 
