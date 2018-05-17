@@ -291,7 +291,7 @@ class Tortuga:
             sys.exit(0)
 
 
-def pretty_print(self, data):
+def pretty_print(data):
     """
     Outputs data as nicely formatted YAML.
 
