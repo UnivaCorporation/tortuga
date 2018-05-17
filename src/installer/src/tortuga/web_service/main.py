@@ -65,7 +65,7 @@ if not log_conf_file.exists():
     root_logger.addHandler(ch)
 
 
-logger = logging.getLogger('tortuga.web_service')
+logger = logging.getLogger(__name__)
 
 
 def prepare_server():
