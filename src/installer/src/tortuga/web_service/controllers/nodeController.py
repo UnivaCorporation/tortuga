@@ -646,7 +646,7 @@ def enqueue_delete_hosts_request(session, nodespec):
     #
     # Fire the delete node request queued event
     #
-    DeleteNodeRequestQueued.fire(transaction_id=request.addHostSession)
+    DeleteNodeRequestQueued.fire(request_id=request.id, request=nodespec)
 
     #
     # Run async task

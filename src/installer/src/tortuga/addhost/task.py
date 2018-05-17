@@ -36,7 +36,8 @@ def enqueue_addnodes_request(session: Session, addNodesRequest: dict):
     #
     # Fire the add node request queued event
     #
-    AddNodeRequestQueued.fire(request_id=request.id)
+    AddNodeRequestQueued.fire(request_id=request.id,
+                              request=addNodesRequest['addNodesRequest'])
 
     #
     # Run async task
