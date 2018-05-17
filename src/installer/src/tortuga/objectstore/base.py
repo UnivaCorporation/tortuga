@@ -74,8 +74,12 @@ def matches_filters(obj: Union[object, dict],
         left = obj
         for attr in parts:
             if isinstance(left, dict):
+                if attr not in left.keys():
+                    return False
                 left = left[attr]
             else:
+                if not hasattr(left, attr):
+                    return False
                 left = getattr(left, attr)
 
         if not COMPARATORS[comparator](left, right):
