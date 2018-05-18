@@ -62,25 +62,10 @@ class tortuga::installer::puppetmaster::service {
   }
 }
 
-class tortuga::installer::puppetmaster::post_config {
-  require tortuga::installer::puppetmaster::config
-
-  # 'puppet cert --generate' will always return an error code, so it is
-  # necessary to ignore the return code.
-  exec { 'generate_puppetmaster_certificate':
-    path    => ['/bin', '/usr/bin'],
-    command => "puppet cert --color false --generate ${tortuga::config::installer_fqdn} ||:",
-    creates => "/var/lib/puppet/ssl/certs/${tortuga::config::installer_fqdn}.pem",
-  }
-}
-
-
 class tortuga::installer::puppetmaster {
   contain tortuga::installer::puppetmaster::config
   contain tortuga::installer::puppetmaster::service
-  # contain tortuga::installer::puppetmaster::post_config
 
   Class['tortuga::installer::puppetmaster::config'] ~>
     Service['puppetserver']
-
 }
