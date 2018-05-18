@@ -32,6 +32,7 @@ from tortuga.db.models.softwareProfile import SoftwareProfile
 from tortuga.db.nodeDbApi import NodeDbApi
 from tortuga.db.nodesDbHandler import NodesDbHandler
 from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
+from tortuga.events.types import NodeStateChanged
 from tortuga.exceptions.configurationError import ConfigurationError
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
@@ -207,6 +208,8 @@ class NodeManager(TortugaObjectManager): \
 
             run_post_install = False
 
+            previous_state = node.state
+
             if 'state' in updateNodeRequest:
                 run_post_install = node.state == 'Allocated' and \
                     updateNodeRequest['state'] == 'Provisioned'
@@ -214,6 +217,15 @@ class NodeManager(TortugaObjectManager): \
                 node.state = updateNodeRequest['state']
 
             session.commit()
+
+            #
+            # If the node state has changed, then fire the node state changed
+            # event
+            #
+            if node.state != previous_state:
+                node_dict = Node.getFromDbDict(node.__dict__).getCleanDict()
+                NodeStateChanged.fire(node=node_dict,
+                                      previous_state=previous_state)
 
             if run_post_install:
                 self.getLogger().debug(
@@ -250,6 +262,7 @@ class NodeManager(TortugaObjectManager): \
 
         try:
             dbNode = NodesDbHandler().getNode(session, nodeName)
+            previous_state = dbNode.state
 
             # Bitfield representing node changes (0 = state change,
             # 1 = bootFrom # change)
@@ -298,6 +311,17 @@ class NodeManager(TortugaObjectManager): \
                 self._bhm.writePXEFile(dbNode, localboot=bootFrom)
 
             session.commit()
+
+            #
+            # If the node state has changed, fire the node state changed
+            # event
+            #
+            if state and previous_state != state:
+                node_dict = Node.getFromDbDict(dbNode.__dict__).getCleanDict()
+                NodeStateChanged.fire(
+                    node=node_dict,
+                    previous_state=previous_state
+                )
 
             return result
         finally:

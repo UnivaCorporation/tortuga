@@ -13,5 +13,6 @@
 # limitations under the License.
 
 from .base import BaseEvent, get_event_class
-from .node import (AddNodeRequestComplete, AddNodeRequestQueued,
-                   DeleteNodeRequestComplete, DeleteNodeRequestQueued)
+from .node import NodeStateChanged
+from .node_request import (AddNodeRequestComplete, AddNodeRequestQueued,
+                           DeleteNodeRequestComplete, DeleteNodeRequestQueued)

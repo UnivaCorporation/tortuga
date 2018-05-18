@@ -17,94 +17,33 @@ from marshmallow import fields
 from .base import BaseEventSchema, BaseEvent
 
 
-class AddNodeRequestSchema(BaseEventSchema):
+class NodeStateChangedSchema(BaseEventSchema):
     """
-    Schema for the AddNodeRequest* events.
+    Schema for the NodeStateChange events.
 
     """
-    request_id = fields.String()
-    request = fields.Dict()
+    node = fields.Dict()
+    previous_state = fields.String()
 
 
-class AddNodeRequestMixin:
+class NodeStateChanged(BaseEvent):
     """
     Common mixin for all AddNodeRequest event classes.
 
     """
-    schema = AddNodeRequestSchema
+    name = 'node-state-changed'
+    schema = NodeStateChangedSchema
 
-    def __init__(self, request_id: str, request: str, **kwargs):
+    def __init__(self, node: dict, previous_state: str, **kwargs):
         """
         Initializer.
 
-        :param str request_id: the add node request id
-        :param dict request:   the add node request
+        :param str node:     the add node, and it's current state
+        :param dict request: the previous state
         :param kwargs:
 
         """
-        self.request_id: str = request_id
-        self.request: dict = request
+        self.node: dict = node
+        self.previous_state: dict = previous_state
 
         super().__init__(**kwargs)
-
-
-class AddNodeRequestComplete(AddNodeRequestMixin, BaseEvent):
-    """
-    Event fired when new add node requests are created.
-
-    """
-    name = 'add-node-request-complete'
-
-
-class AddNodeRequestQueued(AddNodeRequestMixin, BaseEvent):
-    """
-    Event fired when new add node requests are created.
-
-    """
-    name = 'add-node-request-queued'
-
-
-class DeleteNodeRequestSchema(BaseEventSchema):
-    """
-    Schema for the DeleteNodeRequest* events.
-
-    """
-    request_id = fields.String()
-    request = fields.Dict()
-
-
-class DeleteNodeRequestMixin:
-    """
-    Common mixin for all DeleteNodeRequest event classes.
-
-    """
-    schema = DeleteNodeRequestSchema
-
-    def __init__(self, request_id: str, request: dict, **kwargs):
-        """
-        Initializer.
-
-        :param str request_id: the delete node request id
-        :param dict request:   the node request
-        :param kwargs:
-
-        """
-        self.request_id: str = request_id
-        self.request: dict = request
-        super().__init__(**kwargs)
-
-
-class DeleteNodeRequestQueued(DeleteNodeRequestMixin, BaseEvent):
-    """
-    Event fired when new delete node requests are created.
-
-    """
-    name = 'delete-node-request-queued'
-
-
-class DeleteNodeRequestComplete(DeleteNodeRequestMixin, BaseEvent):
-    """
-    Event fired when new add node requests are created.
-
-    """
-    name = 'delete-node-request-complete'
