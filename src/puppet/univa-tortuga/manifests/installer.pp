@@ -19,7 +19,7 @@ class tortuga::installer (
   contain tortuga::installer::puppetmaster
   contain tortuga::envscript
   contain tortuga::installer::ssh
-  contain tortuga::installer::redis::enable
+  contain tortuga::installer::redis
 
   if $activemq_enable {
     class { 'tortuga::installer::activemq':

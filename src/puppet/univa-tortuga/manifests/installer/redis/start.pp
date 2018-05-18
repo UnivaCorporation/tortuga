@@ -6,8 +6,7 @@
 #   include tortuga::installer::redis::start
 
 class tortuga::installer::redis::start {
-
-  require Class['tortuga::installer::redis::install']
+  require tortuga::installer::redis::install
 
   service { 'redis':
     ensure => running,
