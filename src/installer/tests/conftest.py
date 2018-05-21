@@ -67,7 +67,7 @@ def mock_redis(monkeypatch, redis):
     monkeypatch.setattr(objectstore_manager, 'Redis', mockreturn)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture()
 def redis():
     return MockRedis()
 
