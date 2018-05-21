@@ -133,6 +133,7 @@ setup(
         'gevent',
         'marshmallow-sqlalchemy',
         'alembic',
+        'websockets',
     ],
     namespace_packages=['tortuga'],
     entry_points={
