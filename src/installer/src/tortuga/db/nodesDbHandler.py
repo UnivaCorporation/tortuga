@@ -291,27 +291,32 @@ class NodesDbHandler(TortugaDbObjectHandler):
         # Mark node states as deleted in the database
         #
         for dbNode in dbNodes:
-            events_to_fire.append({
-                'node': dbNode,
-                'previous_state': dbNode.state
-            })
+            #
+            # Capture previous state and node data as a dict for firing
+            # the event later on
+            #
+            event_data = {
+                'previous_state': dbNode.state,
+                'node': TortugaNode.getFromDbDict(
+                    dbNode.__dict__).getCleanDict()
+            }
+
             dbNode.state = 'Deleted'
+            event_data['node']['state'] = 'Deleted'
+
             if dbNode.hardwareprofile not in nodes:
                 nodes[dbNode.hardwareprofile] = [dbNode]
             else:
                 nodes[dbNode.hardwareprofile].append(dbNode)
+
         session.commit()
 
         #
         # Fire node state change events
         #
         for event in events_to_fire:
-            node_dict = TortugaNode.getFromDbDict(
-                    event['node'].__dict__).getCleanDict()
-            NodeStateChanged.fire(
-                node=node_dict,
-                previous_state=event['previous_state']
-            )
+            NodeStateChanged.fire(node=event['node'],
+                                  previous_state=event['previous_state'])
 
         #
         # Call resource adapter with batch(es) of node lists keyed on
@@ -665,16 +670,23 @@ class NodesDbHandler(TortugaDbObjectHandler):
             # Node state is consistent for all nodes within the same
             # hardware profile.
             for dbNode in nodeDetails['nodes']:
+                event_data = None
                 #
                 # If the node state is changing, then we need to be prepared
                 # to fire an event after the data has been persisted.
                 #
                 if dbNode.state != nodeState:
-                    events_to_fire.append({
-                        'node': dbNode,
-                        'prevoius_state': dbNode.state
-                    })
+                    event_data = {'prevoius_state': dbNode.state}
+
                 dbNode.state = nodeState
+
+                #
+                # Serialize the node for the event, if required
+                #
+                if event_data:
+                    event_data['node'] = TortugaNode.getFromDbDict(
+                        dbNode.__dict__).getCleanDict()
+                    events_to_fire.append(event_data)
 
             # Add idled node to 'success' list
             results['success'].extend(nodeDetails['nodes'])
@@ -685,12 +697,8 @@ class NodesDbHandler(TortugaDbObjectHandler):
         # Fire node state change events
         #
         for event in events_to_fire:
-            node_dict = TortugaNode.getFromDbDict(
-                    event['node'].__dict__).getCleanDict()
-            NodeStateChanged.fire(
-                node=node_dict,
-                previous_state=event['previous_state']
-            )
+            NodeStateChanged.fire(node=event['node'],
+                                  previous_state=event['previous_state'])
 
         return results
 

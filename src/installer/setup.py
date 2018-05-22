@@ -118,8 +118,13 @@ setup(
     scripts=[str(fn) for fn in walkfiles(Path('bin'))],
     data_files=get_files(),
     install_requires=[
-        'celery',
+        'celery==4.1.0',
         'cryptography',
+        #
+        # Normally, kombu is installed as a dependency of celery, however
+        # we need to pin it to 4.1.0 as we are seeing problems with 4.2.0
+        #
+        'kombu==4.1.0',
         'tortuga-core',
         'Jinja2',
         'CherryPy',
