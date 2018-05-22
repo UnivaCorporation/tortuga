@@ -208,13 +208,19 @@ class NodeManager(TortugaObjectManager): \
 
             run_post_install = False
 
+            #
+            # Capture previous state and node data as dict for firing the
+            # event later on
+            #
             previous_state = node.state
+            node_dict = Node.getFromDbDict(node.__dict__).getCleanDict()
 
             if 'state' in updateNodeRequest:
                 run_post_install = node.state == 'Allocated' and \
                     updateNodeRequest['state'] == 'Provisioned'
 
                 node.state = updateNodeRequest['state']
+                node_dict['state'] = updateNodeRequest['state']
 
             session.commit()
 
@@ -222,8 +228,7 @@ class NodeManager(TortugaObjectManager): \
             # If the node state has changed, then fire the node state changed
             # event
             #
-            if node.state != previous_state:
-                node_dict = Node.getFromDbDict(node.__dict__).getCleanDict()
+            if node_dict['state'] != previous_state:
                 NodeStateChanged.fire(node=node_dict,
                                       previous_state=previous_state)
 
@@ -262,7 +267,13 @@ class NodeManager(TortugaObjectManager): \
 
         try:
             dbNode = NodesDbHandler().getNode(session, nodeName)
+
+            #
+            # Capture previous state and node data in dict form for the
+            # event later on
+            #
             previous_state = dbNode.state
+            node_dict = Node.getFromDbDict(dbNode.__dict__).getCleanDict()
 
             # Bitfield representing node changes (0 = state change,
             # 1 = bootFrom # change)
@@ -284,6 +295,7 @@ class NodeManager(TortugaObjectManager): \
                     msg += ' state: [%s] -> [%s]' % (dbNode.state, state)
 
                     dbNode.state = state
+                    node_dict['state'] = state
 
                 if changed & 2:
                     msg += ' bootFrom: [%d] -> [%d]' % (
@@ -316,12 +328,9 @@ class NodeManager(TortugaObjectManager): \
             # If the node state has changed, fire the node state changed
             # event
             #
-            if state and previous_state != state:
-                node_dict = Node.getFromDbDict(dbNode.__dict__).getCleanDict()
-                NodeStateChanged.fire(
-                    node=node_dict,
-                    previous_state=previous_state
-                )
+            if state and (previous_state != state):
+                NodeStateChanged.fire(node=node_dict,
+                                      previous_state=previous_state)
 
             return result
         finally:
