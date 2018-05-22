@@ -14,6 +14,13 @@
 
 
 class tortuga_kit_base::core {
+  contain tortuga_kit_base::core::actions
+  contain tortuga_kit_base::core::done
+
+  Tortuga_kit_base::Installed<| |> -> Class['tortuga_kit_base::core']
+}
+
+class tortuga_kit_base::core::actions {
   # Incorporate classes defined in Hiera
   $classes = lookup('classes', {'merge' => 'unique', 'default_value' => []})
   if $classes {
@@ -34,4 +41,10 @@ class tortuga_kit_base::core {
   Class['tortuga_kit_base::core::install'] ->
     Class['tortuga::envscript'] ->
     Class['tortuga_kit_base::core::links']
+}
+
+class tortuga_kit-base::core::done {
+  require tortuga_kit_base::core::actions
+
+  tortuga_kit_base::installed { 'compute': }
 }
