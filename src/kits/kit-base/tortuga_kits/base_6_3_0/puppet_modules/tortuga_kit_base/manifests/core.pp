@@ -16,8 +16,6 @@
 class tortuga_kit_base::core {
   contain tortuga_kit_base::core::actions
   contain tortuga_kit_base::core::done
-
-  Tortuga_kit_base::Installed<| |> -> Class['tortuga_kit_base::core']
 }
 
 class tortuga_kit_base::core::actions {
@@ -43,7 +41,7 @@ class tortuga_kit_base::core::actions {
     Class['tortuga_kit_base::core::links']
 }
 
-class tortuga_kit-base::core::done {
+class tortuga_kit_base::core::done {
   require tortuga_kit_base::core::actions
 
   tortuga_kit_base::installed { 'compute': }
