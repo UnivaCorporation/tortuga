@@ -12,16 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-class tortuga_kit_base::pdsh {
-  require tortuga::packages
-
-  $pkgs = [
-    'pdsh',
-    'pdsh-rcmd-ssh'
-  ]
-
-  ensure_resource('package', $pkgs, {'ensure' => 'installed'})
-
-  Tortuga_kit_base::Installed<| |> -> Class['tortuga_kit_base::pdsh']
+define tortuga_kit_base::installed {
+  #
+  # Placeholder define to use to set dependency ordering
+  #
+  # Use 'Tortuga_kit_base::Installed<| |> -> CLASS' to ensure Tortuga
+  # is installed prior to executing CLASS>
+  #
 }

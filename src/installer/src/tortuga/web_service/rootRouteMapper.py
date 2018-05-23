@@ -12,16 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import cherrypy
 
-class tortuga_kit_base::pdsh {
-  require tortuga::packages
+from .controllers.rootController import RootController
 
-  $pkgs = [
-    'pdsh',
-    'pdsh-rcmd-ssh'
-  ]
 
-  ensure_resource('package', $pkgs, {'ensure' => 'installed'})
+rootController = RootController()
 
-  Tortuga_kit_base::Installed<| |> -> Class['tortuga_kit_base::pdsh']
-}
+
+def setupRoutes():
+    dispatcher = cherrypy.dispatch.RoutesDispatcher()
+    dispatcher.mapper.explicit = False
+
+    for action in rootController.actions:
+        dispatcher.connect(
+            action['name'],
+            action['path'],
+            action=action['action'],
+            controller=rootController,
+            conditions=dict(method=action['method'])
+        )
+
+    return dispatcher

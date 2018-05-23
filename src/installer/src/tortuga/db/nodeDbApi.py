@@ -15,14 +15,10 @@
 # pylint: disable=no-member
 
 import socket
-from typing import List, Optional, Union
+from typing import Dict, List, NoReturn, Optional, Union
 
 from sqlalchemy.orm.session import Session
 
-from tortuga.db.dbManager import DbManager
-from tortuga.db.globalParameterDbApi import GlobalParameterDbApi
-from tortuga.db.nodesDbHandler import NodesDbHandler
-from tortuga.db.tortugaDbApi import TortugaDbApi
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.objects.node import Node
@@ -30,7 +26,14 @@ from tortuga.objects.parameter import Parameter
 from tortuga.objects.provisioningInfo import ProvisioningInfo
 from tortuga.objects.tortugaObject import TortugaObjectList
 
+from .dbManager import DbManager
+from .globalParameterDbApi import GlobalParameterDbApi
 from .models.node import Node as NodeModel
+from .nodesDbHandler import NodesDbHandler
+from .tortugaDbApi import TortugaDbApi
+
+
+OptionsDict = Dict[str, bool]
 
 
 class NodeDbApi(TortugaDbApi):
@@ -39,12 +42,12 @@ class NodeDbApi(TortugaDbApi):
     """
 
     def __init__(self):
-        TortugaDbApi.__init__(self)
+        super().__init__()
 
         self._nodesDbHandler = NodesDbHandler()
         self._globalParameterDbApi = GlobalParameterDbApi()
 
-    def getNode(self, name: str, optionDict: Optional[Union[dict, None]] = None):
+    def getNode(self, name: str, optionDict: OptionsDict = None) -> Node:
         """
         Get node from the db.
 
@@ -78,7 +81,8 @@ class NodeDbApi(TortugaDbApi):
             DbManager().closeSession()
 
     def getNodesByAddHostSession(self, ahSession: str,
-                                 optionDict: Optional[Union[dict, None]] = None) -> TortugaObjectList:
+                                 optionDict: OptionsDict = None) \
+            -> TortugaObjectList:
         """
         Get node(s) from db based their addhost session
         """
@@ -95,7 +99,8 @@ class NodeDbApi(TortugaDbApi):
                 raise
 
     def getNodesByNameFilter(self, nodespec: str,
-                             optionDict: Optional[Union[dict, None]] = None) -> TortugaObjectList:
+                             optionDict: OptionsDict = None) \
+            -> TortugaObjectList:
         """
         Get node(s) from db based on the name filter
         """
@@ -110,8 +115,8 @@ class NodeDbApi(TortugaDbApi):
             return self.__convert_nodes_to_TortugaObjectList(
                 nodes, relations=optionDict)
 
-    def getNodeById(self, nodeId: int, optionDict: Optional[Union[dict, None]] = None):
-
+    def getNodeById(self, nodeId: int, optionDict: OptionsDict = None) \
+            -> Node:
         session = DbManager().openSession()
 
         try:
@@ -128,11 +133,13 @@ class NodeDbApi(TortugaDbApi):
         finally:
             DbManager().closeSession()
 
-    def getNodeByIp(self, ip):
+    def getNodeByIp(self, ip: str, relations: OptionsDict = None) -> Node:
         session = DbManager().openSession()
 
         try:
             node = self._nodesDbHandler.getNodeByIp(session, ip)
+
+            self.loadRelations(node, relations)
 
             return Node.getFromDbDict(node.__dict__)
         except TortugaException:
@@ -145,7 +152,7 @@ class NodeDbApi(TortugaDbApi):
 
     def __convert_nodes_to_TortugaObjectList(
             self, nodes: List[NodeModel],
-            relations: Optional[Union[dict, None]] = None) -> TortugaObjectList:
+            relations: OptionsDict = None) -> TortugaObjectList:
         """
         Return TortugaObjectList of nodes with relations populated
 
@@ -171,7 +178,9 @@ class NodeDbApi(TortugaDbApi):
 
         return nodeList
 
-    def getNodeList(self, tags: Optional[Union[dict, None]] = None):
+    def getNodeList(self, tags: Optional[Union[dict, None]] = None,
+                    relations: OptionsDict = None) \
+            -> TortugaObjectList:
         """
         Get list of all available nodes from the db.
 
@@ -185,7 +194,8 @@ class NodeDbApi(TortugaDbApi):
 
         try:
             return self.__convert_nodes_to_TortugaObjectList(
-                self._nodesDbHandler.getNodeList(session, tags=tags))
+                self._nodesDbHandler.getNodeList(session, tags=tags),
+                relations=relations)
         except TortugaException:
             raise
         except Exception as ex:
@@ -194,7 +204,7 @@ class NodeDbApi(TortugaDbApi):
         finally:
             DbManager().closeSession()
 
-    def getProvisioningInfo(self, nodeName: str):
+    def getProvisioningInfo(self, nodeName: str) -> ProvisioningInfo:
         """
         Get the provisioing information for a given provisioned address
 
@@ -262,7 +272,7 @@ class NodeDbApi(TortugaDbApi):
 
     def startupNode(self, nodespec: str,
                     remainingNodeList: Optional[Union[List[str]]] = None,
-                    bootMethod: Optional[str] = 'n'):
+                    bootMethod: Optional[str] = 'n') -> NoReturn:
         """
         Start Node
         """
@@ -292,7 +302,7 @@ class NodeDbApi(TortugaDbApi):
             DbManager().closeSession()
 
     def shutdownNode(self, nodespec: str,
-                     bSoftShutdown: Optional[bool] = False):
+                     bSoftShutdown: Optional[bool] = False) -> NoReturn:
         """
         Shutdown Node
 
@@ -323,7 +333,8 @@ class NodeDbApi(TortugaDbApi):
         finally:
             DbManager().closeSession()
 
-    def __expand_nodespec(self, session: Session, nodespec: str):
+    def __expand_nodespec(self, session: Session, nodespec: str) \
+            -> List[NodeModel]:
         # Expand wildcards in nodespec. Each token in the nodespec can
         # be wildcard that expands into one or more nodes.
 
@@ -342,7 +353,7 @@ class NodeDbApi(TortugaDbApi):
 
         return self._nodesDbHandler.getNodesByNameFilter(session, filter_spec)
 
-    def evacuateChildren(self, nodeName: str):
+    def evacuateChildren(self, nodeName: str) -> NoReturn:
         """
         Evacuate Children of node
         """
@@ -365,7 +376,7 @@ class NodeDbApi(TortugaDbApi):
         finally:
             DbManager().closeSession()
 
-    def getChildrenList(self, nodeName):
+    def getChildrenList(self, nodeName: str) -> TortugaObjectList:
         """
         Get children of node
 
@@ -387,7 +398,7 @@ class NodeDbApi(TortugaDbApi):
         finally:
             DbManager().closeSession()
 
-    def checkpointNode(self, nodeName):
+    def checkpointNode(self, nodeName: str) -> NoReturn:
         """
         Checkpoint Node
         """
@@ -396,6 +407,7 @@ class NodeDbApi(TortugaDbApi):
 
         try:
             self._nodesDbHandler.checkpointNode(session, nodeName)
+
             session.commit()
         except TortugaException:
             session.rollback()
@@ -407,7 +419,7 @@ class NodeDbApi(TortugaDbApi):
         finally:
             DbManager().closeSession()
 
-    def revertNodeToCheckpoint(self, nodeName):
+    def revertNodeToCheckpoint(self, nodeName: str) -> NoReturn:
         """
         Revert Node to Checkpoint
         """
@@ -428,7 +440,8 @@ class NodeDbApi(TortugaDbApi):
         finally:
             DbManager().closeSession()
 
-    def migrateNode(self, nodeName, remainingNodeList, liveMigrate):
+    def migrateNode(self, nodeName: str, remainingNodeList: List[NodeModel],
+                    liveMigrate: bool) -> NoReturn:
         """
         Migrate Node
         """
@@ -450,7 +463,7 @@ class NodeDbApi(TortugaDbApi):
         finally:
             DbManager().closeSession()
 
-    def setParentNode(self, nodeName, parentNodeName):
+    def setParentNode(self, nodeName: str, parentNodeName: str) -> NoReturn:
         '''
         Raises:
             NodeNotFound
@@ -476,7 +489,7 @@ class NodeDbApi(TortugaDbApi):
         finally:
             DbManager().closeSession()
 
-    def getNodesByNodeState(self, state):
+    def getNodesByNodeState(self, state: str) -> TortugaObjectList:
         session = DbManager().openSession()
 
         try:
