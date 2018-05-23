@@ -8,7 +8,7 @@ from .exceptions import SettingNotFoundError, SettingValidationError
 #
 # Dictionary, storing registered settings classes
 #
-SETTING_TYPES: Dict[str, 'BaseSetting'] = {}
+SETTING_TYPES: Dict[str, Type['BaseSetting']] = {}
 
 
 def get_setting_class(type_: str) -> Type['BaseSetting']:

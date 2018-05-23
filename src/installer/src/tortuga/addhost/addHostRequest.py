@@ -20,6 +20,7 @@ import logging
 
 from tortuga.db.dbManager import DbManager
 from tortuga.db.nodeRequestsDbHandler import NodeRequestsDbHandler
+from tortuga.events.types import AddNodeRequestComplete
 
 from .contextManager import AddHostSessionContextManager
 
@@ -38,6 +39,12 @@ def process_addhost_request(addHostSession):
             return
 
         addHostRequest = json.loads(req.request)
+
+        #
+        # Save this data so that we have it for firing the event below
+        #
+        evt_req_id = req.id
+        evt_req_request = addHostRequest
 
         addHostRequest['addHostSession'] = addHostSession
 
@@ -68,3 +75,5 @@ def process_addhost_request(addHostSession):
                 req.last_update = datetime.datetime.utcnow()
             finally:
                 session.commit()
+                AddNodeRequestComplete.fire(request_id=evt_req_id,
+                                            request=evt_req_request)

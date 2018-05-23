@@ -19,6 +19,7 @@ import logging
 from tortuga.node.nodeApi import NodeApi
 from tortuga.db.dbManager import DbManager
 from tortuga.db.nodeRequestsDbHandler import NodeRequestsDbHandler
+from tortuga.events.types import DeleteNodeRequestComplete
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.addhost.addHostManager import AddHostManager
@@ -40,6 +41,14 @@ def process_delete_host_request(transaction_id, nodespec):
             # Session was deleted prior to being process. Nothing to do...
             return
 
+        #
+        # Save this data so that we have it for firing the event below
+        #
+        evt_req_id = req.id
+        evt_req_request = {
+            'name': nodespec
+        }
+
         ahm.update_session(transaction_id, running=True)
 
         logger.debug(
@@ -52,6 +61,9 @@ def process_delete_host_request(transaction_id, nodespec):
             ahm.delete_session(transaction_id)
 
             session.delete(req)
+
+            DeleteNodeRequestComplete.fire(request_id=evt_req_id,
+                                           request=evt_req_request)
         except NodeNotFound:
             ahm.delete_session(transaction_id)
 
@@ -68,5 +80,4 @@ def process_delete_host_request(transaction_id, nodespec):
             ahm.update_session(transaction_id, running=False)
     finally:
         session.commit()
-
         DbManager().closeSession()

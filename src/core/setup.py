@@ -104,8 +104,10 @@ setup(
     ],
     install_requires=[
         'marshmallow',
-        'pip2pi',
         'passlib',
+        'pip2pi',
+        'PyYAML',
+        'websockets',
     ],
     dependency_links=[
         "git+ssh://git@github.com/EmmEff/pip2pi.git@pip-10-fix#egg=pip2pi-0.7.0"
@@ -167,6 +169,7 @@ setup(
             'set-profile-mapping=tortuga.scripts.set_profile_mapping:main',
             'shutdown-node=tortuga.scripts.shutdown_node:main',
             'schedule-update=tortuga.scripts.schedule_update:main',
+            'tortuga=tortuga.scripts.tortuga:main',
             'transfer-node=tortuga.scripts.transfer_node:main',
             'uc-tag=tortuga.scripts.uc_tag:main',
             'ucparam=tortuga.scripts.ucparam:main',

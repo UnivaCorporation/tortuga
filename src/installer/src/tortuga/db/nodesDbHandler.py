@@ -14,7 +14,7 @@
 
 # pylint: disable=not-callable,no-member,multiple-statements,no-self-use
 
-from typing import List, Union
+from typing import List, NoReturn, Union
 
 from sqlalchemy import and_, func, or_
 from sqlalchemy.orm.exc import NoResultFound
@@ -26,6 +26,7 @@ from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
 from tortuga.db.softwareUsesHardwareDbHandler import \
     SoftwareUsesHardwareDbHandler
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
+from tortuga.events.types import NodeStateChanged
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.exceptions.nodeSoftwareProfileLocked import \
     NodeSoftwareProfileLocked
@@ -33,6 +34,7 @@ from tortuga.exceptions.nodeTransferNotValid import NodeTransferNotValid
 from tortuga.exceptions.operationFailed import OperationFailed
 from tortuga.exceptions.profileMappingNotAllowed import \
     ProfileMappingNotAllowed
+from tortuga.objects.node import Node as TortugaNode
 from tortuga.os_utility import osUtility
 from tortuga.resourceAdapter import resourceAdapterFactory
 
@@ -283,56 +285,43 @@ class NodesDbHandler(TortugaDbObjectHandler):
         }
 
         nodes = {}
+        events_to_fire = []
 
+        #
+        # Mark node states as deleted in the database
+        #
         for dbNode in dbNodes:
-            # # Only allow nodes that are not in the installed state to
-            # # be deleted if the force flag is used.
-            # if not (self.__isNodeStateDeleted(dbNode) or
-            #         self.__isNodeStateInstalled(dbNode)) and \
-            #         not forceDelete:
-            #     result['DeleteNodeFailed'].append(dbNode)
             #
-            #     # Skip deleting this node
-            #     continue
+            # Capture previous state and node data as a dict for firing
+            # the event later on
             #
-            # # Check to see if the node is locked
-            # if dbNode.lockedState == 'HardLocked':
-            #     result['SoftwareProfileHardLocked'].append(dbNode)
-            #
-            #     # Skip deleting this node
-            #     continue
-            #
-            # if self.__isNodeLocked(dbNode) and not forceDelete:
-            #     result['SoftwareProfileLocked'].append(dbNode)
-            #
-            #     # Skip deleting this node
-            #     continue
+            event_data = {
+                'previous_state': dbNode.state,
+                'node': TortugaNode.getFromDbDict(
+                    dbNode.__dict__).getCleanDict()
+            }
 
-            # swProfile = dbNode.softwareprofile
-
-            # if swProfile:
-                # Migrate or idle any children
-                # remainingNodeList = self.__getRemainingNodeList(
-                #     session, dbNode, swProfile)
-
-                # self.__migrateOrIdleChildren(
-                #     session, dbNode, remainingNodeList)
-
-                # pass
-
-            # Mark the node as Deleted...
             dbNode.state = 'Deleted'
+            event_data['node']['state'] = 'Deleted'
 
             if dbNode.hardwareprofile not in nodes:
                 nodes[dbNode.hardwareprofile] = [dbNode]
             else:
                 nodes[dbNode.hardwareprofile].append(dbNode)
 
-        # Call resource adapter with batch(es) of node lists keyed on
-        # hardware profile.
-
         session.commit()
 
+        #
+        # Fire node state change events
+        #
+        for event in events_to_fire:
+            NodeStateChanged.fire(node=event['node'],
+                                  previous_state=event['previous_state'])
+
+        #
+        # Call resource adapter with batch(es) of node lists keyed on
+        # hardware profile.
+        #
         for hwProfile, dbNodeList in nodes.items():
             # Get the ResourceAdapter
             adapter = self.__getResourceAdapter(hwProfile)
@@ -449,21 +438,6 @@ class NodesDbHandler(TortugaDbObjectHandler):
             node.softwareprofile = newSoftwareProfile
 
             results.append(result)
-
-            # Mark nodes to be transferred
-            # node.destSPId = newSoftwareProfile.id
-
-            # Get the source software profile
-            # dbSrcSoftwareProfile = node.softwareprofile
-
-            # Migrate or idle any children
-            # self.getLogger().debug(
-            #     'transferNode: Migrating or idling children')
-
-            # remainingNodeList = self.__getRemainingNodeList(
-            #     session, node, dbSrcSoftwareProfile)
-
-            # self.__transferNodes(session, [node], newSoftwareProfile)
 
         return results
 
@@ -685,6 +659,8 @@ class NodesDbHandler(TortugaDbObjectHandler):
             # nodes that have been successfully idled.
             d[hardware_profile.name]['nodes'].append(dbNode)
 
+        events_to_fire = []
+
         # Call idle action extension
         for nodeDetails in d.values():
             # Call resource adapter
@@ -694,12 +670,35 @@ class NodesDbHandler(TortugaDbObjectHandler):
             # Node state is consistent for all nodes within the same
             # hardware profile.
             for dbNode in nodeDetails['nodes']:
+                event_data = None
+                #
+                # If the node state is changing, then we need to be prepared
+                # to fire an event after the data has been persisted.
+                #
+                if dbNode.state != nodeState:
+                    event_data = {'prevoius_state': dbNode.state}
+
                 dbNode.state = nodeState
+
+                #
+                # Serialize the node for the event, if required
+                #
+                if event_data:
+                    event_data['node'] = TortugaNode.getFromDbDict(
+                        dbNode.__dict__).getCleanDict()
+                    events_to_fire.append(event_data)
 
             # Add idled node to 'success' list
             results['success'].extend(nodeDetails['nodes'])
 
         session.commit()
+
+        #
+        # Fire node state change events
+        #
+        for event in events_to_fire:
+            NodeStateChanged.fire(node=event['node'],
+                                  previous_state=event['previous_state'])
 
         return results
 
@@ -899,7 +898,7 @@ class NodesDbHandler(TortugaDbObjectHandler):
             # Call shutdown action extension
             adapter.shutdownNode(detailsDict['nodes'], bSoftShutdown)
 
-    def rebootNode(self, session, nodespec, bSoftReset=False): \
+    def rebootNode(self, session, nodespec, bSoftReset=False) -> NoReturn: \
             # pylint: disable=unused-argument
         nodeList = nodespec if isinstance(nodespec, list) else [nodespec]
 

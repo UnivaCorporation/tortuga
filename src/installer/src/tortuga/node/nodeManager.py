@@ -32,6 +32,7 @@ from tortuga.db.models.softwareProfile import SoftwareProfile
 from tortuga.db.nodeDbApi import NodeDbApi
 from tortuga.db.nodesDbHandler import NodesDbHandler
 from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
+from tortuga.events.types import NodeStateChanged
 from tortuga.exceptions.configurationError import ConfigurationError
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
@@ -207,13 +208,29 @@ class NodeManager(TortugaObjectManager): \
 
             run_post_install = False
 
+            #
+            # Capture previous state and node data as dict for firing the
+            # event later on
+            #
+            previous_state = node.state
+            node_dict = Node.getFromDbDict(node.__dict__).getCleanDict()
+
             if 'state' in updateNodeRequest:
                 run_post_install = node.state == 'Allocated' and \
                     updateNodeRequest['state'] == 'Provisioned'
 
                 node.state = updateNodeRequest['state']
+                node_dict['state'] = updateNodeRequest['state']
 
             session.commit()
+
+            #
+            # If the node state has changed, then fire the node state changed
+            # event
+            #
+            if node_dict['state'] != previous_state:
+                NodeStateChanged.fire(node=node_dict,
+                                      previous_state=previous_state)
 
             if run_post_install:
                 self.getLogger().debug(
@@ -251,6 +268,13 @@ class NodeManager(TortugaObjectManager): \
         try:
             dbNode = NodesDbHandler().getNode(session, nodeName)
 
+            #
+            # Capture previous state and node data in dict form for the
+            # event later on
+            #
+            previous_state = dbNode.state
+            node_dict = Node.getFromDbDict(dbNode.__dict__).getCleanDict()
+
             # Bitfield representing node changes (0 = state change,
             # 1 = bootFrom # change)
             changed = 0
@@ -271,6 +295,7 @@ class NodeManager(TortugaObjectManager): \
                     msg += ' state: [%s] -> [%s]' % (dbNode.state, state)
 
                     dbNode.state = state
+                    node_dict['state'] = state
 
                 if changed & 2:
                     msg += ' bootFrom: [%d] -> [%d]' % (
@@ -298,6 +323,14 @@ class NodeManager(TortugaObjectManager): \
                 self._bhm.writePXEFile(dbNode, localboot=bootFrom)
 
             session.commit()
+
+            #
+            # If the node state has changed, fire the node state changed
+            # event
+            #
+            if state and (previous_state != state):
+                NodeStateChanged.fire(node=node_dict,
+                                      previous_state=previous_state)
 
             return result
         finally:
@@ -775,15 +808,14 @@ class NodeManager(TortugaObjectManager): \
         return NodesDbHandler().getNodesByNameFilter(
             session, self.build_node_filterspec(nodespec))
 
-    def rebootNode(self, nodespec, bSoftReset=False, bReinstall=False):
+    def rebootNode(self, nodespec: str, bSoftReset: bool = False,
+                   bReinstall: bool = False):
         """
         Raises:
             NodeNotFound
         """
 
-        session = DbManager().openSession()
-
-        try:
+        with DbManager().session() as session:
             nodes = self.__expand_nodespec(session, nodespec)
             if not nodes:
                 raise NodeNotFound(
@@ -793,14 +825,9 @@ class NodeManager(TortugaObjectManager): \
                 for dbNode in nodes:
                     self._bhm.setNodeForNetworkBoot(dbNode)
 
-            results = NodesDbHandler().rebootNode(
-                session, nodes, bSoftReset)
+            NodesDbHandler().rebootNode(session, nodes, bSoftReset)
 
             session.commit()
-
-            return results
-        finally:
-            DbManager().closeSession()
 
     def checkpointNode(self, nodeName):
         return self._nodeDbApi.checkpointNode(nodeName)
