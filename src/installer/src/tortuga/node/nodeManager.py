@@ -41,10 +41,11 @@ from tortuga.kit.actions import KitActionsManager
 from tortuga.objects.node import Node
 from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
-from tortuga.os_utility import osUtility, tortugaSubprocess
+from tortuga.os_utility import osUtility
 from tortuga.resourceAdapter import resourceAdapterFactory
 from tortuga.san import san
 from tortuga.sync.syncApi import SyncApi
+from tortuga.softwareprofile.softwareProfileManager import SoftwareProfileManager
 
 
 class NodeManager(TortugaObjectManager): \
@@ -140,29 +141,25 @@ class NodeManager(TortugaObjectManager): \
         # Return the new node
         return node
 
-    def getNode(self, name, optionDict: Optional[Dict[str, bool]] = None):
-        """Get node by name"""
+    def getNode(self, name, optionDict: Optional[Dict[str, bool]] = None) \
+            -> Node:
+        """
+        Get node by name
+
+        Raises:
+            NodeNotFound
+        """
 
         optionDict_ = optionDict.copy() if optionDict else {}
 
-        optionDict_.update({'hardwareprofile': True})
+        optionDict_.update({
+            'hardwareprofile': True,
+            'softwareprofile': True,
+        })
 
-        node = self._nodeDbApi.getNode(name, optionDict_)
+        node = self._nodeDbApi.getNode(name, optionDict=optionDict_)
 
-        hwprofile = self._hardwareProfileDbApi.getHardwareProfile(
-            node.getHardwareProfile().getName(), {'resourceadapter': True})
-
-        adapter_name = hwprofile.getResourceAdapter().getName() \
-            if hwprofile.getResourceAdapter() else 'default'
-
-        # Query vcpus from resource adapter
-        ResourceAdapterClass = \
-            resourceAdapterFactory.get_resourceadapter_class(adapter_name)
-
-        # Update Node object
-        node.setVcpus(ResourceAdapterClass().get_node_vcpus(node.getName()))
-
-        return node
+        return self.__populate_nodes([node])[0]
 
     def getNodeById(self, nodeId: int,
                     optionDict: Optional[Dict[str, bool]] = None) -> Node:
@@ -173,9 +170,20 @@ class NodeManager(TortugaObjectManager): \
             NodeNotFound
         """
 
-        return self._nodeDbApi.getNodeById(int(nodeId), optionDict)
+        relations = optionDict.copy() if optionDict else {}
 
-    def getNodeByIp(self, ip):
+        # ensure software and hardware profile relations are loaded
+        relations.update({
+            'hardwareprofile': True,
+            'softwareprofile': True,
+        })
+
+        return self.__populate_nodes(
+            [self._nodeDbApi.getNodeById(
+                int(nodeId), optionDict=relations)])[0]
+
+    def getNodeByIp(self, ip: str,
+                    optionDict: Optional[Dict[str, bool]] = None) -> Node:
         """
         Get node by IP address
 
@@ -183,12 +191,80 @@ class NodeManager(TortugaObjectManager): \
             NodeNotFound
         """
 
-        return self._nodeDbApi.getNodeByIp(ip)
+        optionDict_ = optionDict.copy() if optionDict else {}
 
-    def getNodeList(self, tags=None):
-        """Return all nodes"""
+        # ensure software and hardware profile relations are loaded
+        optionDict_.update({
+            'hardwareprofile': True,
+            'softwareprofile': True,
+        })
 
-        return self.__expand_node_vcpus(self._nodeDbApi.getNodeList(tags=tags))
+        return self.__populate_nodes(
+            [self._nodeDbApi.getNodeByIp(ip, relations=optionDict_)])[0]
+
+    def getNodeList(self, tags=None,
+                    relations: Optional[Dict[str, bool]] = None) \
+            -> List[Node]:
+        """
+        Return all nodes
+        """
+
+        relations_ = relations.copy() if relations else {}
+
+        # ensure software and hardware profile relations are loaded
+        relations_.update({
+            'hardwareprofile': True,
+            'softwareprofile': True,
+        })
+
+        return self.__populate_nodes(
+            self._nodeDbApi.getNodeList(tags=tags, relations=relations_))
+
+    def __populate_nodes(self, nodes: List[Node]) -> List[Node]:
+        """
+        Expand non-database fields in Node objects
+        """
+
+        swprofile_map = {}
+
+        # dict keyed on resource adapter name, value is resource adapter class
+        adapter_map = {}
+
+        for node in nodes:
+            adapter_name = \
+                node.getHardwareProfile().getResourceAdapter().getName() \
+                if node.getHardwareProfile().getResourceAdapter() else \
+                'default'
+
+            ResourceAdapterClass = adapter_map.get(adapter_name)
+            if ResourceAdapterClass is None:
+                # Query vcpus from resource adapter
+                ResourceAdapterClass = \
+                    resourceAdapterFactory.get_resourceadapter_class(
+                        adapter_name)
+
+                adapter_map[adapter_name] = ResourceAdapterClass
+
+            # Update Node object
+            node.setVcpus(
+                ResourceAdapterClass().get_node_vcpus(node.getName()))
+
+            if not node.getSoftwareProfile():
+                continue
+
+            swprofile_name = node.getSoftwareProfile().getName()
+
+            metadata = swprofile_map.get(swprofile_name)
+            if metadata is None:
+                metadata = \
+                    SoftwareProfileManager().get_software_profile_metadata(
+                        node.getSoftwareProfile().getName())
+
+                swprofile_map[swprofile_name] = metadata
+
+            node.getSoftwareProfile().setMetadata(metadata)
+
+        return nodes
 
     def updateNode(self, nodeName, updateNodeRequest):
         self.getLogger().debug('updateNode(): name=[{0}]'.format(nodeName))
@@ -611,8 +687,7 @@ class NodeManager(TortugaObjectManager): \
                 nodes=[node_dict['name']])
 
     def __scheduleUpdate(self):
-        tortugaSubprocess.executeCommand(
-            os.path.join(self._cm.getRoot(), 'bin/schedule-update'))
+        self._syncApi.scheduleClusterUpdate()
 
     def getInstallerNode(self, optionDict: Optional[Dict[str, bool]] = None):
         return self._nodeDbApi.getNode(
@@ -1013,7 +1088,8 @@ class NodeManager(TortugaObjectManager): \
     def getNodesByNameFilter(self, nodespec: str,
                              optionDict: Optional[Dict[str, bool]] = None) \
             -> TortugaObjectList:
-        return self.__expand_node_vcpus(
+
+        return self.__populate_nodes(
             self._nodeDbApi.getNodesByNameFilter(
                 nodespec, optionDict=optionDict))
 
@@ -1022,23 +1098,3 @@ class NodeManager(TortugaObjectManager): \
             -> TortugaObjectList:
         return self._nodeDbApi.getNodesByAddHostSession(
             addHostSession, optionDict)
-
-    def __expand_node_vcpus(self, nodes: List[Node]) -> List[Node]:
-        # query resource adapter to get virtual cpus for each Node
-
-        for node in nodes:
-            adapter_name = \
-                node.getHardwareProfile().getResourceAdapter().getName() \
-                if node.getHardwareProfile().getResourceAdapter() else \
-                'default'
-
-            # Query vcpus from resource adapter
-            ResourceAdapterClass = \
-                resourceAdapterFactory.get_resourceadapter_class(
-                    adapter_name)
-
-            # Update Node object
-            node.setVcpus(
-                ResourceAdapterClass().get_node_vcpus(node.getName()))
-
-        return nodes
