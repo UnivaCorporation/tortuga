@@ -103,25 +103,6 @@ class NodesDbHandler(TortugaDbObjectHandler):
         except NoResultFound:
             raise NodeNotFound("Node [%s] not found" % (name))
 
-    def getNodes(self, session, nodes):
-        """
-        This method will take either a list of Tortuga Node objects or
-        node names (type 'string')
-        """
-
-        result = {
-            'nodes': [],
-            'badnodes': [],
-        }
-
-        for node in nodes:
-            try:
-                result['nodes'].append(self.getNode(session, str(node)))
-            except NodeNotFound:
-                result['badnodes'].append(str(node))
-
-        return result
-
     def getNodesByTags(self, session, tags=[]):
         """'tags' is a list of (key, value) tuples representing tags.
         tuple may also contain only one element (key,)
