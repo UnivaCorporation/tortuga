@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import NoReturn
 import logging
+from typing import Dict, NoReturn
+
 from tortuga.exceptions.invalidDbRelation import InvalidDbRelation
 from tortuga.objects.tortugaObject import TortugaObjectList
 
@@ -46,22 +47,22 @@ class TortugaDbApi(object):
 
         return o
 
-    def loadRelations(self, dbObject, optionDict: dict) -> NoReturn:
-        if not optionDict:
-            return
+    def loadRelations(self, dbObject, optionDict: Dict[str, bool] = None) \
+            -> NoReturn:
+        if optionDict:
+            for k in list(optionDict.keys()):
+                # The optionDict contains key-value pairs of relation name
+                # and a boolean to indicate whether to load that relation
+                if not optionDict[k]:
+                    continue
 
-        for k in list(optionDict.keys()):
-            # The optionDict contains key-value pairs of relation name
-            # and a boolean to indicate whether to load that relation
-            if not optionDict[k]:
-                continue
+                try:
+                    self.loadRelation(dbObject, k)
+                except InvalidDbRelation:
+                    self.getLogger().exception(
+                        'Relation [{}] not valid'.format(k))
 
-            try:
-                self.loadRelation(dbObject, k)
-            except InvalidDbRelation:
-                self.getLogger().exception(
-                    'Relation [{}] not valid'.format(k))
-                raise
+                    raise
 
     def getTortugaObjectList(self, cls, dbList): \
             # pylint: disable=no-self-use
