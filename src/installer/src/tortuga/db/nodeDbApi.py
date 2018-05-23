@@ -133,11 +133,13 @@ class NodeDbApi(TortugaDbApi):
         finally:
             DbManager().closeSession()
 
-    def getNodeByIp(self, ip: str) -> Node:
+    def getNodeByIp(self, ip: str, relations: OptionsDict = None) -> Node:
         session = DbManager().openSession()
 
         try:
             node = self._nodesDbHandler.getNodeByIp(session, ip)
+
+            self.loadRelations(node, relations)
 
             return Node.getFromDbDict(node.__dict__)
         except TortugaException:
@@ -176,7 +178,8 @@ class NodeDbApi(TortugaDbApi):
 
         return nodeList
 
-    def getNodeList(self, tags: Optional[Union[dict, None]] = None) \
+    def getNodeList(self, tags: Optional[Union[dict, None]] = None,
+                    relations: OptionsDict = None) \
             -> TortugaObjectList:
         """
         Get list of all available nodes from the db.
@@ -191,7 +194,8 @@ class NodeDbApi(TortugaDbApi):
 
         try:
             return self.__convert_nodes_to_TortugaObjectList(
-                self._nodesDbHandler.getNodeList(session, tags=tags))
+                self._nodesDbHandler.getNodeList(session, tags=tags),
+                relations=relations)
         except TortugaException:
             raise
         except Exception as ex:
