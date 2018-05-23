@@ -44,8 +44,9 @@ from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.os_utility import osUtility
 from tortuga.resourceAdapter import resourceAdapterFactory
 from tortuga.san import san
+from tortuga.softwareprofile.softwareProfileManager import \
+    SoftwareProfileManager
 from tortuga.sync.syncApi import SyncApi
-from tortuga.softwareprofile.softwareProfileManager import SoftwareProfileManager
 
 
 class NodeManager(TortugaObjectManager): \
@@ -141,7 +142,7 @@ class NodeManager(TortugaObjectManager): \
         # Return the new node
         return node
 
-    def getNode(self, name, optionDict: Optional[Dict[str, bool]] = None) \
+    def getNode(self, name, optionDict: Dict[str, bool] = None) \
             -> Node:
         """
         Get node by name
@@ -150,19 +151,12 @@ class NodeManager(TortugaObjectManager): \
             NodeNotFound
         """
 
-        optionDict_ = optionDict.copy() if optionDict else {}
-
-        optionDict_.update({
-            'hardwareprofile': True,
-            'softwareprofile': True,
-        })
-
-        node = self._nodeDbApi.getNode(name, optionDict=optionDict_)
-
-        return self.__populate_nodes([node])[0]
+        return self.__populate_nodes(
+            [self._nodeDbApi.getNode(
+                name, optionDict=get_default_relations(optionDict))])[0]
 
     def getNodeById(self, nodeId: int,
-                    optionDict: Optional[Dict[str, bool]] = None) -> Node:
+                    optionDict: Dict[str, bool] = None) -> Node:
         """
         Get node by node id
 
@@ -170,20 +164,13 @@ class NodeManager(TortugaObjectManager): \
             NodeNotFound
         """
 
-        relations = optionDict.copy() if optionDict else {}
-
-        # ensure software and hardware profile relations are loaded
-        relations.update({
-            'hardwareprofile': True,
-            'softwareprofile': True,
-        })
-
         return self.__populate_nodes(
             [self._nodeDbApi.getNodeById(
-                int(nodeId), optionDict=relations)])[0]
+                int(nodeId),
+                optionDict=get_default_relations(optionDict))])[0]
 
     def getNodeByIp(self, ip: str,
-                    optionDict: Optional[Dict[str, bool]] = None) -> Node:
+                    optionDict: Dict[str, bool] = None) -> Node:
         """
         Get node by IP address
 
@@ -191,34 +178,20 @@ class NodeManager(TortugaObjectManager): \
             NodeNotFound
         """
 
-        optionDict_ = optionDict.copy() if optionDict else {}
-
-        # ensure software and hardware profile relations are loaded
-        optionDict_.update({
-            'hardwareprofile': True,
-            'softwareprofile': True,
-        })
-
         return self.__populate_nodes(
-            [self._nodeDbApi.getNodeByIp(ip, relations=optionDict_)])[0]
+            [self._nodeDbApi.getNodeByIp(
+                ip, optionDict=get_default_relations(optionDict))])[0]
 
     def getNodeList(self, tags=None,
-                    relations: Optional[Dict[str, bool]] = None) \
+                    optionDict: Dict[str, bool] = None) \
             -> List[Node]:
         """
         Return all nodes
         """
 
-        relations_ = relations.copy() if relations else {}
-
-        # ensure software and hardware profile relations are loaded
-        relations_.update({
-            'hardwareprofile': True,
-            'softwareprofile': True,
-        })
-
         return self.__populate_nodes(
-            self._nodeDbApi.getNodeList(tags=tags, relations=relations_))
+            self._nodeDbApi.getNodeList(
+                tags=tags, optionDict=get_default_relations(optionDict)))
 
     def __populate_nodes(self, nodes: List[Node]) -> List[Node]:
         """
@@ -685,9 +658,10 @@ class NodeManager(TortugaObjectManager): \
     def __scheduleUpdate(self):
         self._syncApi.scheduleClusterUpdate()
 
-    def getInstallerNode(self, optionDict: Optional[Dict[str, bool]] = None):
+    def getInstallerNode(self, optionDict: Dict[str, bool] = None):
         return self._nodeDbApi.getNode(
-            self._cm.getInstaller(), optionDict=optionDict)
+            self._cm.getInstaller(),
+            optionDict=get_default_relations(optionDict))
 
     def getProvisioningInfo(self, nodeName):
         return self._nodeDbApi.getProvisioningInfo(nodeName)
@@ -1078,19 +1052,50 @@ class NodeManager(TortugaObjectManager): \
     def getStorageVolumes(self, nodeName: str):
         return self._san.getNodeVolumes(self.getNode(nodeName).getName())
 
-    def getNodesByNodeState(self, state: str):
-        return self._nodeDbApi.getNodesByNodeState(state)
+    def getNodesByNodeState(self, state: str,
+                            optionDict: Dict[str, bool] = None) \
+            -> TortugaObjectList:
+        return self.__populate_nodes(
+            self._nodeDbApi.getNodesByNodeState(
+                state, optionDict=get_default_relations(optionDict)))
 
     def getNodesByNameFilter(self, nodespec: str,
-                             optionDict: Optional[Dict[str, bool]] = None) \
+                             optionDict: Dict[str, bool] = None) \
             -> TortugaObjectList:
+        """
+        Return TortugaObjectList of Node objects matching nodespec
+        """
 
         return self.__populate_nodes(
             self._nodeDbApi.getNodesByNameFilter(
-                nodespec, optionDict=optionDict))
+                nodespec, optionDict=get_default_relations(optionDict)))
 
     def getNodesByAddHostSession(self, addHostSession: str,
-                                 optionDict: Optional[Dict[str, bool]] = None) \
+                                 optionDict: Dict[str, bool] = None) \
             -> TortugaObjectList:
-        return self._nodeDbApi.getNodesByAddHostSession(
-            addHostSession, optionDict)
+        """
+        Return TortugaObjectList of Node objects matching add host session
+        """
+
+        return self.__populate_nodes(
+            self._nodeDbApi.getNodesByAddHostSession(
+                addHostSession,
+                optionDict=get_default_relations(optionDict)))
+
+
+def get_default_relations(relations: Dict[str, bool]):
+    """
+    Ensure hardware and software profiles and tags are populated when
+    serializing node records.
+    """
+
+    result = relations.copy() if relations else {}
+
+    # ensure software and hardware profile relations are loaded
+    result.update({
+        'hardwareprofile': True,
+        'softwareprofile': True,
+        'tags': True,
+    })
+
+    return result

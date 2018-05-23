@@ -15,7 +15,7 @@
 # pylint: disable=no-member
 
 import socket
-from typing import Dict, List, NoReturn, Optional, Union
+from typing import Dict, List, NoReturn, Optional
 
 from sqlalchemy.orm.session import Session
 
@@ -58,27 +58,16 @@ class NodeDbApi(TortugaDbApi):
                 DbError
         """
 
-        session = DbManager().openSession()
-
-        try:
-            dbNode = self._nodesDbHandler.getNode(session, name)
-
-            self.loadRelations(dbNode, optionDict)
-
-            self.loadRelations(dbNode, {
-                'softwareprofile': True,
-                'hardwareprofile': True,
-                'tags': True,
-            })
-
-            return Node.getFromDbDict(dbNode.__dict__)
-        except TortugaException:
-            raise
-        except Exception as ex:
-            self.getLogger().exception('%s' % ex)
-            raise
-        finally:
-            DbManager().closeSession()
+        with DbManager().session() as session:
+            try:
+                return self.__convert_nodes_to_TortugaObjectList(
+                    [self._nodesDbHandler.getNode(session, name)],
+                    optionDict=optionDict)[0]
+            except TortugaException:
+                raise
+            except Exception as ex:
+                self.getLogger().exception('%s' % ex)
+                raise
 
     def getNodesByAddHostSession(self, ahSession: str,
                                  optionDict: OptionsDict = None) \
@@ -91,7 +80,7 @@ class NodeDbApi(TortugaDbApi):
             try:
                 return self.__convert_nodes_to_TortugaObjectList(
                     self._nodesDbHandler.getNodesByAddHostSession(
-                        session, ahSession), relations=optionDict)
+                        session, ahSession), optionDict=optionDict)
             except TortugaException:
                 raise
             except Exception as ex:
@@ -106,53 +95,52 @@ class NodeDbApi(TortugaDbApi):
         """
 
         with DbManager().session() as session:
-            nodes = self.__expand_nodespec(session, nodespec)
-
-            # ensure 'resourceadapter' relation is always loaded
-            for node in nodes:
-                self.loadRelation(node.hardwareprofile, 'resourceadapter')
-
-            return self.__convert_nodes_to_TortugaObjectList(
-                nodes, relations=optionDict)
+            try:
+                return self.__convert_nodes_to_TortugaObjectList(
+                    self.__expand_nodespec(session, nodespec),
+                    optionDict=optionDict)
+            except TortugaException:
+                raise
+            except Exception as ex:
+                self.getLogger().exception('%s' % ex)
+                raise
 
     def getNodeById(self, nodeId: int, optionDict: OptionsDict = None) \
             -> Node:
-        session = DbManager().openSession()
+        """
+        Get node by id
+        """
 
-        try:
-            dbNode = self._nodesDbHandler.getNodeById(session, nodeId)
+        with DbManager().session() as session:
+            try:
+                return self.__convert_nodes_to_TortugaObjectList(
+                    [self._nodesDbHandler.getNodeById(
+                        session, nodeId)], optionDict=optionDict)[0]
+            except TortugaException:
+                raise
+            except Exception as ex:
+                self.getLogger().exception('%s' % ex)
+                raise
 
-            self.loadRelations(dbNode, optionDict)
+    def getNodeByIp(self, ip: str, optionDict: OptionsDict = None) -> Node:
+        """
+        Get node by ip
+        """
 
-            return Node.getFromDbDict(dbNode.__dict__)
-        except TortugaException:
-            raise
-        except Exception as ex:
-            self.getLogger().exception('%s' % ex)
-            raise
-        finally:
-            DbManager().closeSession()
-
-    def getNodeByIp(self, ip: str, relations: OptionsDict = None) -> Node:
-        session = DbManager().openSession()
-
-        try:
-            node = self._nodesDbHandler.getNodeByIp(session, ip)
-
-            self.loadRelations(node, relations)
-
-            return Node.getFromDbDict(node.__dict__)
-        except TortugaException:
-            raise
-        except Exception as ex:
-            self.getLogger().exception('%s' % ex)
-            raise
-        finally:
-            DbManager().closeSession()
+        with DbManager().session() as session:
+            try:
+                return self.__convert_nodes_to_TortugaObjectList(
+                    [self._nodesDbHandler.getNodeByIp(
+                        session, ip)], optionDict=optionDict)[0]
+            except TortugaException:
+                raise
+            except Exception as ex:
+                self.getLogger().exception('%s' % ex)
+                raise
 
     def __convert_nodes_to_TortugaObjectList(
             self, nodes: List[NodeModel],
-            relations: OptionsDict = None) -> TortugaObjectList:
+            optionDict: OptionsDict = None) -> TortugaObjectList:
         """
         Return TortugaObjectList of nodes with relations populated
 
@@ -163,23 +151,20 @@ class NodeDbApi(TortugaDbApi):
 
         nodeList = TortugaObjectList()
 
-        relations = relations or dict(softwareprofile=True,
-                                      hardwareprofile=True)
+        for node in nodes:
+            self.loadRelations(node, optionDict)
 
-        for t in nodes:
-            self.loadRelations(t, relations)
+            # ensure 'resourceadapter' relation is always loaded. This one
+            # is special since it's a relationship inside of a relationship.
+            # It needs to be explicitly defined.
+            self.loadRelation(node.hardwareprofile, 'resourceadapter')
 
-            # Always load 'tags' relation
-            self.loadRelations(t, {'tags': True})
-
-            node = Node.getFromDbDict(t.__dict__)
-
-            nodeList.append(node)
+            nodeList.append(Node.getFromDbDict(node.__dict__))
 
         return nodeList
 
-    def getNodeList(self, tags: Optional[Union[dict, None]] = None,
-                    relations: OptionsDict = None) \
+    def getNodeList(self, tags: Optional[dict] = None,
+                    optionDict: OptionsDict = None) \
             -> TortugaObjectList:
         """
         Get list of all available nodes from the db.
@@ -190,19 +175,16 @@ class NodeDbApi(TortugaDbApi):
                 DbError
         """
 
-        session = DbManager().openSession()
-
-        try:
-            return self.__convert_nodes_to_TortugaObjectList(
-                self._nodesDbHandler.getNodeList(session, tags=tags),
-                relations=relations)
-        except TortugaException:
-            raise
-        except Exception as ex:
-            self.getLogger().exception('%s' % ex)
-            raise
-        finally:
-            DbManager().closeSession()
+        with DbManager().session() as session:
+            try:
+                return self.__convert_nodes_to_TortugaObjectList(
+                    self._nodesDbHandler.getNodeList(session, tags=tags),
+                    optionDict=optionDict)
+            except TortugaException:
+                raise
+            except Exception as ex:
+                self.getLogger().exception('%s' % ex)
+                raise
 
     def getProvisioningInfo(self, nodeName: str) -> ProvisioningInfo:
         """
@@ -215,91 +197,86 @@ class NodeDbApi(TortugaDbApi):
                 DbError
         """
 
-        session = DbManager().openSession()
+        with DbManager().session() as session:
+            try:
+                provisioningInfo = ProvisioningInfo()
 
-        try:
-            provisioningInfo = ProvisioningInfo()
+                dbNode = self._nodesDbHandler.getNode(session, nodeName)
 
-            dbNode = self._nodesDbHandler.getNode(session, nodeName)
-
-            if dbNode.softwareprofile:
-                self.loadRelations(dbNode.softwareprofile, {
-                    'partitions': True,
-                })
-
-                for component in dbNode.softwareprofile.components:
-                    self.loadRelations(component, {
-                        'kit': True,
-                        'os': True,
-                        'family': True,
-                        'os_components': True,
-                        'osfamily_components': True,
+                if dbNode.softwareprofile:
+                    self.loadRelations(dbNode.softwareprofile, {
+                        'partitions': True,
                     })
 
-            self.loadRelation(dbNode, 'hardwareprofile')
+                    for component in dbNode.softwareprofile.components:
+                        self.loadRelations(component, {
+                            'kit': True,
+                            'os': True,
+                            'family': True,
+                            'os_components': True,
+                            'osfamily_components': True,
+                        })
 
-            provisioningInfo.setNode(
-                Node.getFromDbDict(dbNode.__dict__))
+                self.loadRelation(dbNode, 'hardwareprofile')
 
-            globalParameters = self._globalParameterDbApi.getParameterList()
+                provisioningInfo.setNode(
+                    Node.getFromDbDict(dbNode.__dict__))
 
-            # manually inject value for 'installer'
-            p = Parameter(name='Installer')
+                globalParameters = \
+                    self._globalParameterDbApi.getParameterList()
 
-            hostName = socket.gethostname().split('.', 1)[0]
+                # manually inject value for 'installer'
+                p = Parameter(name='Installer')
 
-            if '.' in dbNode.name:
-                nodeDomain = dbNode.name.split('.', 1)[1]
+                hostName = socket.gethostname().split('.', 1)[0]
 
-                priInstaller = hostName + '.%s' % (nodeDomain)
-            else:
-                priInstaller = hostName
+                if '.' in dbNode.name:
+                    nodeDomain = dbNode.name.split('.', 1)[1]
 
-            p.setValue(priInstaller)
+                    priInstaller = hostName + '.%s' % (nodeDomain)
+                else:
+                    priInstaller = hostName
 
-            globalParameters.append(p)
+                p.setValue(priInstaller)
 
-            provisioningInfo.setGlobalParameters(globalParameters)
+                globalParameters.append(p)
 
-            return provisioningInfo
-        except TortugaException:
-            raise
-        except Exception as ex:
-            self.getLogger().exception('%s' % ex)
-            raise
-        finally:
-            DbManager().closeSession()
+                provisioningInfo.setGlobalParameters(globalParameters)
+
+                return provisioningInfo
+            except TortugaException:
+                raise
+            except Exception as ex:
+                self.getLogger().exception('%s' % ex)
+                raise
 
     def startupNode(self, nodespec: str,
-                    remainingNodeList: Optional[Union[List[str]]] = None,
+                    remainingNodeList: Optional[List[str]] = None,
                     bootMethod: Optional[str] = 'n') -> NoReturn:
         """
         Start Node
         """
 
-        session = DbManager().openSession()
+        with DbManager().session() as session:
+            try:
+                dbNodes = self.__expand_nodespec(session, nodespec)
 
-        try:
-            dbNodes = self.__expand_nodespec(session, nodespec)
+                if not dbNodes:
+                    raise NodeNotFound(
+                        'No matching nodes for nodespec [%s]' % (nodespec))
 
-            if not dbNodes:
-                raise NodeNotFound(
-                    'No matching nodes for nodespec [%s]' % (nodespec))
+                self._nodesDbHandler.startupNode(
+                    session, dbNodes, remainingNodeList=remainingNodeList,
+                    bootMethod=bootMethod)
 
-            self._nodesDbHandler.startupNode(
-                session, dbNodes, remainingNodeList=remainingNodeList or [],
-                bootMethod=bootMethod)
-
-            session.commit()
-        except TortugaException:
-            session.rollback()
-            raise
-        except Exception as ex:
-            session.rollback()
-            self.getLogger().exception('%s' % ex)
-            raise
-        finally:
-            DbManager().closeSession()
+                session.commit()
+            except TortugaException:
+                session.rollback()
+                raise
+            except Exception as ex:
+                session.rollback()
+                self.getLogger().exception('%s' % ex)
+                raise
 
     def shutdownNode(self, nodespec: str,
                      bSoftShutdown: Optional[bool] = False) -> NoReturn:
@@ -310,28 +287,25 @@ class NodeDbApi(TortugaDbApi):
             NodeNotFound
         """
 
-        session = DbManager().openSession()
+        with DbManager().session() as session:
+            try:
+                dbNodes = self.__expand_nodespec(session, nodespec)
 
-        try:
-            dbNodes = self.__expand_nodespec(session, nodespec)
+                if not dbNodes:
+                    raise NodeNotFound(
+                        'No matching nodes for nodespec [%s]' % (nodespec))
 
-            if not dbNodes:
-                raise NodeNotFound(
-                    'No matching nodes for nodespec [%s]' % (nodespec))
+                self._nodesDbHandler.shutdownNode(
+                    session, dbNodes, bSoftShutdown)
 
-            self._nodesDbHandler.shutdownNode(
-                session, dbNodes, bSoftShutdown)
-
-            session.commit()
-        except TortugaException:
-            session.rollback()
-            raise
-        except Exception as ex:
-            session.rollback()
-            self.getLogger().exception('%s' % ex)
-            raise
-        finally:
-            DbManager().closeSession()
+                session.commit()
+            except TortugaException:
+                session.rollback()
+                raise
+            except Exception as ex:
+                session.rollback()
+                self.getLogger().exception('%s' % ex)
+                raise
 
     def __expand_nodespec(self, session: Session, nodespec: str) \
             -> List[NodeModel]:
@@ -358,25 +332,23 @@ class NodeDbApi(TortugaDbApi):
         Evacuate Children of node
         """
 
-        session = DbManager().openSession()
+        with DbManager().session() as session:
+            try:
+                dbNode = self._nodesDbHandler.getNode(session, nodeName)
 
-        try:
-            dbNode = self._nodesDbHandler.getNode(session, nodeName)
+                self._nodesDbHandler.evacuateChildren(session, dbNode)
 
-            self._nodesDbHandler.evacuateChildren(session, dbNode)
+                session.commit()
+            except TortugaException:
+                session.rollback()
+                raise
+            except Exception as ex:
+                session.rollback()
+                self.getLogger().exception('%s' % ex)
+                raise
 
-            session.commit()
-        except TortugaException:
-            session.rollback()
-            raise
-        except Exception as ex:
-            session.rollback()
-            self.getLogger().exception('%s' % ex)
-            raise
-        finally:
-            DbManager().closeSession()
-
-    def getChildrenList(self, nodeName: str) -> TortugaObjectList:
+    def getChildrenList(self, nodeName: str,
+                        optionDict: OptionsDict = None) -> TortugaObjectList:
         """
         Get children of node
 
@@ -384,61 +356,54 @@ class NodeDbApi(TortugaDbApi):
             NodeNotFound
         """
 
-        session = DbManager().openSession()
+        with DbManager().session() as session:
+            try:
+                parent_node = self._nodesDbHandler.getNode(session, nodeName)
 
-        try:
-            dbNode = self._nodesDbHandler.getNode(session, nodeName)
-
-            return self.getTortugaObjectList(Node, dbNode.children)
-        except TortugaException:
-            raise
-        except Exception as ex:
-            self.getLogger().exception('%s' % ex)
-            raise
-        finally:
-            DbManager().closeSession()
+                return self.__convert_nodes_to_TortugaObjectList(
+                    parent_node.children, optionDict=optionDict
+                )
+            except TortugaException:
+                raise
+            except Exception as ex:
+                self.getLogger().exception('%s' % ex)
+                raise
 
     def checkpointNode(self, nodeName: str) -> NoReturn:
         """
         Checkpoint Node
         """
 
-        session = DbManager().openSession()
+        with DbManager().session() as session:
+            try:
+                self._nodesDbHandler.checkpointNode(session, nodeName)
 
-        try:
-            self._nodesDbHandler.checkpointNode(session, nodeName)
-
-            session.commit()
-        except TortugaException:
-            session.rollback()
-            raise
-        except Exception as ex:
-            session.rollback()
-            self.getLogger().exception('%s' % ex)
-            raise
-        finally:
-            DbManager().closeSession()
+                session.commit()
+            except TortugaException:
+                session.rollback()
+                raise
+            except Exception as ex:
+                session.rollback()
+                self.getLogger().exception('%s' % ex)
+                raise
 
     def revertNodeToCheckpoint(self, nodeName: str) -> NoReturn:
         """
         Revert Node to Checkpoint
         """
 
-        session = DbManager().openSession()
+        with DbManager().session() as session:
+            try:
+                self._nodesDbHandler.revertNodeToCheckpoint(session, nodeName)
 
-        try:
-            self._nodesDbHandler.revertNodeToCheckpoint(session, nodeName)
-
-            session.commit()
-        except TortugaException:
-            session.rollback()
-            raise
-        except Exception as ex:
-            session.rollback()
-            self.getLogger().exception('%s' % ex)
-            raise
-        finally:
-            DbManager().closeSession()
+                session.commit()
+            except TortugaException:
+                session.rollback()
+                raise
+            except Exception as ex:
+                session.rollback()
+                self.getLogger().exception('%s' % ex)
+                raise
 
     def migrateNode(self, nodeName: str, remainingNodeList: List[NodeModel],
                     liveMigrate: bool) -> NoReturn:
@@ -446,22 +411,19 @@ class NodeDbApi(TortugaDbApi):
         Migrate Node
         """
 
-        session = DbManager().openSession()
+        with DbManager().session() as session:
+            try:
+                self._nodesDbHandler.migrateNode(
+                    session, nodeName, remainingNodeList, liveMigrate)
 
-        try:
-            self._nodesDbHandler.migrateNode(
-                session, nodeName, remainingNodeList, liveMigrate)
-
-            session.commit()
-        except TortugaException:
-            session.rollback()
-            raise
-        except Exception as ex:
-            session.rollback()
-            self.getLogger().exception('%s' % ex)
-            raise
-        finally:
-            DbManager().closeSession()
+                session.commit()
+            except TortugaException:
+                session.rollback()
+                raise
+            except Exception as ex:
+                session.rollback()
+                self.getLogger().exception('%s' % ex)
+                raise
 
     def setParentNode(self, nodeName: str, parentNodeName: str) -> NoReturn:
         '''
@@ -469,36 +431,37 @@ class NodeDbApi(TortugaDbApi):
             NodeNotFound
         '''
 
-        session = DbManager().openSession()
+        with DbManager().session() as session:
+            try:
+                dbNode = self._nodesDbHandler.getNode(session, nodeName)
 
-        try:
-            dbNode = self._nodesDbHandler.getNode(session, nodeName)
+                # Setting the parent to 'None' is equivalent to unsetting it
+                dbNode.parentnode = self._nodesDbHandler.getNode(
+                    session, parentNodeName) if parentNodeName else None
 
-            # Setting the parent to 'None' is equivalent to unsetting it
-            dbNode.parentnode = self._nodesDbHandler.getNode(
-                session, parentNodeName) if parentNodeName else None
+                session.commit()
+            except TortugaException:
+                session.rollback()
+                raise
+            except Exception as ex:
+                session.rollback()
+                self.getLogger().exception('%s' % ex)
+                raise
 
-            session.commit()
-        except TortugaException:
-            session.rollback()
-            raise
-        except Exception as ex:
-            session.rollback()
-            self.getLogger().exception('%s' % ex)
-            raise
-        finally:
-            DbManager().closeSession()
+    def getNodesByNodeState(self, state: str,
+                            optionDict: OptionsDict = None) \
+            -> TortugaObjectList:
+        """
+        Get nodes by node state
+        """
 
-    def getNodesByNodeState(self, state: str) -> TortugaObjectList:
-        session = DbManager().openSession()
-
-        try:
-            return self.getTortugaObjectList(
-                Node, self._nodesDbHandler.getNodesByNodeState(session, state))
-        except TortugaException:
-            raise
-        except Exception as ex:
-            self.getLogger().exception('%s' % (ex))
-            raise
-        finally:
-            DbManager().closeSession()
+        with DbManager().session() as session:
+            try:
+                return self.__convert_nodes_to_TortugaObjectList(
+                    self._nodesDbHandler.getNodesByNodeState(session, state),
+                    optionDict=optionDict)
+            except TortugaException:
+                raise
+            except Exception as ex:
+                self.getLogger().exception('%s' % (ex))
+                raise
