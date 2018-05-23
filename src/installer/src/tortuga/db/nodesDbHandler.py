@@ -35,11 +35,8 @@ from tortuga.exceptions.operationFailed import OperationFailed
 from tortuga.exceptions.profileMappingNotAllowed import \
     ProfileMappingNotAllowed
 from tortuga.objects.node import Node as TortugaNode
-from tortuga.os_utility import osUtility
 from tortuga.resourceAdapter import resourceAdapterFactory
 
-from .models.hardwareProfileProvisioningNic import \
-    HardwareProfileProvisioningNic
 from .models.nic import Nic
 from .models.node import Node
 from .models.softwareProfile import SoftwareProfile
@@ -251,111 +248,6 @@ class NodesDbHandler(TortugaDbObjectHandler):
 
         self.__migrateOrIdleChildren(
             session, dbNode, remainingNodeList)
-
-    def deleteNode(self, session, dbNodes):
-        """
-        Raises:
-            DeleteNodeFailed
-        """
-
-        result = {
-            'NodesDeleted': [],
-            'DeleteNodeFailed': [],
-            'SoftwareProfileLocked': [],
-            'SoftwareProfileHardLocked': [],
-        }
-
-        nodes = {}
-        events_to_fire = []
-
-        #
-        # Mark node states as deleted in the database
-        #
-        for dbNode in dbNodes:
-            #
-            # Capture previous state and node data as a dict for firing
-            # the event later on
-            #
-            event_data = {
-                'previous_state': dbNode.state,
-                'node': TortugaNode.getFromDbDict(
-                    dbNode.__dict__).getCleanDict()
-            }
-
-            dbNode.state = 'Deleted'
-            event_data['node']['state'] = 'Deleted'
-
-            if dbNode.hardwareprofile not in nodes:
-                nodes[dbNode.hardwareprofile] = [dbNode]
-            else:
-                nodes[dbNode.hardwareprofile].append(dbNode)
-
-        session.commit()
-
-        #
-        # Fire node state change events
-        #
-        for event in events_to_fire:
-            NodeStateChanged.fire(node=event['node'],
-                                  previous_state=event['previous_state'])
-
-        #
-        # Call resource adapter with batch(es) of node lists keyed on
-        # hardware profile.
-        #
-        for hwProfile, dbNodeList in nodes.items():
-            # Get the ResourceAdapter
-            adapter = self.__getResourceAdapter(hwProfile)
-
-            # Call the resource adapter
-            adapter.deleteNode(dbNodeList)
-
-            # Iterate over all nodes in hardware profile, completing the
-            # delete operation.
-            for dbNode in dbNodeList:
-                # Remove PXE boot file and remove lease from dhcp server
-                if hwProfile.location == 'local':
-                    # Only attempt to remove local boot configuration for
-                    # nodes that are marked as 'local'
-                    bhm = osUtility.getOsObjectFactory().\
-                        getOsBootHostManager()
-
-                    bhm.rmPXEFile(dbNode)
-                    bhm.removeDhcpLease(dbNode)
-
-                # Iterate over nics belonging to node
-                for dbNic in dbNode.nics:
-                    try:
-                        r = session.\
-                            query(HardwareProfileProvisioningNic).\
-                            filter(and_(HardwareProfileProvisioningNic.
-                                        nicId == dbNic.id,
-                                        HardwareProfileProvisioningNic.
-                                        hardwareProfileId ==
-                                        hwProfile.id)).one()
-
-                        session.delete(r)
-                    except NoResultFound:
-                        pass
-
-                # Delete all associated NICs
-                for item in dbNode.nics:
-                    session.delete(item)
-
-                for tag in dbNode.tags:
-                    if len(tag.nodes) == 1 and \
-                            not tag.softwareprofiles and \
-                            not tag.hardwareprofiles:
-                        session.delete(tag)
-
-                # Delete the Node
-                self.getLogger().debug('Deleting node [%s]' % (dbNode.name))
-
-                session.delete(dbNode)
-
-                result['NodesDeleted'].append(dbNode)
-
-        return result
 
     def updateNode(self, session, node, updateNodeRequest):
         """Calls updateNode() method of resource adapter"""

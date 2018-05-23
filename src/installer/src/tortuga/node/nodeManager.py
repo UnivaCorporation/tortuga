@@ -14,7 +14,6 @@
 
 # pylint: disable=no-self-use,no-member,no-name-in-module
 
-import os
 import socket
 import time
 from typing import Dict, List, NoReturn, Optional
@@ -35,6 +34,7 @@ from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
 from tortuga.events.types import NodeStateChanged
 from tortuga.exceptions.configurationError import ConfigurationError
 from tortuga.exceptions.nodeNotFound import NodeNotFound
+from tortuga.exceptions.operationFailed import OperationFailed
 from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
 from tortuga.exceptions.volumeDoesNotExist import VolumeDoesNotExist
 from tortuga.kit.actions import KitActionsManager
@@ -44,6 +44,7 @@ from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.os_utility import osUtility, tortugaSubprocess
 from tortuga.resourceAdapter import resourceAdapterFactory
 from tortuga.san import san
+from tortuga.sync.syncApi import SyncApi
 
 
 class NodeManager(TortugaObjectManager): \
@@ -57,6 +58,7 @@ class NodeManager(TortugaObjectManager): \
         self._cm = ConfigManager()
         self._san = san.San()
         self._bhm = osUtility.getOsObjectFactory().getOsBootHostManager()
+        self._syncApi = SyncApi()
 
     def __validateHostName(self, hostname: str, name_format: str) -> NoReturn:
         """
@@ -359,7 +361,7 @@ class NodeManager(TortugaObjectManager): \
 
         return result, nodes_deleted
 
-    def deleteNode(self, nodespec):
+    def deleteNode(self, nodespec: str):
         """
         Delete node by nodespec
 
@@ -390,7 +392,7 @@ class NodeManager(TortugaObjectManager): \
 
             self.__preDeleteHost(nodes)
 
-            nodeErrorDict = NodesDbHandler().deleteNode(session, nodes)
+            nodeErrorDict = self.__delete_node(session, nodes)
 
             # REALLY!?!? Convert a list of Nodes objects into a list of
             # node names so we can report the list back to the end-user.
@@ -431,6 +433,109 @@ class NodeManager(TortugaObjectManager): \
             raise
         finally:
             DbManager().closeSession()
+
+    def __delete_node(self, session: Session, dbNodes: List[NodeModel]) \
+            -> Dict[str, List[NodeModel]]:
+        """
+        Raises:
+            DeleteNodeFailed
+        """
+
+        result = {
+            'NodesDeleted': [],
+            'DeleteNodeFailed': [],
+            'SoftwareProfileLocked': [],
+            'SoftwareProfileHardLocked': [],
+        }
+
+        nodes = {}
+        events_to_fire = []
+
+        #
+        # Mark node states as deleted in the database
+        #
+        for dbNode in dbNodes:
+            #
+            # Capture previous state and node data as a dict for firing
+            # the event later on
+            #
+            event_data = {
+                'previous_state': dbNode.state,
+                'node': Node.getFromDbDict(dbNode.__dict__).getCleanDict()
+            }
+
+            dbNode.state = 'Deleted'
+            event_data['node']['state'] = 'Deleted'
+
+            if dbNode.hardwareprofile not in nodes:
+                nodes[dbNode.hardwareprofile] = [dbNode]
+            else:
+                nodes[dbNode.hardwareprofile].append(dbNode)
+
+        session.commit()
+
+        #
+        # Fire node state change events
+        #
+        for event in events_to_fire:
+            NodeStateChanged.fire(node=event['node'],
+                                  previous_state=event['previous_state'])
+
+        #
+        # Call resource adapter with batch(es) of node lists keyed on
+        # hardware profile.
+        #
+        for hwprofile, hwprofile_nodes in nodes.items():
+            # Get the ResourceAdapter
+            adapter = self.__get_resource_adapter(hwprofile)
+
+            # Call the resource adapter
+            adapter.deleteNode(hwprofile_nodes)
+
+            # Iterate over all nodes in hardware profile, completing the
+            # delete operation.
+            for dbNode in hwprofile_nodes:
+                # Remove PXE boot file and remove lease from dhcp server
+                if hwprofile.location == 'local':
+                    # Only attempt to remove local boot configuration for
+                    # nodes that are marked as 'local'
+                    bhm = osUtility.getOsObjectFactory().getOsBootHostManager()
+
+                    bhm.rmPXEFile(dbNode)
+                    bhm.removeDhcpLease(dbNode)
+
+                # Delete all associated NICs
+                for item in dbNode.nics:
+                    session.delete(item)
+
+                for tag in dbNode.tags:
+                    if len(tag.nodes) == 1 and \
+                            not tag.softwareprofiles and \
+                            not tag.hardwareprofiles:
+                        session.delete(tag)
+
+                # Delete the Node
+                self.getLogger().debug('Deleting node [%s]' % (dbNode.name))
+
+                session.delete(dbNode)
+
+                result['NodesDeleted'].append(dbNode)
+
+        return result
+
+    def __get_resource_adapter(self, hardwareProfile):
+        """
+        Raises:
+            OperationFailed
+        """
+
+        if not hardwareProfile.resourceadapter:
+            raise OperationFailed(
+                'Hardware profile [%s] does not have an associated'
+                ' resource adapter' % (hardwareProfile.name))
+
+        return resourceAdapterFactory.get_api(
+            hardwareProfile.resourceadapter.name)
 
     def __process_delete_node_result(self, nodeErrorDict):
         # REALLY!?!? Convert a list of Nodes objects into a list of
