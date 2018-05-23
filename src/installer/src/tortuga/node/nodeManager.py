@@ -580,10 +580,6 @@ class NodeManager(TortugaObjectManager): \
                     bhm.rmPXEFile(dbNode)
                     bhm.removeDhcpLease(dbNode)
 
-                # Delete all associated NICs
-                for item in dbNode.nics:
-                    session.delete(item)
-
                 for tag in dbNode.tags:
                     if len(tag.nodes) == 1 and \
                             not tag.softwareprofiles and \
