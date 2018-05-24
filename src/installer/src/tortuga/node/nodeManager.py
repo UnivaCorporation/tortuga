@@ -14,7 +14,6 @@
 
 # pylint: disable=no-self-use,no-member,no-name-in-module
 
-import os
 import socket
 import time
 from typing import Dict, List, NoReturn, Optional
@@ -35,15 +34,19 @@ from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
 from tortuga.events.types import NodeStateChanged
 from tortuga.exceptions.configurationError import ConfigurationError
 from tortuga.exceptions.nodeNotFound import NodeNotFound
+from tortuga.exceptions.operationFailed import OperationFailed
 from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
 from tortuga.exceptions.volumeDoesNotExist import VolumeDoesNotExist
 from tortuga.kit.actions import KitActionsManager
 from tortuga.objects.node import Node
 from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
-from tortuga.os_utility import osUtility, tortugaSubprocess
+from tortuga.os_utility import osUtility
 from tortuga.resourceAdapter import resourceAdapterFactory
 from tortuga.san import san
+from tortuga.softwareprofile.softwareProfileManager import \
+    SoftwareProfileManager
+from tortuga.sync.syncApi import SyncApi
 
 
 class NodeManager(TortugaObjectManager): \
@@ -57,6 +60,7 @@ class NodeManager(TortugaObjectManager): \
         self._cm = ConfigManager()
         self._san = san.San()
         self._bhm = osUtility.getOsObjectFactory().getOsBootHostManager()
+        self._syncApi = SyncApi()
 
     def __validateHostName(self, hostname: str, name_format: str) -> NoReturn:
         """
@@ -138,32 +142,21 @@ class NodeManager(TortugaObjectManager): \
         # Return the new node
         return node
 
-    def getNode(self, name, optionDict: Optional[Dict[str, bool]] = None):
-        """Get node by name"""
+    def getNode(self, name, optionDict: Dict[str, bool] = None) \
+            -> Node:
+        """
+        Get node by name
 
-        optionDict_ = optionDict.copy() if optionDict else {}
+        Raises:
+            NodeNotFound
+        """
 
-        optionDict_.update({'hardwareprofile': True})
-
-        node = self._nodeDbApi.getNode(name, optionDict_)
-
-        hwprofile = self._hardwareProfileDbApi.getHardwareProfile(
-            node.getHardwareProfile().getName(), {'resourceadapter': True})
-
-        adapter_name = hwprofile.getResourceAdapter().getName() \
-            if hwprofile.getResourceAdapter() else 'default'
-
-        # Query vcpus from resource adapter
-        ResourceAdapterClass = \
-            resourceAdapterFactory.get_resourceadapter_class(adapter_name)
-
-        # Update Node object
-        node.setVcpus(ResourceAdapterClass().get_node_vcpus(node.getName()))
-
-        return node
+        return self.__populate_nodes(
+            [self._nodeDbApi.getNode(
+                name, optionDict=get_default_relations(optionDict))])[0]
 
     def getNodeById(self, nodeId: int,
-                    optionDict: Optional[Dict[str, bool]] = None) -> Node:
+                    optionDict: Dict[str, bool] = None) -> Node:
         """
         Get node by node id
 
@@ -171,9 +164,13 @@ class NodeManager(TortugaObjectManager): \
             NodeNotFound
         """
 
-        return self._nodeDbApi.getNodeById(int(nodeId), optionDict)
+        return self.__populate_nodes(
+            [self._nodeDbApi.getNodeById(
+                int(nodeId),
+                optionDict=get_default_relations(optionDict))])[0]
 
-    def getNodeByIp(self, ip):
+    def getNodeByIp(self, ip: str,
+                    optionDict: Dict[str, bool] = None) -> Node:
         """
         Get node by IP address
 
@@ -181,12 +178,66 @@ class NodeManager(TortugaObjectManager): \
             NodeNotFound
         """
 
-        return self._nodeDbApi.getNodeByIp(ip)
+        return self.__populate_nodes(
+            [self._nodeDbApi.getNodeByIp(
+                ip, optionDict=get_default_relations(optionDict))])[0]
 
-    def getNodeList(self, tags=None):
-        """Return all nodes"""
+    def getNodeList(self, tags=None,
+                    optionDict: Dict[str, bool] = None) \
+            -> List[Node]:
+        """
+        Return all nodes
+        """
 
-        return self.__expand_node_vcpus(self._nodeDbApi.getNodeList(tags=tags))
+        return self.__populate_nodes(
+            self._nodeDbApi.getNodeList(
+                tags=tags, optionDict=get_default_relations(optionDict)))
+
+    def __populate_nodes(self, nodes: List[Node]) -> List[Node]:
+        """
+        Expand non-database fields in Node objects
+        """
+
+        swprofile_map = {}
+
+        # dict keyed on resource adapter name, value is resource adapter class
+        adapter_map = {}
+
+        for node in nodes:
+            adapter_name = \
+                node.getHardwareProfile().getResourceAdapter().getName() \
+                if node.getHardwareProfile().getResourceAdapter() else \
+                'default'
+
+            ResourceAdapterClass = adapter_map.get(adapter_name)
+            if ResourceAdapterClass is None:
+                # Query vcpus from resource adapter
+                ResourceAdapterClass = \
+                    resourceAdapterFactory.get_resourceadapter_class(
+                        adapter_name)
+
+                adapter_map[adapter_name] = ResourceAdapterClass
+
+            # Update Node object
+            node.setVcpus(
+                ResourceAdapterClass().get_node_vcpus(node.getName()))
+
+            if not node.getSoftwareProfile():
+                continue
+
+            swprofile_name = node.getSoftwareProfile().getName()
+
+            metadata = swprofile_map.get(swprofile_name)
+            if metadata is None:
+                metadata = \
+                    SoftwareProfileManager().get_software_profile_metadata(
+                        node.getSoftwareProfile().getName())
+
+                swprofile_map[swprofile_name] = metadata
+
+            node.getSoftwareProfile().setMetadata(metadata)
+
+        return nodes
 
     def updateNode(self, nodeName, updateNodeRequest):
         self.getLogger().debug('updateNode(): name=[{0}]'.format(nodeName))
@@ -359,7 +410,7 @@ class NodeManager(TortugaObjectManager): \
 
         return result, nodes_deleted
 
-    def deleteNode(self, nodespec):
+    def deleteNode(self, nodespec: str):
         """
         Delete node by nodespec
 
@@ -390,7 +441,7 @@ class NodeManager(TortugaObjectManager): \
 
             self.__preDeleteHost(nodes)
 
-            nodeErrorDict = NodesDbHandler().deleteNode(session, nodes)
+            nodeErrorDict = self.__delete_node(session, nodes)
 
             # REALLY!?!? Convert a list of Nodes objects into a list of
             # node names so we can report the list back to the end-user.
@@ -431,6 +482,105 @@ class NodeManager(TortugaObjectManager): \
             raise
         finally:
             DbManager().closeSession()
+
+    def __delete_node(self, session: Session, dbNodes: List[NodeModel]) \
+            -> Dict[str, List[NodeModel]]:
+        """
+        Raises:
+            DeleteNodeFailed
+        """
+
+        result = {
+            'NodesDeleted': [],
+            'DeleteNodeFailed': [],
+            'SoftwareProfileLocked': [],
+            'SoftwareProfileHardLocked': [],
+        }
+
+        nodes = {}
+        events_to_fire = []
+
+        #
+        # Mark node states as deleted in the database
+        #
+        for dbNode in dbNodes:
+            #
+            # Capture previous state and node data as a dict for firing
+            # the event later on
+            #
+            event_data = {
+                'previous_state': dbNode.state,
+                'node': Node.getFromDbDict(dbNode.__dict__).getCleanDict()
+            }
+
+            dbNode.state = 'Deleted'
+            event_data['node']['state'] = 'Deleted'
+
+            if dbNode.hardwareprofile not in nodes:
+                nodes[dbNode.hardwareprofile] = [dbNode]
+            else:
+                nodes[dbNode.hardwareprofile].append(dbNode)
+
+        session.commit()
+
+        #
+        # Fire node state change events
+        #
+        for event in events_to_fire:
+            NodeStateChanged.fire(node=event['node'],
+                                  previous_state=event['previous_state'])
+
+        #
+        # Call resource adapter with batch(es) of node lists keyed on
+        # hardware profile.
+        #
+        for hwprofile, hwprofile_nodes in nodes.items():
+            # Get the ResourceAdapter
+            adapter = self.__get_resource_adapter(hwprofile)
+
+            # Call the resource adapter
+            adapter.deleteNode(hwprofile_nodes)
+
+            # Iterate over all nodes in hardware profile, completing the
+            # delete operation.
+            for dbNode in hwprofile_nodes:
+                # Remove PXE boot file and remove lease from dhcp server
+                if hwprofile.location == 'local':
+                    # Only attempt to remove local boot configuration for
+                    # nodes that are marked as 'local'
+                    bhm = osUtility.getOsObjectFactory().getOsBootHostManager()
+
+                    bhm.rmPXEFile(dbNode)
+                    bhm.removeDhcpLease(dbNode)
+
+                for tag in dbNode.tags:
+                    if len(tag.nodes) == 1 and \
+                            not tag.softwareprofiles and \
+                            not tag.hardwareprofiles:
+                        session.delete(tag)
+
+                # Delete the Node
+                self.getLogger().debug('Deleting node [%s]' % (dbNode.name))
+
+                session.delete(dbNode)
+
+                result['NodesDeleted'].append(dbNode)
+
+        return result
+
+    def __get_resource_adapter(self, hardwareProfile):
+        """
+        Raises:
+            OperationFailed
+        """
+
+        if not hardwareProfile.resourceadapter:
+            raise OperationFailed(
+                'Hardware profile [%s] does not have an associated'
+                ' resource adapter' % (hardwareProfile.name))
+
+        return resourceAdapterFactory.get_api(
+            hardwareProfile.resourceadapter.name)
 
     def __process_delete_node_result(self, nodeErrorDict):
         # REALLY!?!? Convert a list of Nodes objects into a list of
@@ -506,12 +656,12 @@ class NodeManager(TortugaObjectManager): \
                 nodes=[node_dict['name']])
 
     def __scheduleUpdate(self):
-        tortugaSubprocess.executeCommand(
-            os.path.join(self._cm.getRoot(), 'bin/schedule-update'))
+        self._syncApi.scheduleClusterUpdate()
 
-    def getInstallerNode(self, optionDict: Optional[Dict[str, bool]] = None):
+    def getInstallerNode(self, optionDict: Dict[str, bool] = None):
         return self._nodeDbApi.getNode(
-            self._cm.getInstaller(), optionDict=optionDict)
+            self._cm.getInstaller(),
+            optionDict=get_default_relations(optionDict))
 
     def getProvisioningInfo(self, nodeName):
         return self._nodeDbApi.getProvisioningInfo(nodeName)
@@ -902,38 +1052,50 @@ class NodeManager(TortugaObjectManager): \
     def getStorageVolumes(self, nodeName: str):
         return self._san.getNodeVolumes(self.getNode(nodeName).getName())
 
-    def getNodesByNodeState(self, state: str):
-        return self._nodeDbApi.getNodesByNodeState(state)
+    def getNodesByNodeState(self, state: str,
+                            optionDict: Dict[str, bool] = None) \
+            -> TortugaObjectList:
+        return self.__populate_nodes(
+            self._nodeDbApi.getNodesByNodeState(
+                state, optionDict=get_default_relations(optionDict)))
 
     def getNodesByNameFilter(self, nodespec: str,
-                             optionDict: Optional[Dict[str, bool]] = None) \
+                             optionDict: Dict[str, bool] = None) \
             -> TortugaObjectList:
-        return self.__expand_node_vcpus(
+        """
+        Return TortugaObjectList of Node objects matching nodespec
+        """
+
+        return self.__populate_nodes(
             self._nodeDbApi.getNodesByNameFilter(
-                nodespec, optionDict=optionDict))
+                nodespec, optionDict=get_default_relations(optionDict)))
 
     def getNodesByAddHostSession(self, addHostSession: str,
-                                 optionDict: Optional[Dict[str, bool]] = None) \
+                                 optionDict: Dict[str, bool] = None) \
             -> TortugaObjectList:
-        return self._nodeDbApi.getNodesByAddHostSession(
-            addHostSession, optionDict)
+        """
+        Return TortugaObjectList of Node objects matching add host session
+        """
 
-    def __expand_node_vcpus(self, nodes: List[Node]) -> List[Node]:
-        # query resource adapter to get virtual cpus for each Node
+        return self.__populate_nodes(
+            self._nodeDbApi.getNodesByAddHostSession(
+                addHostSession,
+                optionDict=get_default_relations(optionDict)))
 
-        for node in nodes:
-            adapter_name = \
-                node.getHardwareProfile().getResourceAdapter().getName() \
-                if node.getHardwareProfile().getResourceAdapter() else \
-                'default'
 
-            # Query vcpus from resource adapter
-            ResourceAdapterClass = \
-                resourceAdapterFactory.get_resourceadapter_class(
-                    adapter_name)
+def get_default_relations(relations: Dict[str, bool]):
+    """
+    Ensure hardware and software profiles and tags are populated when
+    serializing node records.
+    """
 
-            # Update Node object
-            node.setVcpus(
-                ResourceAdapterClass().get_node_vcpus(node.getName()))
+    result = relations.copy() if relations else {}
 
-        return nodes
+    # ensure software and hardware profile relations are loaded
+    result.update({
+        'hardwareprofile': True,
+        'softwareprofile': True,
+        'tags': True,
+    })
+
+    return result

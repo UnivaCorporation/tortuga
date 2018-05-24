@@ -805,8 +805,6 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
 
         metadata = {}
 
-        load_kits()
-
         kits = self._kit_db_api.getKitList()
 
         for kit in kits:

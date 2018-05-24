@@ -207,7 +207,7 @@ class SoftwareProfile(TortugaObject): \
     @staticmethod
     def getKeys():
         return ['id', 'name', 'osId', 'description', 'kernel', 'initrd',
-                'kernelParams', 'type', 'minNodes', 'isIdle']
+                'kernelParams', 'type', 'minNodes', 'isIdle', 'metadata']
 
     @classmethod
     def getFromDict(cls, _dict):
