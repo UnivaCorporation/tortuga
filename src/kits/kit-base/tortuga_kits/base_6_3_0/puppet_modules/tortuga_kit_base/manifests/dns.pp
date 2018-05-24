@@ -24,6 +24,8 @@ class tortuga_kit_base::dns (
   contain tortuga_kit_base::dns::config
   contain tortuga_kit_base::dns::server
   contain tortuga_kit_base::dns::post_conf
+
+  Tortuga_kit_base::Installed<| |> -> Class['tortuga_kit_base::dns']
 }
 
 class tortuga_kit_base::dns::package {

@@ -25,8 +25,7 @@ from pathlib import Path
 import cherrypy
 from cherrypy.process import plugins
 
-from . import app
-from . import controllers, controllers_v2
+from . import app, controllers, controllers_v2, rootRouteMapper
 from .auth import methods as auth_methods
 from .auth.authenticator import CherryPyAuthenticator
 from .controllers.tortugaController import TortugaController
@@ -64,7 +63,7 @@ if not log_conf_file.exists():
     root_logger.addHandler(ch)
 
 
-logger = logging.getLogger('tortuga.web_service')
+logger = logging.getLogger(__name__)
 
 
 def prepare_server():
@@ -78,6 +77,7 @@ def prepare_server():
         '/': {
             'tools.db.on': True,
             'response.headers.server': 'Tortuga web service',
+            'request.dispatch': rootRouteMapper.setupRoutes(),
         },
         '/v1': {
             'request.dispatch': controllers.setup_routes()

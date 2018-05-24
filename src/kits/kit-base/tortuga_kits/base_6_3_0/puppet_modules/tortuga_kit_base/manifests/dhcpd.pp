@@ -67,4 +67,6 @@ class tortuga_kit_base::dhcpd (
   contain tortuga_kit_base::dhcpd::config
   contain tortuga_kit_base::dhcpd::server
   contain tortuga_kit_base::provisioning::pxeserver
+
+  Tortuga_kit_base::Installed<| |> -> Class['tortuga_kit_base::dhcpd']
 }

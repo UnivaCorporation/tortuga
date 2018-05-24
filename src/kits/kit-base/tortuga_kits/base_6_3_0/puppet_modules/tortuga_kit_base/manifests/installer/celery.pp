@@ -9,7 +9,7 @@
 #   include tortuga_kit_base::installer::celery
 
 class tortuga_kit_base::installer::celery {
-  require Class['tortuga::installer::redis::enable']
+  require tortuga::installer::redis
 
   file { '/var/log/celery':
     ensure => directory,

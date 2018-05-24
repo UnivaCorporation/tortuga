@@ -8,8 +8,6 @@
 class tortuga::installer::redis::install {
   require tortuga::packages
 
-  package { 'redis':
-    ensure => latest
-  }
+  ensure_packages(['redis'], {'ensure' => 'installed'})
 
 }

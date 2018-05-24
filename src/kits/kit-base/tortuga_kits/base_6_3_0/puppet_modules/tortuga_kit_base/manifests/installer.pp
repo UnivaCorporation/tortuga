@@ -36,6 +36,12 @@ class tortuga_kit_base::installer (
     include($classes)
   }
 
+  contain tortuga_kit_base::installer::actions
+  contain tortuga_kit_base::installer::done
+}
+
+class tortuga_kit_base::installer::actions {
+
   contain tortuga::packages
 
   contain tortuga::installer
@@ -44,7 +50,7 @@ class tortuga_kit_base::installer (
   contain tortuga_kit_base::installer::ntpd
 
   class { 'tortuga_kit_base::installer::apache':
-    proxy_hash => $proxy_hash,
+    proxy_hash => $tortuga_kit_base::installer::proxy_hash,
   }
 
   contain tortuga_kit_base::installer::apache
@@ -54,8 +60,13 @@ class tortuga_kit_base::installer (
   contain tortuga_kit_base::installer::ssh
 
   class { 'tortuga::installer::database':
-    database_engine => $database_engine,
+    database_engine => $tortuga_kit_base::installer::database_engine,
   }
   contain tortuga::installer::database
+}
 
+class tortuga_kit_base::installer::done {
+  require tortuga_kit_base::installer::actions
+
+  tortuga_kit_base::installed { 'installer': }
 }

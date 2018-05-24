@@ -123,7 +123,7 @@ class ResourceAdapterSchema(ModelSchema):
 
 class NodeSchema(ModelSchema):
     softwareprofile = fields.Nested('SoftwareProfileSchema',
-                                    only=('id', 'name'))
+                                    only=('id', 'name', 'metadata'))
     hardwareprofile = fields.Nested(
         'HardwareProfileSchema',
         only=('id', 'name', 'resourceadapter'),
@@ -160,7 +160,7 @@ class SoftwareProfileSchema(ModelSchema):
     tags = fields.Nested('TagSchema',
                          only=('id', 'name', 'value'), many=True)
 
-    metadata = fields.Nested('MetadataSchema', many=True)
+    metadata = fields.Dict()
 
     class Meta:
         model = SoftwareProfileModel

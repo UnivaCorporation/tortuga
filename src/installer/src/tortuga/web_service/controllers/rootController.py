@@ -12,16 +12,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=no-member
 
-class tortuga_kit_base::pdsh {
-  require tortuga::packages
+import datetime
 
-  $pkgs = [
-    'pdsh',
-    'pdsh-rcmd-ssh'
-  ]
+import cherrypy
 
-  ensure_resource('package', $pkgs, {'ensure' => 'installed'})
+from tortuga.web_service.auth.decorators import authentication_required
 
-  Tortuga_kit_base::Installed<| |> -> Class['tortuga_kit_base::pdsh']
-}
+from .tortugaController import TortugaController
+
+
+class RootController(TortugaController):
+    """
+    Root controller class
+
+    """
+    actions = [
+        {
+            'name': 'getNodeList',
+            'path': '/ping',
+            'action': 'ping',
+            'method': ['GET']
+        },
+    ]
+
+    @cherrypy.tools.json_out()
+    @authentication_required()
+    def ping(self, **kwargs):
+        """
+        """
+        return {'message': 'hello'}
