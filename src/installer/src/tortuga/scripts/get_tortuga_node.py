@@ -127,14 +127,18 @@ def get_puppet_node_yaml(session, nodeName):
                 #
                 # Get the puppet args for the component
                 #
-                puppet_class_args = _component.run_action(
-                    'get_puppet_args',
-                    dbNode.softwareprofile,
-                    dbNode.hardwareprofile
-                )
-                if puppet_class_args is not None:
-                    puppet_classes[_component.puppet_class] = \
-                        puppet_class_args
+                try:
+                    puppet_class_args = _component.run_action(
+                        'get_puppet_args',
+                        dbNode.softwareprofile,
+                        dbNode.hardwareprofile
+                    )
+                    if puppet_class_args is not None:
+                        puppet_classes[_component.puppet_class] = \
+                            puppet_class_args
+                except Exception:  # noqa pylint: disable=broad-except
+                    # suppress exception if unable to get Puppet args
+                    puppet_classes[_component.puppet_class] = {}
 
             else:
                 #
