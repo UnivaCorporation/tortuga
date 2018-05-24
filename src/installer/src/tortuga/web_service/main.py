@@ -32,9 +32,7 @@ from .auth.authenticator import CherryPyAuthenticator
 from .controllers.tortugaController import TortugaController
 from .plugins.database import DatabasePlugin
 from .plugins.websocket import WebsocketPlugin
-from .threadManagerPlugin import ThreadManagerPlugin
 from .tools.database import DatabaseTool
-from .workQueuePlugin import WorkQueuePlugin
 
 
 # read logging configuration
@@ -101,10 +99,6 @@ def run_server(daemonize: bool = False, pidfile: str = None):
     #
     if daemonize:
         plugins.Daemonizer(cherrypy.engine).subscribe()
-
-    WorkQueuePlugin(cherrypy.engine).subscribe()
-
-    ThreadManagerPlugin(cherrypy.engine).subscribe()
 
     if pidfile:
         plugins.PIDFile(cherrypy.engine, pidfile).subscribe()

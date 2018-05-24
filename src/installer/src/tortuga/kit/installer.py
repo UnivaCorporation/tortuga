@@ -198,6 +198,7 @@ class KitInstallerBase(ConfigurableMixin, metaclass=KitInstallerMeta):
     # Attributes, provided by instances of this class
     #
     puppet_modules = []
+    task_modules = []
 
     def __init__(self):
         self.config_manager = ConfigManager()
