@@ -12,20 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-import os.path
 import logging
+import os.path
+import sys
+
 import yaml
 
 from tortuga.config.configManager import ConfigManager
 from tortuga.db.dbManager import DbManager
-from tortuga.db.nodesDbHandler import NodesDbHandler
-from tortuga.exceptions.parameterNotFound import ParameterNotFound
-from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
+from tortuga.db.helper import get_installer_hostname_suffix
+from tortuga.db.nodesDbHandler import NodesDbHandler
+from tortuga.exceptions.nodeNotFound import NodeNotFound
+from tortuga.exceptions.parameterNotFound import ParameterNotFound
 from tortuga.kit.loader import load_kits
 from tortuga.kit.registry import get_kit_installer
-from tortuga.db.helper import get_installer_hostname_suffix
 
 
 logger = logging.getLogger('tortuga.puppet_enc')
