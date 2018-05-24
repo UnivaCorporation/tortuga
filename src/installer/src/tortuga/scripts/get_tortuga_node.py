@@ -12,20 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-import os.path
 import logging
+import os.path
+import sys
+
 import yaml
 
 from tortuga.config.configManager import ConfigManager
 from tortuga.db.dbManager import DbManager
-from tortuga.db.nodesDbHandler import NodesDbHandler
-from tortuga.exceptions.parameterNotFound import ParameterNotFound
-from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
+from tortuga.db.helper import get_installer_hostname_suffix
+from tortuga.db.nodesDbHandler import NodesDbHandler
+from tortuga.exceptions.nodeNotFound import NodeNotFound
+from tortuga.exceptions.parameterNotFound import ParameterNotFound
 from tortuga.kit.loader import load_kits
 from tortuga.kit.registry import get_kit_installer
-from tortuga.db.helper import get_installer_hostname_suffix
 
 
 logger = logging.getLogger('tortuga.puppet_enc')
@@ -127,14 +128,18 @@ def get_puppet_node_yaml(session, nodeName):
                 #
                 # Get the puppet args for the component
                 #
-                puppet_class_args = _component.run_action(
-                    'get_puppet_args',
-                    dbNode.softwareprofile,
-                    dbNode.hardwareprofile
-                )
-                if puppet_class_args is not None:
-                    puppet_classes[_component.puppet_class] = \
-                        puppet_class_args
+                try:
+                    puppet_class_args = _component.run_action(
+                        'get_puppet_args',
+                        dbNode.softwareprofile,
+                        dbNode.hardwareprofile
+                    )
+                    if puppet_class_args is not None:
+                        puppet_classes[_component.puppet_class] = \
+                            puppet_class_args
+                except Exception:  # noqa pylint: disable=broad-except
+                    # suppress exception if unable to get Puppet args
+                    puppet_classes[_component.puppet_class] = {}
 
             else:
                 #

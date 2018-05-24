@@ -278,6 +278,8 @@ class TortugaDeployer(object): \
 
         license_file = ' %s/LICENSE' % (self._cm.getEtcDir())
 
+        print()
+
         if bAcceptEula:
             cmd = 'cat %s\n' % (license_file)
             os.system(cmd)
@@ -417,7 +419,7 @@ class TortugaDeployer(object): \
 
         open(self._lockFilePath, 'w').close()
 
-        self.out('\nTortuga Setup\n')
+        self.out('Tortuga Setup\n')
 
     def getClusterConfig(self):
         sysManager = self._osObjectFactory.getOsSysManager()
