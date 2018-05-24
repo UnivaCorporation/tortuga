@@ -20,21 +20,25 @@ from sqlalchemy.orm import relationship
 from .base import ModelBase
 
 
-class ResourceAdapterCredential(ModelBase):
-    __tablename__ = 'resource_adapter_credentials'
+class ResourceAdapterConfig(ModelBase):
+    __tablename__ = 'resource_adapter_config'
     __table_args__ = (
-        UniqueConstraint('name', 'admin_id', 'key', 'resourceadapter_id'),
+        UniqueConstraint('name', 'admin_id', 'resourceadapter_id'),
     )
 
     id = Column(Integer, primary_key=True)
     name = Column(String(255), nullable=False)
-    # description = Column(String(255))
+    description = Column(String(255))
     admin_id = Column(ForeignKey('admins.id'))
     resourceadapter_id = Column(ForeignKey('resourceadapters.id'))
-    key = Column(String(255), nullable=False)
-    value = Column(String(255))
 
-    admin = relationship('Admin', uselist=False, backref='credentials')
+    admin = relationship('Admin', uselist=False,
+                         backref='resource_adapter_config')
 
     resourceadapter = relationship('ResourceAdapter',
-                                   uselist=False, backref='credentials')
+                                   uselist=False,
+                                   backref='resource_adapter_config')
+
+    settings = relationship('ResourceAdapterSetting',
+                            back_populates='resource_adapter_config',
+                            cascade='all,delete-orphan')
