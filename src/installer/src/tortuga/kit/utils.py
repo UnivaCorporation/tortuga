@@ -19,18 +19,16 @@ import os
 import os.path
 import shutil
 import subprocess
+from typing import Tuple
 import urllib.error
 import urllib.request
 from logging import getLogger
 
 from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.fileNotFound import FileNotFound
-from tortuga.exceptions.kitNotFound import KitNotFound
 from tortuga.exceptions.tortugaException import TortugaException
+from tortuga.kit.metadata import KitMetadataSchema
 from tortuga.os_utility.tortugaSubprocess import TortugaSubprocess
-
-from .metadata import KitMetadataSchema
-
 
 logger = getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -212,93 +210,53 @@ def download(urlList, dest):
         logger.debug('Successfully dowloaded file [%s]' % (destFile))
 
 
-def getKitNameVersionIteration(kitpath):
+def get_metadata_from_archive(kit_archive_path: str) -> dict:
     """
-    Extract kit name/version/iteration from a kit tarball by parsing
-    the enclosed 'kit.json' metadata file.
+    Extracts and validates kit metadata from a kit archive file.
 
-    :raises KitNotFound:
+    :param str kit_archive_path: the path to the kit archive
 
-    """
-    cmd = 'tar jxfO {} \*/kit.json'.format(kitpath)
-    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE, bufsize=1)
-
-    name = None
-    version = None
-    iteration = None
-    try:
-        meta_dict = json.load(p.stdout)
-        errors = KitMetadataSchema().validate(meta_dict)
-        if not errors:
-            name = meta_dict['name']
-            version = meta_dict['version']
-            iteration = meta_dict['iteration']
-    except SyntaxError:
-        #
-        # This is probably an indication that the kit.json did not exist
-        # in the specified tarball.
-        #
-        pass
-
-    retval = p.wait()
-    if retval != 0:
-        raise KitNotFound(
-            'Unable to parse metadata for kit [{}]'.format(kitpath))
-
-    return name, version, iteration
-
-
-def unpack(filePath, destrootdir):
-    """
-    TODO: refactor to use unpack_archive
-
-    :raises InvalidArgument:
+    :return dict: the validated kit metadata
 
     """
-    kit_name, kit_version, kit_iteration = \
-        getKitNameVersionIteration(filePath)
-
-    destdir = os.path.join(
-        destrootdir,
-        'kit-{}'.format(
-            format_kit_descriptor(kit_name, kit_version, kit_iteration)
-        )
-    )
-
-    if not os.path.exists(destdir):
-        os.mkdir(destdir)
-
-    logger.debug(
-        '[utils.parse()] Unpacking [%s] into [%s]' % (
-            filePath, destdir))
-
-    cmd = 'tar --extract --bzip2 --strip-components 1 --file %s -C %s' % (
-        filePath, destdir)
-
+    cmd = 'tar -xjOf {} \*/kit.json'.format(kit_archive_path)
     p = TortugaSubprocess(cmd)
-
     p.run()
 
-    logger.debug(
-        '[utils.parse()] Unpacked [%s] into [%s]' % (
-            filePath, destdir))
+    try:
+        meta_dict: dict = json.loads(p.getStdOut().decode())
+        errors = KitMetadataSchema().validate(meta_dict)
+        if errors:
+            raise TortugaException(
+                'Incomplete kit metadata: {}'.format(meta_dict)
+            )
 
-    return destdir
+    except json.JSONDecodeError:
+        raise Exception('Invalid JSON for kit metadata: {}'.format(p.stdout))
+
+    return meta_dict
 
 
-def unpack_archive(kit_archive_path, dest_root_dir):
+def unpack_archive(kit_archive_path: str,
+                   dest_root_dir: str) -> Tuple[str, str, str]:
     """
-    :raises InvalidArgument:
+    Unpacks a kit archive into a directory.
+
+    :param str kit_archive_path: the path to the kit archive
+    :param str dest_root_dir:    the destination directory in which the
+                                 archive will be extracted
+
+    :return Tuple[str, str, str]: the kit (name, version, iteration)
 
     """
-    kit_name, kit_version, kit_iteration = \
-        getKitNameVersionIteration(kit_archive_path)
+    meta_dict = get_metadata_from_archive(kit_archive_path)
 
     destdir = os.path.join(
         dest_root_dir,
         'kit-{}'.format(
-            format_kit_descriptor(kit_name, kit_version, kit_iteration)
+            format_kit_descriptor(meta_dict['name'],
+                                  meta_dict['version'],
+                                  meta_dict['iteration'])
         )
     )
 
@@ -320,7 +278,7 @@ def unpack_archive(kit_archive_path, dest_root_dir):
         '[utils.parse()] Unpacked [%s] into [%s]' % (
             kit_archive_path, destdir))
 
-    return kit_name, kit_version, kit_iteration
+    return meta_dict['name'], meta_dict['version'], meta_dict['iteration']
 
 
 def format_kit_descriptor(name, version, iteration):

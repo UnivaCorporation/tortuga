@@ -18,6 +18,7 @@ import os
 import shutil
 from logging import getLogger
 
+from tortuga.config import version_is_compatible, VERSION
 from tortuga.exceptions.commandFailed import CommandFailed
 from tortuga.exceptions.kitBuildError import KitBuildError
 from tortuga.os_utility.tortugaSubprocess import executeCommand
@@ -57,7 +58,17 @@ DEFAULT_EXCLUDE_FILES = [
 
 
 class KitBuilder(object):
-    def __init__(self):
+    def __init__(self, working_directory: str = None):
+        """
+        Initialization.
+
+        :param str working_directory: the working directory in which the
+                                      build process will be run.
+
+        """
+        if working_directory:
+            os.chdir(working_directory)
+
         self._third_party_path = os.getenv('THIRD_PARTY')
 
         self._kit_meta = KitBuilder.get_kit_metadata()
@@ -109,11 +120,21 @@ class KitBuilder(object):
         if errors:
             raise KitBuildError(
                 'Kit metadata validation error: {}'.format(errors))
+
+        requires_core = kit_meta.get('requires_core', VERSION)
+        if not version_is_compatible(requires_core):
+            raise KitBuildError(
+                'The {} kit requires tortuga core >= {}'.format(
+                    kit_meta['name'],
+                    requires_core
+                )
+            )
+
         return kit_meta
 
     def _discover_src_makefile(self):
         """
-        Checks for the existance of src/Makefile
+        Checks for the existence of src/Makefile
 
         """
         logger.info('Discovering src/Makefile...')
@@ -289,7 +310,8 @@ class KitBuilder(object):
         #
         # Generate kit tarball
         #
-        self._generate_tarball(dist_dir)
+        tarball_path = self._generate_tarball(dist_dir)
+        return tarball_path
 
     def _build_src(self):
         """
@@ -418,12 +440,13 @@ class KitBuilder(object):
         cmd = 'dir2pi {}'.format(python_whl_dest_path)
         self._run_command(cmd)
 
-    def _generate_tarball(self, dist_dir):
+    def _generate_tarball(self, dist_dir) -> str:
         """
         Generates a tarball of the kit.
 
         :param dist_dir: the dist directory in which the tarball will be
                          created
+        :return str: the path to the generated tarball
 
         """
         logger.info('Generating kit tarball...')
@@ -440,6 +463,8 @@ class KitBuilder(object):
             self._kit_descriptor
         )
         self._run_command(cmd)
+
+        return tarball_path
 
     def clean(self):
         """
