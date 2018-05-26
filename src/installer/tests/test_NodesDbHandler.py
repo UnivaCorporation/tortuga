@@ -17,7 +17,6 @@ import unittest
 
 import pytest
 
-from tortuga.db.models.node import Node
 from tortuga.db.nodesDbHandler import NodesDbHandler
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 
@@ -106,6 +105,92 @@ class TestNodesDbHandler(unittest.TestCase):
                         'compute-02.private',
                         'compute-08.private']) - \
             set([node.name for node in result])
+
+    def test_getNodesByAddHostSession(self):
+        nodes = NodesDbHandler().getNodesByAddHostSession(
+            self.session, '1234')
+
+        assert nodes and isinstance(nodes, list)
+
+    def test_getNodesByAddHostSession_failed(self):
+        result = NodesDbHandler().getNodesByAddHostSession(
+            self.session, 'xxxxxx')
+
+        assert not result
+
+
+@pytest.mark.parametrize('state,swprofile', [
+    ('Installed', 'compute',),
+    pytest.param('Provisioned', 'compute',
+                 marks=pytest.mark.xfail(raises=NodeNotFound)),
+    pytest.param('Installed', 'blah',
+                 marks=pytest.mark.xfail(raises=NodeNotFound)),
+])
+def test_getNodeListByNodeStateAndSoftwareProfileName(dbm, state, swprofile):
+    with dbm.session() as session:
+        result = NodesDbHandler().getNodeListByNodeStateAndSoftwareProfileName(
+            session, state, swprofile,
+        )
+
+        if not result:
+            raise NodeNotFound(
+                'No nodes in software profile [{}] in state [{}]'.format(
+                    state, swprofile))
+
+    assert result
+
+
+@pytest.mark.parametrize('state', [
+    'Installed',
+    pytest.param('Provisioned',
+                 marks=pytest.mark.xfail(raises=NodeNotFound)),
+    pytest.param('Installed',
+                 marks=pytest.mark.xfail(raises=NodeNotFound)),
+])
+def test_getNodesByNodeState(dbm, state):
+    with dbm.session() as session:
+        result = NodesDbHandler().getNodesByNodeState(
+            session, state
+        )
+
+        if not result:
+            raise NodeNotFound(
+                'No nodes in state [{}]'.format(state))
+
+    assert result
+
+
+@pytest.mark.parametrize('node_id', [
+    1,
+    pytest.param(123, marks=pytest.mark.xfail(raises=NodeNotFound)),
+    pytest.param('xxxx', marks=pytest.mark.xfail(raises=NodeNotFound)),
+])
+def test_getNodeById(dbm, node_id):
+    with dbm.session() as session:
+        NodesDbHandler().getNodeById(session, node_id)
+
+
+@pytest.mark.parametrize('nodespec', [
+    ['c%', 'c%'],
+    'c%',
+    'compute%',
+    'compute%.private',
+    pytest.param('not%', marks=pytest.mark.xfail(raises=NodeNotFound)),
+    '%.private',
+    '%%e',
+    '%',
+    'compute-01.private',
+    ['compute-01', 'compute-02'],
+    ['compute-01.private', 'compute-02.private', 'compute-1%.private'],
+    pytest.param(['not', 'a', 'match'],
+                 marks=pytest.mark.xfail(raises=NodeNotFound)),
+])
+def test_getNodesByNameFilter(dbm, nodespec):
+    with dbm.session() as session:
+        result = NodesDbHandler().getNodesByNameFilter(session, nodespec)
+        if not result:
+            raise NodeNotFound(
+                'No matching nodes: nodespec=[{}]'.format(nodespec))
 
 
 def match_all_nodes(result):
