@@ -250,4 +250,5 @@ class NodesDbHandler(TortugaDbObjectHandler):
 
     def expand_nodespec(self, session: Session, nodespec: str) \
             -> List[Node]:
-        return self.getNodesByNameFilter(session, self.build_node_filterspec(nodespec))
+        return self.getNodesByNameFilter(
+            session, self.build_node_filterspec(nodespec))
