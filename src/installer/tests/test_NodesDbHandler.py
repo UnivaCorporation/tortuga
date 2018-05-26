@@ -41,6 +41,9 @@ class TestNodesDbHandler(unittest.TestCase):
 
         assert result.nics
 
+    def test_getNodeList(self):
+        assert isinstance(NodesDbHandler().getNodeList(self.session), list)
+
     def test_getNode_failed(self):
         with pytest.raises(NodeNotFound):
             NodesDbHandler().getNode(self.session, 'XXXXXXXX')
