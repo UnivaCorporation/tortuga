@@ -21,15 +21,15 @@ import random
 import re
 import string
 import threading
-from typing import NoReturn, List, Optional, Union
+from typing import List, NoReturn, Optional
 
 from sqlalchemy.orm.session import Session
 
 from tortuga.db.models.hardwareProfile import HardwareProfile
-from tortuga.db.models.softwareProfile import SoftwareProfile
 from tortuga.db.models.network import Network
 from tortuga.db.models.nic import Nic
 from tortuga.db.models.node import Node
+from tortuga.db.models.softwareProfile import SoftwareProfile
 from tortuga.db.nodesDbHandler import NodesDbHandler
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.invalidMacAddress import InvalidMacAddress
@@ -38,6 +38,7 @@ from tortuga.exceptions.networkNotFound import NetworkNotFound
 from tortuga.exceptions.nicNotFound import NicNotFound
 from tortuga.resourceAdapter.utility import get_provisioning_nics
 from tortuga.utility.tortugaApi import TortugaApi
+
 
 session_nodes_lock = threading.RLock()
 
@@ -102,7 +103,7 @@ class AddHostServerLocal(TortugaApi):
                        nic_defs: List[dict],
                        bValidateIp: bool = True,
                        bGenerateIp: bool = True,
-                       dns_zone: Optional[Union[str, None]] = None) -> NoReturn: \
+                       dns_zone: Optional[str] = None) -> NoReturn: \
             # pylint: disable=unused-argument
         """
         Assigns hostname and IP address, and inserts new record into
@@ -122,7 +123,6 @@ class AddHostServerLocal(TortugaApi):
             raise NetworkNotFound(
                 'Hardware profile [{}] does not have a provisioning'
                 ' network'.format(dbHardwareProfile.name))
-
 
         try:
             if not dbNode.name:
@@ -376,7 +376,7 @@ class AddHostServerLocal(TortugaApi):
         # Normalize and Validate MAC address formatting
         #
         mac_regex = re.compile(
-                r'^([0-9A-Fa-f]{2}[:-]?){5}[0-9A-Fa-f]{2}([:-]?.*)?$')
+            r'^([0-9A-Fa-f]{2}[:-]?){5}[0-9A-Fa-f]{2}([:-]?.*)?$')
         if not mac_regex.match(mac_address):
             raise InvalidMacAddress(
                 'MAC address [{}] is invalid/malformed'.format(mac_address))
