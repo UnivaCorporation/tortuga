@@ -259,8 +259,11 @@ def dbm():
 
         # create compute (compute-01, compute-02, ...) nodes
         for n in range(1, 11):
-            compute_node = Node(name='compute-{0:02d}.private'.format(n),
-                                state='Installed')
+            compute_node = Node(
+                name='compute-{0:02d}.private'.format(n),
+                state='Installed'
+            )
+            compute_node.addHostSession = '1234'
             compute_node.softwareprofile = compute_swprofile
             compute_node.hardwareprofile = localiron_hwprofile
 
