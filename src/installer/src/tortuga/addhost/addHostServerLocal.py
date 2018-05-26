@@ -42,12 +42,12 @@ from tortuga.utility.tortugaApi import TortugaApi
 
 session_nodes_lock = threading.RLock()
 
-session_nodes = []
+session_nodes: List[Node] = []
 
 # Maintain a list of used IP addresses. We do this to ensure we are
 # not reusing IP addresses that were already used in this add nodes
 # session.
-reservedIps = []
+reservedIps: List[str] = []
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())

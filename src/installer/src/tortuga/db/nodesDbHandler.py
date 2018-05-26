@@ -14,10 +14,11 @@
 
 # pylint: disable=not-callable,no-member,multiple-statements,no-self-use
 
-from typing import List, NoReturn, Union
+from typing import Dict, List, NoReturn, Optional, Tuple, Union
 
 from sqlalchemy import and_, func, or_
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.orm.session import Session
 
 from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
 from tortuga.db.hardwareProfilesDbHandler import HardwareProfilesDbHandler
@@ -37,9 +38,12 @@ from tortuga.exceptions.profileMappingNotAllowed import \
 from tortuga.objects.node import Node as TortugaNode
 from tortuga.resourceAdapter import resourceAdapterFactory
 
+from .models.hardwareProfile import HardwareProfile
 from .models.nic import Nic
 from .models.node import Node
 from .models.softwareProfile import SoftwareProfile
+
+Tags = List[Tuple[str, str]]
 
 
 class NodesDbHandler(TortugaDbObjectHandler):
@@ -59,26 +63,26 @@ class NodesDbHandler(TortugaDbObjectHandler):
         self._softwareUsesHardwareDbHandler = SoftwareUsesHardwareDbHandler()
         self._globalParametersDbHandler = GlobalParametersDbHandler()
 
-    def __isNodeLocked(self, dbNode):
+    def __isNodeLocked(self, dbNode: Node) -> bool:
         return dbNode.lockedState != 'Unlocked'
 
-    def __isNodeHardLocked(self, dbNode):
+    def __isNodeHardLocked(self, dbNode: Node) -> bool:
         return dbNode.lockedState == 'HardLocked'
 
-    def __isNodeSoftLocked(self, dbNode):
+    def __isNodeSoftLocked(self, dbNode: Node) -> bool:
         return dbNode.lockedState == 'SoftLocked'
 
-    def __getNodeState(self, dbNode):
+    def __getNodeState(self, dbNode: Node) -> bool:
         return dbNode.state
 
-    def __isNodeStateDeleted(self, node):
+    def __isNodeStateDeleted(self, node: Node) -> bool:
         return self.__getNodeState(node) == NodesDbHandler.NODE_STATE_DELETED
 
-    def __isNodeStateInstalled(self, dbNode):
+    def __isNodeStateInstalled(self, dbNode: Node) -> bool:
         return self.__getNodeState(dbNode) == \
             NodesDbHandler.NODE_STATE_INSTALLED
 
-    def getNode(self, session, name):
+    def getNode(self, session: Session, name: str) -> Node:
         """
         Return node.
 
@@ -100,7 +104,8 @@ class NodesDbHandler(TortugaDbObjectHandler):
         except NoResultFound:
             raise NodeNotFound("Node [%s] not found" % (name))
 
-    def getNodesByTags(self, session, tags=[]):
+    def getNodesByTags(self, session: Session,
+                       tags: Optional[Tags] = None):
         """'tags' is a list of (key, value) tuples representing tags.
         tuple may also contain only one element (key,)
         """
@@ -120,7 +125,8 @@ class NodesDbHandler(TortugaDbObjectHandler):
 
         return session.query(Node).filter(or_(*searchspec)).all()
 
-    def getNodesByAddHostSession(self, session, ahSession) -> List[Node]:
+    def getNodesByAddHostSession(self, session: Session, ahSession: str) \
+            -> List[Node]:
         """
         Get nodes by add host session
         Returns a list of nodes
@@ -132,7 +138,7 @@ class NodesDbHandler(TortugaDbObjectHandler):
         return session.query(Node).filter(
             Node.addHostSession == ahSession).order_by(Node.name).all()
 
-    def getNodesByNameFilter(self, session,
+    def getNodesByNameFilter(self, session: Session,
                              filter_spec: Union[str, list]) -> List[Node]:
         """
         Filter follows SQL "LIKE" semantics (ie. "something%")
@@ -161,7 +167,7 @@ class NodesDbHandler(TortugaDbObjectHandler):
 
         return session.query(Node).filter(or_(*node_filter)).all()
 
-    def getNodeById(self, session, _id):
+    def getNodeById(self, session: Session, _id: int) -> Node:
         """
         Return node.
 
@@ -178,7 +184,7 @@ class NodesDbHandler(TortugaDbObjectHandler):
 
         return dbNode
 
-    def getNodeByIp(self, session, ip):
+    def getNodeByIp(self, session: Session, ip: str) -> Node:
         """
         Raises:
             NodeNotFound
@@ -192,7 +198,9 @@ class NodesDbHandler(TortugaDbObjectHandler):
             raise NodeNotFound(
                 'Node with IP address [%s] not found.' % (ip))
 
-    def getNodeList(self, session, softwareProfile=None, tags=None):
+    def getNodeList(self, session: Session,
+                    softwareProfile: Optional[str] = None,
+                    tags: Tags = None) -> List[Node]:
         """
         Get sorted list of nodes from the db.
 
@@ -223,9 +231,9 @@ class NodesDbHandler(TortugaDbObjectHandler):
         return session.query(Node).filter(
             or_(*searchspec)).order_by(Node.name).all()
 
-    def getNodeListByNodeStateAndSoftwareProfileName(self, session,
-                                                     nodeState,
-                                                     softwareProfileName):
+    def getNodeListByNodeStateAndSoftwareProfileName(
+            self, session: Session, nodeState: str,
+            softwareProfileName: str) -> List[Node]:
         """
         Get list of nodes from the db.
         """
@@ -238,7 +246,7 @@ class NodesDbHandler(TortugaDbObjectHandler):
             SoftwareProfile.name == softwareProfileName,
             Node.state == nodeState)).all()
 
-    def evacuateChildren(self, session, dbNode):
+    def evacuateChildren(self, session: Session, dbNode: Node):
         swProfile = dbNode.softwareprofile
         if not swProfile:
             return
@@ -249,15 +257,17 @@ class NodesDbHandler(TortugaDbObjectHandler):
         self.__migrateOrIdleChildren(
             session, dbNode, remainingNodeList)
 
-    def updateNode(self, session, node, updateNodeRequest):
+    def updateNode(self, session: Session, node: Node,
+            updateNodeRequest: dict) -> NoReturn:
         """Calls updateNode() method of resource adapter"""
 
         adapter = self.__getResourceAdapter(node.hardwareprofile)
 
         adapter.updateNode(session, node, updateNodeRequest)
 
-    def transferNode(self, session, dbNodes, newSoftwareProfile,
-                     bForce=False): \
+    def transferNode(self, session: Session, dbNodes: List[Node],
+                     newSoftwareProfile: SoftwareProfile,
+                     bForce: bool = False): \
             # pylint: disable=unused-argument
         """
         Raises:
@@ -314,14 +324,15 @@ class NodesDbHandler(TortugaDbObjectHandler):
 
         return results
 
-    def __isNodeTransferrable(self, dbNode):
+    def __isNodeTransferrable(self, dbNode: Node) -> bool:
         # Only nodes that are not locked and in Installed state are
         # eligible for transfer.
         return not self.__isNodeLocked(dbNode) and \
             self.__isNodeStateInstalled(dbNode)
 
-    def __getNodeTransferCandidates(self, dbSrcSoftwareProfile,
-                                    dbDstSoftwareProfile, compare_func):
+    def __getNodeTransferCandidates(
+            self, dbSrcSoftwareProfile: SoftwareProfile,
+            dbDstSoftwareProfile: SoftwareProfile, compare_func):
         """
         Helper method for determining which nodes should be considered for
         transfer.
@@ -347,22 +358,26 @@ class NodesDbHandler(TortugaDbObjectHandler):
             if dbNode.softwareprofile != dbDstSoftwareProfile and
             compare_func(dbNode)]
 
-    def __getTransferrableNodes(self, dbSrcSoftwareProfile,
-                                dbDstSoftwareProfile):
+    def __getTransferrableNodes(
+            self, dbSrcSoftwareProfile: SoftwareProfile,
+            dbDstSoftwareProfile: SoftwareProfile) -> List[Node]:
         """Return list of Unlocked nodes"""
         return self.__getNodeTransferCandidates(
             dbSrcSoftwareProfile, dbDstSoftwareProfile,
             self.__isNodeTransferrable)
 
-    def __getSoftLockedNodes(self, dbSrcSoftwareProfile,
-                             dbDstSoftwareProfile):
+    def __getSoftLockedNodes(
+            self, dbSrcSoftwareProfile: SoftwareProfile,
+            dbDstSoftwareProfile: SoftwareProfile) -> List[Node]:
         """Return list of SoftLocked nodes"""
         return self.__getNodeTransferCandidates(
             dbSrcSoftwareProfile, dbDstSoftwareProfile,
             self.__isNodeSoftLocked)
 
-    def transferNodes(self, session, dbSrcSoftwareProfile,
-                      dbDstSoftwareProfile, count, bForce=False): \
+    def transferNodes(self, session: Session,
+                      dbSrcSoftwareProfile: SoftwareProfile,
+                      dbDstSoftwareProfile: SoftwareProfile,
+                      count: int, bForce: bool = False): \
             # pylint: disable=unused-argument
         """
         Raises:
@@ -425,7 +440,7 @@ class NodesDbHandler(TortugaDbObjectHandler):
 
         return self.transferNode(session, dbNodeList, dbDstSoftwareProfile)
 
-    def idleNode(self, session, dbNodes):
+    def idleNode(self, session: Session, dbNodes: List[Node]):
         """
         Raises:
             NodeAlreadyIdle
@@ -575,7 +590,8 @@ class NodesDbHandler(TortugaDbObjectHandler):
 
         return results
 
-    def migrateNode(self, session, nodeName, remainingNodeList, liveMigrate):
+    def migrateNode(self, session: Session, nodeName: str,
+                    remainingNodeList: List[Node], liveMigrate: bool):
         dbNode = self.getNode(session, nodeName)
 
         # Get the ResourceAdapter
@@ -588,8 +604,8 @@ class NodesDbHandler(TortugaDbObjectHandler):
         # Call migrate action extension
         adapter.migrateNode(dbNode, remainingNodeList, liveMigrate)
 
-    def activateNode(self, session, dbNodes,
-                     dbDstSoftwareProfile=None):
+    def activateNode(self, session: Session, dbNodes: List[Node],
+                     dbDstSoftwareProfile: SoftwareProfile = None):
         d = {}
 
         activateNodeResults = {
@@ -722,7 +738,8 @@ class NodesDbHandler(TortugaDbObjectHandler):
 
         return activateNodeResults
 
-    def __processNodeList(self, dbNodes):
+    def __processNodeList(self, dbNodes: List[Node]) \
+            -> Dict[HardwareProfile, Dict[str, list]]:
         """
         Returns dict indexed by hardware profile, each with a list of
         nodes in the hardware profile
@@ -740,8 +757,9 @@ class NodesDbHandler(TortugaDbObjectHandler):
 
         return d
 
-    def startupNode(self, session, nodespec, remainingNodeList=None,
-                    bootMethod='n'): \
+    def startupNode(self, session: Session, nodespec: str,
+                    remainingNodeList: List[Node] = None,
+                    bootMethod: str = 'n') -> NoReturn: \
             # pylint: disable=unused-argument
         nodes = nodespec if isinstance(nodespec, list) else [nodespec]
 
@@ -758,7 +776,8 @@ class NodesDbHandler(TortugaDbObjectHandler):
                 remainingNodeList=remainingNodeList or [],
                 tmpBootMethod=bootMethod)
 
-    def shutdownNode(self, session, nodespec, bSoftShutdown=False): \
+    def shutdownNode(self, session: Session, nodespec: str,
+                     bSoftShutdown: bool = False) -> NoReturn: \
             # pylint: disable=unused-argument
         nodeList = nodespec if isinstance(nodespec, list) else [nodespec]
 
@@ -771,7 +790,8 @@ class NodesDbHandler(TortugaDbObjectHandler):
             # Call shutdown action extension
             adapter.shutdownNode(detailsDict['nodes'], bSoftShutdown)
 
-    def rebootNode(self, session, nodespec, bSoftReset=False) -> NoReturn: \
+    def rebootNode(self, session: Session, nodespec: str,
+                   bSoftReset: bool = False) -> NoReturn: \
             # pylint: disable=unused-argument
         nodeList = nodespec if isinstance(nodespec, list) else [nodespec]
 
@@ -783,7 +803,7 @@ class NodesDbHandler(TortugaDbObjectHandler):
             # Call reboot action extension
             adapter.rebootNode(detailsDict['nodes'], bSoftReset)
 
-    def checkpointNode(self, session, nodeName):
+    def checkpointNode(self, session: Session, nodeName: str) -> NoReturn:
         # Get the Node
         dbNode = self.getNode(session, nodeName)
 
@@ -793,7 +813,8 @@ class NodesDbHandler(TortugaDbObjectHandler):
         # Call checkpoint action extension
         adapter.checkpointNode(dbNode)
 
-    def revertNodeToCheckpoint(self, session, nodeName):
+    def revertNodeToCheckpoint(self, session: Session, nodeName: str) \
+            -> NoReturn:
         dbNode = self.getNode(session, nodeName)
 
         # Get the ResourceAdapter
@@ -802,7 +823,7 @@ class NodesDbHandler(TortugaDbObjectHandler):
         # Call revert to checkpoint action extension
         adapter.revertNodeToCheckpoint(dbNode)
 
-    def __getResourceAdapter(self, hardwareProfile):
+    def __getResourceAdapter(self, hardwareProfile: HardwareProfile):
         """
         Raises:
             OperationFailed
@@ -856,16 +877,19 @@ class NodesDbHandler(TortugaDbObjectHandler):
     #         self.getLogger().error(
     #             '__migrateOrIdleChildren: Exception: %s' % (ex))
 
-    def __getRemainingNodeList(self, dbnode, dbSoftwareProfile):
+    def __getRemainingNodeList(self, dbnode: Node,
+                               dbSoftwareProfile: SoftwareProfile) \
+            -> List[Node]:
         if not dbSoftwareProfile:
             return []
 
         return list(set(dbSoftwareProfile.nodes) - set([dbnode]))
 
-    def getNodesByNodeState(self, session, state):
+    def getNodesByNodeState(self, session: Session, state: str) -> List[Node]:
         return session.query(Node).filter(Node.state == state).all()
 
-    def getNodesByMac(self, session, usedMacList):
+    def getNodesByMac(self, session: Session, usedMacList: List[str]) \
+            -> List[Node]:
         if not usedMacList:
             return []
 
