@@ -163,8 +163,6 @@ def dbm():
             networkdevice=eth1_network_device
         )
 
-        installer_node.hardwareprofile.hardwareprofilenetworks.append(hwpn1)
-
         # create nic on installer
         installer_nic = Nic()
         installer_nic.ip = '10.2.0.1'
@@ -239,9 +237,15 @@ def dbm():
         aws_hwprofile.mappedsoftwareprofiles.append(compute_swprofile)
 
         # create 'localiron' hardware profile
-        localiron_hwprofile = HardwareProfile(name='localiron')
+        localiron_hwprofile = HardwareProfile(name='localiron', nameFormat='compute-#NN')
         localiron_hwprofile.resourceadapter = default_adapter
         localiron_hwprofile.mappedsoftwareprofiles.append(compute_swprofile)
+        localiron_hwprofile.hardwareprofilenetworks.append(hwpn1)
+
+        # create 'nonetwork' hardware profile
+        nonetwork_hwprofile = HardwareProfile(name='nonetwork')
+        nonetwork_hwprofile.resourceadapter = default_adapter
+        nonetwork_hwprofile.mappedsoftwareprofiles.append(compute_swprofile)
 
         eth0_networkdevice = NetworkDevice(name='eth0')
 
