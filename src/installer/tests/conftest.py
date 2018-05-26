@@ -88,8 +88,10 @@ def dbm():
 
     dbmgr.init_database()
 
+    rhel7_os_family_info = osFamilyInfo.OsFamilyInfo('rhel', '7', 'x86_64')
+
     os_info = osInfo.OsInfo('centos', '7.4', 'x86_64')
-    os_info.setOsFamilyInfo(osFamilyInfo.OsFamilyInfo('rhel', '7', 'x86_64'))
+    os_info.setOsFamilyInfo(rhel7_os_family_info)
 
     settings = {
         'language': 'en',
@@ -116,8 +118,14 @@ def dbm():
         os_ = session.query(OperatingSystem).filter(
             OperatingSystem.name == 'centos').one()
 
-        os_family = session.query(OperatingSystemFamily).filter(
+        rhel7_os_family = session.query(OperatingSystemFamily).filter(
             OperatingSystemFamily.name == 'rhel').one()
+
+        # add add'l operating system/family
+        rhel75_os = OperatingSystem(name='rhel', version='7.5', arch='x86_64')
+        rhel75_os.family = rhel7_os_family
+
+        session.add(rhel75_os)
 
         admin = Admin(username='admin',
                       password=pbkdf2_sha256.hash('password'),
@@ -162,13 +170,13 @@ def dbm():
         kit.description = 'Sample base kit'
 
         installer_component = Component(name='installer', version='6.3')
-        installer_component.family = [os_family]
+        installer_component.family = [rhel7_os_family]
         installer_component.kit = kit
 
         core_component = Component(name='core',
                                    version='6.3',
                                    description='Compute component')
-        core_component.family = [os_family]
+        core_component.family = [rhel7_os_family]
         core_component.kit = kit
 
         session.add(kit)
@@ -186,7 +194,7 @@ def dbm():
         # create resource adapter kit
         ra_kit = Kit(name='awsadapter', version='0.0.1', iteration='0')
         ra_component = Component(name='management', version='0.0.1')
-        ra_component.family.append(os_family)
+        ra_component.family.append(rhel7_os_family)
         ra_kit.components.append(ra_component)
 
         installer_node.softwareprofile.components.append(ra_component)
