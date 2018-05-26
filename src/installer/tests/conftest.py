@@ -258,6 +258,7 @@ def dbm():
             compute_node.nics.append(
                 Nic(
                     ip='10.2.0.{}'.format(100 + n),
+                    mac='FF:00:00:00:00:00:{:02x}'.format(100 + n),
                     boot=True,
                     network=network,
                     networkdevice=eth0_networkdevice
