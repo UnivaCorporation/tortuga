@@ -36,10 +36,12 @@ from tortuga.db.models.operatingSystem import OperatingSystem
 from tortuga.db.models.operatingSystemFamily import OperatingSystemFamily
 from tortuga.db.models.resourceAdapter import ResourceAdapter
 from tortuga.db.models.softwareProfile import SoftwareProfile
+from tortuga.db.models.tag import Tag
 from tortuga.deployer.dbUtility import init_global_parameters, primeDb
 from tortuga.node import nodeManager
 from tortuga.objects import osFamilyInfo, osInfo
 from tortuga.objectstore import manager as objectstore_manager
+
 from .mocks.redis import MockRedis
 
 
@@ -111,6 +113,15 @@ def dbm():
         primeDb(session, installer_fqdn, os_info, settings)
 
         init_global_parameters(session, settings)
+
+        # create sample tags
+        all_tags = []
+
+        for idx in range(1, 5 + 1):
+            tag = Tag(name='tag{:d}'.format(idx),
+                      value='value{:d}'.format(idx))
+
+            all_tags.append(tag)
 
         installer_node = session.query(Node).filter(
             Node.name == installer_fqdn).one()
@@ -249,7 +260,43 @@ def dbm():
                 )
             )
 
+            if n in (1, 2):
+                # compute-01 and compute-02 have all tags
+                compute_node.tags.extend(all_tags)
+            elif n in (3, 4):
+                # compute-03 and compute-04 have 'tag1' and 'tag2'
+                compute_node.tags.append(all_tags[0])
+                compute_node.tags.append(all_tags[1])
+            elif n in (5, 6):
+                # compute-05 and compute-06 have 'tag2' and 'tag3'
+                compute_node.tags.append(all_tags[1])
+                compute_node.tags.append(all_tags[2])
+            elif n == 7:
+                # compute-07 has 'tag4'
+                compute_node.tags.append(all_tags[3])
+            elif n == 8:
+                # compute-08 has 'tag5'
+                compute_node.tags.append(all_tags[4])
+
             session.add(compute_node)
+
+        # create arbitrary hardware profiles
+        hwprofile1 = HardwareProfile(name='profile1', tags=[all_tags[0]])
+        hwprofile2 = HardwareProfile(name='profile2', tags=[all_tags[1]])
+
+        session.add(hwprofile1)
+        session.add(hwprofile2)
+
+        # create arbitrary software profiles
+        swprofile1 = SoftwareProfile(name='swprofile1',
+                                     os=os_,
+                                     type='compute',
+                                     tags=[all_tags[0]])
+
+        swprofile2 = SoftwareProfile(name='swprofile2',
+                                     os=os_,
+                                     type='compute',
+                                     tags=[all_tags[1]])
 
         session.commit()
 
