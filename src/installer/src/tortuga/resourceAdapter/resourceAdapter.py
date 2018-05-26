@@ -199,18 +199,6 @@ class ResourceAdapter(UserDataMixin): \
         # By default raise unsupported operation
         raise UnsupportedOperation('Node does not support rebooting')
 
-    def checkpointNode(self, nodeId: int): \
-            # pylint: disable=unused-argument
-        """Checkpoint the given node"""
-        # By default raise unsupported operation
-        raise UnsupportedOperation('Node does not support checkpointing')
-
-    def revertNodeToCheckpoint(self, nodeId: int): \
-            # pylint: disable=unused-argument
-        """Revert the given node to the checkpoint"""
-        # By default raise unsupported operation
-        raise UnsupportedOperation('Node does not support checkpointing')
-
     def migrateNode(self, node: Node, remainingNodeList: List[str],
                     liveMigrate: bool): \
             # pylint: disable=unused-argument

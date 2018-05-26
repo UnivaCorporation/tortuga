@@ -59,12 +59,6 @@ class NodeController(TortugaController):
             'method': ['GET']
         },
         {
-            'name': 'setParentNode',
-            'path': '/v1/nodes/:nodeName/parentNode',
-            'action': 'setParentNode',
-            'method': ['POST'],
-        },
-        {
             'name': 'idleNode',
             'path': '/v1/nodes/:nodeName/idle',
             'action': 'idleNode',
@@ -75,18 +69,6 @@ class NodeController(TortugaController):
             'path': '/v1/nodes/:nodeName/activate',
             'action': 'activateNode',
             'method': ['POST'],
-        },
-        {
-            'name': 'checkpointNode',
-            'path': '/v1/nodes/:nodeName/checkpoint',
-            'action': 'checkpointNode',
-            'method': ['GET'],
-        },
-        {
-            'name': 'revertNodeToCheckpoint',
-            'path': '/v1/nodes/:nodeName/revert',
-            'action': 'revertNodeToCheckpoint',
-            'method': ['GET'],
         },
         {
             'name': 'migrateNode',
@@ -101,18 +83,6 @@ class NodeController(TortugaController):
                     '/boot/:(bootMethod)',
             'action': 'startupNode',
             'method': ['PUT'],
-        },
-        {
-            'name': 'evacuateChildren',
-            'path': '/v1/nodes/:nodeName/evacuate',
-            'action': 'evacuateChildren',
-            'method': ['GET'],
-        },
-        {
-            'name': 'getChildrenList',
-            'path': '/v1/nodes/:nodeName/children',
-            'action': 'getChildrenList',
-            'method': ['GET'],
         },
         {
             'name': 'shutdownNode',
@@ -301,35 +271,6 @@ class NodeController(TortugaController):
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     @authentication_required()
-    def setParentNode(self, nodeName, parentNodeName):
-        """
-        Handle POST to /nodes/:(nodeName)/parentNode
-
-        Required data: parentNodeName
-        """
-
-        response = None
-
-        postdata = cherrypy.request.json
-
-        if 'parentNodeName' not in postdata or \
-                not postdata['parentNodeName']:
-            raise InvalidArgument(
-                'Missing or empty required field: [%s]' % (
-                    'parentNodeName'))
-
-        try:
-            app.node_api.setParentNode(nodeName, parentNodeName)
-        except Exception as ex:
-            self.getLogger().exception('node WS API setParentNode() failed')
-            self.handleException(ex)
-            response = self.errorResponse(str(ex))
-
-        return self.formatResponse(response)
-
-    @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
-    @authentication_required()
     def idleNode(self, nodeName):
         """
         Idle an active node
@@ -366,45 +307,6 @@ class NodeController(TortugaController):
 
         except Exception as ex:
             self.getLogger().exception('node WS API activateNode() failed')
-            self.handleException(ex)
-            response = self.errorResponse(str(ex))
-
-        return self.formatResponse(response)
-
-    @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
-    @authentication_required()
-    def checkpointNode(self, nodeName):
-        """
-        Checkpoint a node
-        """
-
-        response = None
-
-        try:
-            app.node_api.checkpointNode(nodeName)
-        except Exception as ex:
-            self.getLogger().exception('node WS API checkpointNode() failed')
-            self.handleException(ex)
-            response = self.errorResponse(str(ex))
-
-        return self.formatResponse(response)
-
-    @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
-    @authentication_required()
-    def revertNodeToCheckpoint(self, nodeName):
-        """
-        Migrate a node
-        """
-
-        response = None
-
-        try:
-            app.node_api.revertNodeToCheckpoint(nodeName)
-        except Exception as ex:
-            self.getLogger().exception(
-                'node WS API revertNodeToCheckpoint() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -453,40 +355,6 @@ class NodeController(TortugaController):
             response = self.notFoundErrorResponse(str(ex), code)
         except Exception as ex:
             self.getLogger().exception('node WS API startupNode() failed')
-            self.handleException(ex)
-            response = self.errorResponse(str(ex))
-
-        return self.formatResponse(response)
-
-    @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
-    @authentication_required()
-    def evacuateChildren(self, nodeName):
-        response = None
-
-        try:
-            app.node_api.evacuateChildren(nodeName)
-        except Exception as ex:
-            self.getLogger().exception('node WS API evacuateChildren() failed')
-            self.handleException(ex)
-            response = self.errorResponse(str(ex))
-
-        return self.formatResponse(response)
-
-    @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
-    @authentication_required()
-    def getChildrenList(self, nodeName):
-        """
-        Return list of all children nodes
-        """
-
-        try:
-            nodeList = app.node_api.getChildrenList(nodeName)
-
-            response = nodeList.getCleanDict()
-        except Exception as ex:
-            self.getLogger().exception('node WS API getChildrenList() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 

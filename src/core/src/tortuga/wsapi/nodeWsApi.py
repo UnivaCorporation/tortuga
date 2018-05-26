@@ -249,25 +249,6 @@ class NodeWsApi(TortugaWsApi):
         except Exception as ex:
             raise TortugaException(exception=ex)
 
-    def setParentNode(self, nodeName, parentNodeName):
-        """
-        Set parent node of specified node
-        """
-
-        url = 'v1/nodes/%s/parentNode' % (
-            urllib.parse.quote_plus(nodeName))
-
-        try:
-            response, _ = self.sendSessionRequest(
-                url, method='POST',
-                data=json.dumps(dict(parentNodeName=parentNodeName)))
-
-            return response
-        except TortugaException:
-            raise
-        except Exception as ex:
-            raise TortugaException(exception=ex)
-
     def idleNode(self, nodespec):
         """
         idle node
@@ -355,50 +336,6 @@ class NodeWsApi(TortugaWsApi):
 
         try:
             self.sendSessionRequest(url, method='PUT')
-        except TortugaException:
-            raise
-        except Exception as ex:
-            raise TortugaException(exception=ex)
-
-    def evacuateChildren(self, nodeName):
-        """
-        evacuate any children of this node
-        """
-
-        url = 'v1/nodes/%s/evacuate' % (urllib.parse.quote_plus(nodeName))
-
-        try:
-            self.sendSessionRequest(url)
-        except TortugaException:
-            raise
-        except Exception as ex:
-            raise TortugaException(exception=ex)
-
-    def getChildrenList(self, nodeName: str):
-        """
-        return the list of children currently on this node
-        """
-
-        url = 'v1/nodes/%s/children' % (urllib.parse.quote_plus(nodeName))
-
-        try:
-            _, responseDict = self.sendSessionRequest(url)
-
-            nodeList = TortugaObjectList()
-
-            if responseDict:
-                if 'nodes' in responseDict:
-                    cDicts = responseDict.get('nodes')
-                    for cDict in cDicts:
-                        node = tortuga.objects.node.Node.getFromDict(cDict)
-                        nodeList.append(node)
-                else:
-                    node = tortuga.objects.node.Node.getFromDict(
-                        responseDict.get('node'))
-
-                    nodeList.append(node)
-
-            return nodeList
         except TortugaException:
             raise
         except Exception as ex:

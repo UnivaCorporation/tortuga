@@ -283,29 +283,6 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def checkpointNode(self, nodeName: str) -> NoReturn:
-        try:
-            self._nodeManager.checkpointNode(nodeName)
-        except TortugaException:
-            raise
-        except Exception as ex:
-            self.getLogger().exception(
-                'Fatal error checkpointing node [{0}]'.format(nodeName))
-
-            raise TortugaException(exception=ex)
-
-    def revertNodeToCheckpoint(self, nodeName: str) -> NoReturn:
-        try:
-            self._nodeManager.revertNodeToCheckpoint(nodeName)
-        except TortugaException:
-            raise
-        except Exception as ex:
-            self.getLogger().exception(
-                'Fatal error reverting node [{}] to checkpoint'.format(
-                    nodeName))
-
-            raise TortugaException(exception=ex)
-
     def migrateNode(self, nodeName: str, remainingNodeList: List[Node],
                     liveMigrate: bool) -> NoReturn:
         try:
@@ -316,39 +293,6 @@ class NodeApi(TortugaApi):
         except Exception as ex:
             self.getLogger().exception(
                 'Fatal error migrating node [{}]'.format(nodeName))
-
-            raise TortugaException(exception=ex)
-
-    def evacuateChildren(self, nodeName: str) -> NoReturn:
-        try:
-            self._nodeManager.evacuateChildren(nodeName)
-        except TortugaException:
-            raise
-        except Exception as ex:
-            self.getLogger().exception(
-                'Fatal error evacuating child node [{}]'.format(nodeName))
-
-            raise TortugaException(exception=ex)
-
-    def getChildrenList(self, nodeName: str) -> List[Node]:
-        try:
-            return self._nodeManager.getChildrenList(nodeName)
-        except TortugaException:
-            raise
-        except Exception as ex:
-            self.getLogger().exception(
-                'Fatal error retrieving child node list')
-
-            raise TortugaException(exception=ex)
-
-    def setParentNode(self, nodeName: str, parentNodeName: str) -> NoReturn:
-        try:
-            self._nodeManager.setParentNode(nodeName, parentNodeName)
-        except TortugaException:
-            raise
-        except Exception as ex:
-            self.getLogger().exception(
-                'Fatal error setting parent node of [{}]'.format(nodeName))
 
             raise TortugaException(exception=ex)
 
