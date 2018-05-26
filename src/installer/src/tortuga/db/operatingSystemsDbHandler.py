@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Optional, Union
+from typing import Optional
 
 from sqlalchemy import and_
 from sqlalchemy.orm.exc import NoResultFound
@@ -34,11 +34,11 @@ class OperatingSystemsDbHandler(TortugaDbObjectHandler):
     """
 
     def getOsInfo(self, session: Session, name: str,
-                  vers: Optional[Union[str, None]] = None,
-                  arch: Optional[Union[str, None]] = None) -> OperatingSystem: \
+                  vers: Optional[str] = None,
+                  arch: Optional[str] = None) -> OperatingSystem: \
             # pylint: disable=no-self-use
         """
-        Return osInfo for specified name/version/arch
+        Return OperatingSystem for specified name/version/arch
 
         Raises:
             OsNotFound
@@ -108,7 +108,8 @@ class OperatingSystemsDbHandler(TortugaDbObjectHandler):
         return dbOsFamily
 
     def addOsFamilyIfNotFound(self, session: Session,
-                              osFamilyInfo: OsFamilyInfo) -> OperatingSystemFamily:
+                              osFamilyInfo: OsFamilyInfo) \
+            -> OperatingSystemFamily:
         familyName = osFamilyInfo.getName()
         familyVers = osFamilyInfo.getVersion()
         familyArch = osFamilyInfo.getArch()
@@ -158,7 +159,8 @@ class OperatingSystemsDbHandler(TortugaDbObjectHandler):
 
         return dbOsFamily
 
-    def addOsIfNotFound(self, session: Session, osInfo: OsInfo):
+    def addOsIfNotFound(self, session: Session, osInfo: OsInfo) \
+            -> OperatingSystem:
         """
         Insert operating system into the db if it is not found.
         """
