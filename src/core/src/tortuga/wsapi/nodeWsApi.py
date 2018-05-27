@@ -341,33 +341,6 @@ class NodeWsApi(TortugaWsApi):
         except Exception as ex:
             raise TortugaException(exception=ex)
 
-    def checkpointNode(self, nodeName):
-        """
-        checkpoint node
-        """
-
-        url = 'v1/nodes/%s/checkpoint' % (urllib.parse.quote_plus(nodeName))
-
-        try:
-            self.sendSessionRequest(url)
-        except TortugaException:
-            raise
-        except Exception as ex:
-            raise TortugaException(exception=ex)
-
-    def revertNodeToCheckpoint(self, nodeName):
-        """
-        revert node to checkpoint
-        """
-
-        url = 'v1/nodes/%s/revert' % (urllib.parse.quote_plus(nodeName))
-
-        try:
-            self.sendSessionRequest(url)
-        except TortugaException:
-            raise
-        except Exception as ex:
-            raise TortugaException(exception=ex)
 
     def getNodeRequests(self, addHostSession: Optional[Union[str, None]] = None):
         url = 'v1/addhost/requests/'
