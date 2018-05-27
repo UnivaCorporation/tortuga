@@ -1122,7 +1122,7 @@ class NodeManager(TortugaObjectManager): \
 
         return results
 
-    def activateNode(self, nodespec, softwareProfileName):
+    def activateNode(self, nodespec: str, softwareProfileName: str):
         """
         Raises:
             SoftwareProfileNotFound
@@ -1323,7 +1323,8 @@ class NodeManager(TortugaObjectManager): \
                 self.getLogger().exception('%s' % ex)
                 raise
 
-    def shutdownNode(self, nodespec, bSoftShutdown=False) -> NoReturn:
+    def shutdownNode(self, nodespec: str, bSoftShutdown: bool = False) \
+            -> NoReturn:
         """
         Raises:
             NodeNotFound
@@ -1382,7 +1383,9 @@ class NodeManager(TortugaObjectManager): \
 
             session.commit()
 
-    def migrateNode(self, nodeName, remainingNodeList, liveMigrate):
+    def migrateNode(self, nodeName: str,
+                    remainingNodeList: List[NodeModel],
+                    liveMigrate: bool) -> NoReturn:
         """
         Migrate node
         """
@@ -1571,7 +1574,8 @@ class NodeManager(TortugaObjectManager): \
             self, dbSrcSoftwareProfile: SoftwareProfile,
             dbDstSoftwareProfile: SoftwareProfile) -> List[Node]:
         """
-        Return list of Unlocked nodes"""
+        Return list of Unlocked nodes
+        """
 
         return self.__getNodeTransferCandidates(
             dbSrcSoftwareProfile, dbDstSoftwareProfile,
@@ -1581,7 +1585,8 @@ class NodeManager(TortugaObjectManager): \
             self, dbSrcSoftwareProfile: SoftwareProfile,
             dbDstSoftwareProfile: SoftwareProfile) -> List[Node]:
         """
-        Return list of SoftLocked nodes"""
+        Return list of SoftLocked nodes
+        """
 
         return self.__getNodeTransferCandidates(
             dbSrcSoftwareProfile, dbDstSoftwareProfile,
