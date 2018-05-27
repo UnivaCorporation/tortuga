@@ -14,26 +14,16 @@
 
 # pylint: disable=not-callable,no-member,multiple-statements,no-self-use
 
-from typing import Dict, List, NoReturn, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 from sqlalchemy import and_, func, or_
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.session import Session
 
-from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
-from tortuga.db.hardwareProfilesDbHandler import HardwareProfilesDbHandler
-from tortuga.db.nicsDbHandler import NicsDbHandler
 from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
-from tortuga.db.softwareUsesHardwareDbHandler import \
-    SoftwareUsesHardwareDbHandler
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
-from tortuga.events.types import NodeStateChanged
 from tortuga.exceptions.nodeNotFound import NodeNotFound
-from tortuga.exceptions.operationFailed import OperationFailed
-from tortuga.objects.node import Node as TortugaNode
-from tortuga.resourceAdapter import resourceAdapterFactory
 
-from .models.hardwareProfile import HardwareProfile
 from .models.nic import Nic
 from .models.node import Node
 from .models.softwareProfile import SoftwareProfile

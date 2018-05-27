@@ -34,7 +34,13 @@ from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
 from tortuga.events.types import NodeStateChanged
 from tortuga.exceptions.configurationError import ConfigurationError
 from tortuga.exceptions.nodeNotFound import NodeNotFound
+from tortuga.exceptions.nodeSoftwareProfileLocked import \
+    NodeSoftwareProfileLocked
+from tortuga.exceptions.nodeTransferNotValid import NodeTransferNotValid
 from tortuga.exceptions.operationFailed import OperationFailed
+from tortuga.exceptions.profileMappingNotAllowed import \
+    ProfileMappingNotAllowed
+from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
 from tortuga.exceptions.volumeDoesNotExist import VolumeDoesNotExist
 from tortuga.kit.actions import KitActionsManager
@@ -47,12 +53,6 @@ from tortuga.san import san
 from tortuga.softwareprofile.softwareProfileManager import \
     SoftwareProfileManager
 from tortuga.sync.syncApi import SyncApi
-from tortuga.exceptions.tortugaException import TortugaException
-from tortuga.exceptions.nodeTransferNotValid import NodeTransferNotValid
-from tortuga.exceptions.profileMappingNotAllowed import \
-    ProfileMappingNotAllowed
-from tortuga.exceptions.nodeSoftwareProfileLocked import \
-    NodeSoftwareProfileLocked
 
 
 class NodeManager(TortugaObjectManager): \
@@ -443,7 +443,8 @@ class NodeManager(TortugaObjectManager): \
         try:
             nodes = []
 
-            for node in self._nodesDbHandler.expand_nodespec(session, nodespec):
+            for node in \
+                    self._nodesDbHandler.expand_nodespec(session, nodespec):
                 if node.name.split('.', 1)[0] == installer_hostname:
                     self.getLogger().info(
                         'Ignoring request to delete installer node'
@@ -787,8 +788,8 @@ class NodeManager(TortugaObjectManager): \
                 # software profile
                 if not bForce and not self.__isNodeStateInstalled(node):
                     raise NodeTransferNotValid(
-                        "Can't transfer node [%s], because of its state [%s]" % (
-                            node.name, node.state))
+                        'Node [{}] in state [{}] cannot be'
+                        ' transferred'.format(node.name, node.state))
 
                 # Check to see if the node is already using the requested
                 # software profile
@@ -908,7 +909,8 @@ class NodeManager(TortugaObjectManager): \
             else:
                 dbNodeList = dbUnlockedNodeList[:count]
 
-            results = self.transferNode(session, dbNodeList, dbDstSoftwareProfile)
+            results = self.transferNode(
+                session, dbNodeList, dbDstSoftwareProfile)
 
             return self.__transferNodeCommon(
                 session, dbDstSoftwareProfile, results)
@@ -1034,11 +1036,12 @@ class NodeManager(TortugaObjectManager): \
                 for dbNode in nodeDetails['nodes']:
                     event_data = None
                     #
-                    # If the node state is changing, then we need to be prepared
-                    # to fire an event after the data has been persisted.
+                    # If the node state is changing, then we need to be
+                    # prepared to fire an event after the data has been
+                    #  persisted.
                     #
                     if dbNode.state != nodeState:
-                        event_data = {'prevoius_state': dbNode.state}
+                        event_data = {'previous_state': dbNode.state}
 
                     dbNode.state = nodeState
 
@@ -1133,7 +1136,7 @@ class NodeManager(TortugaObjectManager): \
             dbDstSoftwareProfile = \
                 SoftwareProfilesDbHandler().getSoftwareProfile(
                     session, softwareProfileName) \
-                    if softwareProfileName else None
+                if softwareProfileName else None
 
             dbNodes = self._nodesDbHandler.expand_nodespec(session, nodespec)
 
@@ -1186,7 +1189,8 @@ class NodeManager(TortugaObjectManager): \
 
                     dbSoftwareProfile = dbNode.softwareprofile
                 else:
-                    softwareProfileChanged = dbNode.softwareprofile is None or \
+                    softwareProfileChanged = \
+                        dbNode.softwareprofile is None or \
                         dbNode.softwareprofile != dbDstSoftwareProfile
 
                     dbSoftwareProfile = dbNode.softwareprofile \
@@ -1281,12 +1285,14 @@ class NodeManager(TortugaObjectManager): \
         finally:
             DbManager().closeSession()
 
-    def startupNode(self, nodespec: str, remainingNodeList: List[NodeModel] = None,
+    def startupNode(self, nodespec: str,
+                    remainingNodeList: List[NodeModel] = None,
                     bootMethod: str = 'n') -> NoReturn:
         """
         Raises:
             NodeNotFound
         """
+
         with DbManager().session() as session:
             try:
                 nodes = self._nodesDbHandler.expand_nodespec(session, nodespec)
