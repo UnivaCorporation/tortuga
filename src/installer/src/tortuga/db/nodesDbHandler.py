@@ -564,7 +564,7 @@ class NodesDbHandler(TortugaDbObjectHandler):
                 # to fire an event after the data has been persisted.
                 #
                 if dbNode.state != nodeState:
-                    event_data = {'prevoius_state': dbNode.state}
+                    event_data = {'previous_state': dbNode.state}
 
                 dbNode.state = nodeState
 
