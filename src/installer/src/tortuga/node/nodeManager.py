@@ -70,6 +70,7 @@ class NodeManager(TortugaObjectManager): \
         self._san = san.San()
         self._bhm = osUtility.getOsObjectFactory().getOsBootHostManager()
         self._syncApi = SyncApi()
+        self._nodesDbHandler = NodesDbHandler()
 
     def __validateHostName(self, hostname: str, name_format: str) -> NoReturn:
         """
