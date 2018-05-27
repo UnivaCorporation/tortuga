@@ -199,15 +199,6 @@ class ResourceAdapter(UserDataMixin): \
         # By default raise unsupported operation
         raise UnsupportedOperation('Node does not support rebooting')
 
-    def migrateNode(self, node: Node, remainingNodeList: List[str],
-                    liveMigrate: bool): \
-            # pylint: disable=unused-argument
-        """
-        Migrate the given node
-        """
-
-        raise UnsupportedOperation('Node does not support migrating')
-
     def addVolumeToNode(self, node: Node, volume: str, isDirect: bool): \
             # pylint: disable=unused-argument
         """Add a disk to a node"""

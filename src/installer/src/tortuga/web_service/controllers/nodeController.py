@@ -71,13 +71,6 @@ class NodeController(TortugaController):
             'method': ['POST'],
         },
         {
-            'name': 'migrateNode',
-            'path': '/v1/nodes/:nodeName/migrate/:(remainingNodeList)'
-                    '/type/:(liveMigrate)',
-            'action': 'migrateNode',
-            'method': ['GET'],
-        },
-        {
             'name': 'startupNode',
             'path': '/v1/nodes/:nodeName/startup/:(nodeString)'
                     '/boot/:(bootMethod)',
@@ -307,31 +300,6 @@ class NodeController(TortugaController):
 
         except Exception as ex:
             self.getLogger().exception('node WS API activateNode() failed')
-            self.handleException(ex)
-            response = self.errorResponse(str(ex))
-
-        return self.formatResponse(response)
-
-    @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
-    @authentication_required()
-    def migrateNode(self, nodeName: str, remainingNodeString: str,
-                    liveMigrate: str):
-        """
-        Migrate a node
-        """
-
-        response = None
-
-        try:
-            # Make remainingNodeString into a real list
-            remainingNodeList = [
-                node for node in remainingNodeString.split('+')]
-
-            app.node_api.migrateNode(
-                nodeName, remainingNodeList, str2bool(liveMigrate))
-        except Exception as ex:
-            self.getLogger().exception('node WS API migrateNode() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 

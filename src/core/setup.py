@@ -162,7 +162,6 @@ setup(
             'get-software-profile-list=tortuga.scripts.get_software_profile_list:main',
             'get-software-profile-nodes=tortuga.scripts.get_software_profile_nodes:main',
             'idle-node=tortuga.scripts.idle_node:main',
-            'migrate-node=tortuga.scripts.migrate_node:main',
             'reboot-node=tortuga.scripts.reboot_node:main',
             'set-profile-mapping=tortuga.scripts.set_profile_mapping:main',
             'shutdown-node=tortuga.scripts.shutdown_node:main',

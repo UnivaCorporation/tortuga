@@ -1373,45 +1373,16 @@ class NodeManager(TortugaObjectManager): \
                 for dbNode in nodes:
                     self._bhm.setNodeForNetworkBoot(dbNode)
 
-            d = self.__processNodeList(nodes)
-
-            for dbHardwareProfile, detailsDict in d.items():
+            for dbHardwareProfile, detailsDict in \
+                    self.__processNodeList(nodes).items():
+                # iterate over hardware profile/nodes dict to reboot each
+                # node
                 adapter = self.__getResourceAdapter(dbHardwareProfile)
 
                 # Call reboot action extension
                 adapter.rebootNode(detailsDict['nodes'], bSoftReset)
 
             session.commit()
-
-    def migrateNode(self, nodeName: str,
-                    remainingNodeList: List[NodeModel],
-                    liveMigrate: bool) -> NoReturn:
-        """
-        Migrate node
-        """
-
-        with DbManager().session() as session:
-            try:
-                dbNode = self.getNode(session, nodeName)
-
-                # Get the ResourceAdapter
-                adapter = self.__getResourceAdapter(dbNode.hardwareprofile)
-
-                # Try to migrate the Node
-                self.getLogger().debug(
-                    'Attempting to migrate node [%s]' % (dbNode.name))
-
-                # Call migrate action extension
-                adapter.migrateNode(dbNode, remainingNodeList, liveMigrate)
-
-                session.commit()
-            except TortugaException:
-                session.rollback()
-                raise
-            except Exception as ex:
-                session.rollback()
-                self.getLogger().exception('%s' % ex)
-                raise
 
     def addStorageVolume(self, nodeName: str, volume: str,
                          isDirect: Optional[str] = "DEFAULT") -> NoReturn:

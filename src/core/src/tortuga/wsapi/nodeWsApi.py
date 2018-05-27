@@ -369,27 +369,6 @@ class NodeWsApi(TortugaWsApi):
         except Exception as ex:
             raise TortugaException(exception=ex)
 
-    def migrateNode(self, nodeName,
-                    remainingNodeList: Optional[Union[List[str], None]],
-                    liveMigrate: bool):
-        """
-        migrate node
-        """
-
-        # Turn remainingNodeList into something that can be passed in
-        remainingNodeString = str.join('+', remainingNodeList)
-
-        url = 'v1/nodes/%s/migrate/%s/type/%s' % (
-            urllib.parse.quote_plus(nodeName), remainingNodeString,
-            liveMigrate)
-
-        try:
-            self.sendSessionRequest(url)
-        except TortugaException:
-            raise
-        except Exception as ex:
-            raise TortugaException(exception=ex)
-
     def getNodeRequests(self, addHostSession: Optional[Union[str, None]] = None):
         url = 'v1/addhost/requests/'
 

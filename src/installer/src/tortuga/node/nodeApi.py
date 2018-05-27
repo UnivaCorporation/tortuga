@@ -283,19 +283,6 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def migrateNode(self, nodeName: str, remainingNodeList: List[Node],
-                    liveMigrate: bool) -> NoReturn:
-        try:
-            self._nodeManager.migrateNode(
-                nodeName, remainingNodeList, liveMigrate)
-        except TortugaException:
-            raise
-        except Exception as ex:
-            self.getLogger().exception(
-                'Fatal error migrating node [{}]'.format(nodeName))
-
-            raise TortugaException(exception=ex)
-
     def addStorageVolume(self, nodeName: str, volume: str,
                          isDirect: Optional[str] = 'DEFAULT'):
         try:
