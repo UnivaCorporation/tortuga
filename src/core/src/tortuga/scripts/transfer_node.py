@@ -25,19 +25,19 @@ class TransferNodeCli(TortugaCli):
 
     def parseArgs(self, usage=None):
         self.addOption(
-            '--node', dest='nodeName',
+            '--node', dest='nodeName', metavar='NAME',
             help=_('Name of node to transfer'))
         self.addOption(
-            '--count', dest='nodeCount',
+            '--count', '-n', dest='nodeCount', metavar='COUNT',
             help=_('Number of nodes to transfer'), type=int)
         self.addOption(
             '--src-software-profile',
             dest='srcSoftwareProfileName', metavar='NAME',
-            help=_('Source software profile to transfer nodes from'))
+            help=_('Source software profile'))
         self.addOption(
             '--software-profile', dest='softwareProfileName',
             required=True, metavar='NAME',
-            help=_('Destination software profile to transfer node to'))
+            help=_('Destination software profile'))
 
         self.addOption(
             '--force', dest='force', action='store_true', default=False,
