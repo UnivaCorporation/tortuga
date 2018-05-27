@@ -54,6 +54,7 @@ from tortuga.softwareprofile.softwareProfileManager import \
     SoftwareProfileManager
 from tortuga.sync.syncApi import SyncApi
 
+OptionDict = Dict[str, bool]
 
 class NodeManager(TortugaObjectManager): \
         # pylint: disable=too-many-public-methods
@@ -152,7 +153,7 @@ class NodeManager(TortugaObjectManager): \
         # Return the new node
         return node
 
-    def getNode(self, name, optionDict: Dict[str, bool] = None) \
+    def getNode(self, name, optionDict: OptionDict = None) \
             -> Node:
         """
         Get node by name
@@ -166,7 +167,7 @@ class NodeManager(TortugaObjectManager): \
                 name, optionDict=get_default_relations(optionDict))])[0]
 
     def getNodeById(self, nodeId: int,
-                    optionDict: Dict[str, bool] = None) -> Node:
+                    optionDict: OptionDict = None) -> Node:
         """
         Get node by node id
 
@@ -193,7 +194,7 @@ class NodeManager(TortugaObjectManager): \
                 ip, optionDict=get_default_relations(optionDict))])[0]
 
     def getNodeList(self, tags=None,
-                    optionDict: Dict[str, bool] = None) \
+                    optionDict: OptionDict = None) \
             -> List[Node]:
         """
         Return all nodes
@@ -259,7 +260,7 @@ class NodeManager(TortugaObjectManager): \
         session = DbManager().openSession()
 
         try:
-            node = NodesDbHandler().getNode(session, nodeName)
+            node = self._nodesDbHandler.getNode(session, nodeName)
 
             if 'nics' in updateNodeRequest:
                 nic = updateNodeRequest['nics'][0]
@@ -269,7 +270,7 @@ class NodeManager(TortugaObjectManager): \
                     node.nics[0].boot = True
 
             # Call resource adapter
-            # NodesDbHandler().updateNode(session, node, updateNodeRequest)
+            # self._nodesDbHandler.updateNode(session, node, updateNodeRequest)
 
             adapter = self.__getResourceAdapter(node.hardwareprofile)
 
@@ -335,7 +336,7 @@ class NodeManager(TortugaObjectManager): \
         session = DbManager().openSession()
 
         try:
-            dbNode = NodesDbHandler().getNode(session, nodeName)
+            dbNode = self._nodesDbHandler.getNode(session, nodeName)
 
             #
             # Capture previous state and node data in dict form for the
@@ -677,7 +678,7 @@ class NodeManager(TortugaObjectManager): \
     def __scheduleUpdate(self):
         self._syncApi.scheduleClusterUpdate()
 
-    def getInstallerNode(self, optionDict: Dict[str, bool] = None):
+    def getInstallerNode(self, optionDict: OptionDict = None):
         return self._nodeDbApi.getNode(
             self._cm.getInstaller(),
             optionDict=get_default_relations(optionDict))
@@ -928,7 +929,7 @@ class NodeManager(TortugaObjectManager): \
         session = DbManager().openSession()
 
         try:
-            nodes = NodesDbHandler().expand_nodespec(session, nodespec)
+            nodes = self._nodesDbHandler.expand_nodespec(session, nodespec)
 
             if not nodes:
                 raise NodeNotFound(
@@ -1439,7 +1440,7 @@ class NodeManager(TortugaObjectManager): \
         return self._san.getNodeVolumes(self.getNode(nodeName).getName())
 
     def getNodesByNodeState(self, state: str,
-                            optionDict: Dict[str, bool] = None) \
+                            optionDict: OptionDict = None) \
             -> TortugaObjectList:
         """
         Get nodes by state
@@ -1450,7 +1451,7 @@ class NodeManager(TortugaObjectManager): \
                 state, optionDict=get_default_relations(optionDict)))
 
     def getNodesByNameFilter(self, nodespec: str,
-                             optionDict: Dict[str, bool] = None) \
+                             optionDict: OptionDict = None) \
             -> TortugaObjectList:
         """
         Return TortugaObjectList of Node objects matching nodespec
@@ -1461,7 +1462,7 @@ class NodeManager(TortugaObjectManager): \
                 nodespec, optionDict=get_default_relations(optionDict)))
 
     def getNodesByAddHostSession(self, addHostSession: str,
-                                 optionDict: Dict[str, bool] = None) \
+                                 optionDict: OptionDict = None) \
             -> TortugaObjectList:
         """
         Return TortugaObjectList of Node objects matching add host session
@@ -1583,7 +1584,7 @@ class NodeManager(TortugaObjectManager): \
             NodesDbHandler.NODE_STATE_INSTALLED
 
 
-def get_default_relations(relations: Dict[str, bool]):
+def get_default_relations(relations: OptionDict):
     """
     Ensure hardware and software profiles and tags are populated when
     serializing node records.
