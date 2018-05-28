@@ -16,7 +16,7 @@
 
 import socket
 import time
-from typing import Dict, List, NoReturn, Optional
+from typing import Dict, List, NoReturn, Optional, Tuple, Any
 
 from sqlalchemy.orm.session import Session
 
@@ -686,72 +686,88 @@ class NodeManager(TortugaObjectManager): \
     def getProvisioningInfo(self, nodeName):
         return self._nodeDbApi.getProvisioningInfo(nodeName)
 
-    def __transferNodeCommon(self, session, dbDstSoftwareProfile,
-                             results): \
-            # pylint: disable=no-self-use
-        # Aggregate list of transferred nodes based on hardware profile
-        # to call resource adapter minimal number of times.
-
-        hwProfileMap = {}
+    def __group_by_hwprofile(self, results: List[Dict[str, Any]]) \
+            -> Dict[HardwareProfile, List[Dict[str, Any]]]:
+        # group nodes by hardware profile
+        result: Dict[HardwareProfile, List[Dict[str, Any]]] = {}
 
         for transferResultDict in results:
-            dbNode = transferResultDict['node']
-            dbHardwareProfile = dbNode.hardwareprofile
+            hardware_profile = transferResultDict['node'].hardwareprofile
 
-            if dbHardwareProfile not in hwProfileMap:
-                hwProfileMap[dbHardwareProfile] = [transferResultDict]
-            else:
-                hwProfileMap[dbHardwareProfile].append(transferResultDict)
+            if hardware_profile not in result:
+                result[hardware_profile] = []
 
-        session.commit()
+            result[hardware_profile].append(transferResultDict)
 
-        nodeTransferDict = {}
+        return result
+
+    def __process_transfer_requests(
+        self,
+        session: Session,
+        hwProfileMap: Dict[HardwareProfile, List[Dict[str, Any]]],
+        dst_swprofile: SoftwareProfile) \
+            -> Dict[str, Dict[str, List[NodeModel]]]:
+        """
+
+        """
+
+        res: Dict[str, Dict[str, List[NodeModel]]] = {}
 
         # Kill two birds with one stone... do the resource adapter
         # action as well as populate the nodeTransferDict. This saves
         # having to iterate twice on the same result data.
-        for dbHardwareProfile, nodesDict in hwProfileMap.items():
-            adapter = resourceAdapterFactory.get_api(
-                dbHardwareProfile.resourceadapter.name)
+        for hwprofile, nodesDict in hwProfileMap.items():
+            node_tuples: List[Tuple[NodeModel, SoftwareProfile]] = []
 
-            dbNodeTuples = []
-
-            for nodeDict in nodesDict:
-                dbNode = nodeDict['node']
-                dbSrcSoftwareProfile = nodeDict['prev_softwareprofile']
-
-                if dbSrcSoftwareProfile.name not in nodeTransferDict:
-                    nodeTransferDict[dbSrcSoftwareProfile.name] = {
+            for node, src_swprofile in \
+                    [(nodeDict['node'], nodeDict['prev_softwareprofile'])
+                    for nodeDict in nodesDict]:
+                if src_swprofile.name not in res:
+                    res[src_swprofile.name] = {
                         'added': [],
-                        'removed': [dbNode],
+                        'removed': [node],
                     }
                 else:
-                    nodeTransferDict[dbSrcSoftwareProfile.name]['removed'].\
-                        append(dbNode)
+                    res[src_swprofile.name]['removed'].append(node)
 
-                if dbDstSoftwareProfile.name not in nodeTransferDict:
-                    nodeTransferDict[dbDstSoftwareProfile.name] = {
-                        'added': [dbNode],
+                if dst_swprofile.name not in res:
+                    res[dst_swprofile.name] = {
+                        'added': [node],
                         'removed': [],
                     }
                 else:
-                    nodeTransferDict[dbDstSoftwareProfile.name]['added'].\
-                        append(dbNode)
+                    res[dst_swprofile.name]['added'].append(node)
 
                 # The destination software profile is available through
                 # node relationship.
-                dbNodeTuples.append((dbNode, dbSrcSoftwareProfile))
+                node_tuples.append((node, src_swprofile))
 
-            adapter.transferNode(dbNodeTuples, dbDstSoftwareProfile)
+            # get resource adapter for hardware profile
+            adapter = self.__get_resource_adapter(hwprofile)
+
+            # call resource adapter
+            adapter.transferNode(node_tuples, dst_swprofile)
 
             session.commit()
 
+        return res
+
+    def __transferNodeCommon(self, session: Session,
+                             dbDstSoftwareProfile: str,
+                             results: List[Dict[str, Any]]):
+        transfer_dict = self.__process_transfer_requests(
+            session,
+            self.__group_by_hwprofile(results),
+            dbDstSoftwareProfile
+        )
+
         # Now call the 'refresh' action to all participatory components
-        KitActionsManager().refresh(nodeTransferDict)
+        KitActionsManager().refresh(transfer_dict)
 
         return results
 
-    def transferNode(self, nodespec, dstSoftwareProfileName, bForce=False):
+    def transferNode(self, nodespec: str, dstSoftwareProfileName: str,
+                     bForce: bool = False):
         """
         Transfer nodes defined by 'nodespec' to 'dstSoftwareProfile'
 
@@ -761,10 +777,9 @@ class NodeManager(TortugaObjectManager): \
             NodeTransferNotValid
         """
 
-        session = DbManager().openSession()
-
-        try:
-            nodes = self._nodesDbHandler.expand_nodespec(session, nodespec)
+        with DbManager().session() as session:
+            nodes: List[NodeModel] = self._nodesDbHandler.expand_nodespec(
+                session, nodespec)
 
             if not nodes:
                 raise NodeNotFound(
@@ -774,7 +789,7 @@ class NodeManager(TortugaObjectManager): \
                 SoftwareProfilesDbHandler().getSoftwareProfile(
                     session, dstSoftwareProfileName)
 
-            results = []
+            results: List[Dict[str, Any]] = []
 
             for node in nodes:
                 if node.hardwareprofile not in\
@@ -813,7 +828,7 @@ class NodeManager(TortugaObjectManager): \
                         "Node [%s] can't be transferred while locked" % (
                             node.name))
 
-                result = {
+                result: Dict[str, Any] = {
                     'prev_softwareprofile': node.softwareprofile,
                     'node': node,
                 }
@@ -824,8 +839,6 @@ class NodeManager(TortugaObjectManager): \
 
             return self.__transferNodeCommon(
                 session, dbDstSoftwareProfile, results)
-        finally:
-            DbManager().closeSession()
 
     def transferNodes(self, srcSoftwareProfileName: str,
                       dstSoftwareProfileName: str,
@@ -1577,11 +1590,11 @@ class NodeManager(TortugaObjectManager): \
         return dbNode.state
 
     def __isNodeStateDeleted(self, node: Node) -> bool:
-        return self.__getNodeState(node) == NodesDbHandler.NODE_STATE_DELETED
+        return self.__getNodeState(node) == self.NODE_STATE_DELETED
 
     def __isNodeStateInstalled(self, dbNode: Node) -> bool:
         return self.__getNodeState(dbNode) == \
-            NodesDbHandler.NODE_STATE_INSTALLED
+            self.NODE_STATE_INSTALLED
 
 
 def get_default_relations(relations: OptionDict):

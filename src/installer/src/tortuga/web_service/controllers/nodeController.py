@@ -107,6 +107,18 @@ class NodeController(TortugaController):
             'action': 'getNodeByIpRequest',
             'method': ['GET']
         },
+        {
+            'name': 'transferNode',
+            'path': '/v1/transfer-node/:(nodespec)',
+            'action': 'transferNode',
+            'method': ['PUT'],
+        },
+        {
+            'name': 'transferNodes',
+            'path': '/v1/transfer-nodes/',
+            'action': 'transferNodes',
+            'method': ['PUT'],
+        },
     ]
 
     @cherrypy.tools.json_out()
@@ -375,22 +387,56 @@ class NodeController(TortugaController):
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     @authentication_required()
-    def transferNode(self, softwareProfileName, nodeName,
-                     srcSoftwareProfileName, nodeCount):
+    def transferNode(self, nodespec):
+        postdata = cherrypy.request.json
+
         try:
+            # TODO: add request validation here
+
             nodeList = app.node_api.transferNode(
-                softwareProfileName, nodeName, srcSoftwareProfileName,
-                nodeCount)
+                nodespec, postdata['softwareProfileName'],
+                bForce=str2bool(postdata['bForce'])
+                if 'bForce' in postdata else False,
+            )
 
             response = nodeList.getCleanDict()
         except NodeNotFound as ex:
             self.handleException(ex)
             code = self.getTortugaStatusCode(ex)
             response = self.notFoundErrorResponse(str(ex), code)
-        except Exception as ex:
-            self.getLogger().exception('node WS API transferNode() failed')
+        except Exception as ex:  # noqa pylint: disable=broad-except
+            self.getLogger().exception(str(ex))
             self.handleException(ex)
             response = self.errorResponse(str(ex))
+
+        return self.formatResponse(response)
+
+    @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
+    @authentication_required()
+    def transferNodes(self):
+        postdata = cherrypy.request.json
+
+        try:
+            # TODO: add request validation here
+
+            nodeList = app.node_api.transferNodes(
+                postdata['srcSoftwareProfile'],
+                postdata['dstSoftwareProfile'],
+                count=postdata['count'],
+                bForce=postdata['bForce']
+            )
+
+            response = nodeList.getCleanDict()
+        except NodeNotFound as ex:
+            self.handleException(ex)
+            code = self.getTortugaStatusCode(ex)
+            response = self.notFoundErrorResponse(str(ex), code)
+        except Exception as ex:  # noqa pylint: disable=broad-except
+            self.getLogger().exception(str(ex))
+            self.handleException(ex)
+            response = self.errorResponse(str(ex))
+
         return self.formatResponse(response)
 
     @cherrypy.tools.json_out()

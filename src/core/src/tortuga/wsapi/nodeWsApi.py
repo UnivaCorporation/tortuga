@@ -341,7 +341,6 @@ class NodeWsApi(TortugaWsApi):
         except Exception as ex:
             raise TortugaException(exception=ex)
 
-
     def getNodeRequests(self, addHostSession: Optional[Union[str, None]] = None):
         url = 'v1/addhost/requests/'
 
@@ -358,3 +357,50 @@ class NodeWsApi(TortugaWsApi):
             raise
         except Exception as ex:
             raise TortugaException(exception=ex)
+
+    def transferNode(self, nodespec: str, softwareProfileName: str,
+                     bForce: bool = False):
+        """
+        Transfer named node
+        """
+
+        url = 'v1/transfer-node/{}'.format(urllib.parse.quote_plus(nodespec))
+
+        request = {
+            'softwareProfileName': softwareProfileName,
+            'bForce': bForce,
+        }
+
+        try:
+            return self.sendSessionRequest(
+                url, method='PUT', data=json.dumps(request))[1]
+        except Exception as exc:  # noqa pylint: disable=broad-except
+            if not isinstance(exc, TortugaException):
+                raise TortugaException(exception=exc)
+
+            raise
+
+    def transferNodes(self, srcSoftwareProfile: str,
+                      dstSoftwareProfile: str, count: int,
+                      bForce: bool = False):
+        """
+        Transfer node(s) between software profiles
+        """
+
+        url = 'v1/transfer-nodes/'
+
+        request = {
+            'srcSoftwareProfile': srcSoftwareProfile,
+            'dstSoftwareProfile': dstSoftwareProfile,
+            'count': count,
+            'bForce': bForce,
+        }
+
+        try:
+            return self.sendSessionRequest(
+                url, method='PUT', data=json.dumps(request))[1]
+        except Exception as exc:  # noqa pylint: disable=broad-except
+            if not isinstance(exc, TortugaException):
+                raise TortugaException(exception=exc)
+
+            raise
