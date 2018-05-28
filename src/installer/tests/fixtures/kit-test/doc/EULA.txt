@@ -1,0 +1,1 @@
+If your kit has a EULA, put it here. If your kit does not have a EULA, you can safely delete this file.

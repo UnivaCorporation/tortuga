@@ -21,6 +21,7 @@ import urllib.request
 from typing import Any, List
 
 from tortuga.boot.distro import DistributionFactory
+from tortuga.config import VERSION, version_is_compatible
 from tortuga.config.configManager import ConfigManager
 from tortuga.db import componentDbApi
 from tortuga.db.dbManager import DbManager
@@ -145,11 +146,27 @@ class KitManager(TortugaObjectManager, Singleton):
         self.getLogger().debug('Installing kit package: {}'.format(kit_pkg_url))
 
         #
-        # Download/copy and unpack kit archive.
+        # Download/copy kit archive.
         #
         kit_src_path = os.path.basename(kit_pkg_url)
         kit_pkg_path = utils.retrieve(
             kit_src_path, kit_pkg_url, self._kits_root)
+
+        #
+        # Make sure the kit version is compatible
+        #
+        kit_meta = utils.get_metadata_from_archive(kit_pkg_path)
+        requires_core = kit_meta.get('requires_core', VERSION)
+        if not version_is_compatible(requires_core):
+            self.getLogger().error(
+                'The {} kit requires tortuga core >= {}'.format(
+                    kit_meta['name'],requires_core)
+            )
+            return
+
+        #
+        # Unpack the archive
+        #
         kit_spec = utils.unpack_archive(kit_pkg_path, self._kits_root)
 
         #
