@@ -14,7 +14,9 @@
 
 # pylint: disable=no-member
 
-"""Resource adapter configuration management CLI"""
+"""
+Resource adapter configuration management CLI
+"""
 
 import os.path
 import sys
@@ -150,7 +152,8 @@ class AdapterMgmtCLI(TortugaCli):
             '--profile', '-p', metavar='NAME',
             help='Configuration profile name', required=True)
         self.subparser_update = subparsers.add_parser(
-            'update', parents=[common_args, update_args, create_update_common_args])
+            'update',
+            parents=[common_args, update_args, create_update_common_args])
 
         self.subparser_update.add_argument(
             '--delete-setting', '-d', metavar="KEY", type=cfgkey,
@@ -382,7 +385,7 @@ class AdapterMgmtCLI(TortugaCli):
         sys.stdout.write('Processing resource adapter configuration... ')
         sys.stdout.flush()
 
-        cfg.readfp(args.adapter_config)
+        cfg.read_file(args.adapter_config)
 
         sys.stdout.write('done.\n')
         sys.stdout.flush()
