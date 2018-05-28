@@ -16,8 +16,7 @@ import socket
 import unittest
 
 import pytest
-from tortuga.db.models.node import Node
-from tortuga.db.models.tag import Tag
+
 from tortuga.db.nodesDbHandler import NodesDbHandler
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 
@@ -41,6 +40,9 @@ class TestNodesDbHandler(unittest.TestCase):
 
         assert result.nics
 
+    def test_getNodeList(self):
+        assert isinstance(NodesDbHandler().getNodeList(self.session), list)
+
     def test_getNode_failed(self):
         with pytest.raises(NodeNotFound):
             NodesDbHandler().getNode(self.session, 'XXXXXXXX')
@@ -53,165 +55,151 @@ class TestNodesDbHandler(unittest.TestCase):
         assert result.nics
 
     def test_getNodesByTags(self):
-        tags = get_tags()
-        nodes = get_nodes()
-
-        populate(self.session, tags, nodes)
-
         result = NodesDbHandler().getNodesByTags(
-            self.session, [(tags[0].name,)])
+            self.session, [('tag1',)])
 
-        assert result
-
-        assert nodes[0] in result
-        assert nodes[1] in result
-        assert nodes[2] in result
-        assert nodes[3] in result
+        assert match_all_nodes(result)
 
     def test_getNodesByTags_match_multiple(self):
-        tags = get_tags()
-        nodes = get_nodes()
-
-        populate(self.session, tags, nodes)
-
         result = NodesDbHandler().getNodesByTags(
-            self.session, [(tags[0].name,), (tags[1].name,)])
+            self.session, [('tag1',), ('key2',)])
 
-        assert result
-
-        assert nodes[0] in result
-        assert nodes[1] in result
-        assert nodes[2] in result
-        assert nodes[3] in result
+        assert match_all_nodes(result)
 
     def test_getNodesByTags_match_multiple_with_values(self):
-        tags = get_tags()
-        nodes = get_nodes()
-
-        populate(self.session, tags, nodes)
-
         result = NodesDbHandler().getNodesByTags(
-            self.session, [(tags[0].name, tags[0].value),
-                           (tags[1].name, tags[1].value)])
+            self.session, [('tag1', 'value1'),
+                           ('tag2', 'value2')])
 
-        assert result
-
-        assert nodes[0] in result
-        assert nodes[1] in result
-        assert nodes[2] in result
-        assert nodes[3] in result
+        assert match_all_nodes(result)
 
     def test_getNodesByTags_nonexistent(self):
-        tags = get_tags()
-        nodes = get_nodes()
-
-        populate(self.session, tags, nodes)
-
         result = NodesDbHandler().getNodesByTags(
             self.session, [('invalid_tag',)])
 
         assert not result
 
     def test_getNodesByTags_value_match(self):
-        tags = get_tags()
-        nodes = get_nodes()
-
-        populate(self.session, tags, nodes)
-
         result = NodesDbHandler().getNodesByTags(
-            self.session, [(tags[0].name, tags[0].value)])
+            self.session, [('tag1', 'value1')])
 
-        assert result
-
-        assert nodes[0] in result
-        assert nodes[1] in result
-        assert nodes[2] in result
-        assert nodes[3] in result
+        assert match_all_nodes(result)
 
     def test_getNodesByTags_value_mismatch(self):
-        tags = get_tags()
-        nodes = get_nodes()
-
-        populate(self.session, tags, nodes)
-
         result = NodesDbHandler().getNodesByTags(
-            self.session, [(tags[0].name, 'invalid_value',)])
+            self.session, [('tag1', 'invalid_value',)])
 
         assert not result
 
     def test_getNodesByTags_one_match_one_nomatch(self):
-        tags = get_tags()
-        nodes = get_nodes()
-
-        populate(self.session, tags, nodes)
-
         result = NodesDbHandler().getNodesByTags(
-            self.session, [(tags[0].name, tags[0].value),
-                           ('nomatch',)])
+            self.session, [('tag1', 'value1'), ('nomatch',)])
 
-        assert result
+        assert match_all_nodes(result)
 
-        assert len(result) == 4
+    def test_getNodesByTag_non_contiguous(self):
+        result = NodesDbHandler().getNodesByTags(
+            self.session, [('tag5',)])
 
-        # Match expected tags
-        assert nodes[0] in result
-        assert nodes[1] in result
-        assert nodes[2] in result
-        assert nodes[3] in result
+        assert not set(['compute-01.private',
+                        'compute-02.private',
+                        'compute-08.private']) - \
+            set([node.name for node in result])
 
+    def test_getNodesByAddHostSession(self):
+        nodes = NodesDbHandler().getNodesByAddHostSession(
+            self.session, '1234')
 
+        assert nodes and isinstance(nodes, list)
 
-def get_tags():
-    tag1 = Tag(name='tag1', value='value1')
-    tag2 = Tag(name='tag2', value='value2')
-    tag3 = Tag(name='tag3', value='value3')
-    tag4 = Tag(name='tag4', value='value4')
-    tag5 = Tag(name='tag5', value='value5')
+    def test_getNodesByAddHostSession_failed(self):
+        result = NodesDbHandler().getNodesByAddHostSession(
+            self.session, 'xxxxxx')
 
-    return [tag1, tag2, tag3, tag4, tag5]
-
-
-def get_nodes():
-    n1 = Node(name='compute-01')
-    n2 = Node(name='compute-02')
-    n3 = Node(name='compute-03')
-    n4 = Node(name='compute-04')
-    n5 = Node(name='compute-05')
-    n6 = Node(name='compute-06')
-    n7 = Node(name='compute-07')
-    n8 = Node(name='compute-08')
-
-    return [n1, n2, n3, n4, n5, n6, n7, n8]
+        assert not result
 
 
-def populate(session, tags, nodes):
-    # 'compute-01' has all tags
-    nodes[0].tags.extend(tags)
+@pytest.mark.parametrize('state,swprofile', [
+    ('Installed', 'compute',),
+    pytest.param('Provisioned', 'compute',
+                 marks=pytest.mark.xfail(raises=NodeNotFound)),
+    pytest.param('Installed', 'blah',
+                 marks=pytest.mark.xfail(raises=NodeNotFound)),
+])
+def test_getNodeListByNodeStateAndSoftwareProfileName(dbm, state, swprofile):
+    with dbm.session() as session:
+        result = NodesDbHandler().getNodeListByNodeStateAndSoftwareProfileName(
+            session, state, swprofile,
+        )
 
-    # 'compute-02' has all tags
-    nodes[1].tags.extend(tags)
+        if not result:
+            raise NodeNotFound(
+                'No nodes in software profile [{}] in state [{}]'.format(
+                    state, swprofile))
 
-    # 'compute-03' has 'tag1' and 'tag2'
-    nodes[2].tags.extend([tags[0], tags[1]])
+    assert result
 
-    # 'compute-04' has 'tag1' and 'tag2'
-    nodes[3].tags.extend([tags[0], tags[1]])
 
-    # 'compute-05' has 'tag2' and 'tag3'
-    nodes[4].tags.extend([tags[1], tags[2]])
+@pytest.mark.parametrize('state', [
+    'Installed',
+    pytest.param('Provisioned',
+                 marks=pytest.mark.xfail(raises=NodeNotFound)),
+    pytest.param('Installed',
+                 marks=pytest.mark.xfail(raises=NodeNotFound)),
+])
+def test_getNodesByNodeState(dbm, state):
+    with dbm.session() as session:
+        result = NodesDbHandler().getNodesByNodeState(
+            session, state
+        )
 
-    # 'compute-06' has 'tag2' and 'tag3'
-    nodes[5].tags.extend([tags[1], tags[2]])
+        if not result:
+            raise NodeNotFound(
+                'No nodes in state [{}]'.format(state))
 
-    # 'compute-07' has 'tag4'
-    nodes[6].tags.extend([tags[3]])
+    assert result
 
-    # 'compute-08' has 'tag5'
-    nodes[7].tags.extend([tags[4]])
 
-    session.add_all(tags)
+@pytest.mark.parametrize('node_id', [
+    1,
+    pytest.param(123, marks=pytest.mark.xfail(raises=NodeNotFound)),
+    pytest.param('xxxx', marks=pytest.mark.xfail(raises=NodeNotFound)),
+])
+def test_getNodeById(dbm, node_id):
+    with dbm.session() as session:
+        NodesDbHandler().getNodeById(session, node_id)
 
-    session.add_all(nodes)
+
+@pytest.mark.parametrize('nodespec', [
+    ['c%', 'c%'],
+    'c%',
+    'compute%',
+    'compute%.private',
+    pytest.param('not%', marks=pytest.mark.xfail(raises=NodeNotFound)),
+    '%.private',
+    '%%e',
+    '%',
+    'compute-01.private',
+    ['compute-01', 'compute-02'],
+    ['compute-01.private', 'compute-02.private', 'compute-1%.private'],
+    pytest.param(['not', 'a', 'match'],
+                 marks=pytest.mark.xfail(raises=NodeNotFound)),
+])
+def test_getNodesByNameFilter(dbm, nodespec):
+    with dbm.session() as session:
+        result = NodesDbHandler().getNodesByNameFilter(session, nodespec)
+        if not result:
+            raise NodeNotFound(
+                'No matching nodes: nodespec=[{}]'.format(nodespec))
+
+
+def match_all_nodes(result):
+    # Match expected tags
+    return not set(['compute-01.private',
+                    'compute-02.private',
+                    'compute-03.private',
+                    'compute-04.private']) - \
+        set([node.name for node in result])
 
 
 if __name__ == '__main__':

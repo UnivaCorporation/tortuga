@@ -249,25 +249,6 @@ class NodeWsApi(TortugaWsApi):
         except Exception as ex:
             raise TortugaException(exception=ex)
 
-    def setParentNode(self, nodeName, parentNodeName):
-        """
-        Set parent node of specified node
-        """
-
-        url = 'v1/nodes/%s/parentNode' % (
-            urllib.parse.quote_plus(nodeName))
-
-        try:
-            response, _ = self.sendSessionRequest(
-                url, method='POST',
-                data=json.dumps(dict(parentNodeName=parentNodeName)))
-
-            return response
-        except TortugaException:
-            raise
-        except Exception as ex:
-            raise TortugaException(exception=ex)
-
     def idleNode(self, nodespec):
         """
         idle node
@@ -360,99 +341,6 @@ class NodeWsApi(TortugaWsApi):
         except Exception as ex:
             raise TortugaException(exception=ex)
 
-    def evacuateChildren(self, nodeName):
-        """
-        evacuate any children of this node
-        """
-
-        url = 'v1/nodes/%s/evacuate' % (urllib.parse.quote_plus(nodeName))
-
-        try:
-            self.sendSessionRequest(url)
-        except TortugaException:
-            raise
-        except Exception as ex:
-            raise TortugaException(exception=ex)
-
-    def getChildrenList(self, nodeName: str):
-        """
-        return the list of children currently on this node
-        """
-
-        url = 'v1/nodes/%s/children' % (urllib.parse.quote_plus(nodeName))
-
-        try:
-            _, responseDict = self.sendSessionRequest(url)
-
-            nodeList = TortugaObjectList()
-
-            if responseDict:
-                if 'nodes' in responseDict:
-                    cDicts = responseDict.get('nodes')
-                    for cDict in cDicts:
-                        node = tortuga.objects.node.Node.getFromDict(cDict)
-                        nodeList.append(node)
-                else:
-                    node = tortuga.objects.node.Node.getFromDict(
-                        responseDict.get('node'))
-
-                    nodeList.append(node)
-
-            return nodeList
-        except TortugaException:
-            raise
-        except Exception as ex:
-            raise TortugaException(exception=ex)
-
-    def checkpointNode(self, nodeName):
-        """
-        checkpoint node
-        """
-
-        url = 'v1/nodes/%s/checkpoint' % (urllib.parse.quote_plus(nodeName))
-
-        try:
-            self.sendSessionRequest(url)
-        except TortugaException:
-            raise
-        except Exception as ex:
-            raise TortugaException(exception=ex)
-
-    def revertNodeToCheckpoint(self, nodeName):
-        """
-        revert node to checkpoint
-        """
-
-        url = 'v1/nodes/%s/revert' % (urllib.parse.quote_plus(nodeName))
-
-        try:
-            self.sendSessionRequest(url)
-        except TortugaException:
-            raise
-        except Exception as ex:
-            raise TortugaException(exception=ex)
-
-    def migrateNode(self, nodeName,
-                    remainingNodeList: Optional[Union[List[str], None]],
-                    liveMigrate: bool):
-        """
-        migrate node
-        """
-
-        # Turn remainingNodeList into something that can be passed in
-        remainingNodeString = str.join('+', remainingNodeList)
-
-        url = 'v1/nodes/%s/migrate/%s/type/%s' % (
-            urllib.parse.quote_plus(nodeName), remainingNodeString,
-            liveMigrate)
-
-        try:
-            self.sendSessionRequest(url)
-        except TortugaException:
-            raise
-        except Exception as ex:
-            raise TortugaException(exception=ex)
-
     def getNodeRequests(self, addHostSession: Optional[Union[str, None]] = None):
         url = 'v1/addhost/requests/'
 
@@ -469,3 +357,50 @@ class NodeWsApi(TortugaWsApi):
             raise
         except Exception as ex:
             raise TortugaException(exception=ex)
+
+    def transferNode(self, nodespec: str, softwareProfileName: str,
+                     bForce: bool = False):
+        """
+        Transfer named node
+        """
+
+        url = 'v1/transfer-node/{}'.format(urllib.parse.quote_plus(nodespec))
+
+        request = {
+            'softwareProfileName': softwareProfileName,
+            'bForce': bForce,
+        }
+
+        try:
+            return self.sendSessionRequest(
+                url, method='PUT', data=json.dumps(request))[1]
+        except Exception as exc:  # noqa pylint: disable=broad-except
+            if not isinstance(exc, TortugaException):
+                raise TortugaException(exception=exc)
+
+            raise
+
+    def transferNodes(self, srcSoftwareProfile: str,
+                      dstSoftwareProfile: str, count: int,
+                      bForce: bool = False):
+        """
+        Transfer node(s) between software profiles
+        """
+
+        url = 'v1/transfer-nodes/'
+
+        request = {
+            'srcSoftwareProfile': srcSoftwareProfile,
+            'dstSoftwareProfile': dstSoftwareProfile,
+            'count': count,
+            'bForce': bForce,
+        }
+
+        try:
+            return self.sendSessionRequest(
+                url, method='PUT', data=json.dumps(request))[1]
+        except Exception as exc:  # noqa pylint: disable=broad-except
+            if not isinstance(exc, TortugaException):
+                raise TortugaException(exception=exc)
+
+            raise

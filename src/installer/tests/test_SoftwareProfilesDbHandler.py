@@ -13,33 +13,22 @@
 # limitations under the License.
 
 import unittest
+
 import pytest
-from tortuga.db.models.softwareProfile import SoftwareProfile
-from tortuga.db.softwareProfilesDbHandler \
-    import SoftwareProfilesDbHandler
+
 from tortuga.db.models.operatingSystem import OperatingSystem
-from tortuga.db.models.tag import Tag
+from tortuga.db.models.softwareProfile import SoftwareProfile
+from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
 
 
 @pytest.mark.usefixtures('dbm_class')
 class TestSoftwareProfilesDbHandler(unittest.TestCase):
     def setUp(self):
-        super(TestSoftwareProfilesDbHandler, self).setUp()
-
         self.session = self.dbm.openSession()
-
-        self.softwareprofiles = get_software_profiles()
-        self.tags = get_tags()
-
-        # 'profile1' has 'tag1'
-        # 'profile2' has 'tag2'
-        populate(self.session, self.softwareprofiles, self.tags)
 
     def tearDown(self):
         self.dbm.closeSession()
         self.session = None
-
-        super(TestSoftwareProfilesDbHandler, self).tearDown()
 
     def test_getSoftwareProfileList(self):
         result = SoftwareProfilesDbHandler().\
@@ -50,13 +39,11 @@ class TestSoftwareProfilesDbHandler(unittest.TestCase):
     def test_getSoftwareProfileList_tags(self):
         # 'tag1' returns software profile 'profile1' only
         result = SoftwareProfilesDbHandler().getSoftwareProfileList(
-            self.session, tags=[(self.tags[0].name,)])
+            self.session, tags=[('tag1',)])
 
-        assert result
-
-        assert len(result) == 1
-
-        assert self.tags[0] in result[0].tags
+        assert result and \
+            len(result) == 1 and \
+            result[0].name == 'swprofile1'
 
     def test_no_matching_tags(self):
         # Ensure invalid tag returns no result
@@ -68,54 +55,18 @@ class TestSoftwareProfilesDbHandler(unittest.TestCase):
     def test_getSoftwareProfileList_tag2(self):
         # 'tag2' returns software profile 'profile2' only
         result = SoftwareProfilesDbHandler().getSoftwareProfileList(
-            self.session, tags=[(self.tags[1].name,)])
+            self.session, tags=[('tag2',)])
 
-        assert result
-
-        assert len(result) == 1
-
-        assert self.tags[1] in result[0].tags
+        assert result and \
+            len(result) == 1 and \
+            'tag2' in [tag.name for tag in result[0].tags]
 
     def test_getSoftwareProfileList_tag1_and_tag2(self):
         # 'tag1' and 'tag2' returns both profiles
         result = SoftwareProfilesDbHandler().getSoftwareProfileList(
-            self.session, tags=[(self.tags[0].name,),
-                                (self.tags[1].name,)])
+            self.session, tags=[('tag1',),
+                                ('tag2',)])
 
-        assert result
-
-        assert len(result) == 2
-
-        assert self.softwareprofiles[0] in result
-        assert self.softwareprofiles[1] in result
-
-
-def get_tags():
-    tag1 = Tag('tag1', 'value1')
-    tag2 = Tag('tag2', 'value2')
-
-    return [tag1, tag2]
-
-
-def get_software_profiles():
-    osInfo = OperatingSystem(name='centos', version='7', arch='x86_64')
-
-    softwareprofile1 = SoftwareProfile(name='profile1')
-    softwareprofile1.os = osInfo
-    softwareprofile1.type = 'compute'
-    softwareprofile2 = SoftwareProfile(name='profile2')
-    softwareprofile2.os = osInfo
-    softwareprofile2.type = 'compute'
-
-    return [softwareprofile1, softwareprofile2]
-
-
-def populate(session, softwareprofiles=None, tags=None):
-    if softwareprofiles:
-        session.add_all(softwareprofiles)
-
-    if tags:
-        session.add_all(tags)
-
-        softwareprofiles[0].tags.append(tags[0])
-        softwareprofiles[1].tags.append(tags[1])
+        assert result and \
+            len(result) == 2 and \
+            not set(['swprofile1', 'swprofile2']) - set([swp.name for swp in result])

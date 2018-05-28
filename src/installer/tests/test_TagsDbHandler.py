@@ -13,34 +13,20 @@
 # limitations under the License.
 
 import unittest
+
 import pytest
-from tortuga.db.models.tag import Tag
+
 from tortuga.db.tagsDbHandler import TagsDbHandler
 
 
 @pytest.mark.usefixtures('dbm_class')
 class TestTagsDbHandler(unittest.TestCase):
     def setUp(self):
-        super(TestTagsDbHandler, self).setUp()
-
         self.session = self.dbm.openSession()
-
-        self._tags = []
-        self._populate()
 
     def tearDown(self):
         self.dbm.closeSession()
         self.session = None
-
-        super(TestTagsDbHandler, self).tearDown()
-
-    def _populate(self):
-        self._tags = [
-            Tag('tag1', 'value1'),
-            Tag('tag2', 'value2'),
-        ]
-
-        self.session.add_all(self._tags)
 
     def test_get_tag(self):
         result = TagsDbHandler().get_tag(self.session, 'tag1')
@@ -52,13 +38,8 @@ class TestTagsDbHandler(unittest.TestCase):
     def test_get_tags(self):
         result = TagsDbHandler().get_tags(self.session)
 
-        assert result
-
-        assert len(result) == 2
-
-        assert self._tags[0] in result
-
-        assert self._tags[1] in result
+        assert not set(['tag1', 'tag2', 'tag3', 'tag4', 'tag5']) - \
+            set([tag.name for tag in result])
 
 
 if __name__ == '__main__':

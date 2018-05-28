@@ -51,7 +51,7 @@ class AdminManager(TortugaObjectManager):
         AuthManager().reloadPrincipals()
 
     def updateAdmin(self, adminObject, isCrypted):
-        if adminObject.get_password() is not None:
+        if adminObject.getPassword() is not None:
             # Only consider updating the password if the field is defined
             if not isCrypted:
                 adminObject.setPassword(
