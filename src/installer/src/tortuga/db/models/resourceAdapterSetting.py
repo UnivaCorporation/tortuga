@@ -35,6 +35,6 @@ class ResourceAdapterSetting(ModelBase):
         "ResourceAdapterConfig", back_populates='settings')
 
     def __repr__(self):
-        return ('<ResourceAdapterSetting(resource_adapter_config=[{}}:'
+        return ('<ResourceAdapterSetting(resource_adapter_config=[{}]:'
                 ' {}={})>'.format(
                     self.resource_adapter_config.name, self.key, self.value))

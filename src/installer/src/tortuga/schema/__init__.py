@@ -43,6 +43,10 @@ from tortuga.db.models.tag import Tag as TagModel
 from tortuga.db.models.admin import Admin as AdminModel
 from tortuga.db.models.resourceAdapterSetting import \
     ResourceAdapterSetting as ResourceAdapterSettingModel
+from tortuga.db.models.instanceMapping import \
+    InstanceMapping as InstanceMappingModel
+from tortuga.db.models.instanceMetadata import \
+    InstanceMetadata as InstanceMetadataModel
 
 
 class AdminSchema(ModelSchema):
@@ -140,6 +144,17 @@ class ResourceAdapterSchema(ModelSchema):
         model = ResourceAdapterModel
 
 
+class InstanceMetadataSchema(ModelSchema):
+    class Meta:
+        model = InstanceMetadataModel
+
+class InstanceMappingSchema(ModelSchema):
+    instance_metadata = fields.Nested('InstanceMetadataSchema', many=True)
+    resource_adapter_configuration = fields.Nested('ResourceAdapterConfig')
+
+    class Meta:
+        model = InstanceMappingModel
+
 class NodeSchema(ModelSchema):
     softwareprofile = fields.Nested('SoftwareProfileSchema',
                                     only=('id', 'name', 'metadata'))
@@ -157,6 +172,8 @@ class NodeSchema(ModelSchema):
 
     tags = fields.Nested('TagSchema',
                          only=('id', 'name', 'value'), many=True)
+
+    instance = fields.Nested('InstanceMappingSchema')
 
     class Meta:
         model = NodeModel
