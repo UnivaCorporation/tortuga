@@ -102,36 +102,6 @@ class Node(TortugaObject): \
     def getLockedState(self):
         return self.get('lockedState')
 
-    def setParentNodeId(self, val):
-        self['parentNodeId'] = val
-
-    def getParentNodeId(self):
-        return self.get('parentNodeId')
-
-    def setParentNode(self, val):
-        self['parentNode'] = val
-
-    def getParentNode(self):
-        return self.get('parentNode')
-
-    def setChildNodes(self, val):
-        self['childNodes'] = val
-
-    def getChildNodes(self):
-        return self.get('childNodes')
-
-    def setMaxChildUnits(self, val):
-        self['maxChildUnits'] = val
-
-    def getMaxChildUnits(self):
-        return self.get('maxChildUnits')
-
-    def setMyUnits(self, val):
-        self['myUnits'] = val
-
-    def getMyUnits(self):
-        return self.get('myUnits')
-
     def setIsIdle(self, val):
         self['isIdle'] = val
 
@@ -193,8 +163,7 @@ class Node(TortugaObject): \
         return [
             'id', 'name', 'state', 'bootFrom', 'lastUpdate',
             'rack', 'rank', 'hardwareProfileId', 'softwareProfileId',
-            'lockedState', 'parentNodeId', 'maxChildUnits',
-            'myUnits', 'isIdle', 'destSPId', 'addHostSession',
+            'lockedState', 'isIdle', 'destSPId', 'addHostSession',
             'resource_adapter', 'vcpus',
         ]
 
@@ -221,16 +190,6 @@ class Node(TortugaObject): \
             node.setSoftwareProfile(
                 tortuga.objects.softwareProfile.SoftwareProfile.
                 getFromDict(softwareProfileDict))
-
-        parentNodeDict = _dict.get('parentnode')
-
-        if parentNodeDict:
-            node.setParentNode(Node.getListFromDict(parentNodeDict))
-
-        childNodes = _dict.get('children')
-
-        if childNodes:
-            node.setChildNodes(Node.getListFromDict(childNodes))
 
         return node
 
@@ -263,20 +222,6 @@ class Node(TortugaObject): \
                 node.setSoftwareProfile(
                     tortuga.objects.softwareProfile.SoftwareProfile.
                     getFromDbDict(softwareProfileDict.__dict__))
-
-        # parentnode (relation)
-        parentNodeDict = _dict.get('parentnode')
-
-        if parentNodeDict:
-            node.setParentNode(
-                Node.getFromDbDict(parentNodeDict.__dict__))
-
-        # children (relation)
-        childNodes = _dict.get('children')
-
-        if childNodes:
-            node.setChildNodes(
-                Node.getListFromDbDict(childNodes.__dict__))
 
         tags = dict()
 

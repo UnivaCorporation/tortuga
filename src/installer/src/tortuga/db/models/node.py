@@ -34,12 +34,9 @@ class Node(ModelBase):
     hardwareProfileId = Column(Integer, ForeignKey('hardwareprofiles.id'))
     softwareProfileId = Column(Integer, ForeignKey('softwareprofiles.id'))
     lockedState = Column(String(20), nullable=False, default='Unlocked')
-    parentNodeId = Column(Integer, ForeignKey('nodes.id'))
     isIdle = Column(Boolean, nullable=False, default=True)
     addHostSession = Column(String(36))
 
-    nodes_parentNodeId = index_property(
-        'parentNodeId', 'Nodes_parentNodeId')
     nodes_softwareProfileId = index_property(
         'softwareProfilesId', 'Nodes_softwareProfileId')
     nodes_hardwareProfileId = index_property(
@@ -49,10 +46,6 @@ class Node(ModelBase):
 
     nics = relationship('Nic', backref='node', lazy=False,
                         cascade='all, delete-orphan')
-
-    children = relationship('Node',
-                            backref=backref('parentnode',
-                                            remote_side=[id]))
 
     tags = relationship(
         'Tag',

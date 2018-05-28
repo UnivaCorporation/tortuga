@@ -13,16 +13,19 @@
 # limitations under the License.
 
 import pytest
-from tortuga.db.nodesDbHandler import NodesDbHandler
-from tortuga.exceptions.nodeNotFound import NodeNotFound
+
+from tortuga.db.operatingSystemsDbHandler import OperatingSystemsDbHandler
+from tortuga.exceptions.osNotFound import OsNotFound
 
 
-def test_getNodeList(dbm):
+def test_getOsInfo(dbm):
     with dbm.session() as session:
-        assert isinstance(NodesDbHandler().getNodeList(session), list)
+        result = OperatingSystemsDbHandler().getOsInfo(session, 'rhel')
+
+    assert result.name == 'rhel'
 
 
-def test_getNode(dbm):
+def test_getOsInfo_failed(dbm):
     with dbm.session() as session:
-        with pytest.raises(NodeNotFound):
-            NodesDbHandler().getNode(session, 'anynode')
+        with pytest.raises(OsNotFound):
+            OperatingSystemsDbHandler().getOsInfo(session, 'ubuntu')

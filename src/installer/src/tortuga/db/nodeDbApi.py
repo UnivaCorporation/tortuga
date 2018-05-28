@@ -15,7 +15,7 @@
 # pylint: disable=no-member
 
 import socket
-from typing import Dict, List, NoReturn, Optional
+from typing import Dict, List, Optional
 
 from sqlalchemy.orm.session import Session
 
@@ -97,7 +97,7 @@ class NodeDbApi(TortugaDbApi):
         with DbManager().session() as session:
             try:
                 return self.__convert_nodes_to_TortugaObjectList(
-                    self.__expand_nodespec(session, nodespec),
+                    self._nodesDbHandler.expand_nodespec(session, nodespec),
                     optionDict=optionDict)
             except TortugaException:
                 raise
@@ -247,204 +247,6 @@ class NodeDbApi(TortugaDbApi):
             except TortugaException:
                 raise
             except Exception as ex:
-                self.getLogger().exception('%s' % ex)
-                raise
-
-    def startupNode(self, nodespec: str,
-                    remainingNodeList: Optional[List[str]] = None,
-                    bootMethod: Optional[str] = 'n') -> NoReturn:
-        """
-        Start Node
-        """
-
-        with DbManager().session() as session:
-            try:
-                dbNodes = self.__expand_nodespec(session, nodespec)
-
-                if not dbNodes:
-                    raise NodeNotFound(
-                        'No matching nodes for nodespec [%s]' % (nodespec))
-
-                self._nodesDbHandler.startupNode(
-                    session, dbNodes, remainingNodeList=remainingNodeList,
-                    bootMethod=bootMethod)
-
-                session.commit()
-            except TortugaException:
-                session.rollback()
-                raise
-            except Exception as ex:
-                session.rollback()
-                self.getLogger().exception('%s' % ex)
-                raise
-
-    def shutdownNode(self, nodespec: str,
-                     bSoftShutdown: Optional[bool] = False) -> NoReturn:
-        """
-        Shutdown Node
-
-        Raises:
-            NodeNotFound
-        """
-
-        with DbManager().session() as session:
-            try:
-                dbNodes = self.__expand_nodespec(session, nodespec)
-
-                if not dbNodes:
-                    raise NodeNotFound(
-                        'No matching nodes for nodespec [%s]' % (nodespec))
-
-                self._nodesDbHandler.shutdownNode(
-                    session, dbNodes, bSoftShutdown)
-
-                session.commit()
-            except TortugaException:
-                session.rollback()
-                raise
-            except Exception as ex:
-                session.rollback()
-                self.getLogger().exception('%s' % ex)
-                raise
-
-    def __expand_nodespec(self, session: Session, nodespec: str) \
-            -> List[NodeModel]:
-        # Expand wildcards in nodespec. Each token in the nodespec can
-        # be wildcard that expands into one or more nodes.
-
-        filter_spec = []
-
-        for nodespec_token in nodespec.split(','):
-            # Convert shell-style wildcards into SQL wildcards
-            if '*' in nodespec_token or '?' in nodespec_token:
-                filter_spec.append(
-                    nodespec_token.replace('*', '%').replace('?', '_'))
-
-                continue
-
-            # Add nodespec "AS IS"
-            filter_spec.append(nodespec_token)
-
-        return self._nodesDbHandler.getNodesByNameFilter(session, filter_spec)
-
-    def evacuateChildren(self, nodeName: str) -> NoReturn:
-        """
-        Evacuate Children of node
-        """
-
-        with DbManager().session() as session:
-            try:
-                dbNode = self._nodesDbHandler.getNode(session, nodeName)
-
-                self._nodesDbHandler.evacuateChildren(session, dbNode)
-
-                session.commit()
-            except TortugaException:
-                session.rollback()
-                raise
-            except Exception as ex:
-                session.rollback()
-                self.getLogger().exception('%s' % ex)
-                raise
-
-    def getChildrenList(self, nodeName: str,
-                        optionDict: OptionsDict = None) -> TortugaObjectList:
-        """
-        Get children of node
-
-        Raises:
-            NodeNotFound
-        """
-
-        with DbManager().session() as session:
-            try:
-                parent_node = self._nodesDbHandler.getNode(session, nodeName)
-
-                return self.__convert_nodes_to_TortugaObjectList(
-                    parent_node.children, optionDict=optionDict
-                )
-            except TortugaException:
-                raise
-            except Exception as ex:
-                self.getLogger().exception('%s' % ex)
-                raise
-
-    def checkpointNode(self, nodeName: str) -> NoReturn:
-        """
-        Checkpoint Node
-        """
-
-        with DbManager().session() as session:
-            try:
-                self._nodesDbHandler.checkpointNode(session, nodeName)
-
-                session.commit()
-            except TortugaException:
-                session.rollback()
-                raise
-            except Exception as ex:
-                session.rollback()
-                self.getLogger().exception('%s' % ex)
-                raise
-
-    def revertNodeToCheckpoint(self, nodeName: str) -> NoReturn:
-        """
-        Revert Node to Checkpoint
-        """
-
-        with DbManager().session() as session:
-            try:
-                self._nodesDbHandler.revertNodeToCheckpoint(session, nodeName)
-
-                session.commit()
-            except TortugaException:
-                session.rollback()
-                raise
-            except Exception as ex:
-                session.rollback()
-                self.getLogger().exception('%s' % ex)
-                raise
-
-    def migrateNode(self, nodeName: str, remainingNodeList: List[NodeModel],
-                    liveMigrate: bool) -> NoReturn:
-        """
-        Migrate Node
-        """
-
-        with DbManager().session() as session:
-            try:
-                self._nodesDbHandler.migrateNode(
-                    session, nodeName, remainingNodeList, liveMigrate)
-
-                session.commit()
-            except TortugaException:
-                session.rollback()
-                raise
-            except Exception as ex:
-                session.rollback()
-                self.getLogger().exception('%s' % ex)
-                raise
-
-    def setParentNode(self, nodeName: str, parentNodeName: str) -> NoReturn:
-        '''
-        Raises:
-            NodeNotFound
-        '''
-
-        with DbManager().session() as session:
-            try:
-                dbNode = self._nodesDbHandler.getNode(session, nodeName)
-
-                # Setting the parent to 'None' is equivalent to unsetting it
-                dbNode.parentnode = self._nodesDbHandler.getNode(
-                    session, parentNodeName) if parentNodeName else None
-
-                session.commit()
-            except TortugaException:
-                session.rollback()
-                raise
-            except Exception as ex:
-                session.rollback()
                 self.getLogger().exception('%s' % ex)
                 raise
 

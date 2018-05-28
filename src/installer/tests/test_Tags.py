@@ -18,9 +18,6 @@ from tortuga.db.models.tag import Tag
 
 
 class TestTagsTable(unittest.TestCase):
-    def setUp(self):
-        pass
-
     def test_simple(self):
         t = Tag('mike', 'value')
 

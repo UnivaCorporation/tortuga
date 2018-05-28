@@ -27,7 +27,7 @@ logger = getLogger(__name__)
 
 class KitActionsManager(TortugaObjectManager, Singleton):
     def __init__(self):
-        super(KitActionsManager, self).__init__()
+        super().__init__()
         load_kits()
 
     def get_cloud_config(self, node, hardware_profile, software_profile,

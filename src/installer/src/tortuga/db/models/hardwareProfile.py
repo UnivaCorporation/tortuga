@@ -67,3 +67,6 @@ class HardwareProfile(ModelBase):
         secondary='hardwareprofile_tags',
         backref='hardwareprofiles'
     )
+
+    def __repr__(self):
+        return '<HardwareProfile(name=[{}])>'.format(self.name)
