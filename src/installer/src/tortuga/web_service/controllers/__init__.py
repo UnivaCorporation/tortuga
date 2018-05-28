@@ -14,7 +14,6 @@
 
 import cherrypy
 
-from tortuga.kit.loader import load_kits
 from tortuga.kit.registry import get_all_kit_installers
 from .addHostController import AddHostController
 from .adminController import AdminController
@@ -57,7 +56,6 @@ def setup_routes():
     #
     # Ensure all kits are loaded, and their web services are registered
     #
-    load_kits()
     for kit_installer_class in get_all_kit_installers():
         kit_installer = kit_installer_class()
         kit_installer.register_web_service_controllers()

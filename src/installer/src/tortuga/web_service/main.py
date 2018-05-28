@@ -25,6 +25,7 @@ from pathlib import Path
 import cherrypy
 from cherrypy.process import plugins
 
+from tortuga.kit.loader import load_kits
 from . import app, controllers, controllers_v2, rootRouteMapper
 from .auth import methods as auth_methods
 from .auth.authenticator import CherryPyAuthenticator
@@ -93,6 +94,11 @@ def prepare_server():
 
 def run_server(daemonize: bool = False, pidfile: str = None):
     logger.debug('Starting service')
+
+    #
+    # Load kits
+    #
+    load_kits()
 
     #
     # Initialize plugins

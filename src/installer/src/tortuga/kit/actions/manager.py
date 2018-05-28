@@ -16,7 +16,6 @@
 
 from logging import getLogger
 
-from tortuga.kit.loader import load_kits
 from tortuga.kit.registry import get_all_kit_installers
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.types import Singleton
@@ -26,10 +25,6 @@ logger = getLogger(__name__)
 
 
 class KitActionsManager(TortugaObjectManager, Singleton):
-    def __init__(self):
-        super(KitActionsManager, self).__init__()
-        load_kits()
-
     def get_cloud_config(self, node, hardware_profile, software_profile,
                          user_data, *args, **kwargs):
         logger.debug(
