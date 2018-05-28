@@ -224,6 +224,12 @@ def dbm():
         compute_swprofile.components = [core_component]
         compute_swprofile.type = 'compute'
 
+        # create 'compute2' software profile
+        compute2_swprofile = SoftwareProfile(name='compute2',
+                                             os=os_,
+                                             components=[core_component],
+                                             type='compute')
+
         # map 'aws' to 'compute'
         aws_hwprofile.mappedsoftwareprofiles.append(compute_swprofile)
 
@@ -231,12 +237,14 @@ def dbm():
         localiron_hwprofile = HardwareProfile(name='localiron')
         localiron_hwprofile.resourceadapter = default_adapter
         localiron_hwprofile.mappedsoftwareprofiles.append(compute_swprofile)
+        localiron_hwprofile.mappedsoftwareprofiles.append(compute2_swprofile)
 
         eth0_networkdevice = NetworkDevice(name='eth0')
 
         # create compute (compute-01, compute-02, ...) nodes
         for n in range(1, 11):
-            compute_node = Node(name='compute-{0:02d}.private'.format(n))
+            compute_node = Node(name='compute-{0:02d}.private'.format(n),
+                                state='Installed')
             compute_node.softwareprofile = compute_swprofile
             compute_node.hardwareprofile = localiron_hwprofile
 
