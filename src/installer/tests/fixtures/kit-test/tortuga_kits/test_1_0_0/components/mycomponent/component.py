@@ -11,4 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from .version import version_is_compatible, VERSION
+
+from tortuga.kit.installer import ComponentInstallerBase
+
+
+class ComponentInstaller(ComponentInstallerBase):
+    name = 'mycomponent'
+    version = '1.0.0'

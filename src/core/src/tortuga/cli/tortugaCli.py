@@ -99,29 +99,26 @@ class TortugaCli(metaclass=ABCMeta):
         Raises:
             InvalidArgument
         """
-        commonGroup = _('Common Tortuga Options')
-        self.addOptionGroup(commonGroup, None)
+        common_group = _('Common Tortuga Options')
+        self.addOptionGroup(common_group, None)
 
-        self.addOptionToGroup(commonGroup, '-V', action='store_true',
+        self.addOptionToGroup(common_group, '-V', action='store_true',
                               dest='cmdVersion', default=False,
                               help=_('print version and exit'))
 
-        self.addOptionToGroup(
-            commonGroup, '-d', '--debug', dest='consoleLogLevel',
-            help=_('set debug level; valid values are: critical, error,'
-                   ' warning, info, debug'))
+        self.addOptionToGroup(common_group, '-d', '--debug',
+                              dest='consoleLogLevel', default='warning',
+                              help=_('set debug level; valid values are: '
+                                     'critical, error, warning, info, debug'))
 
-        self.addOptionToGroup(
-            commonGroup, '--url',
-            help=_('Tortuga web service URL'))
+        self.addOptionToGroup(common_group, '--url',
+                              help=_('Tortuga web service URL'))
 
-        self.addOptionToGroup(
-            commonGroup, '--username', dest='username',
-            help=_('Tortuga web service user name'))
+        self.addOptionToGroup(common_group, '--username', dest='username',
+                              help=_('Tortuga web service user name'))
 
-        self.addOptionToGroup(
-            commonGroup, '--password', dest='password',
-            help=_('Tortuga web service password'))
+        self.addOptionToGroup(common_group, '--password', dest='password',
+                              help=_('Tortuga web service password'))
 
         if usage:
             self._parser.description = usage
@@ -137,42 +134,42 @@ class TortugaCli(metaclass=ABCMeta):
             print(_('{0} version: {1}'.format(
                 os.path.basename(sys.argv[0]),
                 self._cm.getTortugaRelease())))
-
             sys.exit(0)
 
-        # Log level.
-        consoleLogLevel = self._args.consoleLogLevel
-        if consoleLogLevel:
-            # logManager.setConsoleLogLevel(consoleLogLevel)
+        self._setup_logging(self._args.consoleLogLevel)
 
-            logger = logging.getLogger('tortuga')
-
-            logger.setLevel(logging.DEBUG)
-
-            # create console handler and set level to debug
-            ch = logging.StreamHandler()
-            ch.setLevel(logging.DEBUG)
-
-            # create formatter
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
-            # add formatter to ch
-            ch.setFormatter(formatter)
-
-            # add ch to logger
-            logger.addHandler(ch)
-
-        # Promote options to attributes
-        url, username, password = self.__get_web_service_options()
-
-        self._url = url
-        self._username = username
-        self._password = password
+        self._url, self._username, self._password = \
+            self._get_web_service_options()
 
         return self._args
 
-    def __get_web_service_options(self):
+    def _setup_logging(self, log_level_name: str):
+        """
+        Setup logging for the specified log level.
+
+        :param str log_level_name: the name of the log level to use
+
+        """
+        log_level_name = log_level_name.upper()
+        if log_level_name not in ['CRITICAL','ERROR', 'WARNING', 'INFO',
+                                  'DEBUG']:
+            print('Invalid debug level: {}'.format(log_level_name))
+            sys.exit(0)
+
+        log_level = getattr(logging, log_level_name)
+
+        logger = logging.getLogger('tortuga')
+        logger.setLevel(log_level)
+
+        ch = logging.StreamHandler()
+        ch.setLevel(log_level)
+        formatter = logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        ch.setFormatter(formatter)
+
+        logger.addHandler(ch)
+
+    def _get_web_service_options(self):
         """
         Read Tortuga web service credentials from config file, environment,
         or command-line. Command-line overrides either config file or

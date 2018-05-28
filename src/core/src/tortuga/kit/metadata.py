@@ -16,6 +16,8 @@ from typing import List
 
 from marshmallow import Schema, fields
 
+from tortuga.config import VERSION
+
 
 KIT_METADATA_FILE = 'kit.json'
 
@@ -29,5 +31,6 @@ class KitMetadataSchema(Schema):
     version: str = fields.String(required=True)
     iteration: str = fields.String(required=True)
     description: str = fields.String(required=False)
+    requires_core: str = fields.String(default=VERSION)
     include_files: List[str] = fields.List(fields.String(), required=False)
     exclude_files: List[str] = fields.List(fields.String(), required=False)
