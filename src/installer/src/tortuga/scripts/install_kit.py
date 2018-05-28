@@ -27,10 +27,6 @@ class InstallKitCli(TortugaCli):
             kitPkgGroup, _('If kit package URL is provided, kit'
                            ' /name/version/iteration are not used.'))
 
-        # self.addOptionToGroup(
-        #     kitPkgGroup, '--package', dest='packageUrl',
-        #     help=_('kit package URL'))
-
         self.addOptionToGroup(
             kitPkgGroup, 'package_uri',
             help=_('kit package URI (can be a file name or fully-qualified URL)'),
@@ -66,12 +62,15 @@ class InstallKitCli(TortugaCli):
 
         self.installKitHelper(api, accept_eula=self.getArgs().acceptEula)
 
-    def installKitHelper(self, api, key=None, accept_eula=False): \
-            # pylint: disable=unused-argument
-        if self.getArgs().package_uri:
+    def installKitHelper(self, api, key=None, accept_eula=False):
+        args = self.getArgs()
+
+        if args.package_uri:
             return api.installKitPackage(self.getArgs().package_uri, key)
 
-        name, version, iteration = self.get_name_version_iteration()
+        name = args.name
+        version = args.version
+        iteration = args.iteration
 
         return api.installKit(name, version, iteration, key)
 
