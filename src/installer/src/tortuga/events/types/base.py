@@ -119,16 +119,60 @@ class BaseEvent(metaclass=EventMeta):
         :return: the new event instance
 
         """
-        from ..manager import EventStoreManager, PubSubManager
-
         event = cls(**kwargs)
         event.id = str(uuid.uuid4())
         event.timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
 
+        cls._store_event(event)
+        cls._publish_event(event)
+        cls._schedule_event_listeners(event)
+
+        return event
+
+    @classmethod
+    def _store_event(cls, event: 'BaseEvent'):
+        """
+        Stores the event in the event store.
+
+        :param BaseEvent event:
+
+        """
+        from ..manager import EventStoreManager
+
         store = EventStoreManager.get()
         store.save(event)
+
+    @classmethod
+    def _publish_event(cls, event: 'BaseEvent'):
+        """
+        Publishes the even to the pubsub.
+
+        :param BaseEvent event:
+
+        """
+        from ..manager import PubSubManager
 
         pubsub = PubSubManager.get()
         pubsub.publish(event)
 
-        return event
+    @classmethod
+    def _schedule_event_listeners(cls, event: 'BaseEvent'):
+        """
+        Schedules all event listeners to run, as required.
+
+        :param BaseEvent event:
+
+        """
+        from ..listeners import get_all_listener_classes
+        from ..tasks import run_event_listener
+
+        event_dict = event.schema().dump(event).data
+        for listener_class in get_all_listener_classes():
+            if listener_class.should_run(event):
+                kwargs = {}
+                if listener_class.countdown is not None:
+                    kwargs['countdown'] = listener_class.countdown
+                run_event_listener.apply_async(
+                    args=[listener_class.name, event_dict],
+                    **kwargs
+                )

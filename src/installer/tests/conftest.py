@@ -39,6 +39,7 @@ from tortuga.db.models.softwareProfile import SoftwareProfile
 from tortuga.db.models.tag import Tag
 from tortuga.deployer.dbUtility import init_global_parameters, primeDb
 from tortuga.node import nodeManager
+from tortuga.tasks.celery import app
 from tortuga.objects import osFamilyInfo, osInfo
 from tortuga.objectstore import manager as objectstore_manager
 
@@ -72,6 +73,16 @@ def mock_redis(monkeypatch, redis):
 @pytest.fixture()
 def redis():
     return MockRedis()
+
+
+#
+# This is here to override the celery_app fixture that comes with the
+# celery pytest plugin. We bring up our own version of the test instance
+# in our tasks library, and just refer to that here.
+#
+@pytest.fixture()
+def celery_app():
+    return app
 
 
 @pytest.fixture(scope='session')
