@@ -135,7 +135,7 @@ setup(
         'pyjwt',
         'pyzmq',
         'redis',
-        'gevent',
+        'gevent<1.3.2',
         'marshmallow-sqlalchemy',
         'alembic',
         'websockets',
