@@ -49,7 +49,7 @@ from tortuga.node.nodeApi import NodeApi
 from tortuga.exceptions.commandFailed import CommandFailed
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.kitNotFound import KitNotFound
-from tortuga.kit.utils import getKitNameVersionIteration
+from tortuga.kit.utils import get_metadata_from_archive
 
 
 class TortugaDeployer(object): \
@@ -278,6 +278,8 @@ class TortugaDeployer(object): \
 
         license_file = ' %s/LICENSE' % (self._cm.getEtcDir())
 
+        print()
+
         if bAcceptEula:
             cmd = 'cat %s\n' % (license_file)
             os.system(cmd)
@@ -417,7 +419,7 @@ class TortugaDeployer(object): \
 
         open(self._lockFilePath, 'w').close()
 
-        self.out('\nTortuga Setup\n')
+        self.out('Tortuga Setup\n')
 
     def getClusterConfig(self):
         sysManager = self._osObjectFactory.getOsSysManager()
@@ -930,7 +932,7 @@ class TortugaDeployer(object): \
 
         for kitPackage in glob.glob(kitFileGlob):
             try:
-                kit = getKitNameVersionIteration(kitPackage)
+                kit = get_metadata_from_archive(kitPackage)
             except KitNotFound:
                 msg = 'Kit [%s] is malformed/invalid. Skipping.' % (
                     os.path.basename(kitPackage))
@@ -941,8 +943,8 @@ class TortugaDeployer(object): \
 
                 continue
 
-            if kit[0] in skip_kits:
-                msg = 'Kit [%s] installation skipped.' % (kit[0])
+            if kit['name'] in skip_kits:
+                msg = 'Kit [%s] installation skipped.' % (kit['name'])
 
                 self.out('   %s\n' % (msg))
 
@@ -962,9 +964,9 @@ class TortugaDeployer(object): \
 
                 continue
 
-            self.out('   - %s installed.\n' % (kit[0]))
+            self.out('   - %s installed.\n' % (kit['name']))
 
-            self._logger.info('Kit [%s] installed' % (kit[0]))
+            self._logger.info('Kit [%s] installed' % (kit['name']))
 
         self._logger.info('Done installing kits')
 

@@ -15,11 +15,12 @@
 # pylint: disable=no-member
 
 import sys
-from typing import Any, Optional, Union, Dict, List
-from tortuga.wsapi.nodeWsApi import NodeWsApi
+from typing import Any, Dict, List, Optional, Union
+
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
 from tortuga.cli.utils import FilterTagsAction
+from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
+from tortuga.wsapi.nodeWsApi import NodeWsApi
 
 
 class GetNodeStatus(TortugaCli): \
@@ -230,7 +231,7 @@ class GetNodeStatus(TortugaCli): \
         grouped: dict = {}
         profile: str = 'hardwareprofile' if by_hardware_profile else 'softwareprofile'
         for node in nodes:
-            key: str = node[profile]['name']
+            key: str = node[profile]['name'] if 'softwareprofile' in node else 'none'
             if key not in grouped.keys():
                 grouped[key]: list = []
             grouped[key].append(node)

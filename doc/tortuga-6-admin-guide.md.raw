@@ -583,8 +583,6 @@ Tortuga can *provision* physical hardware with an operating system and software 
 
 Tortuga abstracts complex virtualization APIs to *manage virtual machines* using a single, consistent interface.
 
-Tortuga helps *migrate* virtual machines off of hardware which must be taken offline for upgrades, maintenance, or decommissioning, leaving users unaffected.
-
 Tortuga performs *reallocation* of "compute" nodes from one task to another.
 
 Tortuga obtains resources from clouds to *cloud burst*, virtually integrating public and private clouds into a single, unified, secure datacenter.
@@ -1541,7 +1539,7 @@ In this example, it is assumed `eth0` on the Tortuga installer is connected to t
 
 # Managing Clusters
 
-Managing a cluster in Tortuga essentially means just a few things. Nodes can be added and removed, and configured (as well as transitioned between configurations). Virtual nodes may also be migrated between hypervisors, where supported.
+Managing a cluster in Tortuga essentially means just a few things. Nodes can be added and removed, and configured (as well as transitioned between configurations).
 
 ## Adding Nodes
 
@@ -1676,18 +1674,6 @@ Transfer 6 nodes from source software profile:
         --software-profile Compute
 
 Tortuga does its best to make an intelligent determination of which nodes to transfer, favoring idle and unused nodes when possible.
-
-## Migrating virtual nodes
-
-Virtual machines may be migrated between hypervisors using the `migrate-node`
-CLI. Obviously, this only makes sense on supported virtualization platforms and
-does not apply to physical or cloud-based nodes.
-
-The migration can be performed using "live migration" where the node state is not changed and the node remains running during the migration. THis functionality is limited to reosurce adapters/hypervisors that allow "hot" migration.
-
-Support for migration is dependent upon the hypervisor resource adapter.
-
-*Note: The `--with-shutdown` option is required if "live" migration is not supported by the hypervisor (rare).*
 
 ## Node states
 

@@ -22,14 +22,14 @@ import pkgutil
 from logging import getLogger
 from typing import Optional
 
+from tortuga.config import version_is_compatible, VERSION
 from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.configurationError import ConfigurationError
+from tortuga.kit.metadata import KIT_METADATA_FILE, KitMetadataSchema
 from tortuga.objects.component import Component
 from tortuga.objects.eula import Eula
 from tortuga.objects.kit import Kit
 from tortuga.objects.osFamilyInfo import OsFamilyInfo
-
-from .metadata import KIT_METADATA_FILE, KitMetadataSchema
 from .registry import register_kit_installer
 from .utils import pip_install_requirements
 
@@ -198,6 +198,7 @@ class KitInstallerBase(ConfigurableMixin, metaclass=KitInstallerMeta):
     # Attributes, provided by instances of this class
     #
     puppet_modules = []
+    task_modules = []
 
     def __init__(self):
         self.config_manager = ConfigManager()
@@ -248,6 +249,13 @@ class KitInstallerBase(ConfigurableMixin, metaclass=KitInstallerMeta):
         if errors:
             raise Exception(
                 'Kit metadata validation error: {}'.format(errors))
+
+        requires_core = meta_dict.get('requires_core', VERSION)
+        if not version_is_compatible(requires_core):
+            raise Exception(
+                'The {} kit requires tortuga core >= {}'.format(
+                    meta_dict['name'], requires_core))
+
         meta_dict = copy.deepcopy(meta_dict)
         cls.name = meta_dict.pop('name')
         cls.version = meta_dict.pop('version')

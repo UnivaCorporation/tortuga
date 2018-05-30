@@ -139,8 +139,6 @@ class NodeSchema(ModelSchema):
     tags = fields.Nested('TagSchema',
                          only=('id', 'name', 'value'), many=True)
 
-    parentnode = fields.Nested('NodeSchema', only=('id', 'name'))
-
     class Meta:
         model = NodeModel
 

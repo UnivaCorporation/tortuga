@@ -59,12 +59,6 @@ class NodeController(TortugaController):
             'method': ['GET']
         },
         {
-            'name': 'setParentNode',
-            'path': '/v1/nodes/:nodeName/parentNode',
-            'action': 'setParentNode',
-            'method': ['POST'],
-        },
-        {
             'name': 'idleNode',
             'path': '/v1/nodes/:nodeName/idle',
             'action': 'idleNode',
@@ -77,42 +71,11 @@ class NodeController(TortugaController):
             'method': ['POST'],
         },
         {
-            'name': 'checkpointNode',
-            'path': '/v1/nodes/:nodeName/checkpoint',
-            'action': 'checkpointNode',
-            'method': ['GET'],
-        },
-        {
-            'name': 'revertNodeToCheckpoint',
-            'path': '/v1/nodes/:nodeName/revert',
-            'action': 'revertNodeToCheckpoint',
-            'method': ['GET'],
-        },
-        {
-            'name': 'migrateNode',
-            'path': '/v1/nodes/:nodeName/migrate/:(remainingNodeList)'
-                    '/type/:(liveMigrate)',
-            'action': 'migrateNode',
-            'method': ['GET'],
-        },
-        {
             'name': 'startupNode',
             'path': '/v1/nodes/:nodeName/startup/:(nodeString)'
                     '/boot/:(bootMethod)',
             'action': 'startupNode',
             'method': ['PUT'],
-        },
-        {
-            'name': 'evacuateChildren',
-            'path': '/v1/nodes/:nodeName/evacuate',
-            'action': 'evacuateChildren',
-            'method': ['GET'],
-        },
-        {
-            'name': 'getChildrenList',
-            'path': '/v1/nodes/:nodeName/children',
-            'action': 'getChildrenList',
-            'method': ['GET'],
         },
         {
             'name': 'shutdownNode',
@@ -143,6 +106,18 @@ class NodeController(TortugaController):
             'path': '/v1/identify-node',
             'action': 'getNodeByIpRequest',
             'method': ['GET']
+        },
+        {
+            'name': 'transferNode',
+            'path': '/v1/transfer-node/:(nodespec)',
+            'action': 'transferNode',
+            'method': ['PUT'],
+        },
+        {
+            'name': 'transferNodes',
+            'path': '/v1/transfer-nodes/',
+            'action': 'transferNodes',
+            'method': ['PUT'],
         },
     ]
 
@@ -301,35 +276,6 @@ class NodeController(TortugaController):
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     @authentication_required()
-    def setParentNode(self, nodeName, parentNodeName):
-        """
-        Handle POST to /nodes/:(nodeName)/parentNode
-
-        Required data: parentNodeName
-        """
-
-        response = None
-
-        postdata = cherrypy.request.json
-
-        if 'parentNodeName' not in postdata or \
-                not postdata['parentNodeName']:
-            raise InvalidArgument(
-                'Missing or empty required field: [%s]' % (
-                    'parentNodeName'))
-
-        try:
-            app.node_api.setParentNode(nodeName, parentNodeName)
-        except Exception as ex:
-            self.getLogger().exception('node WS API setParentNode() failed')
-            self.handleException(ex)
-            response = self.errorResponse(str(ex))
-
-        return self.formatResponse(response)
-
-    @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
-    @authentication_required()
     def idleNode(self, nodeName):
         """
         Idle an active node
@@ -374,70 +320,6 @@ class NodeController(TortugaController):
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     @authentication_required()
-    def checkpointNode(self, nodeName):
-        """
-        Checkpoint a node
-        """
-
-        response = None
-
-        try:
-            app.node_api.checkpointNode(nodeName)
-        except Exception as ex:
-            self.getLogger().exception('node WS API checkpointNode() failed')
-            self.handleException(ex)
-            response = self.errorResponse(str(ex))
-
-        return self.formatResponse(response)
-
-    @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
-    @authentication_required()
-    def revertNodeToCheckpoint(self, nodeName):
-        """
-        Migrate a node
-        """
-
-        response = None
-
-        try:
-            app.node_api.revertNodeToCheckpoint(nodeName)
-        except Exception as ex:
-            self.getLogger().exception(
-                'node WS API revertNodeToCheckpoint() failed')
-            self.handleException(ex)
-            response = self.errorResponse(str(ex))
-
-        return self.formatResponse(response)
-
-    @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
-    @authentication_required()
-    def migrateNode(self, nodeName: str, remainingNodeString: str,
-                    liveMigrate: str):
-        """
-        Migrate a node
-        """
-
-        response = None
-
-        try:
-            # Make remainingNodeString into a real list
-            remainingNodeList = [
-                node for node in remainingNodeString.split('+')]
-
-            app.node_api.migrateNode(
-                nodeName, remainingNodeList, str2bool(liveMigrate))
-        except Exception as ex:
-            self.getLogger().exception('node WS API migrateNode() failed')
-            self.handleException(ex)
-            response = self.errorResponse(str(ex))
-
-        return self.formatResponse(response)
-
-    @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
-    @authentication_required()
     def startupNode(self, nodeName, nodeString, bootMethod):
         response = None
 
@@ -453,40 +335,6 @@ class NodeController(TortugaController):
             response = self.notFoundErrorResponse(str(ex), code)
         except Exception as ex:
             self.getLogger().exception('node WS API startupNode() failed')
-            self.handleException(ex)
-            response = self.errorResponse(str(ex))
-
-        return self.formatResponse(response)
-
-    @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
-    @authentication_required()
-    def evacuateChildren(self, nodeName):
-        response = None
-
-        try:
-            app.node_api.evacuateChildren(nodeName)
-        except Exception as ex:
-            self.getLogger().exception('node WS API evacuateChildren() failed')
-            self.handleException(ex)
-            response = self.errorResponse(str(ex))
-
-        return self.formatResponse(response)
-
-    @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
-    @authentication_required()
-    def getChildrenList(self, nodeName):
-        """
-        Return list of all children nodes
-        """
-
-        try:
-            nodeList = app.node_api.getChildrenList(nodeName)
-
-            response = nodeList.getCleanDict()
-        except Exception as ex:
-            self.getLogger().exception('node WS API getChildrenList() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -539,22 +387,56 @@ class NodeController(TortugaController):
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     @authentication_required()
-    def transferNode(self, softwareProfileName, nodeName,
-                     srcSoftwareProfileName, nodeCount):
+    def transferNode(self, nodespec):
+        postdata = cherrypy.request.json
+
         try:
+            # TODO: add request validation here
+
             nodeList = app.node_api.transferNode(
-                softwareProfileName, nodeName, srcSoftwareProfileName,
-                nodeCount)
+                nodespec, postdata['softwareProfileName'],
+                bForce=str2bool(postdata['bForce'])
+                if 'bForce' in postdata else False,
+            )
 
             response = nodeList.getCleanDict()
         except NodeNotFound as ex:
             self.handleException(ex)
             code = self.getTortugaStatusCode(ex)
             response = self.notFoundErrorResponse(str(ex), code)
-        except Exception as ex:
-            self.getLogger().exception('node WS API transferNode() failed')
+        except Exception as ex:  # noqa pylint: disable=broad-except
+            self.getLogger().exception(str(ex))
             self.handleException(ex)
             response = self.errorResponse(str(ex))
+
+        return self.formatResponse(response)
+
+    @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
+    @authentication_required()
+    def transferNodes(self):
+        postdata = cherrypy.request.json
+
+        try:
+            # TODO: add request validation here
+
+            nodeList = app.node_api.transferNodes(
+                postdata['srcSoftwareProfile'],
+                postdata['dstSoftwareProfile'],
+                count=postdata['count'],
+                bForce=postdata['bForce']
+            )
+
+            response = nodeList.getCleanDict()
+        except NodeNotFound as ex:
+            self.handleException(ex)
+            code = self.getTortugaStatusCode(ex)
+            response = self.notFoundErrorResponse(str(ex), code)
+        except Exception as ex:  # noqa pylint: disable=broad-except
+            self.getLogger().exception(str(ex))
+            self.handleException(ex)
+            response = self.errorResponse(str(ex))
+
         return self.formatResponse(response)
 
     @cherrypy.tools.json_out()
