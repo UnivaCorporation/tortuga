@@ -22,7 +22,7 @@ import socket
 import subprocess
 import sys
 import traceback
-from typing import List, NoReturn, Optional, Union
+from typing import Dict, List, NoReturn, Optional, Union
 
 import gevent
 from sqlalchemy.orm.session import Session
@@ -35,14 +35,15 @@ from tortuga.db.models.network import Network
 from tortuga.db.models.nic import Nic
 from tortuga.db.models.node import Node
 from tortuga.db.models.softwareProfile import SoftwareProfile
-from tortuga.db.resourceAdapterCredentialsDbHandler import \
-    ResourceAdapterCredentialsDbHandler
+from tortuga.db.resourceAdapterConfigDbHandler import \
+    ResourceAdapterConfigDbHandler
 from tortuga.exceptions.configurationError import ConfigurationError
 from tortuga.exceptions.nicNotFound import NicNotFound
 from tortuga.exceptions.resourceNotFound import ResourceNotFound
 from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
 from tortuga.os_utility.osUtility import getOsObjectFactory
 from tortuga.parameter.parameterApi import ParameterApi
+from tortuga.schema import ResourceAdapterConfigSchema
 
 from .userDataMixin import UserDataMixin
 
@@ -225,7 +226,7 @@ class ResourceAdapter(UserDataMixin): \
         return self._logger
 
     def getResourceAdapterConfig(self,
-                                 sectionName: Optional[Union[str, None]] = None) -> dict:
+                                 sectionName: Union[str, None] = None) -> dict:
         """
         Raises:
             ResourceNotFound
@@ -251,27 +252,27 @@ class ResourceAdapter(UserDataMixin): \
             list(defaultResourceAdapterConfigDict.items()) +
             list(overrideConfigDict.items()))
 
-    def _loadConfigDict(self, sectionName: Optional[Union[str, None]] = None):
+    def _loadConfigDict(self, sectionName: Union[str, None] = None) \
+            -> Dict[str, str]:
         """
+        Retrieve resource adapter configuration from database.
+
         Raises:
             ResourceNotFound
         """
 
-        if sectionName is None:
-            sectionName = 'default'
+        self.getLogger().debug(
+            '_loadConfigDict(): sectionName=[{}]'.format(
+                sectionName if sectionName else 'default'))
 
         with DbManager().session() as session:
-            self.getLogger().debug('_loadConfigDict()')
+            cfg = ResourceAdapterConfigSchema().dump(
+                ResourceAdapterConfigDbHandler().get(
+                    session, self.__adaptername__,
+                    sectionName if sectionName else 'default')
+            ).data
 
-            result = ResourceAdapterCredentialsDbHandler().get(
-                session, self.__adaptername__, sectionName)
-
-            configDict = {}
-
-            for entry in result['configuration']:
-                configDict[entry['key']] = entry['value']
-
-        return configDict
+            return {s['key']: s['value'] for s in cfg['settings']}
 
     def getResourceAdapterConfigProfileByNodeName(self, name: str):
         """Get resource adapter configuration for existing node"""
