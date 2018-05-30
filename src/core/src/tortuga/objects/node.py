@@ -14,12 +14,10 @@
 
 # pylint: disable=no-member
 
-from tortuga.objects.tortugaObject import TortugaObject
-from tortuga.objects.tortugaObject import TortugaObjectList
-
-import tortuga.objects.nic
 import tortuga.objects.hardwareProfile
+import tortuga.objects.nic
 import tortuga.objects.softwareProfile
+from tortuga.objects.tortugaObject import TortugaObject, TortugaObjectList
 
 
 class Node(TortugaObject): \
@@ -158,6 +156,12 @@ class Node(TortugaObject): \
     def setVcpus(self, vcpus):
         self['vcpus'] = int(vcpus)
 
+    def getInstance(self):
+        return self['instance']
+
+    def setInstance(self, value):
+        self['instance'] = value
+
     @staticmethod
     def getKeys():
         return [
@@ -165,6 +169,7 @@ class Node(TortugaObject): \
             'rack', 'rank', 'hardwareProfileId', 'softwareProfileId',
             'lockedState', 'isIdle', 'destSPId', 'addHostSession',
             'resource_adapter', 'vcpus',
+            'instance',
         ]
 
     @classmethod
@@ -230,5 +235,16 @@ class Node(TortugaObject): \
                 tags[tag.name] = tag.value
 
         node.setTags(tags)
+
+        # instance mapping
+        instance_mapping_dict = _dict.get('instance')
+        if instance_mapping_dict:
+            from tortuga.schema import InstanceMappingSchema
+
+            node.setInstance(
+                InstanceMappingSchema(
+                    exclude=('node',
+                             'resource_adapter_configuration.settings')
+                ).dump(instance_mapping_dict).data)
 
         return node
