@@ -25,6 +25,7 @@ from tortuga.db.helper import get_installer_hostname_suffix
 from tortuga.db.nodesDbHandler import NodesDbHandler
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.exceptions.parameterNotFound import ParameterNotFound
+from tortuga.kit.loader import load_kits
 from tortuga.kit.registry import get_kit_installer
 
 
@@ -37,6 +38,9 @@ dbm = DbManager()
 def main():
     if len(sys.argv) != 2:
         sys.exit(1)
+
+    # ensure all available kits are loaded
+    load_kits()
 
     nodeName = sys.argv[1].lower()
 

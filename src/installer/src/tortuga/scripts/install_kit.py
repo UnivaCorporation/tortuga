@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import platform
+import subprocess
+import sys
+
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.kit.kitApiFactory import getKitApi
 
@@ -61,6 +65,32 @@ class InstallKitCli(TortugaCli):
         api = getKitApi(self.getUsername(), self.getPassword())
 
         self.installKitHelper(api, accept_eula=self.getArgs().acceptEula)
+
+        # restart tortugawsd and celery after installing new kit
+        cmd = None
+        try:
+            if platform.dist()[1].startswith('7'):
+                cmd = 'systemctl restart tortugawsd celery'
+        except ValueError:
+            pass
+
+        if not cmd:
+            cmd = 'service tortugawsd restart && service celery restart'
+
+        p = subprocess.Popen(
+            cmd,
+            shell=True,
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+        )
+
+        retval = p.wait()
+        if retval != 0:
+            print(
+                'Error restarting services: rc=[{}]'.format(retval),
+                file=sys.stderr
+            )
+
+            sys.exit(1)
 
     def installKitHelper(self, api, key=None, accept_eula=False):
         args = self.getArgs()
