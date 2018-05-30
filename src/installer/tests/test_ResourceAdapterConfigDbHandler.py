@@ -16,7 +16,6 @@ import pytest
 
 from tortuga.db.resourceAdapterConfigDbHandler import \
     ResourceAdapterConfigDbHandler
-from tortuga.exceptions.resourceAdapterNotFound import ResourceAdapterNotFound
 from tortuga.exceptions.resourceNotFound import ResourceNotFound
 
 
@@ -37,20 +36,3 @@ def test_get_failed(dbm):
         with pytest.raises(ResourceNotFound):
             ResourceAdapterConfigDbHandler().get(
                 session, 'nonexistent', 'default')
-
-
-def test_get_profile_names(dbm):
-    with dbm.session() as session:
-        result = ResourceAdapterConfigDbHandler().get_profile_names(
-            session, 'aws'
-        )
-
-        assert isinstance(result, list) and 'default' in result
-
-
-def test_get_profile_names_failed(dbm):
-    with dbm.session() as session:
-        with pytest.raises(ResourceAdapterNotFound):
-            ResourceAdapterConfigDbHandler().get_profile_names(
-                session, 'nonexistent'
-            )
