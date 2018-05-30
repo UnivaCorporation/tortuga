@@ -61,6 +61,7 @@ class NodeManager(TortugaObjectManager): \
 
     NODE_STATE_INSTALLED = 'Installed'
     NODE_STATE_DELETED = 'Deleted'
+    NODE_STATE_UNRESPONSIVE = 'Unresponsive'
 
     def __init__(self):
         super(NodeManager, self).__init__()

@@ -349,7 +349,6 @@ class KitManager(TortugaObjectManager, Singleton):
         #
         # Get the EULA from the installer
         #
-        load_kits()
         installer = get_kit_installer(kit_spec)()
         eula = installer.get_eula()
 
@@ -677,7 +676,6 @@ class KitManager(TortugaObjectManager, Singleton):
         if os.path.exists(kit_install_path):
             kit_spec = (kit.getName(), kit.getVersion(), kit.getIteration())
 
-            load_kits()
             installer = get_kit_installer(kit_spec)()
 
             installer.run_action('pre_uninstall')

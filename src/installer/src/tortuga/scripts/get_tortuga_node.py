@@ -25,7 +25,6 @@ from tortuga.db.helper import get_installer_hostname_suffix
 from tortuga.db.nodesDbHandler import NodesDbHandler
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.exceptions.parameterNotFound import ParameterNotFound
-from tortuga.kit.loader import load_kits
 from tortuga.kit.registry import get_kit_installer
 
 
@@ -115,7 +114,6 @@ def get_puppet_node_yaml(session, nodeName):
                 #
                 # Load the kit and component installers
                 #
-                load_kits()
                 kit_spec = (
                     dbComponent.kit.name,
                     dbComponent.kit.version,

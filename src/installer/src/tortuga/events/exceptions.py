@@ -15,3 +15,7 @@
 
 class EventNotFoundError(Exception):
     pass
+
+
+class ListenerNotFoundError(Exception):
+    pass

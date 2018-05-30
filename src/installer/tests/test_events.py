@@ -14,7 +14,9 @@
 
 from marshmallow import fields
 import pytest
+import time
 
+from tortuga.events.listeners.base import BaseListener, get_all_listener_classes
 from tortuga.events.types.base import BaseEvent, BaseEventSchema
 from tortuga.events.manager import EventStoreManager, PubSubManager
 from tortuga.events.store import ObjectStoreEventStore
@@ -48,11 +50,13 @@ def event_store(redis):
     # return the same instance
     #
     EventStoreManager._event_store = store
+
     #
     # Manually set the redis instance on the pub/sub manager so that it
     # is there for any internal calls to the manager
     #
     PubSubManager._redis_client = redis
+
     return store
 
 
@@ -97,6 +101,7 @@ def test_event_list_filter(event_store):
     for evt in event_store.list(order_by='integer', order_desc=True,
                                 integer__gt=3):
         integers.append(evt.integer)
+
     assert integers == [5, 4]
 
 
@@ -115,5 +120,58 @@ def test_event_pubsub(event_store):
     #
     for evt in events:
         evt_sub = pubsub.get_message()
-        print(evt_sub)
         assert evt == evt_sub
+
+
+def test_event_listener(event_store, celery_worker):
+    #
+    # The purpose of this unit test is to ensure that when events fire,
+    # any event listeners that are setup to run, are run by Celery
+    #
+    was_run = []
+
+    class RunMixin:
+        def run(self, _):
+            was_run.append(self.name)
+
+    class ExampleEventListener(RunMixin, BaseListener):
+        """
+        This listener will run for the ExampleEvent.
+
+        """
+        name = 'example-listener'
+        event_types = [ExampleEvent]
+
+    class ExampleEventAllListener(RunMixin, BaseListener):
+        """
+        This listener will run for all events.
+
+        """
+        name = 'example-all-listener'
+        all_events = True
+
+    class ExampleEventNoneListener(RunMixin, BaseListener):
+        """
+        This listener should not run for any event.
+
+        """
+        name = 'example-none-listener'
+
+    ExampleEvent.fire(integer=3, string='testing')
+
+    #
+    # Wait for up to 10 seconds for the worker to do complete it's tasks
+    #
+    counter = 0
+    while 'example-all-listener' not in was_run:
+        if counter > 10:
+            break
+        time.sleep(1)
+        counter += 1
+
+    #
+    # Make sure run was called (or not) as appropriate for each listener
+    #
+    assert 'example-listener' in was_run
+    assert 'example-all-listener' in was_run
+    assert 'example-none-listener' not in was_run
