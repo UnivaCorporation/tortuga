@@ -641,11 +641,6 @@ class NodeManager(TortugaObjectManager): \
             '__preDeleteHost(): nodes=[%s]' % (
                 ' '.join([node.name for node in nodes])))
 
-        if not nodes:
-            self.getLogger().debug('No nodes deleted in this operation')
-
-            return
-
         for node in nodes:
             self._kitmgr.pre_delete_host(
                 node.hardwareprofile.name,
