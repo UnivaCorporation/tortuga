@@ -14,7 +14,7 @@
 
 from cherrypy.process import plugins
 
-from tortuga.web_service import dbm
+from tortuga.db.dbManager import DbManager
 
 
 class DatabasePlugin(plugins.SimplePlugin):
@@ -24,6 +24,7 @@ class DatabasePlugin(plugins.SimplePlugin):
         self.bus.subscribe('bind', self.bind)
 
     def start(self):
+        dbm = DbManager()
         self.sa_engine = dbm.engine
 
     def stop(self):

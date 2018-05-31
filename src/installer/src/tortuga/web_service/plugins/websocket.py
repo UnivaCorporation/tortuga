@@ -14,11 +14,15 @@
 
 import asyncio
 import logging
+import os
+import ssl
 import threading
 
+import cherrypy
 from cherrypy.process import plugins
 import websockets
 
+from tortuga.config.configManager import ConfigManager
 from tortuga.web_service.websocket.state_manager import StateManager
 
 
@@ -32,6 +36,7 @@ class WebsocketPlugin(plugins.SimplePlugin):
     """
     def __init__(self, bus):
         super().__init__(bus)
+        self._cm = ConfigManager()
         self._loop: asyncio.AbstractEventLoop = None
         self._thread: threading.Thread = None
 
@@ -56,12 +61,59 @@ class WebsocketPlugin(plugins.SimplePlugin):
         self._loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self._loop)
 
-        #
-        # Start the websockets server
-        #
-        server = websockets.serve(websocket_handler, port=9443)
+        scheme = self._cm.getWebsocketScheme()
+        port = self._cm.getWebsocketPort()
+
+        try:
+            if scheme == 'wss':
+                server = self._start_secure(port=port)
+
+            elif scheme == 'ws':
+                server = self._start_insecure(port=port)
+
+            else:
+                raise Exception('Unknown websocket scheme: {}'.format(scheme))
+
+        except Exception as ex:
+            logger.error(str(ex))
+            logger.error('Unable to start websocket server')
+
+            return
+
         self._loop.run_until_complete(server)
         self._loop.run_forever()
+
+    def _start_secure(self, port: int) -> websockets.WebSocketServerProtocol:
+        logger.debug(
+            'Starting websocket with SSL/TLS enabled on port {}'.format(port))
+
+        ssl_context = self._get_ssl_context()
+
+        return websockets.serve(websocket_handler, port=port, ssl=ssl_context)
+
+    def _get_ssl_context(self) -> ssl.SSLContext:
+        cherrypy_cert = cherrypy.config.get('server.ssl_certificate', '')
+        cherrypy_key = cherrypy.config.get('server.ssl_private_key', '')
+        websocket_cert = cherrypy_cert.replace('.crt', '-bundle.crt')
+
+        if not os.path.exists(websocket_cert):
+            raise Exception(
+                'Combined SSL cert not found: {}'.format(websocket_cert))
+
+        if not os.path.exists(cherrypy_key):
+            raise Exception('SSL key not found: {}'.format(cherrypy_key))
+
+        ssl_context = ssl.SSLContext()
+        ssl_context.load_cert_chain(websocket_cert, keyfile=cherrypy_key)
+
+        return ssl_context
+
+    def _start_insecure(self, port: int) -> websockets.WebSocketServerProtocol:
+        logger.debug(
+            'Starting websocket with SSL/TLS disabled on port {}'.format(
+                port))
+
+        return websockets.serve(websocket_handler, port=port)
 
 
 async def websocket_handler(websocket, path):
@@ -74,9 +126,17 @@ async def websocket_handler(websocket, path):
     """
     logger.debug('New websocket connection established')
 
-    state_manager = StateManager(websocket=websocket)
-    consumer_task = asyncio.ensure_future(state_manager.consumer_handler())
-    producer_task = asyncio.ensure_future(state_manager.producer_handler())
+    try:
+        state_manager = StateManager(websocket=websocket)
+        consumer_task = asyncio.ensure_future(
+            state_manager.consumer_handler())
+        producer_task = asyncio.ensure_future(
+            state_manager.producer_handler())
+
+    except Exception as ex:
+        logger.error(str(ex))
+        logger.error('Websocket connection exited')
+        raise
 
     done, pending = await asyncio.wait(
         [consumer_task, producer_task],

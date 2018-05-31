@@ -21,7 +21,6 @@ import cherrypy
 from tortuga.addhost.addHostManager import AddHostManager
 from tortuga.events.types import DeleteNodeRequestQueued
 from tortuga.db.models.nodeRequest import NodeRequest
-from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.resourceAdapter.tasks import delete_nodes
@@ -29,7 +28,6 @@ from tortuga.schema import NodeSchema
 from tortuga.utility.helper import str2bool
 from tortuga.web_service.auth.decorators import authentication_required
 
-from .. import app
 from .common import make_options_from_query_string, parse_tag_query_string
 from .tortugaController import TortugaController
 
@@ -141,20 +139,20 @@ class NodeController(TortugaController):
                 ['softwareprofile', 'hardwareprofile'])
 
             if 'addHostSession' in kwargs and kwargs['addHostSession']:
-                nodeList = app.node_api.getNodesByAddHostSession(
+                nodeList = self.app.node_api.getNodesByAddHostSession(
                     kwargs['addHostSession'], options)
             elif 'name' in kwargs and kwargs['name']:
-                nodeList = app.node_api.getNodesByNameFilter(
+                nodeList = self.app.node_api.getNodesByNameFilter(
                     kwargs['name'], optionDict=options)
             elif 'installer' in kwargs and str2bool(kwargs['installer']):
                 nodeList = TortugaObjectList(
-                    [app.node_api.getInstallerNode()]
+                    [self.app.node_api.getInstallerNode()]
                 )
             elif 'ip' in kwargs:
                 nodeList = TortugaObjectList(
-                    [app.node_api.getNodeByIp(kwargs['ip'])])
+                    [self.app.node_api.getNodeByIp(kwargs['ip'])])
             else:
-                nodeList = app.node_api.getNodeList(tags=tagspec)
+                nodeList = self.app.node_api.getNodeList(tags=tagspec)
 
             response = {
                 'nodes': NodeSchema().dump(nodeList, many=True).data
@@ -179,7 +177,7 @@ class NodeController(TortugaController):
                 if 'include' in kwargs else None,
                 ['softwareprofile', 'hardwareprofile'])
 
-            node = app.node_api.getNodeById(node_id, optionDict=options)
+            node = self.app.node_api.getNodeById(node_id, optionDict=options)
 
             response = {
                 'node': node.getCleanDict(),
@@ -203,9 +201,9 @@ class NodeController(TortugaController):
 
         try:
             if ip == '127.0.0.1' or ip == '::1':
-                node = app.node_api.getInstallerNode()
+                node = self.app.node_api.getInstallerNode()
             else:
-                node = app.node_api.getNodeByIp(ip)
+                node = self.app.node_api.getNodeByIp(ip)
 
             response = {'node': node.getCleanDict()}
         except NodeNotFound as ex:
@@ -234,7 +232,7 @@ class NodeController(TortugaController):
                 if 'bootFrom' in postdata and \
                 postdata['bootFrom'] is not None else None
 
-            result = app.node_api.updateNodeStatus(name, state, bootFrom)
+            result = self.app.node_api.updateNodeStatus(name, state, bootFrom)
 
             response = {
                 'changed': result,
@@ -256,7 +254,7 @@ class NodeController(TortugaController):
         """
 
         try:
-            info = app.node_api.getProvisioningInfo(nodeName)
+            info = self.app.node_api.getProvisioningInfo(nodeName)
 
             response = {
                 'provisioninginfo': info.getCleanDict(),
@@ -282,7 +280,7 @@ class NodeController(TortugaController):
         """
 
         try:
-            response = app.node_api.idleNode(nodeName)
+            response = self.app.node_api.idleNode(nodeName)
         except NodeNotFound as ex:
             self.handleException(ex)
             code = self.getTortugaStatusCode(ex)
@@ -308,7 +306,7 @@ class NodeController(TortugaController):
             if 'softwareProfileName' in postdata else None
 
         try:
-            response = app.node_api.activateNode(nodeName, softwareProfileName)
+            response = self.app.node_api.activateNode(nodeName, softwareProfileName)
 
         except Exception as ex:
             self.getLogger().exception('node WS API activateNode() failed')
@@ -328,7 +326,7 @@ class NodeController(TortugaController):
             nodeList = [node for node in nodeString.split('+')] \
                 if nodeString != '+' else []
 
-            app.node_api.startupNode(nodeName, nodeList, bootMethod)
+            self.app.node_api.startupNode(nodeName, nodeList, bootMethod)
         except NodeNotFound as ex:
             self.handleException(ex)
             code = self.getTortugaStatusCode(ex)
@@ -347,7 +345,7 @@ class NodeController(TortugaController):
         response = None
 
         try:
-            app.node_api.shutdownNode(nodeName)
+            self.app.node_api.shutdownNode(nodeName)
         except NodeNotFound as ex:
             self.handleException(ex)
             code = self.getTortugaStatusCode(ex)
@@ -371,7 +369,7 @@ class NodeController(TortugaController):
             if 'reinstall' in kwargs else False
 
         try:
-            app.node_api.rebootNode(
+            self.app.node_api.rebootNode(
                 nodeName, bSoftReset=soft_reset, bReinstall=reinstall)
         except NodeNotFound as ex:
             self.handleException(ex)
@@ -393,7 +391,7 @@ class NodeController(TortugaController):
         try:
             # TODO: add request validation here
 
-            nodeList = app.node_api.transferNode(
+            nodeList = self.app.node_api.transferNode(
                 nodespec, postdata['softwareProfileName'],
                 bForce=str2bool(postdata['bForce'])
                 if 'bForce' in postdata else False,
@@ -420,7 +418,7 @@ class NodeController(TortugaController):
         try:
             # TODO: add request validation here
 
-            nodeList = app.node_api.transferNodes(
+            nodeList = self.app.node_api.transferNodes(
                 postdata['srcSoftwareProfile'],
                 postdata['dstSoftwareProfile'],
                 count=postdata['count'],
@@ -450,7 +448,7 @@ class NodeController(TortugaController):
         bDirect = postdata['isDirect'] if 'isDirect' in postdata else None
 
         try:
-            app.node_api.addStorageVolume(nodeName, volume, bDirect)
+            self.app.node_api.addStorageVolume(nodeName, volume, bDirect)
         except Exception as ex:
             self.getLogger().exception('node WS API addStorageVolume() failed')
             self.handleException(ex)
@@ -465,7 +463,7 @@ class NodeController(TortugaController):
         response = None
 
         try:
-            app.node_api.removeStorageVolume(
+            self.app.node_api.removeStorageVolume(
                 nodeName, volume)
         except Exception as ex:
             self.getLogger().exception(
@@ -480,7 +478,7 @@ class NodeController(TortugaController):
     @authentication_required()
     def getStorageVolumeList(self, nodeName):
         try:
-            result = app.node_api.getStorageVolumeList(nodeName)
+            result = self.app.node_api.getStorageVolumeList(nodeName)
 
             response = result.getCleanDict()
         except Exception as ex:

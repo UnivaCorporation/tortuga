@@ -22,7 +22,6 @@ from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.utility.helper import str2bool
 from tortuga.web_service.auth.decorators import authentication_required
 from .tortugaController import TortugaController
-from .. import app
 
 
 class NetworkController(TortugaController):
@@ -73,10 +72,10 @@ class NetworkController(TortugaController):
         try:
             if 'address' in kwargs and 'netmask' in kwargs:
                 networkList = TortugaObjectList(
-                    [app.network_api.getNetwork(
+                    [self.app.network_api.getNetwork(
                         kwargs['address'], kwargs['netmask'])])
             else:
-                networkList = app.network_api.getNetworkList()
+                networkList = self.app.network_api.getNetworkList()
 
             response = {'networks': networkList.getCleanDict()}
         except Exception as ex:
@@ -96,7 +95,7 @@ class NetworkController(TortugaController):
         #     address, netmask))
 
         try:
-            network = app.network_api.getNetwork(
+            network = self.app.network_api.getNetwork(
                 address, netmask)
 
             response = {'network': network.getCleanDict()}
@@ -120,7 +119,7 @@ class NetworkController(TortugaController):
         self.getLogger().debug('Retrieving network id [%s]' % (network_id))
 
         try:
-            network = app.network_api.getNetworkById(network_id)
+            network = self.app.network_api.getNetworkById(network_id)
 
             response = {'network': network.getCleanDict()}
         except Exception as ex:
@@ -149,7 +148,7 @@ class NetworkController(TortugaController):
             network.setAddress(address)
             network.setNetmask(netmask)
 
-            app.network_api.addNetwork(network)
+            self.app.network_api.addNetwork(network)
         except Exception as ex:
             self.getLogger().error('%s' % ex)
             self.handleException(ex)
@@ -168,7 +167,7 @@ class NetworkController(TortugaController):
         response = None
 
         try:
-            app.network_api.deleteNetwork(network_id)
+            self.app.network_api.deleteNetwork(network_id)
         except Exception as ex:
             self.getLogger().error('%s' % ex)
             self.handleException(ex)
@@ -247,13 +246,13 @@ class NetworkController(TortugaController):
                 # Malformed request
                 raise Exception('Malformed request: missing \'network\' key')
 
-            network = app.network_api.getNetworkById(network_id)
+            network = self.app.network_api.getNetworkById(network_id)
 
             if self.__update_network(
                     network, cherrypy.request.json['network']):
                 network.setId(network_id)
 
-                app.network_api.updateNetwork(network)
+                self.app.network_api.updateNetwork(network)
         except NetworkNotFound as ex:
             self.handleException(ex)
             code = self.getTortugaStatusCode(ex)

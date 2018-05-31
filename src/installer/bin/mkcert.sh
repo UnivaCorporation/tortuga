@@ -164,3 +164,6 @@ openssl x509 -req -in $hostdir/${certname}.csr -CA $ca_dir/ca.pem \
     -extensions v3_req -extfile $sslcnf
 
 chmod 0400 $hostdir/$keyfile
+
+# Combine the certificate and ca into a bundle for apps that need it
+cat $hostdir/${certname}.crt $ca_dir/ca.pem > $hostdir/${certname}-bundle.crt

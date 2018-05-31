@@ -22,7 +22,6 @@ from tortuga.objects.admin import Admin
 from tortuga.utility.helper import str2bool
 from tortuga.web_service.auth.decorators import authentication_required
 from .tortugaController import TortugaController
-from .. import app
 
 
 class AdminController(TortugaController):
@@ -75,7 +74,7 @@ class AdminController(TortugaController):
         """ Get an admin by name """
 
         try:
-            admin = app.admin_api.getAdminById(admin_id)
+            admin = self.app.admin_api.getAdminById(admin_id)
 
             response = {
                 'admin': admin.getCleanDict(),
@@ -93,7 +92,7 @@ class AdminController(TortugaController):
         """ Return list of admin users """
 
         try:
-            adminList = app.admin_api.getAdminList()
+            adminList = self.app.admin_api.getAdminList()
 
             response = {
                 'admins': adminList.getCleanDict(),
@@ -125,7 +124,7 @@ class AdminController(TortugaController):
         isCrypted = str2bool(postdata['isCrypted'])
 
         try:
-            app.admin_api.addAdmin(
+            self.app.admin_api.addAdmin(
                 adminRequestObject.getUsername(),
                 adminRequestObject.get_password(),
                 isCrypted,
@@ -146,7 +145,7 @@ class AdminController(TortugaController):
         response = None
 
         try:
-            app.admin_api.deleteAdmin(admin_id)
+            self.app.admin_api.deleteAdmin(admin_id)
         except Exception as ex:
             self.getLogger().error('%s' % ex)
             self.handleException(ex)
@@ -172,7 +171,7 @@ class AdminController(TortugaController):
             if 'isCrypted' in postdata and postdata['isCrypted'] else False
 
         try:
-            app.admin_api.updateAdmin(admin, isCrypted)
+            self.app.admin_api.updateAdmin(admin, isCrypted)
 
             response = None
         except Exception as ex:

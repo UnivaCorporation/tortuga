@@ -36,7 +36,7 @@ class StateManager:
     websocket session.
 
     """
-    def __init__(self, websocket):
+    def __init__(self, websocket: websockets.WebSocketServerProtocol):
         """
         Initializer.
 

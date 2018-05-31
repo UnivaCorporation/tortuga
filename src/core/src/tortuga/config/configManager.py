@@ -31,6 +31,8 @@ DEFAULT_TORTUGA_CONFIG_BASE = os.path.join(DEFAULT_TORTUGA_ROOT, 'config')
 DEFAULT_TORTUGA_REPO_CONFIG_FILE = os.path.join(
     DEFAULT_TORTUGA_CONFIG_BASE, 'repo.conf')
 DEFAULT_TORTUGA_ADMIN_PORT = 8443
+DEFAULT_TORTUGA_WEBSOCKET_PORT = 9443
+DEFAULT_TORTUGA_WEBSOCKET_SCHEME = 'wss'
 DEFAULT_TORTUGA_INT_WEBSERVICE_PORT = 8444
 DEFAULT_TORTUGA_ADMIN_SCHEME = 'https'
 DEFAULT_TORTUGA_INT_WEB_PORT = 8008
@@ -136,6 +138,8 @@ class ConfigManager(dict, Singleton): \
         self['defaultAdminPort'] = DEFAULT_TORTUGA_ADMIN_PORT
         self['defaultIntWebservicePort'] = \
             DEFAULT_TORTUGA_INT_WEBSERVICE_PORT
+        self['defaultWebsocketScheme'] = DEFAULT_TORTUGA_WEBSOCKET_SCHEME
+        self['defaultWebsocketPort'] = DEFAULT_TORTUGA_WEBSOCKET_PORT
         self['defaultAdminScheme'] = DEFAULT_TORTUGA_ADMIN_SCHEME
         self['defaultIntWebPort'] = DEFAULT_TORTUGA_INT_WEB_PORT
         self['defaultDbPassword'] = DEFAULT_TORTUGA_DB_PASSWORD
@@ -510,6 +514,38 @@ class ConfigManager(dict, Singleton): \
         Get the admin scheme
         """
         return self.__getKeyValue('adminScheme', default)
+
+    def setWebsocketScheme(self, websocketScheme: str):
+        """
+        Set the websocket scheme.
+
+        :param str websocketScheme: the websocket scheme (ws or wss...)
+
+        """
+        self['websocketScheme'] = websocketScheme
+        
+    def getWebsocketScheme(self, default: str = '__internal__') -> str:
+        """
+        Get the websocket scheme (ws, or wss...)
+
+        """
+        return self.__getKeyValue('websocketScheme', default)
+
+    def setWebsocketPort(self, websocketPort: int):
+        """
+        Set the websocket port.
+
+        :param str websocketPort: the websocket port
+
+        """
+        self['websocketPort'] = websocketPort
+
+    def getWebsocketPort(self, default: str = '__internal__') ->int:
+        """
+        Get the websocket port
+
+        """
+        return self.__getKeyValue('websocketPort', default)
 
     def setIntWebServicePort(self, intWebservicePort):
         """ Set internal webservice port. """

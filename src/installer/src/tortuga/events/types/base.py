@@ -67,6 +67,7 @@ class BaseEventSchema(Schema):
     Marshmallow schema for events.
 
     """
+    type: fields.Field = fields.String(dump_only=True)
     name: fields.Field = fields.String(dump_only=True)
     id: fields.Field = fields.String()
     timestamp: fields.Field = fields.DateTime()
@@ -79,6 +80,7 @@ class BaseEvent(metaclass=EventMeta):
     implement specific event types.
 
     """
+    type: str = 'event'
     #
     # A name for the event type
     #

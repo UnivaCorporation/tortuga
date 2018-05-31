@@ -1,3 +1,17 @@
+# Copyright 2008-2018 Univa Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from logging import getLogger
 import os
 from typing import List
@@ -201,9 +215,10 @@ class JwtAuthenticationMethod(AuthenticationMethod):
     #
     SECRET_FILE_NAME = 'jwt.secret'
 
-    def __init__(self):
-        self._secret: str = None
-        self._load_secret()
+    def __init__(self, secret: str = None):
+        self._secret: str = secret
+        if not secret:
+            self._load_secret()
 
     def do_authentication(self, **kwargs) -> str:
         if not self._secret:
@@ -214,8 +229,12 @@ class JwtAuthenticationMethod(AuthenticationMethod):
         if not token:
             raise AuthenticationFailed()
 
-        decoded = jwt.decode(token, self._secret,
-                             algorithms=self.ALGORITHMS)
+        try:
+            decoded = jwt.decode(token, self._secret,
+                                 algorithms=self.ALGORITHMS)
+
+        except jwt.DecodeError:
+            raise AuthenticationFailed()
 
         username = decoded.get('username', None)
         if not username:
