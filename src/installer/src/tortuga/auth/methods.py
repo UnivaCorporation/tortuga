@@ -1,8 +1,12 @@
 from logging import getLogger
+import os
 from typing import List
 
+import jwt
 from passlib.hash import pbkdf2_sha256
 
+from tortuga.auth.principal import AuthPrincipal
+from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.authenticationFailed import AuthenticationFailed
 from .manager import AuthManager
 
@@ -153,19 +157,18 @@ class UsernamePasswordAuthenticationMethod(AuthenticationMethod):
         super().__init__()
         self._auth_manager: AuthManager = AuthManager()
 
-    def do_authentication(self, username: str = None,
-                          password: str =None) -> str:
+    def do_authentication(self, **kwargs) -> str:
         """
         An authentication implementation that requires a username and
         password.
-
-        :param str username:        the username to authenticate
-        :param str password:        the password to authenticate
 
         :return str: the username
         :raises AuthenticationFailed:
 
         """
+        username: str = kwargs.get('username', None)
+        password: str = kwargs.get('password', None)
+
         if not username or not password:
             raise AuthenticationFailed()
 
@@ -185,3 +188,62 @@ class UsernamePasswordAuthenticationMethod(AuthenticationMethod):
             return username
 
         raise AuthenticationFailed()
+
+
+class JwtAuthenticationMethod(AuthenticationMethod):
+    """
+    Authenticate a user via JWT tokens.
+
+    """
+    ALGORITHMS = ['HS256', 'RS256']
+    #
+    # The path to the JWT secret file, as found under $TORTUGA_HOME/etc
+    #
+    SECRET_FILE_NAME = 'jwt.secret'
+
+    def __init__(self):
+        self._secret: str = None
+        self._load_secret()
+
+    def do_authentication(self, **kwargs) -> str:
+        if not self._secret:
+            logger.debug('No secret set for JWT authentication')
+            raise AuthenticationFailed()
+
+        token: str = kwargs.get('token', None)
+        if not token:
+            raise AuthenticationFailed()
+
+        decoded = jwt.decode(token, self._secret,
+                             algorithms=self.ALGORITHMS)
+
+        username = decoded.get('username', None)
+        if not username:
+            raise AuthenticationFailed()
+
+        principal: AuthPrincipal = AuthManager().get_principal(username)
+        if not principal:
+            raise AuthenticationFailed()
+
+        return username
+
+    def _load_secret(self):
+        """
+        Loads the JWT shared secret from the secret file, if it exists.
+
+        """
+        cm = ConfigManager()
+
+        secret_file_path = os.path.join(
+            cm.getRoot(),
+            'etc',
+            self.SECRET_FILE_NAME
+        )
+
+        if not os.path.exists(secret_file_path):
+            logger.info('No JWT secret found, JWT authentication will not '
+                        'work: {}'.format(secret_file_path))
+            return
+
+        with open(secret_file_path) as fp:
+            self._secret = fp.read().strip()

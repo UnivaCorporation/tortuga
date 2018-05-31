@@ -13,14 +13,13 @@
 # limitations under the License.
 
 import asyncio
-import json
 import logging
 import threading
 
 from cherrypy.process import plugins
 import websockets
 
-from tortuga.events.manager import PubSubManager
+from tortuga.web_service.websocket.state_manager import StateManager
 
 
 logger = logging.getLogger(__name__)
@@ -44,7 +43,12 @@ class WebsocketPlugin(plugins.SimplePlugin):
         self._loop.stop()
 
     def worker(self):
-        logging.debug('Starting websocket server thread')
+        """
+        The thread worker that runs the asyncio event loop for handling
+        websockets.
+
+        """
+        logger.debug('Starting websocket server thread')
 
         #
         # Create a new asyncio event loop for the thread
@@ -55,42 +59,31 @@ class WebsocketPlugin(plugins.SimplePlugin):
         #
         # Start the websockets server
         #
-        server = websockets.serve(subcribe_to_events, port=9443)
+        server = websockets.serve(websocket_handler, port=9443)
         self._loop.run_until_complete(server)
         self._loop.run_forever()
 
 
-@asyncio.coroutine
-def subcribe_to_events(websocket: websockets.WebSocketServerProtocol,
-                       path: str):
+async def websocket_handler(websocket, path):
     """
-    Subscribes to events, and sends them as JSON data over the websocket.
+    The main websocket handler.
 
-    :param websockets.WebSocketServerProtocol websocket:
-    :param websocket URI path:
+    :param websocket: the websocket server instance
+    :param path:      the path requested on the websocket (unused)
 
     """
-    logging.debug('New websocket connection established')
+    logger.debug('New websocket connection established')
 
-    #
-    # Subscribe to the events pub/sub service
-    #
-    pubsub = PubSubManager.get()
-    pubsub.subscribe()
-    while True:
-        #
-        # Get the next event, if any
-        #
-        event = pubsub.get_message()
-        #
-        # If there is an event, send it immediately
-        #
-        if event:
-            event_dict = event.schema().dump(event).data
-            yield from websocket.send(json.dumps(event_dict))
-        #
-        # If there is are no events in the queue, return to the main event
-        # loop so as to not block processing
-        #
-        else:
-            yield from asyncio.sleep(1)
+    state_manager = StateManager(websocket=websocket)
+    consumer_task = asyncio.ensure_future(state_manager.consumer_handler())
+    producer_task = asyncio.ensure_future(state_manager.producer_handler())
+
+    done, pending = await asyncio.wait(
+        [consumer_task, producer_task],
+        return_when=asyncio.FIRST_COMPLETED,
+    )
+
+    for task in pending:
+        task.cancel()
+
+    logger.debug('Websocket connection exited')

@@ -12,16 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-def authentication_required():
-    """
-    A decorator that specifies whether or not authentication is required.
 
-    """
-    def decorate(f):
-        if not hasattr(f, '_cp_config'):
-            f._cp_config = dict()
-        if 'auth.required' not in f._cp_config:
-            f._cp_config['auth.required'] = True
-        return f
+class AuthenticationRequired(Exception):
+    pass
 
-    return decorate
+
+class AuthenticationTimeout(Exception):
+    pass
+
+
+class ActionNotFoundError(Exception):
+    pass

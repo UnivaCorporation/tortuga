@@ -112,6 +112,8 @@ class BaseEvent(metaclass=EventMeta):
         - A new id is generated for the event
         - A new timestamp is generated for the event
         - The event is stored in the event store
+        - The event is published to a pubsub channel
+        - Any matching event listeners are run
 
         :param kwargs: Arguments passed here will be passed to the
                        events class initialization (__init__) method

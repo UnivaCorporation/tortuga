@@ -285,8 +285,10 @@ class Tortuga:
         :param params:
 
         """
+        ws_client = WebsocketClient(username=self._username,
+                                    password=self._password)
         try:
-            asyncio.get_event_loop().run_until_complete(websocket_client())
+            asyncio.get_event_loop().run_until_complete(ws_client.start())
         except KeyboardInterrupt:
             sys.exit(0)
 
@@ -301,14 +303,61 @@ def pretty_print(data):
     print(yaml.safe_dump(data, default_flow_style=False))
 
 
-@asyncio.coroutine
-def websocket_client():
-    websocket = yield from websockets.connect('ws://localhost:9443/')
+class WebsocketClient:
+    """
+    Websocket client class.
 
-    while True:
-        msg = yield from websocket.recv()
-        data = json.loads(msg)
-        print(yaml.safe_dump(data, default_flow_style=False))
+    """
+    def __init__(self, username: str, password: str):
+        self._username = username
+        self._password = password
+        self._websocket = None
+
+    async def start(self):
+        """
+        Initializes the websocket and starts the event loop.
+
+        """
+        self._websocket = await websockets.connect('ws://localhost:9443/')
+
+        while True:
+            msg = await self._websocket.recv()
+            data = json.loads(msg)
+            print(yaml.safe_dump(data, default_flow_style=False))
+
+            if data['type'] == 'message':
+                if data['name'] == 'authentication-required':
+                    await self.send_auth()
+
+                if data['name'] == 'authentication-succeeded':
+                    await self.send_subscribe()
+
+    async def send_auth(self):
+        """
+        Sends an authentication request.
+
+        """
+        data = {
+            'action': 'authenticate',
+            'method': 'password',
+            'data': {
+                'username': self._username,
+                'password': self._password
+            }
+        }
+
+        await self._websocket.send(json.dumps(data))
+
+    async def send_subscribe(self):
+        """
+        Sends a subscription request.
+
+        """
+        data = {
+            'action': 'subscribe'
+        }
+
+        await self._websocket.send(json.dumps(data))
 
 
 def main():
