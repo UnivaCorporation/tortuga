@@ -72,6 +72,9 @@ class ResourceAdapterConfigurationManager:
 
         adapter.resource_adapter_config.append(cfg)
 
+        # commit resource adapter changes to database
+        session.commit()
+
         return cfg
 
     def get(self, session: Session, resadapter_name: str, name: str) \

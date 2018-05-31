@@ -53,8 +53,11 @@ from tortuga.san import san
 from tortuga.softwareprofile.softwareProfileManager import \
     SoftwareProfileManager
 from tortuga.sync.syncApi import SyncApi
+from tortuga.kit.loader import load_kits
+
 
 OptionDict = Dict[str, bool]
+
 
 class NodeManager(TortugaObjectManager): \
         # pylint: disable=too-many-public-methods
@@ -73,6 +76,10 @@ class NodeManager(TortugaObjectManager): \
         self._bhm = osUtility.getOsObjectFactory().getOsBootHostManager()
         self._syncApi = SyncApi()
         self._nodesDbHandler = NodesDbHandler()
+
+        load_kits()
+
+        self._kitmgr = KitActionsManager()
 
     def __validateHostName(self, hostname: str, name_format: str) -> NoReturn:
         """
@@ -634,15 +641,8 @@ class NodeManager(TortugaObjectManager): \
             '__preDeleteHost(): nodes=[%s]' % (
                 ' '.join([node.name for node in nodes])))
 
-        if not nodes:
-            self.getLogger().debug('No nodes deleted in this operation')
-
-            return
-
-        kitmgr = KitActionsManager()
-
         for node in nodes:
-            kitmgr.pre_delete_host(
+            self._kitmgr.pre_delete_host(
                 node.hardwareprofile.name,
                 node.softwareprofile.name if node.softwareprofile else None,
                 nodes=[node.name])
@@ -667,10 +667,8 @@ class NodeManager(TortugaObjectManager): \
 
             return
 
-        kitmgr = KitActionsManager()
-
         for node_dict in nodes_deleted:
-            kitmgr.post_delete_host(
+            self._kitmgr.post_delete_host(
                 node_dict['hardwareprofile'],
                 node_dict['softwareprofile']
                 if 'softwareprofile' in node_dict else None,
@@ -763,7 +761,7 @@ class NodeManager(TortugaObjectManager): \
         )
 
         # Now call the 'refresh' action to all participatory components
-        KitActionsManager().refresh(transfer_dict)
+        self._kitmgr.refresh(transfer_dict)
 
         return results
 
