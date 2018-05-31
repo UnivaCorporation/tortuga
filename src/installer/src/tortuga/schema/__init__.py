@@ -35,11 +35,19 @@ from tortuga.db.models.osFamilyComponent import \
     OsFamilyComponent as OsFamilyComponentModel
 from tortuga.db.models.resourceAdapter import \
     ResourceAdapter as ResourceAdapterModel
-from tortuga.db.models.resourceAdapterCredential import \
-    ResourceAdapterCredential as ResourceAdapterCredentialModel
+from tortuga.db.models.resourceAdapterConfig import \
+    ResourceAdapterConfig as ResourceAdapterConfigModel
 from tortuga.db.models.softwareProfile import \
     SoftwareProfile as SoftwareProfileModel
 from tortuga.db.models.tag import Tag as TagModel
+from tortuga.db.models.admin import Admin as AdminModel
+from tortuga.db.models.resourceAdapterSetting import \
+    ResourceAdapterSetting as ResourceAdapterSettingModel
+
+
+class AdminSchema(ModelSchema):
+    class Meta:
+        model = AdminModel
 
 
 class TagSchema(ModelSchema):
@@ -109,13 +117,24 @@ class ComponentSchema(ModelSchema):
         model = ComponentModel
 
 
-class ResourceAdapterCredentialSchema(ModelSchema):
+class ResourceAdapterConfigSettingSchema(ModelSchema):
     class Meta:
-        model = ResourceAdapterCredentialModel
+        model = ResourceAdapterSettingModel
+
+
+class ResourceAdapterConfigSchema(ModelSchema):
+    resourceadapter = fields.Nested('ResourceAdapterSchema',
+                                    only=('id', 'name'))
+    admin = fields.Nested('AdminSchema', only=('id', 'username'))
+    settings = fields.Nested('ResourceAdapterConfigSettingSchema',
+                             only=('id', 'key', 'value'), many=True)
+
+    class Meta:
+        model = ResourceAdapterConfigModel
 
 
 class ResourceAdapterSchema(ModelSchema):
-    credentials = fields.Nested('ResourceAdapterCredentialSchema')
+    credentials = fields.Nested('ResourceAdapterConfigSchema')
 
     class Meta:
         model = ResourceAdapterModel
@@ -151,7 +170,8 @@ class SoftwareProfileSchema(ModelSchema):
                                exclude=('softwareprofiles',))
 
     hardwareprofiles = fields.Nested('HardwareProfileSchema',
-                                     only=('id', 'name', 'resourceadapter'), many=True)
+                                     only=('id', 'name', 'resourceadapter'),
+                                     many=True)
 
     os = fields.Nested('OperatingSystemSchema')
 
@@ -174,7 +194,8 @@ class HardwareProfileSchema(ModelSchema):
     tags = fields.Nested('TagSchema',
                          only=('id', 'name', 'value'), many=True)
 
-    resourceadapter = fields.Nested('ResourceAdapterSchema', only=('id', 'name'))
+    resourceadapter = fields.Nested('ResourceAdapterSchema',
+                                    only=('id', 'name'))
 
     class Meta:
         model = HardwareProfileModel

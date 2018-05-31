@@ -20,7 +20,7 @@ import json
 import os
 import pkgutil
 from logging import getLogger
-from typing import Optional
+from typing import Optional, Type
 
 from tortuga.config import version_is_compatible, VERSION
 from tortuga.config.configManager import ConfigManager
@@ -130,7 +130,7 @@ class KitInstallerMeta(type):
     KIT_METADATA_FILE file.
 
     """
-    def __init__(cls, name, bases, attrs):
+    def __init__(cls: Type['KitInstallerBase'], name, bases, attrs):
         super().__init__(name, bases, attrs)
 
         #
@@ -148,24 +148,20 @@ class KitInstallerMeta(type):
         kit_file_path_segments = kit_file_path.split(os.path.sep)
         kit_install_path_segments = \
             kit_file_path_segments[:-(kit_pkg_depth + 1)]
-        kit_install_path = os.path.abspath(
+        cls.install_path = os.path.abspath(
             os.path.join(
                 os.path.sep,
                 *kit_install_path_segments
             )
         )
 
-        metadata_file_path = os.path.join(kit_install_path, KIT_METADATA_FILE)
-        kit_meta_fp = None
+        metadata_file_path = os.path.join(cls.install_path, KIT_METADATA_FILE)
         try:
-            kit_meta_fp = open(metadata_file_path)
-        except FileNotFoundError:
-            pass
-        if not kit_meta_fp:
+            with open(metadata_file_path) as kit_meta_fp:
+                cls.load_meta(json.load(kit_meta_fp))
+        except [FileNotFoundError, json.JSONDecodeError]:
             raise Exception(
                 'Metadata not found for kit: {}'.format(cls.__module__))
-        cls.install_path = kit_install_path
-        cls.load_meta(json.load(kit_meta_fp))
 
         #
         # Register the kit class

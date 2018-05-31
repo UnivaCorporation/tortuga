@@ -39,6 +39,9 @@ def main():
     if len(sys.argv) != 2:
         sys.exit(1)
 
+    # ensure all available kits are loaded
+    load_kits()
+
     nodeName = sys.argv[1].lower()
 
     # Load DNSZone from GlobalParameters
@@ -115,7 +118,6 @@ def get_puppet_node_yaml(session, nodeName):
                 #
                 # Load the kit and component installers
                 #
-                load_kits()
                 kit_spec = (
                     dbComponent.kit.name,
                     dbComponent.kit.version,

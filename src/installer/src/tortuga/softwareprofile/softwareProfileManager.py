@@ -25,7 +25,6 @@ from tortuga.db.softwareProfileDbApi import SoftwareProfileDbApi
 from tortuga.exceptions.componentNotFound import ComponentNotFound
 from tortuga.exceptions.kitNotFound import KitNotFound
 from tortuga.helper import osHelper
-from tortuga.kit.loader import load_kits
 from tortuga.kit.registry import get_kit_installer
 from tortuga.objects.softwareProfile import SoftwareProfile
 from tortuga.objects.tortugaObject import TortugaObjectList
@@ -553,7 +552,6 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
         """
         kit_spec = (kit.getName(), kit.getVersion(), kit.getIteration())
 
-        load_kits()
         installer = get_kit_installer(kit_spec)()
         comp_installer = installer.get_component_installer(comp_name)
         if not comp_installer.is_enableable(software_profile):
@@ -675,7 +673,6 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
         """
         kit_spec = (kit.getName(), kit.getVersion(), kit.getIteration())
 
-        load_kits()
         installer = get_kit_installer(kit_spec)()
         comp_installer = installer.get_component_installer(comp_name)
         comp_installer.run_action('pre_disable',
@@ -808,6 +805,10 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
         kits = self._kit_db_api.getKitList()
 
         for kit in kits:
+            if kit.getIsOs():
+                # ignore OS kits
+                continue
+
             installer_ = get_kit_installer(
                 (kit.getName(), kit.getVersion(), kit.getIteration()))
 

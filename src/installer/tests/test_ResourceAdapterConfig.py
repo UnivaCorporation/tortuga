@@ -11,3 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+from tortuga.db.models.resourceAdapterConfig import ResourceAdapterConfig
+from tortuga.db.models.resourceAdapterSetting import ResourceAdapterSetting
+
+
+def test_instantiation():
+    adapter_cfg = ResourceAdapterConfig(name='default')
+    adapter_cfg.settings.append(
+        ResourceAdapterSetting(key='test_key', value='test_value')
+    )

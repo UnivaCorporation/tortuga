@@ -39,10 +39,13 @@ from tortuga.db.models.softwareProfile import SoftwareProfile
 from tortuga.db.models.tag import Tag
 from tortuga.deployer.dbUtility import init_global_parameters, primeDb
 from tortuga.node import nodeManager
+from tortuga.tasks.celery import app
 from tortuga.objects import osFamilyInfo, osInfo
 from tortuga.objectstore import manager as objectstore_manager
 
 from .mocks.redis import MockRedis
+from tortuga.db.models.resourceAdapterConfig import ResourceAdapterConfig
+from tortuga.db.models.resourceAdapterSetting import ResourceAdapterSetting
 
 
 @pytest.fixture(autouse=True)
@@ -72,6 +75,16 @@ def mock_redis(monkeypatch, redis):
 @pytest.fixture()
 def redis():
     return MockRedis()
+
+
+#
+# This is here to override the celery_app fixture that comes with the
+# celery pytest plugin. We bring up our own version of the test instance
+# in our tasks library, and just refer to that here.
+#
+@pytest.fixture()
+def celery_app():
+    return app
 
 
 @pytest.fixture(scope='session')
@@ -217,6 +230,24 @@ def dbm():
         # create resource adapter
         aws_adapter = ResourceAdapter(name='aws')
         aws_adapter.kit = ra_kit
+
+        aws_adapter_cfg = ResourceAdapterConfig(
+            name='default',
+            description='Example default resource adapter configuration'
+        )
+
+        aws_adapter_cfg.settings.append(
+            ResourceAdapterSetting(key='ami', value='ami-XXXXXX')
+        )
+
+        aws_adapter.resource_adapter_config.append(aws_adapter_cfg)
+
+        # add second resource adapter configuration
+        aws_adapter_cfg2 = ResourceAdapterConfig(
+            name='nondefault', admin=admin)
+        aws_adapter_cfg2.settings.append(
+            ResourceAdapterSetting(key='another_key', value='another_value')
+        )
 
         session.add(aws_adapter)
 

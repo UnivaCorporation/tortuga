@@ -1,4 +1,4 @@
-from tortuga.tasks import app
+from tortuga.tasks.celery import app
 from tortuga.addhost.addHostRequest import process_addhost_request
 from tortuga.addhost.deleteHostRequest import process_delete_host_request
 

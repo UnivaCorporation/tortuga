@@ -25,7 +25,9 @@ from tortuga.exceptions.resourceAlreadyExists import ResourceAlreadyExists
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.resourceAdapterConfiguration.api import \
     ResourceAdapterConfigurationApi
+from tortuga.schema import ResourceAdapterConfigSchema
 from tortuga.web_service.auth.decorators import authentication_required
+
 from .tortugaController import TortugaController
 
 
@@ -81,7 +83,7 @@ class ResourceAdapterConfigurationController(TortugaController):
                 for adapter in
                 ResourceAdapterDbApi().getResourceAdapterList()
             ]
-        except Exception:
+        except Exception:  # noqa pylint: disable=broad-except
             # Unhandled server exception
             self.getLogger().exception('create() failed')
 
@@ -139,8 +141,10 @@ class ResourceAdapterConfigurationController(TortugaController):
     @authentication_required()
     def get(self, resadapter_name, name):
         try:
-            response = ResourceAdapterConfigurationApi().get(
+            adapter_cfg = ResourceAdapterConfigurationApi().get(
                 cherrypy.request.db, resadapter_name, name)
+
+            response = ResourceAdapterConfigSchema().dump(adapter_cfg).data
         except ResourceAdapterNotFound as exc:
             self.handleException(exc)
 
@@ -151,7 +155,7 @@ class ResourceAdapterConfigurationController(TortugaController):
             response = self.errorResponse(
                 str(exc),
                 code=self.getTortugaStatusCode(exc))
-        except Exception:
+        except Exception:  # noqa pylint: disable=broad-except
             # Unhandled server exception
             self.getLogger().exception('get() failed')
 
@@ -177,7 +181,7 @@ class ResourceAdapterConfigurationController(TortugaController):
             response = self.errorResponse(
                 str(exc),
                 code=self.getTortugaStatusCode(exc))
-        except Exception:
+        except Exception:  # noqa pylint: disable=broad-except
             # Unhandled server exception
             self.getLogger().exception('get() failed')
 
@@ -208,7 +212,7 @@ class ResourceAdapterConfigurationController(TortugaController):
             response = self.errorResponse(
                 str(exc),
                 code=self.getTortugaStatusCode(exc))
-        except Exception:
+        except Exception:  # noqa pylint: disable=broad-except
             # Unhandled server exception
             self.getLogger().exception('update() failed')
 
@@ -238,7 +242,7 @@ class ResourceAdapterConfigurationController(TortugaController):
             response = self.errorResponse(
                 str(exc),
                 code=self.getTortugaStatusCode(exc))
-        except Exception:
+        except Exception:  # noqa pylint: disable=broad-except
             # Unhandled server exception
             self.getLogger().exception('delete() failed')
 
