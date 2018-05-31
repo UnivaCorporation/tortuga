@@ -14,13 +14,16 @@
 
 # pylint: disable=no-member
 
-"""Resource adapter configuration management CLI"""
+"""
+Resource adapter configuration management CLI
+"""
 
 import os.path
 import sys
 import json
 import configparser
 import argparse
+from typing import List, Dict
 
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.wsapi.resourceAdapterConfigurationWsApi \
@@ -150,7 +153,8 @@ class AdapterMgmtCLI(TortugaCli):
             '--profile', '-p', metavar='NAME',
             help='Configuration profile name', required=True)
         self.subparser_update = subparsers.add_parser(
-            'update', parents=[common_args, update_args, create_update_common_args])
+            'update',
+            parents=[common_args, update_args, create_update_common_args])
 
         self.subparser_update.add_argument(
             '--delete-setting', '-d', metavar="KEY", type=cfgkey,
@@ -203,7 +207,7 @@ class AdapterMgmtCLI(TortugaCli):
 
             if args.setting:
                 # Display only specified configuration setting
-                for cfgitem in cfg['configuration']:
+                for cfgitem in cfg['settings']:
                     if cfgitem['key'] == args.setting:
                         sys.stdout.write(cfgitem['value'] + '\n')
 
@@ -223,7 +227,9 @@ class AdapterMgmtCLI(TortugaCli):
                 sys.stdout.flush()
             else:
                 sys.stdout.write(
-                    'Resource adapter: {0}\n'.format(cfg['resourceadapter']))
+                    'Resource adapter: {0}\n'.format(
+                        cfg['resourceadapter']['name']))
+
                 sys.stdout.write('Profile: {0}\n'.format(cfg['name']))
 
                 secret_keys = [
@@ -236,30 +242,26 @@ class AdapterMgmtCLI(TortugaCli):
                     'password',
                 ]
 
-                sys.stdout.write('Configuration:\n')
-                for cfgitem in cfg['configuration']:
-                    value = cfgitem['value'] \
-                        if args.show_all or \
-                        cfgitem['key'] not in secret_keys else '<REDACTED>'
+                if cfg['settings']:
+                    sys.stdout.write('Configuration:\n')
 
-                    sys.stdout.write(
-                        '  - {0} = {1}\n'.format(cfgitem['key'], value))
+                    for cfgitem in cfg['settings']:
+                        value = cfgitem['value'] \
+                            if args.show_all or \
+                            cfgitem['key'] not in secret_keys else '<REDACTED>'
+
+                        sys.stdout.write(
+                            '  - {0} = {1}\n'.format(cfgitem['key'], value))
         except TortugaException as exc:
             sys.stderr.write('Error: {0}\n'.format(exc))
             sys.stderr.flush()
             sys.exit(1)
 
     def create_resource_adapter_config(self, args):
-        if not args.setting:
-            sys.stderr.write(
-                'Error: No adapter configuration provided, '
-                'profile not created.\n'
-            )
-            sys.stdout.flush()
-            sys.exit(1)
-
         try:
-            cfg = [dict(key=key, value=value) for key, value in args.setting]
+            cfg = [dict(key=key, value=value)
+                   for key, value in args.setting] if args.setting else None
+
             self.api.create(args.resource_adapter, args.profile, cfg)
         except TortugaException as exc:
             sys.stderr.write('Error: {0}\n'.format(exc))
@@ -311,7 +313,7 @@ class AdapterMgmtCLI(TortugaCli):
             sys.stdout.flush()
 
         try:
-            cfg = []
+            cfg: List[Dict[str, str]] = []
 
             for key, value in args.setting or []:
                 if args.verbose:
@@ -382,7 +384,7 @@ class AdapterMgmtCLI(TortugaCli):
         sys.stdout.write('Processing resource adapter configuration... ')
         sys.stdout.flush()
 
-        cfg.readfp(args.adapter_config)
+        cfg.read_file(args.adapter_config)
 
         sys.stdout.write('done.\n')
         sys.stdout.flush()

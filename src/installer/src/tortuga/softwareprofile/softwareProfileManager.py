@@ -805,6 +805,10 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
         kits = self._kit_db_api.getKitList()
 
         for kit in kits:
+            if kit.getIsOs():
+                # ignore OS kits
+                continue
+
             installer_ = get_kit_installer(
                 (kit.getName(), kit.getVersion(), kit.getIteration()))
 
