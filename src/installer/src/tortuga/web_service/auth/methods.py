@@ -1,13 +1,24 @@
+# Copyright 2008-2018 Univa Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from logging import getLogger
 
 import cherrypy
 from cherrypy.lib import httpauth
-import jwt
 
-from tortuga.auth.manager import AuthManager
 from tortuga.auth.methods import AuthenticationMethod, \
-    UsernamePasswordAuthenticationMethod
-from tortuga.auth.principal import AuthPrincipal
+    JwtAuthenticationMethod, UsernamePasswordAuthenticationMethod
 from tortuga.exceptions.authenticationFailed import AuthenticationFailed
 
 
@@ -61,8 +72,7 @@ class HttpPostAuthenticatonMethod(UsernamePasswordAuthenticationMethod):
     Authenticate a user via HTTP post data.
 
     """
-    def do_authentication(self, username: str = None,
-                          password: str =None) -> str:
+    def do_authentication(self, **kwargs) -> str:
         if int(cherrypy.request.headers['Content-Length']):
             postdata = cherrypy.request.json
         else:
@@ -71,16 +81,15 @@ class HttpPostAuthenticatonMethod(UsernamePasswordAuthenticationMethod):
         username = postdata.get('username', None)
         password = postdata.get('password', None)
 
-        return super().do_authentication(username=username, password=password)
+        return super().do_authentication(username=username,
+                                         password=password, **kwargs)
 
 
-class HttpJwtAuthenticationMethod(AuthenticationMethod):
+class HttpJwtAuthenticationMethod(JwtAuthenticationMethod):
     """
-    Authenticate a user via JWT tokens.
+    Authenticate a user via a HTTP JWT.
 
     """
-    ALGORITHMS = ['HS256', 'RS256']
-
     def do_authentication(self, **kwargs) -> str:
         if 'authorization' not in cherrypy.request.headers:
             raise AuthenticationFailed()
@@ -90,21 +99,18 @@ class HttpJwtAuthenticationMethod(AuthenticationMethod):
         if not value or not scheme or scheme.lower() != 'bearer':
             raise AuthenticationFailed()
 
-        decoded = jwt.decode(value, self._get_key(),
-                             algorithms=self.ALGORITHMS)
-
-        username = decoded.get('username', None)
-        if not username:
-            raise AuthenticationFailed()
-
-        principal: AuthPrincipal = AuthManager().get_principal(username)
-        if not principal:
-            raise AuthenticationFailed()
-
-        return username
+        return super().do_authentication(token=value)
 
     @staticmethod
     def _parse_authorization_header(header: str) -> (str, str):
+        """
+        Parses an authentication header.
+
+        :param str header: the header string to parse
+
+        :return (str, str): the (scheme, value) of the authorization header
+
+        """
         scheme = None
         value = None
 
@@ -116,5 +122,51 @@ class HttpJwtAuthenticationMethod(AuthenticationMethod):
 
         return scheme, value
 
-    def _get_key(self):
-        return 'Abc123'
+
+class WsUsernamePasswordAuthenticationMethod(
+        UsernamePasswordAuthenticationMethod):
+    """
+    Authenticate a websocket user using a username/password.
+
+    """
+    def do_authentication(self, **kwargs):
+        #
+        # An instance of tortuga.web_service.websocket.actions.BaseAction
+        #
+        action = kwargs.get('action', None)
+        if not action:
+            raise AuthenticationFailed()
+
+        if action.method != 'password':
+            raise AuthenticationFailed()
+
+        username: str = action.data.get('username', None)
+        password: str = action.data.get('password', None)
+        if not username or not password:
+            raise AuthenticationFailed()
+
+        return super().do_authentication(username=username,
+                                         password=password, **kwargs)
+
+
+class WsJwtAuthenticationMethod(JwtAuthenticationMethod):
+    """
+    Authenticate a websocket user using via a JWT.
+
+    """
+    def do_authentication(self, **kwargs):
+        #
+        # An instance of tortuga.web_service.websocket.actions.BaseAction
+        #
+        action = kwargs.get('action', None)
+        if not action:
+            raise AuthenticationFailed()
+
+        if action.method != 'jwt':
+            raise AuthenticationFailed()
+
+        token: str = action.data.get('token', None)
+        if not token:
+            raise AuthenticationFailed()
+
+        return super().do_authentication(token=token, **kwargs)

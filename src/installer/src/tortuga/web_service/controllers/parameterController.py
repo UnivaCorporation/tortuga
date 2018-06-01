@@ -19,7 +19,6 @@ from tortuga.exceptions.parameterNotFound import ParameterNotFound
 from tortuga.objects.parameter import Parameter
 from tortuga.web_service.auth.decorators import authentication_required
 from .tortugaController import TortugaController
-from .. import app
 
 
 class ParameterController(TortugaController):
@@ -69,7 +68,7 @@ class ParameterController(TortugaController):
 
         """
         try:
-            parameter = app.parameter_api.getParameter(name)
+            parameter = self.app.parameter_api.getParameter(name)
 
             response = {
                 'globalparameter': parameter.getCleanDict(),
@@ -92,7 +91,7 @@ class ParameterController(TortugaController):
         self.getLogger().debug('Retrieving parameter list')
 
         try:
-            parameterList = app.parameter_api.getParameterList()
+            parameterList = self.app.parameter_api.getParameterList()
 
             response = {
                 'globalparameters': parameterList.getCleanDict(),
@@ -118,7 +117,7 @@ class ParameterController(TortugaController):
         parameter = Parameter.getFromDict(postdata)
 
         try:
-            app.parameter_api.getParameter(parameter.get_name())
+            self.app.parameter_api.getParameter(parameter.get_name())
             parameter_exists = True
 
         except ParameterNotFound:
@@ -128,7 +127,7 @@ class ParameterController(TortugaController):
             if parameter_exists:
                 raise ParameterAlreadyExists()
 
-            app.parameter_api.upsertParameter(parameter)
+            self.app.parameter_api.upsertParameter(parameter)
 
             response = None
 
@@ -156,7 +155,7 @@ class ParameterController(TortugaController):
             if name != parameter.get_name():
                 raise Exception('Parameter name mismatch')
 
-            app.parameter_api.upsertParameter(parameter)
+            self.app.parameter_api.upsertParameter(parameter)
             response = None
 
         except Exception as ex:
@@ -178,7 +177,7 @@ class ParameterController(TortugaController):
         self.getLogger().debug('Deleting parameter: {}'.format(name))
 
         try:
-            app.parameter_api.deleteParameter(name)
+            self.app.parameter_api.deleteParameter(name)
             response = None
 
         except Exception as ex:

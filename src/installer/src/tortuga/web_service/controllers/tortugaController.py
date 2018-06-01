@@ -20,6 +20,7 @@ import cherrypy
 
 from tortuga.exceptions.internalError import InternalError
 from tortuga.utility import tortugaStatus
+from tortuga.types.application import Application
 
 
 class TortugaController(object):
@@ -38,6 +39,7 @@ class TortugaController(object):
     #    }
     #
     actions = []
+    app = Application()
 
     def __init__(self):
         self._logger = logging.getLogger(

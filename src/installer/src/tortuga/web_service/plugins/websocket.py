@@ -13,14 +13,17 @@
 # limitations under the License.
 
 import asyncio
-import json
 import logging
+import os
+import ssl
 import threading
 
+import cherrypy
 from cherrypy.process import plugins
 import websockets
 
-from tortuga.events.manager import PubSubManager
+from tortuga.config.configManager import ConfigManager
+from tortuga.web_service.websocket.state_manager import StateManager
 
 
 logger = logging.getLogger(__name__)
@@ -33,6 +36,7 @@ class WebsocketPlugin(plugins.SimplePlugin):
     """
     def __init__(self, bus):
         super().__init__(bus)
+        self._cm = ConfigManager()
         self._loop: asyncio.AbstractEventLoop = None
         self._thread: threading.Thread = None
 
@@ -44,7 +48,12 @@ class WebsocketPlugin(plugins.SimplePlugin):
         self._loop.stop()
 
     def worker(self):
-        logging.debug('Starting websocket server thread')
+        """
+        The thread worker that runs the asyncio event loop for handling
+        websockets.
+
+        """
+        logger.debug('Starting websocket server thread')
 
         #
         # Create a new asyncio event loop for the thread
@@ -52,45 +61,89 @@ class WebsocketPlugin(plugins.SimplePlugin):
         self._loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self._loop)
 
-        #
-        # Start the websockets server
-        #
-        server = websockets.serve(subcribe_to_events, port=9443)
+        scheme = self._cm.getWebsocketScheme()
+        port = self._cm.getWebsocketPort()
+
+        try:
+            if scheme == 'wss':
+                server = self._start_secure(port=port)
+
+            elif scheme == 'ws':
+                server = self._start_insecure(port=port)
+
+            else:
+                raise Exception('Unknown websocket scheme: {}'.format(scheme))
+
+        except Exception as ex:
+            logger.error(str(ex))
+            logger.error('Unable to start websocket server')
+
+            return
+
         self._loop.run_until_complete(server)
         self._loop.run_forever()
 
+    def _start_secure(self, port: int) -> websockets.WebSocketServerProtocol:
+        logger.debug(
+            'Starting websocket with SSL/TLS enabled on port {}'.format(port))
 
-@asyncio.coroutine
-def subcribe_to_events(websocket: websockets.WebSocketServerProtocol,
-                       path: str):
+        ssl_context = self._get_ssl_context()
+
+        return websockets.serve(websocket_handler, port=port, ssl=ssl_context)
+
+    def _get_ssl_context(self) -> ssl.SSLContext:
+        cherrypy_cert = cherrypy.config.get('server.ssl_certificate', '')
+        cherrypy_key = cherrypy.config.get('server.ssl_private_key', '')
+        websocket_cert = cherrypy_cert.replace('.crt', '-bundle.crt')
+
+        if not os.path.exists(websocket_cert):
+            raise Exception(
+                'Combined SSL cert not found: {}'.format(websocket_cert))
+
+        if not os.path.exists(cherrypy_key):
+            raise Exception('SSL key not found: {}'.format(cherrypy_key))
+
+        ssl_context = ssl.SSLContext()
+        ssl_context.load_cert_chain(websocket_cert, keyfile=cherrypy_key)
+
+        return ssl_context
+
+    def _start_insecure(self, port: int) -> websockets.WebSocketServerProtocol:
+        logger.debug(
+            'Starting websocket with SSL/TLS disabled on port {}'.format(
+                port))
+
+        return websockets.serve(websocket_handler, port=port)
+
+
+async def websocket_handler(websocket, path):
     """
-    Subscribes to events, and sends them as JSON data over the websocket.
+    The main websocket handler.
 
-    :param websockets.WebSocketServerProtocol websocket:
-    :param websocket URI path:
+    :param websocket: the websocket server instance
+    :param path:      the path requested on the websocket (unused)
 
     """
-    logging.debug('New websocket connection established')
+    logger.debug('New websocket connection established')
 
-    #
-    # Subscribe to the events pub/sub service
-    #
-    pubsub = PubSubManager.get()
-    pubsub.subscribe()
-    while True:
-        #
-        # Get the next event, if any
-        #
-        event = pubsub.get_message()
-        #
-        # If there is an event, send it immediately
-        #
-        if event:
-            event_dict = event.schema().dump(event).data
-            yield from websocket.send(json.dumps(event_dict))
-        #
-        # If there is are no events in the queue, return to the main event
-        # loop so as to not block processing
-        #
-        else:
-            yield from asyncio.sleep(1)
+    try:
+        state_manager = StateManager(websocket=websocket)
+        consumer_task = asyncio.ensure_future(
+            state_manager.consumer_handler())
+        producer_task = asyncio.ensure_future(
+            state_manager.producer_handler())
+
+    except Exception as ex:
+        logger.error(str(ex))
+        logger.error('Websocket connection exited')
+        raise
+
+    done, pending = await asyncio.wait(
+        [consumer_task, producer_task],
+        return_when=asyncio.FIRST_COMPLETED,
+    )
+
+    for task in pending:
+        task.cancel()
+
+    logger.debug('Websocket connection exited')

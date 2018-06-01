@@ -67,6 +67,7 @@ class BaseEventSchema(Schema):
     Marshmallow schema for events.
 
     """
+    type: fields.Field = fields.String(dump_only=True)
     name: fields.Field = fields.String(dump_only=True)
     id: fields.Field = fields.String()
     timestamp: fields.Field = fields.DateTime()
@@ -79,6 +80,7 @@ class BaseEvent(metaclass=EventMeta):
     implement specific event types.
 
     """
+    type: str = 'event'
     #
     # A name for the event type
     #
@@ -112,6 +114,8 @@ class BaseEvent(metaclass=EventMeta):
         - A new id is generated for the event
         - A new timestamp is generated for the event
         - The event is stored in the event store
+        - The event is published to a pubsub channel
+        - Any matching event listeners are run
 
         :param kwargs: Arguments passed here will be passed to the
                        events class initialization (__init__) method

@@ -12,25 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from cherrypy.process import plugins
 
-from tortuga.db.dbManager import DbManager
+class AuthenticationRequired(Exception):
+    pass
 
 
-class DatabasePlugin(plugins.SimplePlugin):
-    def __init__(self, bus):
-        super(DatabasePlugin, self).__init__(bus)
-        self.sa_engine = None
-        self.bus.subscribe('bind', self.bind)
+class AuthenticationTimeout(Exception):
+    pass
 
-    def start(self):
-        dbm = DbManager()
-        self.sa_engine = dbm.engine
 
-    def stop(self):
-        if self.sa_engine:
-            self.sa_engine.dispose()
-            self.sa_engine = None
-
-    def bind(self, session):
-        session.configure(bind=self.sa_engine)
+class ActionNotFoundError(Exception):
+    pass
