@@ -246,18 +246,22 @@ class JwtAuthenticationMethod(AuthenticationMethod):
 
         return username
 
+    @staticmethod
+    def secret_path():
+        cm = ConfigManager()
+
+        return os.path.join(
+            cm.getRoot(),
+            'etc',
+            JwtAuthenticationMethod.SECRET_FILE_NAME
+        )
+
     def _load_secret(self):
         """
         Loads the JWT shared secret from the secret file, if it exists.
 
         """
-        cm = ConfigManager()
-
-        secret_file_path = os.path.join(
-            cm.getRoot(),
-            'etc',
-            self.SECRET_FILE_NAME
-        )
+        secret_file_path = JwtAuthenticationMethod.secret_path()
 
         if not os.path.exists(secret_file_path):
             logger.info('No JWT secret found, JWT authentication will not '
