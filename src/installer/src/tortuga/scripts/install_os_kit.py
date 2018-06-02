@@ -16,6 +16,7 @@ from typing import List
 
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.kit.kitApiFactory import getKitApi
+from tortuga.kit.loader import load_kits
 from tortuga.puppet import Puppet
 
 
@@ -49,6 +50,8 @@ class InstallOsKitCli(TortugaCli):
 Installs operating system media to Tortuga for the purpose of
 package-based node provisioning.
 """))
+
+        load_kits()
 
         api = getKitApi(self.getUsername(), self.getPassword())
 
