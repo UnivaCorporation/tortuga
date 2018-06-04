@@ -11,11 +11,3 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-from tortuga.db.dbManager import DbManager
-from ..types.application import Application
-
-
-app = Application()
-
-dbm = DbManager()

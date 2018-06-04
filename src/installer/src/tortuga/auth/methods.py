@@ -1,8 +1,26 @@
+# Copyright 2008-2018 Univa Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from logging import getLogger
+import os
 from typing import List
 
+import jwt
 from passlib.hash import pbkdf2_sha256
 
+from tortuga.auth.principal import AuthPrincipal
+from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.authenticationFailed import AuthenticationFailed
 from .manager import AuthManager
 
@@ -153,19 +171,18 @@ class UsernamePasswordAuthenticationMethod(AuthenticationMethod):
         super().__init__()
         self._auth_manager: AuthManager = AuthManager()
 
-    def do_authentication(self, username: str = None,
-                          password: str =None) -> str:
+    def do_authentication(self, **kwargs) -> str:
         """
         An authentication implementation that requires a username and
         password.
-
-        :param str username:        the username to authenticate
-        :param str password:        the password to authenticate
 
         :return str: the username
         :raises AuthenticationFailed:
 
         """
+        username: str = kwargs.get('username', None)
+        password: str = kwargs.get('password', None)
+
         if not username or not password:
             raise AuthenticationFailed()
 
@@ -185,3 +202,71 @@ class UsernamePasswordAuthenticationMethod(AuthenticationMethod):
             return username
 
         raise AuthenticationFailed()
+
+
+class JwtAuthenticationMethod(AuthenticationMethod):
+    """
+    Authenticate a user via JWT tokens.
+
+    """
+    ALGORITHMS = ['HS256', 'RS256']
+    #
+    # The path to the JWT secret file, as found under $TORTUGA_HOME/etc
+    #
+    SECRET_FILE_NAME = 'jwt.secret'
+
+    def __init__(self, secret: str = None):
+        self._secret: str = secret
+        if not secret:
+            self._load_secret()
+
+    def do_authentication(self, **kwargs) -> str:
+        if not self._secret:
+            logger.debug('No secret set for JWT authentication')
+            raise AuthenticationFailed()
+
+        token: str = kwargs.get('token', None)
+        if not token:
+            raise AuthenticationFailed()
+
+        try:
+            decoded = jwt.decode(token, self._secret,
+                                 algorithms=self.ALGORITHMS)
+
+        except jwt.DecodeError:
+            raise AuthenticationFailed()
+
+        username = decoded.get('username', None)
+        if not username:
+            raise AuthenticationFailed()
+
+        principal: AuthPrincipal = AuthManager().get_principal(username)
+        if not principal:
+            raise AuthenticationFailed()
+
+        return username
+
+    @staticmethod
+    def secret_path():
+        cm = ConfigManager()
+
+        return os.path.join(
+            cm.getRoot(),
+            'etc',
+            JwtAuthenticationMethod.SECRET_FILE_NAME
+        )
+
+    def _load_secret(self):
+        """
+        Loads the JWT shared secret from the secret file, if it exists.
+
+        """
+        secret_file_path = JwtAuthenticationMethod.secret_path()
+
+        if not os.path.exists(secret_file_path):
+            logger.info('No JWT secret found, JWT authentication will not '
+                        'work: {}'.format(secret_file_path))
+            return
+
+        with open(secret_file_path) as fp:
+            self._secret = fp.read().strip()

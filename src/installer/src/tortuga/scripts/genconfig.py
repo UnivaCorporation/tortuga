@@ -17,6 +17,8 @@
 import sys
 
 from tortuga.cli.tortugaCli import TortugaCli
+from tortuga.kit.actions.manager import KitActionsManager
+from tortuga.kit.loader import load_kits
 
 
 class GenconfigAppClass(TortugaCli):
@@ -28,7 +30,8 @@ class GenconfigAppClass(TortugaCli):
     def runCommand(self):
         self.parseArgs()
 
-        from tortuga.kit.actions.manager import KitActionsManager
+        load_kits()
+
         kitmgr = KitActionsManager()
 
         component = kitmgr.load_component(self.getArgs().cname)

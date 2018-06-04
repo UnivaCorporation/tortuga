@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import jwt
 import pytest
 
-from tortuga.auth.methods import AuthenticationMethod, MultiAuthentionMethod, \
-    UsernamePasswordAuthenticationMethod
+from tortuga.auth.methods import AuthenticationMethod, \
+    MultiAuthentionMethod, UsernamePasswordAuthenticationMethod,\
+    JwtAuthenticationMethod
 from tortuga.exceptions.authenticationFailed import AuthenticationFailed
 
 
@@ -173,3 +175,24 @@ def test_username_password_authentication_method():
     #
     with pytest.raises(AuthenticationFailed):
         method.authenticate(username='admin', password='invalid')
+
+
+def test_jwt_authentication_method():
+    token_data = {
+        'username': 'admin'
+    }
+    secret = 'TestSecretKey'
+    token = jwt.encode(token_data, secret)
+
+    method = JwtAuthenticationMethod(secret=secret)
+
+    #
+    # Assert that a valid token returns the username
+    #
+    assert method.authenticate(token=token) == 'admin'
+
+    #
+    # Assert that an invalid token raises an AuthenticationFailed exception
+    #
+    with pytest.raises(AuthenticationFailed):
+        method.authenticate(token='bad_token')

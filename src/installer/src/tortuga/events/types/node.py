@@ -28,7 +28,7 @@ class NodeStateChangedSchema(BaseEventSchema):
 
 class NodeStateChanged(BaseEvent):
     """
-    Common mixin for all AddNodeRequest event classes.
+    Event that fires when a node state changes.
 
     """
     name = 'node-state-changed'
@@ -38,7 +38,7 @@ class NodeStateChanged(BaseEvent):
         """
         Initializer.
 
-        :param str node:     the add node, and it's current state
+        :param str node:     the current state of the node affected
         :param dict request: the previous state
         :param kwargs:
 
