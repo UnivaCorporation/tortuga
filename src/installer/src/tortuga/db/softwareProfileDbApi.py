@@ -97,7 +97,7 @@ class SoftwareProfileDbApi(TortugaDbApi):
 
         # if 'components' is specified, ensure 'kit' relationship is
         # also serialized
-        if 'components' in options and options['components']:
+        if options and 'components' in options and options['components']:
             for component in software_profile.components:
                 self.loadRelation(component, 'kit')
 
