@@ -14,8 +14,10 @@
 
 # pylint: disable=no-member
 
-from tortuga.objects.tortugaObject import TortugaObject, TortugaObjectList
+from typing import Iterable, Optional
+
 import tortuga.objects.osFamilyInfo
+from tortuga.objects.tortugaObject import TortugaObject, TortugaObjectList
 
 
 class OsFamilyComponent(TortugaObject): \
@@ -36,7 +38,7 @@ class OsFamilyComponent(TortugaObject): \
         return self['osFamilyInfo']
 
     @classmethod
-    def getFromDict(cls, dict_):
+    def getFromDict(cls, dict_, ignore: Optional[Iterable[str]] = None):
         osFamilyDict = dict_.get(
             tortuga.objects.osFamilyInfo.OsFamilyInfo.ROOT_TAG)
 
@@ -49,7 +51,7 @@ class OsFamilyComponent(TortugaObject): \
         return osFamilyComponent
 
     @classmethod
-    def getFromDbDict(cls, _dict):
+    def getFromDbDict(cls, _dict, ignore: Optional[Iterable[str]] = None):
         osFamilyInfoDict = _dict.get(
             tortuga.objects.osFamilyInfo.OsFamilyInfo.ROOT_TAG)
 

@@ -17,6 +17,7 @@
 import base64
 import json
 import xml.etree.cElementTree as ET
+from typing import Iterable, Optional
 
 
 def indent(elem, level=0):
@@ -107,10 +108,13 @@ class TortugaObject(dict): \
         return []
 
     @classmethod
-    def getFromDict(cls, _dict, ignore=None):
+    def getFromDict(cls, _dict, ignore: Optional[Iterable[str]] = None):
         inst = cls()
 
         for key in cls.getKeys():
+            if ignore and key in ignore:
+                continue
+
             if key not in _dict:
                 inst[key] = None
                 continue
@@ -120,11 +124,11 @@ class TortugaObject(dict): \
         return inst
 
     @classmethod
-    def getFromDbDict(cls, _dict, ignore=None):
+    def getFromDbDict(cls, _dict, ignore: Optional[Iterable[str]] = None):
         return cls.getFromDict(_dict, ignore=ignore)
 
     @classmethod
-    def getListFromDict(cls, dict_, ignore=None):
+    def getListFromDict(cls, dict_, ignore: Optional[Iterable[str]] = None):
         dictList = []
 
         tag = cls.ROOT_TAG
@@ -139,7 +143,7 @@ class TortugaObject(dict): \
         return TortugaObjectList([cls.getFromDict(d) for d in dictList])
 
     @classmethod
-    def getListFromDbDict(cls, _dict, ignore=None):
+    def getListFromDbDict(cls, _dict, ignore: Optional[Iterable[str]] = None):
         dictList = []
 
         tag = cls.ROOT_TAG
@@ -152,7 +156,7 @@ class TortugaObject(dict): \
                 dictList = [_dict[tag]]
 
         return TortugaObjectList(
-            [cls.getFromDbDict(d.__dict__) for d in dictList])
+            [cls.getFromDbDict(d.__dict__, ignore=ignore) for d in dictList])
 
     def getPrettyXmlString(self, root): \
             # pylint: disable=unused-argument

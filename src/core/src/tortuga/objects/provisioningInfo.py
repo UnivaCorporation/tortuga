@@ -14,10 +14,10 @@
 
 # pylint: disable=no-member
 
-from tortuga.objects.tortugaObject import TortugaObject
+from typing import Iterable, Optional
 
-from tortuga.objects import node
-from tortuga.objects import parameter
+from tortuga.objects import node, parameter
+from tortuga.objects.tortugaObject import TortugaObject
 
 
 class ProvisioningInfo(TortugaObject): \
@@ -53,7 +53,7 @@ class ProvisioningInfo(TortugaObject): \
         return ''
 
     @classmethod
-    def getFromDict(cls, dict_):
+    def getFromDict(cls, dict_, ignore: Optional[Iterable[str]] = None):
         """ Get provisioning info from dict. """
 
         provisioningInfo = super(ProvisioningInfo, cls).getFromDict(dict_)

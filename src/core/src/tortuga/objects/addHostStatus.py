@@ -14,6 +14,8 @@
 
 # pylint: disable=no-member
 
+from typing import Iterable, Optional
+
 from tortuga.objects import node
 from tortuga.objects.tortugaObject import TortugaObject, TortugaObjectList
 from tortuga.utility.helper import str2bool
@@ -55,7 +57,7 @@ class AddHostStatus(TortugaObject): \
         return ['running']
 
     @classmethod
-    def getFromDict(cls, dict_):
+    def getFromDict(cls, dict_, ignore: Optional[Iterable[str]] = None):
         """ Get addHostStatus from dict. """
 
         addHostStatus = super(AddHostStatus, cls).getFromDict(dict_)
