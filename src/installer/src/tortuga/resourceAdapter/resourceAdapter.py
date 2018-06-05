@@ -29,6 +29,7 @@ from sqlalchemy.orm.session import Session
 from tortuga.addhost.addHostManager import AddHostManager
 from tortuga.config.configManager import ConfigManager
 from tortuga.db.dbManager import DbManager
+from tortuga.events.types.node import NodeStateChanged
 from tortuga.db.models.hardwareProfile import HardwareProfile
 from tortuga.db.models.network import Network
 from tortuga.db.models.nic import Nic
@@ -40,6 +41,7 @@ from tortuga.db.resourceAdapterConfigDbHandler import \
 from tortuga.exceptions.configurationError import ConfigurationError
 from tortuga.exceptions.nicNotFound import NicNotFound
 from tortuga.exceptions.resourceNotFound import ResourceNotFound
+from tortuga.objects.node import Node as TortugaNode
 from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
 from tortuga.os_utility.osUtility import getOsObjectFactory
 from tortuga.parameter.parameterApi import ParameterApi
@@ -111,6 +113,35 @@ class ResourceAdapter(UserDataMixin): \
         self.__trace(
             addNodesRequest, dbSession, dbHardwareProfile,
             dbSoftwareProfile)
+
+    def fire_state_change_event(self, db_node: Node, previous_state: str):
+        """
+        Fires a node state changed event. This is a "fake" operation allowing
+        resource adapters to fire events without having to actually take
+        the node through the actual state change. The node is assumed to
+        have it's current state set to the new state.
+
+        :param Node db_node:       a database node instance
+        :param str previous_state: the previous state for the node
+
+        """
+        node_dict = TortugaNode.getFromDbDict(db_node.__dict__).getCleanDict()
+        NodeStateChanged.fire(node=node_dict,
+                              previous_state=previous_state)
+
+    def fire_provisioned_event(self, db_node: Node):
+        """
+        Fires the node provisioned event. This is a fake operation that
+        assumes two things: that the node's current state is already set
+        as "Provisioned" and that the previous state was "Created". If you
+        need it to behave differently from that, then you need to sue the
+        "fire_state_change_event" method instead.
+
+        :param Node db_node: the database node instance
+
+        """
+        self.fire_state_change_event(db_node=db_node,
+                                     previous_state='Created')
 
     def validate_start_arguments(self, addNodesRequest: dict,
                                  dbHardwareProfile: HardwareProfile,
