@@ -14,9 +14,9 @@
 
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
-
-from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
 from tortuga.objects.softwareProfile import SoftwareProfile
+from tortuga.objects.tortugaObject import TortugaObjectList
+from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
 
 
 class UpdateSoftwareProfileCli(TortugaCli):
@@ -34,16 +34,22 @@ class UpdateSoftwareProfileCli(TortugaCli):
         # Simple Options
         self.addOption('--name', dest='name',
                        help=_('Name of software profile'))
+
         self.addOption('--new-name', dest='newName',
                        help=_('New name for software profile'))
+
         self.addOption('--description', dest='description',
                        help=_('User description of this software profile'))
+
         self.addOption('--kernel', dest='kernel',
                        help=_('Kernel for software profile'))
+
         self.addOption('--kernel-parameters', dest='kernelParameters',
                        help=_('Kernel parameters for software profile'))
+
         self.addOption('--initrd', dest='initrd',
                        help=_('Initrd for software profile'))
+
         self.addOption('--min-nodes', dest='minNodes',
                        help=_('Minimum number of nodes required to remain in'
                               ' this profile.'))
@@ -128,15 +134,10 @@ class UpdateSoftwareProfileCli(TortugaCli):
             help=_('The maximum size in megabytes when the partition'
                    ' is set to grow.'))
 
-        # Or an xml file can be passed in
-        self.addOption('--xml-file', dest='xmlFile',
-                       help=_('A file pointing to an XML representation of'
-                              ' hardware profile'))
-
         super().parseArgs(usage=usage)
 
     def runCommand(self):
-        self.parseArgs(_("""
+        self.parseArgs(usage=_("""
 Updates software profile in the Tortuga system.
 """))
 
@@ -146,44 +147,33 @@ Updates software profile in the Tortuga system.
                                    password=self.getPassword(),
                                    baseurl=self.getUrl())
 
-        if self.getArgs().xmlFile:
-            # An XML file was provided as input...start with that...
-            f = open(self.getArgs().xmlFile, 'r')
-            try:
-                xmlString = f.read()
-            finally:
-                f.close()
-            try:
-                sp = SoftwareProfile.getFromXml(xmlString)
-            except Exception as ex:
-                sp = None
-                self.getLogger().debug('Error parsing xml %s' % ex)
 
-            if sp is None:
-                raise InvalidCliRequest(
-                    _('The file "%s" does not contain a valid software'
-                      ' profile') % (self.getArgs().xmlFile))
-        else:
-            if software_profile_name is None:
-                raise InvalidCliRequest(_('Missing software profile name'))
+        if software_profile_name is None:
+            raise InvalidCliRequest(_('Missing software profile name'))
 
-            sp = api.getSoftwareProfile(software_profile_name,
-                                        UpdateSoftwareProfileCli.optionDict)
+        sp = api.getSoftwareProfile(software_profile_name,
+                                    UpdateSoftwareProfileCli.optionDict)
 
         if self.getArgs().newName is not None:
             sp.setName(self.getArgs().newName)
+
         if self.getArgs().description is not None:
             sp.setDescription(self.getArgs().description)
+
         if self.getArgs().kernel is not None:
             sp.setKernel(self.getArgs().kernel)
+
         if self.getArgs().kernelParameters is not None:
             sp.setKernelParams(self.getArgs().kernelParameters)
+
         if self.getArgs().initrd is not None:
             sp.setInitrd(self.getArgs().initrd)
+
         if self.getArgs().minNodes is not None:
             sp.setMinNodes(self.getArgs().minNodes)
+
         if self.getArgs().deletePartition is not None:
-            from tortuga.objects.tortugaObject import TortugaObjectList
+
             out = TortugaObjectList()
             for p in sp.getPartitions():
                 for dp in self.getArgs().deletePartition:
