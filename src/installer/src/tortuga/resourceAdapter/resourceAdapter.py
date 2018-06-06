@@ -566,19 +566,26 @@ class ResourceAdapter(UserDataMixin): \
 
             return 1
 
-    def get_node_resource_adapter_config(self, node: Node) -> Dict[str, Any]:
+    def get_node_resource_adapter_config(self, node: Node) \
+            -> Dict[str, Any]:
         """
         Deserialize resource adapter configuration to key/value pairs
         """
 
-        if node.instance and node.instance.resource_adapter_configuration:
-            return self._normalize_resource_adapter_config(
-                {c.key: c.value for c in node.instance.resource_adapter_configuration.settings}
-            )
+        default_config = self._loadConfigDict()
 
-        # this should never happen... every node should have an associated
-        # resource adapter configuration
-        return self.getResourceAdapterConfig()
+        if node.instance and node.instance.resource_adapter_configuration:
+            # break db relationship into key-value pairs for dict
+            override_config = {
+                c.key: c.value
+                for c in
+                node.instance.resource_adapter_configuration.settings
+            }
+
+            # override any settings in the configuration profile
+            default_config.update(override_config)
+
+        return self._normalize_resource_adapter_config(default_config)
 
     def load_resource_adapter_config(self, session: Session, name: str) \
             -> ResourceAdapterConfig:
