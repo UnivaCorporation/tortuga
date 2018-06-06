@@ -61,9 +61,14 @@ class TortugaDeployer(object): \
 
         self._settings = self.__load_settings(cmdline_options)
 
+        self._settings['installer_software_profile'] = 'Installer'
+        self._settings['installer_hardware_profile'] = 'Installer'
+
         self._settings['eulaAccepted'] = False
 
         self._settings['fqdn'] = self._getfqdn()
+
+        self._settings['osInfo'] = getOsInfo()
 
         self._forceCleaning = False
         self._depotCreated = False
@@ -86,9 +91,7 @@ class TortugaDeployer(object): \
         self.gettext = gettext.gettext
         self._ = self.gettext
 
-        self._osInfo = getOsInfo()
-
-        self._logger.info('Detected OS: [%s]' % (self._osInfo))
+        self._logger.info('Detected OS: [{}]' % (self._settings['osInfo']))
 
     def __load_settings(self, cmdline_options):
         settings = dict(list(cmdline_options.items()))
@@ -697,8 +700,6 @@ class TortugaDeployer(object): \
 
             self.installKits()
 
-            self._logger.debug('Enabling default components')
-
             self.enableComponents()
 
             self.prepSudo()
@@ -885,14 +886,13 @@ class TortugaDeployer(object): \
 
         dbm = DbManager()
 
+        # create database
         dbm.init_database()
 
         # Prime the database previously created as part of the bootstrap
         with dbm.session() as session:
             try:
-                dbUtility.primeDb(
-                    session, self._settings['fqdn'], self._osInfo,
-                    self._settings)
+                dbUtility.primeDb(session, self._settings)
 
                 dbUtility.init_global_parameters(session, self._settings)
 
