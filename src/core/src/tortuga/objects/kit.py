@@ -250,7 +250,7 @@ class Kit(TortugaObject): \
     def getFromDbDict(cls, _dict, ignore: Optional[Iterable[str]] = None):
         kit = super(Kit, cls).getFromDict(_dict)
 
-        if ignore and 'components' not in ignore:
+        if not ignore or 'components' not in ignore:
             kit.setComponentList(
                 tortuga.objects.component.Component.getListFromDbDict(
                     _dict, ignore=('kit',)))
