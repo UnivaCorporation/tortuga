@@ -13,12 +13,14 @@
 # limitations under the License.
 
 # pylint: disable=no-member
+from typing import List, Optional
+
+from tortuga.exceptions.tortugaException import TortugaException
+from tortuga.kit.manager import KitManager
+from tortuga.objects.kit import Kit
+from tortuga.utility.tortugaApi import TortugaApi
 
 from .eula import CommandLineEulaValidator
-from tortuga.kit.manager import KitManager
-from tortuga.utility.tortugaApi import TortugaApi
-from tortuga.exceptions.tortugaException import TortugaException
-from typing import List
 
 
 class KitApi(TortugaApi):
@@ -31,7 +33,8 @@ class KitApi(TortugaApi):
             eula_validator=CommandLineEulaValidator()
         )
 
-    def getKit(self, name, version, iteration=None):
+    def getKit(self, name: str, version: Optional[str] = None,
+               iteration: Optional[str] = None) -> Kit:
         """
         Get kit info.
 
@@ -42,8 +45,8 @@ class KitApi(TortugaApi):
                 TortugaException
         """
         try:
-            kit = self._kit_manager.getKit(name, version, iteration)
-            return kit
+            return self._kit_manager.getKit(
+                name, version=version, iteration=iteration)
         except TortugaException as ex:
             raise
         except Exception as ex:

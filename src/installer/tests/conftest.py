@@ -108,6 +108,8 @@ def dbm():
     os_info = osInfo.OsInfo('centos', '7.4', 'x86_64')
     os_info.setOsFamilyInfo(rhel7_os_family_info)
 
+    installer_fqdn = socket.getfqdn()
+
     settings = {
         'language': 'en',
         'keyboard': 'en_US',
@@ -118,12 +120,14 @@ def dbm():
         'adminPort': '8443',
         'eulaAccepted': 'true',
         'depotpath': '/opt/tortuga/depot',
+        'osInfo': os_info,
+        'fqdn': installer_fqdn,
+        'installer_software_profile': 'Installer',
+        'installer_hardware_profile': 'Installer',
     }
 
-    installer_fqdn = socket.getfqdn()
-
     with dbmgr.session() as session:
-        primeDb(session, installer_fqdn, os_info, settings)
+        primeDb(session, settings)
 
         init_global_parameters(session, settings)
 

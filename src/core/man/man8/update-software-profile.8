@@ -18,7 +18,7 @@
 update-software-profile - Update an existing software profile in the Tortuga system.
 .SH "SYNTAX"
 .LP
-\fBupdate-software-profile [--xml-file=\fIXMLFILE\fB|--name=\fISOFTWAREPROFILENAME\fB] [--new-name=\fISOFTWAREPROFILENAME\fB --description=\fIDESCRIPTION\fB --kernel=\fIKERNEL\fB --kernel-parameters=\fIKERNELPARAMETERS\fB  --initrd=\fIINITRD\fB --min-nodes=\fIMINNODES\fB --add-package=\fIPACKAGENAME\fB --delete-package=\fIPACKAGENAME\fB]
+\fBupdate-software-profile --name=\fISOFTWAREPROFILENAME\fB [--new-name=\fISOFTWAREPROFILENAME\fB --description=\fIDESCRIPTION\fB --kernel=\fIKERNEL\fB --kernel-parameters=\fIKERNELPARAMETERS\fB  --initrd=\fIINITRD\fB --min-nodes=\fIMINNODES\fB --add-package=\fIPACKAGENAME\fB --delete-package=\fIPACKAGENAME\fB]
 
 \fBupdate-software-profile --name=\fISOFTWAREPROFILENAME\fB --add-partition=\fIPARTITION\fB --device=\fIDEVICE\fB --mount-point=\fIMOUNTPOINT\fB --file-system=\fIFILESYSTEM\fB --size=\fISIZE\fB --options=\fIOPTIONS\fB [ --preserve | --no-preserve ]\fB [ --boot-loader | --no-boot-loader ]\fB
 
@@ -28,9 +28,7 @@ update-software-profile - Update an existing software profile in the Tortuga sys
 
 .SH "DESCRIPTION"
 .LP
-The update-software-profile tool updates a single existing software profile in the Tortuga system.  Nodes receive several configuration parameters from the software profile they are associated with.
-.LP
-The update-software-profile tool is structured to first set up all of the options and then look to see if the --xml-file option is specified. If the --xml-file option is specified a profile object is created from the file. If the --xml-file option is not present the tool fetches the profile specified by the --name option.
+The update-software-profile tool updates an existing software profile in the Tortuga system. Nodes receive several configuration parameters from the software profile they are associated with.
 .LP
 .SH "OPTIONS"
 .LP
@@ -112,8 +110,6 @@ The optional SAN volume to back this device.
 .TP
 \fB--boot-loader=[true|false]
 If true, the bootloader will be installed on this partition for image-based installations.
-.TP
-\fB--xml-file=XMLFILE
 A file pointing to an XML representation of a software profile.
 .LP
 .SH "Common Tortuga Options"

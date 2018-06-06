@@ -14,8 +14,10 @@
 
 # pylint: disable=no-member
 
-from tortuga.objects.tortugaObject import TortugaObject, TortugaObjectList
+from typing import Iterable, Optional
+
 from tortuga.objects.osInfo import OsInfo
+from tortuga.objects.tortugaObject import TortugaObject, TortugaObjectList
 
 
 class OsComponent(TortugaObject): \
@@ -36,7 +38,7 @@ class OsComponent(TortugaObject): \
         return self['osInfo']
 
     @classmethod
-    def getFromDict(cls, dict_):
+    def getFromDict(cls, dict_, ignore: Optional[Iterable[str]] = None):
         osDict = dict.get(OsInfo.ROOT_TAG)
         osInfo = OsInfo.getFromDict(osDict)
 
@@ -47,9 +49,9 @@ class OsComponent(TortugaObject): \
         return osComponent
 
     @classmethod
-    def getFromDbDict(cls, _dict):
+    def getFromDbDict(cls, _dict, ignore: Optional[Iterable[str]] = None):
         osDict = _dict.get(OsInfo.ROOT_TAG)
-        osInfo = OsInfo.getFromDbDict(osDict.__dict__)
+        osInfo = OsInfo.getFromDbDict(osDict.__dict__, ignore=ignore)
 
         osComponent = super(OsComponent, cls).getFromDict(_dict)
 

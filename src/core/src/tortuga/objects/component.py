@@ -14,14 +14,15 @@
 
 # pylint: disable=no-member
 
-from tortuga.objects.tortugaObject import TortugaObject
-from tortuga.objects.tortugaObject import TortugaObjectList
+from typing import Iterable, Optional
+
 import tortuga.objects.kit
-import tortuga.objects.osInfo
 import tortuga.objects.osFamilyInfo
+import tortuga.objects.osInfo
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.objects.osComponent import OsComponent
 from tortuga.objects.osFamilyComponent import OsFamilyComponent
+from tortuga.objects.tortugaObject import TortugaObject, TortugaObjectList
 
 
 class Component(TortugaObject): \
@@ -173,7 +174,7 @@ class Component(TortugaObject): \
         ]
 
     @classmethod
-    def getFromDict(cls, _dict):
+    def getFromDict(cls, _dict, ignore: Optional[Iterable[str]] = None):
         """ Get component from _dict. """
 
         component = super(Component, cls).getFromDict(_dict)
@@ -194,8 +195,8 @@ class Component(TortugaObject): \
         return component
 
     @classmethod
-    def getFromDbDict(cls, _dict):
-        component = super(Component, cls).getFromDict(_dict)
+    def getFromDbDict(cls, _dict, ignore: Optional[Iterable[str]] = None):
+        component = super(Component, cls).getFromDict(_dict, ignore=ignore)
 
         component.setOsComponentList(OsComponent.getListFromDbDict(_dict))
 
@@ -203,9 +204,9 @@ class Component(TortugaObject): \
             OsFamilyComponent.getListFromDbDict(_dict))
 
         kitDict = _dict.get(tortuga.objects.kit.Kit.ROOT_TAG)
-
         if kitDict:
             component.setKit(
-                tortuga.objects.kit.Kit.getFromDbDict(kitDict.__dict__))
+                tortuga.objects.kit.Kit.getFromDbDict(
+                    kitDict.__dict__, ignore=('components',)))
 
         return component

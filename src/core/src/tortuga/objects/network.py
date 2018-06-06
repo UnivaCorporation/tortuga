@@ -14,6 +14,8 @@
 
 # pylint: disable=no-member
 
+from typing import Iterable, Optional
+
 from tortuga.objects.networkDevice import NetworkDevice
 from tortuga.objects.tortugaObject import TortugaObject
 from tortuga.utility.helper import str2bool
@@ -143,7 +145,7 @@ class Network(TortugaObject): \
             'options', 'name', 'startIp', 'type', 'increment', 'usingDhcp']
 
     @classmethod
-    def getFromDict(cls, _dict):
+    def getFromDict(cls, _dict, ignore: Optional[Iterable[str]] = None):
         """ Get network from _dict. """
 
         network = super(Network, cls).getFromDict(_dict)
@@ -157,8 +159,8 @@ class Network(TortugaObject): \
         return network
 
     @classmethod
-    def getFromDbDict(cls, _dict):
-        network = super(Network, cls).getFromDict(_dict)
+    def getFromDbDict(cls, _dict, ignore: Optional[Iterable[str]] = None):
+        network = super(Network, cls).getFromDict(_dict, ignore=ignore)
 
         networkDeviceDict = _dict.get(NetworkDevice.ROOT_TAG)
 

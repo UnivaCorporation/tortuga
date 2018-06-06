@@ -14,6 +14,8 @@
 
 # pylint: disable=no-member
 
+from typing import Iterable, Optional
+
 import tortuga.objects.admin
 import tortuga.objects.module
 import tortuga.objects.network
@@ -247,7 +249,7 @@ class HardwareProfile(TortugaObject): \
         ]
 
     @classmethod
-    def getFromDict(cls, _dict):
+    def getFromDict(cls, _dict, ignore: Optional[Iterable[str]] = None):
         hardwareProfile = super(HardwareProfile, cls).getFromDict(_dict)
 
         hardwareProfile.setAdmins(
@@ -279,8 +281,9 @@ class HardwareProfile(TortugaObject): \
         return hardwareProfile
 
     @classmethod
-    def getFromDbDict(cls, _dict):
-        hardwareProfile = super(HardwareProfile, cls).getFromDict(_dict)
+    def getFromDbDict(cls, _dict, ignore: Optional[Iterable[str]] = None):
+        hardwareProfile = super(HardwareProfile, cls).getFromDict(
+            _dict, ignore=ignore)
 
         hardwareProfile.setAdmins(
             tortuga.objects.admin.Admin.getListFromDbDict(_dict))

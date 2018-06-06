@@ -15,6 +15,9 @@
 # pylint: disable=no-member
 
 import time
+from typing import Any, Dict
+
+from sqlalchemy.orm.session import Session
 
 from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
 from tortuga.db.models.hardwareProfile import HardwareProfile
@@ -25,62 +28,49 @@ from tortuga.db.models.softwareProfile import SoftwareProfile
 from tortuga.objects.parameter import Parameter
 
 
-def primeDb(session, installer_fqdn, osInfo, settings):
+def primeDb(session: Session, settings: Dict[str, Any]):
     """
     Prime database with initial data
     """
 
+    # Create node entry for installer
+    node = Node(name=settings['fqdn'])
+    node.state = 'Installed'
+    node.lockedState = 'HardLocked'
+    node.lastUpdate = time.strftime(
+        '%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+    node.bootFrom = 1
+    node.isIdle = False
+
     # Create Installer Software Profile
-    swProfileName = 'Installer'
+    node.softwareprofile = SoftwareProfile(
+        name=settings['installer_software_profile']
+    )
+    node.softwareprofile.description = 'Installer software profile'
+    node.softwareprofile.type = 'installer'
+    node.softwareprofile.os = OperatingSystem(
+        name=settings['osInfo'].getName(),
+        version=settings['osInfo'].getVersion(),
+        arch=settings['osInfo'].getArch()
+    )
 
-    dbSoftwareProfile = SoftwareProfile(name=swProfileName)
-    dbSoftwareProfile.description = 'Installer software profile'
-    dbSoftwareProfile.type = 'installer'
-
-    dbOs = OperatingSystem()
-    dbOs.name = osInfo.getName()
-    dbOs.version = osInfo.getVersion()
-    dbOs.arch = osInfo.getArch()
-
-    session.add(dbOs)
-
-    dbOsFamily = OperatingSystemFamily()
-    dbOsFamily.name = osInfo.getOsFamilyInfo().getName()
-    dbOsFamily.version = osInfo.getOsFamilyInfo().getVersion()
-    dbOsFamily.arch = osInfo.getOsFamilyInfo().getArch()
-
-    session.add(dbOsFamily)
-
-    dbOs.family = dbOsFamily
-
-    dbSoftwareProfile.os = dbOs
-
-    session.add(dbSoftwareProfile)
+    node.softwareprofile.os.family = OperatingSystemFamily(
+        name=settings['osInfo'].getOsFamilyInfo().getName(),
+        version=settings['osInfo'].getOsFamilyInfo().getVersion(),
+        arch=settings['osInfo'].getOsFamilyInfo().getArch()
+    )
 
     # Create Installer Hardware Profile
-    hwProfileName = 'Installer'
+    node.hardwareprofile = HardwareProfile(
+        name=settings['installer_hardware_profile']
+    )
+    node.hardwareprofile.description = 'Installer hardware profile'
+    node.hardwareprofile.nameFormat = 'installer'
+    node.hardwareprofile.installType = 'package'
+    node.hardwareprofile.setLocation = 'local'
+    node.hardwareprofile.mappedsoftwareprofiles.append(node.softwareprofile)
 
-    dbHardwareProfile = HardwareProfile(name=hwProfileName)
-    dbHardwareProfile.description = 'Installer hardware profile'
-    dbHardwareProfile.nameFormat = 'installer'
-    dbHardwareProfile.installType = 'package'
-    dbHardwareProfile.setLocation = 'local'
-    dbHardwareProfile.mappedsoftwareprofiles.append(dbSoftwareProfile)
-
-    session.add(dbHardwareProfile)
-
-    # Create node entry for installer
-    dbNode = Node(name=installer_fqdn)
-    dbNode.softwareprofile = dbSoftwareProfile
-    dbNode.hardwareprofile = dbHardwareProfile
-    dbNode.state = 'Installed'
-    dbNode.lockedState = 'HardLocked'
-    dbNode.lastUpdate = time.strftime(
-        '%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
-    dbNode.bootFrom = 1
-    dbNode.isIdle = False
-
-    session.add(dbNode)
+    session.add(node)
 
 
 def init_global_parameters(session, settings):

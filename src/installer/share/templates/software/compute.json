@@ -1,0 +1,30 @@
+{
+    "softwareprofile": {
+        "type": "compute",
+        "partitions": [
+            {
+                "bootLoader": false,
+                "device": "1.1",
+                "diskSize": 10000,
+                "fsType": "ext4",
+                "grow": true,
+                "maxSize": null,
+                "mountPoint": "/",
+                "name": "root",
+                "preserve": false,
+                "size": 1
+            },
+            {
+                "bootLoader": false,
+                "device": "1.2",
+                "diskSize": 10000,
+                "fsType": "swap",
+                "grow": true,
+                "maxSize": null,
+                "name": "swap",
+                "preserve": false,
+                "size": 1
+            }
+        ]
+    }
+}

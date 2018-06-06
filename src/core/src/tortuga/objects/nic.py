@@ -14,6 +14,8 @@
 
 # pylint: disable=no-member
 
+from typing import Iterable, Optional
+
 from tortuga.objects.network import Network
 from tortuga.objects.networkDevice import NetworkDevice
 from tortuga.objects.tortugaObject import TortugaObject
@@ -109,7 +111,7 @@ class Nic(TortugaObject): \
         return ['id', 'nodeId', 'networkId', 'mac', 'ip', 'boot']
 
     @classmethod
-    def getFromDict(cls, _dict):
+    def getFromDict(cls, _dict, ignore: Optional[Iterable[str]] = None):
         """ Get nic from _dict. """
 
         nic = super(Nic, cls).getFromDict(_dict)
@@ -128,8 +130,8 @@ class Nic(TortugaObject): \
         return nic
 
     @classmethod
-    def getFromDbDict(cls, _dict):
-        nic = super(Nic, cls).getFromDict(_dict)
+    def getFromDbDict(cls, _dict, ignore: Optional[Iterable[str]] = None):
+        nic = super(Nic, cls).getFromDict(_dict, ignore=ignore)
 
         # network (relation)
         networkDict = _dict.get(Network.ROOT_TAG)

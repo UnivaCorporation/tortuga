@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, Dict
+from typing import Any, Dict, Iterable, Optional
 
-from tortuga.objects.tortugaObject import TortugaObject
-from .resourceadapter_settings import BaseSetting, get_setting_class
 from tortuga.objects.resourceadapter_settings.base import BaseSettingSchema
+from tortuga.objects.tortugaObject import TortugaObject
+
+from .resourceadapter_settings import BaseSetting, get_setting_class
 
 
 class ResourceAdapter(TortugaObject): \
@@ -69,7 +70,7 @@ class ResourceAdapter(TortugaObject): \
         return ['id', 'name', 'kitId', 'settings']
 
     @classmethod
-    def getFromDict(cls, _dict, ignore=None):
+    def getFromDict(cls, _dict, ignore: Optional[Iterable[str]] = None):
         inst = cls()
 
         for key in cls.getKeys():
