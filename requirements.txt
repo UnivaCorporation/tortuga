@@ -1,0 +1,10 @@
+-e src/core
+mock
+wheel
+pylint
+pyflakes
+pycodestyle
+Paver
+pytest
+pytest-cov
+Babel
