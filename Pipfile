@@ -1,23 +1,21 @@
 [[source]]
-url = "https://pypi.python.org/simple"
+url = "https://pypi.org/simple"
 verify_ssl = true
 name = "pypi"
 
 [packages]
 "66f681e" = {path = "src/core", editable = true}
+
+[dev-packages]
 mock = "*"
+wheel = "*"
 pylint = "*"
 pyflakes = "*"
 pycodestyle = "*"
-marshmallow = "*"
-passlib = "*"
 paver = "*"
 pytest = "*"
 pytest-cov = "*"
 babel = "*"
-"Jinja2" = "*"
-
-[dev-packages]
 tox = "*"
 
 [requires]
