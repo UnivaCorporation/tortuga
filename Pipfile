@@ -1,0 +1,22 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+"66f681e" = {path = "src/core", editable = true}
+
+[dev-packages]
+mock = "*"
+wheel = "*"
+pylint = "*"
+pyflakes = "*"
+pycodestyle = "*"
+paver = "*"
+pytest = "*"
+pytest-cov = "*"
+babel = "*"
+tox = "*"
+
+[requires]
+python_version = "3.6"
