@@ -14,41 +14,40 @@
 
 # pylint: disable=no-name-in-module,no-member
 
-import os
-import sys
+import configparser
 import gettext
-import socket
-import time
 import glob
+import itertools
+import os
 import pwd
 import random
-import subprocess
-import itertools
-import configparser
 import shutil
-from six import print_
-import yaml
+import socket
+import subprocess
+import sys
+import time
 
-from tortuga.config.configManager import ConfigManager
-from tortuga.os_utility import osUtility
-from tortuga.os_utility import tortugaSubprocess
-from tortuga.helper.osHelper import getOsInfo
-from tortuga.exceptions.softwareAlreadyDeployed \
-    import SoftwareAlreadyDeployed
-from tortuga.exceptions.invalidMachineConfiguration \
-    import InvalidMachineConfiguration
-from tortuga.os_utility.osUtility import getOsObjectFactory
-from tortuga.deployer import dbUtility
-from tortuga.exceptions.eulaAcceptanceRequired \
-    import EulaAcceptanceRequired
+import yaml
+from six import print_
+
 from tortuga.admin.api import AdminApi
-from tortuga.kit.kitApi import KitApi
-from tortuga.softwareprofile.softwareProfileApi import SoftwareProfileApi
-from tortuga.node.nodeApi import NodeApi
+from tortuga.config.configManager import ConfigManager
+from tortuga.deployer import dbUtility
 from tortuga.exceptions.commandFailed import CommandFailed
+from tortuga.exceptions.eulaAcceptanceRequired import EulaAcceptanceRequired
 from tortuga.exceptions.invalidArgument import InvalidArgument
+from tortuga.exceptions.invalidMachineConfiguration import \
+    InvalidMachineConfiguration
 from tortuga.exceptions.kitNotFound import KitNotFound
+from tortuga.exceptions.softwareAlreadyDeployed import SoftwareAlreadyDeployed
+from tortuga.helper.osHelper import getOsInfo
+from tortuga.kit.kitApi import KitApi
+from tortuga.kit.loader import load_kits
 from tortuga.kit.utils import get_metadata_from_archive
+from tortuga.node.nodeApi import NodeApi
+from tortuga.os_utility import osUtility, tortugaSubprocess
+from tortuga.os_utility.osUtility import getOsObjectFactory
+from tortuga.softwareprofile.softwareProfileApi import SoftwareProfileApi
 
 
 class TortugaDeployer(object): \
@@ -969,6 +968,7 @@ class TortugaDeployer(object): \
 
         self._logger.info('Done installing kits')
 
+        load_kits()
 
     def enableComponents(self):
         """
