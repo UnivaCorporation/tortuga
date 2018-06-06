@@ -43,7 +43,6 @@ from tortuga.exceptions.eulaAcceptanceRequired \
     import EulaAcceptanceRequired
 from tortuga.admin.api import AdminApi
 from tortuga.kit.kitApi import KitApi
-from tortuga.exceptions.configurationError import ConfigurationError
 from tortuga.softwareprofile.softwareProfileApi import SoftwareProfileApi
 from tortuga.node.nodeApi import NodeApi
 from tortuga.exceptions.commandFailed import CommandFailed
@@ -970,20 +969,6 @@ class TortugaDeployer(object): \
 
         self._logger.info('Done installing kits')
 
-    def __getBaseKit(self): \
-            # pylint: disable=no-self-use
-        kitApi = KitApi()
-
-        k = None
-
-        for k in kitApi.getKitList():
-            if k.getName() == 'base':
-                break
-        else:
-            raise ConfigurationError(
-                'Unable to find \"base\" kit. Check Tortuga installation')
-
-        return k
 
     def enableComponents(self):
         """
@@ -993,11 +978,12 @@ class TortugaDeployer(object): \
 
         self._logger.info('Enabling \'installer\' component')
 
-        k = self.__getBaseKit()
+        base_kit = KitApi().getKit('base')
 
         enabledComponents = ['installer']
 
-        components = [c for c in k.getComponentList()
+        # get list of components from 'base' kit
+        components = [c for c in base_kit.getComponentList()
                       if c.getName() in enabledComponents]
 
         installerNode = NodeApi().getInstallerNode()
@@ -1005,8 +991,10 @@ class TortugaDeployer(object): \
         for component in components:
             SoftwareProfileApi().enableComponent(
                 installerNode.getSoftwareProfile().getName(),
-                k.getName(), k.getVersion(), k.getIteration(),
-                component.getName(), component.getVersion(),
+                base_kit.getName(),
+                base_kit.getVersion(),
+                base_kit.getIteration(),
+                component.getName(), compVersion=component.getVersion(),
                 sync=False)
 
     def promptForAdminCredentials(self):
