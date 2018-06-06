@@ -43,3 +43,5 @@ from . import hardwareProfileProvisioningNic  # noqa
 from . import nodeRequest  # noqa
 from . import resourceAdapterConfig  # noqa
 from . import resourceAdapterSetting  # noqa
+from . import instanceMapping  # noqa
+from . import instanceMetadata  # noqa

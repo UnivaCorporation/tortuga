@@ -53,5 +53,8 @@ class Node(ModelBase):
         backref='nodes'
     )
 
+    instance = relationship('InstanceMapping', uselist=False,
+                            back_populates='node')
+
     def __repr__(self):
         return 'Node(name=%s)' % (self.name)

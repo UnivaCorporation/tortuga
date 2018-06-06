@@ -14,7 +14,6 @@
 
 # pylint: disable=logging-not-lazy,no-self-use,no-member,maybe-no-member
 
-import configparser
 import csv
 import logging
 import os.path
@@ -22,7 +21,7 @@ import socket
 import subprocess
 import sys
 import traceback
-from typing import Dict, List, NoReturn, Optional, Union
+from typing import Any, Dict, List, NoReturn, Optional, Union
 
 import gevent
 from sqlalchemy.orm.session import Session
@@ -34,6 +33,7 @@ from tortuga.db.models.hardwareProfile import HardwareProfile
 from tortuga.db.models.network import Network
 from tortuga.db.models.nic import Nic
 from tortuga.db.models.node import Node
+from tortuga.db.models.resourceAdapterConfig import ResourceAdapterConfig
 from tortuga.db.models.softwareProfile import SoftwareProfile
 from tortuga.db.resourceAdapterConfigDbHandler import \
     ResourceAdapterConfigDbHandler
@@ -252,6 +252,11 @@ class ResourceAdapter(UserDataMixin): \
             list(defaultResourceAdapterConfigDict.items()) +
             list(overrideConfigDict.items()))
 
+    def _normalize_resource_adapter_config(
+            self, configDict: Dict[str, Any]) -> Dict[str, Any]:
+        # no-op by default
+        return configDict
+
     def _loadConfigDict(self, sectionName: Union[str, None] = None) \
             -> Dict[str, str]:
         """
@@ -267,24 +272,10 @@ class ResourceAdapter(UserDataMixin): \
 
         with DbManager().session() as session:
             cfg = ResourceAdapterConfigSchema().dump(
-                ResourceAdapterConfigDbHandler().get(
-                    session, self.__adaptername__,
-                    sectionName if sectionName else 'default')
+                self.load_resource_adapter_config(session, sectionName)
             ).data
 
             return {s['key']: s['value'] for s in cfg['settings']}
-
-    def getResourceAdapterConfigProfileByNodeName(self, name: str):
-        """Get resource adapter configuration for existing node"""
-
-        self.getLogger().debug(
-            'getResourceAdapterConfigByNodeName(): name=[{0}]'.format(name))
-
-        instance_cache = self.instanceCacheRefresh()
-
-        return instance_cache.get(name, 'resource_adapter_configuration') \
-            if instance_cache.has_section(name) and instance_cache.has_option(
-                name, 'resource_adapter_configuration') else None
 
     def __getAddHostApi(self):
         """Get and cache the Add Host API"""
@@ -341,125 +332,6 @@ class ResourceAdapter(UserDataMixin): \
                    dbHardwareProfile: HardwareProfile) -> dict: \
             # pylint: disable=unused-argument
         return {}
-
-    def instanceCacheWrite(self, cfg):
-        # Write the instance cache back to disk
-
-        self.getLogger().debug('instanceCacheWrite()')
-
-        with open(self.cacheCfgFilePath, 'w') as fp:
-            cfg.write(fp)
-
-    def instanceCacheRefresh(self):
-        self.getLogger().debug('instanceCacheRefresh()')
-
-        cfg = configparser.ConfigParser()
-
-        cfg.read(self.cacheCfgFilePath)
-
-        return cfg
-
-    def instanceCacheSet(self, name: str,
-                         metadata: Optional[Union[dict, None]] = None):
-        self.getLogger().debug(
-            'instanceCacheSet(node=[%s], metadata=[%s])' % (name, metadata))
-
-        cfg = self.instanceCacheRefresh()
-
-        if not cfg.has_section(name):
-            cfg.add_section(name)
-
-        # Write metadata to node section
-        if metadata:
-            for key, value in metadata.items():
-                cfg.set(name, key, value)
-
-        self.instanceCacheWrite(cfg)
-
-    def instanceCacheSetBulk(self, instance_ids: List[str],
-                             nodes: Optional[Union[List[Node], None]] = None):
-        self.getLogger().debug(
-            'instanceCacheSetBulk(instance_ids=[%s], nodes=[%s])' % (
-                ' '.join(instance_ids),
-                ' '.join([node.name for node in nodes or []])))
-
-        cfg = self.instanceCacheRefresh()
-
-        if not nodes:
-            if not cfg.has_section('unassigned'):
-                cfg.add_section('unassigned')
-
-                instances = set()
-            else:
-                val = cfg.get('unassigned', 'instances')
-
-                instances = set(val.split(' '))
-
-            instances |= set(instance_ids)
-
-            cfg.set('unassigned', 'instances', ' '.join(instances))
-
-        self.instanceCacheWrite(cfg)
-
-    def instanceCacheGet(self, nodeName: str) -> dict:
-        self.getLogger().debug(
-            'instanceCacheGet(nodeName=[%s])' % (nodeName))
-
-        cfg = self.instanceCacheRefresh()
-
-        if not cfg.has_section(nodeName):
-            raise ResourceNotFound(
-                'No instance cache entry for [{0}]'.format(nodeName))
-
-        # Read entire section into a dict
-        result = {}
-
-        for key, value in cfg.items(nodeName):
-            result[key] = value
-
-        return result
-
-    def instanceCacheDelete(self, name: str) -> NoReturn:
-        # Clear instance from configuration
-
-        config = self.instanceCacheRefresh()
-
-        if not config.has_section(name):
-            self.getLogger().debug(
-                'Cache clear: node [{0}] not found, no action'
-                ' taken'.format(name))
-
-            return
-
-        self.getLogger().debug('Cache clear: node [{0}]'.format(name))
-
-        config.remove_section(name)
-
-        self.instanceCacheWrite(config)
-
-    def instanceCacheUpdate(self, name: str,
-                            added: Optional[Union[List, None]] = None,
-                            deleted: Optional[Union[List, None]] = None) -> NoReturn:
-        """
-        'added' is a list of key-value tuples to be added
-        'deleted' is a list of keys to be removed from the instance cache
-        """
-
-        self.getLogger().debug(
-            'instanceCacheUpdate(): name=[{0}]'.format(name))
-
-        config = self.instanceCacheRefresh()
-
-        if not config.has_section(name):
-            config.add_section(name)
-
-        for key, value in added or []:
-            config.set(name, key, value)
-
-        for key in deleted or []:
-            config.remove_option(name, key)
-
-        self.instanceCacheWrite(config)
 
     def __findNicForProvisioningNetwork(self, nics: List[Nic],
                                         prov_network: Network) -> Nic:
@@ -662,3 +534,32 @@ class ResourceAdapter(UserDataMixin): \
                 ' [{0}] (exc=[{1}]). Using default value'.format(fn, exc))
 
             return 1
+
+    def get_node_resource_adapter_config(self, node: Node) -> Dict[str, Any]:
+        """
+        Deserialize resource adapter configuration to key/value pairs
+        """
+
+        if node.instance and node.instance.resource_adapter_configuration:
+            return self._normalize_resource_adapter_config(
+                {c.key: c.value for c in node.instance.resource_adapter_configuration.settings}
+            )
+
+        # this should never happen... every node should have an associated
+        # resource adapter configuration
+        return self.getResourceAdapterConfig()
+
+    def load_resource_adapter_config(self, session: Session, name: str) \
+            -> ResourceAdapterConfig:
+        """
+        Helper method to get resource adapter configuration
+
+        Raises:
+            ResourceNotFound
+        """
+
+        return ResourceAdapterConfigDbHandler().get(
+            session,
+            self.__adaptername__,
+            name if name else 'default',
+        )

@@ -1609,6 +1609,7 @@ def get_default_relations(relations: OptionDict):
         'hardwareprofile': True,
         'softwareprofile': True,
         'tags': True,
+        'instance': True,
     })
 
     return result
