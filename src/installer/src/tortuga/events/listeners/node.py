@@ -43,7 +43,7 @@ class NodeProvisioningListener(BaseListener):
         from tortuga.node.nodeManager import NodeManager
 
         manager: NodeManager = NodeManager()
-        node = manager.getNodeById(event.node['id'])
+        node = manager.getNode(event.node['name'])
 
         if node.getState() != NodeManager.NODE_STATE_INSTALLED:
             manager.updateNodeStatus(node.getName(),
