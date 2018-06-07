@@ -21,13 +21,15 @@ import cherrypy
 from marshmallow import Schema, fields
 
 from tortuga.addhost.addHostManager import AddHostManager
+from tortuga.addhost.task import enqueue_addnodes_request
 from tortuga.addhost.utility import validate_addnodes_request
 from tortuga.db.models.nodeRequest import NodeRequest
 from tortuga.db.nodeRequestsDbHandler import NodeRequestsDbHandler
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.notFound import NotFound
+from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.web_service.auth.decorators import authentication_required
-from tortuga.addhost.task import enqueue_addnodes_request
+
 from .tortugaController import TortugaController
 
 
@@ -89,9 +91,12 @@ class AddHostController(TortugaController):
                 'addHostSession': enqueue_addnodes_request(
                     cherrypy.request.db, addNodesRequest),
             }
-        except Exception as ex:
-            self.getLogger().exception('Exception occurred while adding hosts')
+        except Exception as ex:  # pylint: disable=broad-except
+            if not isinstance(ex, TortugaException):
+                self.getLogger().exception('Exception occurred while adding hosts')
+
             self.handleException(ex)
+
             response = self.errorResponse(str(ex))
 
         return self.formatResponse(response)

@@ -26,17 +26,17 @@ from tortuga.os_utility import tortugaSubprocess
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.db.models.globalParameter import GlobalParameter
 from tortuga.db.dbManager import DbManager
-from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.db.nodesDbHandler import NodesDbHandler
+from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
+from tortuga.exceptions.parameterNotFound import ParameterNotFound
+
+
+DEFAULT_DNS_TYPE = 'dnsmasq'
 
 
 class SetPrivateDnsZoneApp(TortugaCli):
-    def parseArgs(self, usage=None):
-        self.addOption(
-            '--force', action='store_true', default='false',
-            dest='bForce', help='Force update of domain name')
-
-        self.addOption('zone', nargs='?')
+    def __init__(self):
+        super().__init__()
 
         self.dbm = DbManager()
 
@@ -47,7 +47,12 @@ class SetPrivateDnsZoneApp(TortugaCli):
         self.cfgFileName = os.path.join(
             self._cm.getRoot(), 'config/base/dns-component.conf')
 
-        self._loadDNSConfig()
+    def parseArgs(self, usage=None):
+        self.addOption(
+            '--force', action='store_true', default='false',
+            dest='bForce', help='Force update of domain name')
+
+        self.addOption('zone', nargs='?')
 
         super().parseArgs(usage=usage)
 
@@ -56,64 +61,69 @@ class SetPrivateDnsZoneApp(TortugaCli):
 
         # Read/parse existing DNS settings
 
-        if self.cfg.has_section('dns'):
-            if self.cfg.has_option('dns', 'domain'):
-                self.dns_conf['domain'] = self.cfg.get('dns', 'domain')
+        if not self.cfg.has_section('dns'):
+            self.cfg.add_section('dns')
 
-            if self.cfg.has_option('dns', 'type'):
-                dns_type = self.cfg.get('dns', 'type')
+        if self.cfg.has_option('dns', 'domain'):
+            self.dns_conf['domain'] = self.cfg.get('dns', 'domain')
 
-                self.dns_conf['type'] = dns_type
+        if self.cfg.has_option('dns', 'type'):
+            dns_type = self.cfg.get('dns', 'type')
 
-                if not self.dns_conf['type'].lower() in ('named', 'dnsmasq'):
-                    # Invalid DNS type
-                    self.dns_conf['type'] = 'named'
-            else:
-                # Default to 'named'
-                self.dns_conf['type'] = 'named'
+            self.dns_conf['type'] = dns_type
+
+            if not self.dns_conf['type'].lower() in ('named', 'dnsmasq'):
+                # Invalid DNS type
+                self.dns_conf['type'] = DEFAULT_DNS_TYPE
+        else:
+            # Default to 'named'
+            self.dns_conf['type'] = DEFAULT_DNS_TYPE
 
     def _getOldDnsZone(self):
         """
         Returns None if DNS zone previously undefined
         """
 
-        return self.dns_conf['domain'] if 'domain' in self.dns_conf else None
+        with self.dbm.session() as session:
+            try:
+                result = GlobalParametersDbHandler().getParameter(
+                    session, 'DNSZone'
+                )
+
+                return result.value.lower() if result.value else None
+            except ParameterNotFound:
+                return None
 
     def _updateDatabase(self, dnsZone):
+        with self.dbm.session() as session:
+            try:
+                dbValue = GlobalParametersDbHandler().getParameter(
+                    session, 'DNSZone'
+                )
 
-        session = self.dbm.openSession()
+                # Update existing value
+                dbValue.value = dnsZone
+            except NoResultFound:
+                dbValue = GlobalParameter(name='DNSZone', value=dnsZone)
 
-        dbValue = None
+                session.append(dbValue)
 
-        try:
-            dbValue = session.query(GlobalParameter).filter(
-                GlobalParameter.name == 'DNSZone').one()
-
-            # Update existing value
-            dbValue.value = dnsZone
-        except NoResultFound:
-            pass
-
-        if dbValue is None:
-            dbValue = GlobalParameter(name='DNSZone', value=dnsZone)
-            session.append(dbValue)
-
-        session.commit()
-
-        self.dbm.closeSession()
+            session.commit()
 
     def _updateDnsComponentConf(self, dnsZone):
-        if os.path.exists(self.cfgFileName):
-            shutil.copy(self.cfgFileName, self.cfgFileName + '.orig')
+        if not os.path.exists(self.cfgFileName):
+            return
 
-            self.cfg.set('dns', 'domain', dnsZone)
+        shutil.copy(self.cfgFileName, self.cfgFileName + '.orig')
 
-            with open(self.cfgFileName + '.modified', 'w') as fpOut:
-                self.cfg.write(fpOut)
+        self.cfg.set('dns', 'domain', dnsZone)
 
-            shutil.copy(self.cfgFileName + '.modified', self.cfgFileName)
+        with open(self.cfgFileName + '.modified', 'w') as fpOut:
+            self.cfg.write(fpOut)
 
-            os.unlink(self.cfgFileName + '.modified')
+        shutil.copy(self.cfgFileName + '.modified', self.cfgFileName)
+
+        os.unlink(self.cfgFileName + '.modified')
 
     def _updatePuppetExtData(self, dnsZone): \
             # pylint: disable=no-self-use
@@ -166,22 +176,22 @@ class SetPrivateDnsZoneApp(TortugaCli):
     def runCommand(self):
         self.parseArgs()
 
+        self._loadDNSConfig()
+
         # Remove remnants
         oldDnsZone = self._getOldDnsZone()
 
-        dnsZone = self.getArgs().zone
-
-        if dnsZone:
+        if not self.getArgs().zone:
             # Output current DNS zone and exit
-
-            sys.stdout.write('{0}\n'.format(oldDnsZone))
+            print(f'{oldDnsZone}')
 
             sys.exit(0)
 
-        if oldDnsZone == dnsZone.lower():
-            if not self.getArgs().bForce:
-                # Nothing changed. Nothing to do!
-                sys.exit(0)
+        dnsZone = self.getArgs().zone.lower()
+
+        if oldDnsZone == dnsZone and not self.getArgs().bForce:
+            # Nothing changed. Nothing to do!
+            sys.exit(0)
 
         # Update database
         self._updateDatabase(dnsZone)

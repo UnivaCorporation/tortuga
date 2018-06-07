@@ -106,7 +106,6 @@ class ConfigurableMixin:
         self._config_parser = defaults_config_parser
 
     def write_default_config(self):
-        import configparser
         config_parser = configparser.ConfigParser()
         self.set_defaults(config_parser)
         self.write_config()
