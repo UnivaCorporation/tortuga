@@ -63,6 +63,7 @@ class BaseSetting(metaclass=SettingMeta):
         self.secret = kwargs.get('secret', False)
         self.values = kwargs.get('values', [])
         self.mutually_exclusive = kwargs.get('mutually_exclusive', [])
+        self.default = kwargs.get('default')
 
     def validate(self, value):
         """
