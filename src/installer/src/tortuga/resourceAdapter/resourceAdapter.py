@@ -29,7 +29,6 @@ from sqlalchemy.orm.session import Session
 from tortuga.addhost.addHostManager import AddHostManager
 from tortuga.config.configManager import ConfigManager
 from tortuga.db.dbManager import DbManager
-from tortuga.events.types.node import NodeStateChanged
 from tortuga.db.models.hardwareProfile import HardwareProfile
 from tortuga.db.models.network import Network
 from tortuga.db.models.nic import Nic
@@ -38,11 +37,12 @@ from tortuga.db.models.resourceAdapterConfig import ResourceAdapterConfig
 from tortuga.db.models.softwareProfile import SoftwareProfile
 from tortuga.db.resourceAdapterConfigDbHandler import \
     ResourceAdapterConfigDbHandler
+from tortuga.events.types.node import NodeStateChanged
 from tortuga.exceptions.configurationError import ConfigurationError
 from tortuga.exceptions.nicNotFound import NicNotFound
 from tortuga.exceptions.resourceNotFound import ResourceNotFound
-from tortuga.objects.node import Node as TortugaNode
 from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
+from tortuga.objects.node import Node as TortugaNode
 from tortuga.os_utility.osUtility import getOsObjectFactory
 from tortuga.parameter.parameterApi import ParameterApi
 from tortuga.schema import ResourceAdapterConfigSchema
