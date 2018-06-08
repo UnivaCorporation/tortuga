@@ -198,7 +198,7 @@ class TortugaDeployer(object): \
         Additional arguments will be used to substitute variables in the
         message output
         """
-        if len(args) > 0:
+        if args:
             mesg = self.gettext(message) % args
         else:
             mesg = self.gettext(message)
@@ -210,7 +210,7 @@ class TortugaDeployer(object): \
         Additional arguments will be used to substitute variables in the
         message output
         """
-        if len(args) > 0:
+        if args:
             mesg = self.gettext(message) % args
         else:
             mesg = self.gettext(message)
@@ -287,8 +287,8 @@ class TortugaDeployer(object): \
         else:
             cmd = 'more %s\n' % (license_file)
 
-            print ("To install Tortuga you must read and agree to "
-                   "the following EULA.")
+            print("To install Tortuga you must read and agree to "
+                  "the following EULA.")
 
             print("Press 'Enter' to continue...")
 
@@ -300,8 +300,8 @@ class TortugaDeployer(object): \
                 answer = input('').lower()
 
                 if answer not in ['yes', 'no', 'y', 'n']:
-                    print ('Invalid response. Please respond \'Yes\''
-                           ' or \'No\'')
+                    print('Invalid response. Please respond \'Yes\''
+                          ' or \'No\'')
 
                     continue
                 break
@@ -635,8 +635,9 @@ class TortugaDeployer(object): \
             self.out('  * Removing database [%s]\n' % (dbSchema))
 
             dbManager.destroyDb(dbSchema)
-        except Exception as ex:   # pylint: disable=W0703
-            self._logger.exception('Could not destroy existing db')
+        except Exception as ex:   # pylint: disable=broad-except
+            self._logger.exception(
+                'Could not destroy existing db: {}'.format(ex))
 
         # Remove DB password file
         osUtility.removeFile(self._cm.getDbPasswordFile())
@@ -707,7 +708,7 @@ class TortugaDeployer(object): \
             self.puppetApply()
 
             self.out('\nTortuga installation completed successfully!\n\n')
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             self._logger.exception('Fatal error occurred during setup')
 
             self.out('\nInstallation failed...\n')
@@ -899,7 +900,7 @@ class TortugaDeployer(object): \
                 print_(_('done'))
 
                 session.commit()
-            except Exception as exc:
+            except Exception as exc:  # pylint: disable=broad-except
                 session.rollback()
 
                 print_(_('failed.'))
