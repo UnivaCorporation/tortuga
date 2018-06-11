@@ -21,6 +21,7 @@ import logging
 from tortuga.db.dbManager import DbManager
 from tortuga.db.nodeRequestsDbHandler import NodeRequestsDbHandler
 from tortuga.events.types import AddNodeRequestComplete
+from tortuga.exceptions.tortugaException import TortugaException
 
 from .contextManager import AddHostSessionContextManager
 
@@ -66,8 +67,9 @@ def process_addhost_request(addHostSession):
                     'Add host request [%s] processed successfully' % (
                         req.addHostSession))
             except Exception as exc:
-                logger.exception(
-                    'Exception occurred during add host workflow')
+                if not isinstance(exc, TortugaException):
+                    logger.exception(
+                        'Exception occurred during add host workflow')
 
                 req.state = 'error'
                 req.message = 'Exception: {}: {}'.format(
