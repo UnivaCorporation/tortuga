@@ -40,6 +40,9 @@ class NodeProvisioningListener(BaseListener):
         return event.node['state'] == 'Provisioned'
 
     def run(self, event: NodeStateChanged):
+        if not event.node['name']:
+            return
+
         from tortuga.node.nodeManager import NodeManager
         from tortuga.exceptions.nodeNotFound import NodeNotFound
 
