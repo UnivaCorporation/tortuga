@@ -28,8 +28,9 @@ class InstanceMapping(ModelBase):
     node_id = Column(Integer, ForeignKey('nodes.id'))
     node = relationship('Node', back_populates='instance')
 
-    instance_metadata = relationship('InstanceMetadata',
-                                     back_populates='instance')
+    instance_metadata = relationship(
+        'InstanceMetadata', back_populates='instance',
+        cascade='all,delete-orphan')
 
     resource_adapter_configuration_id = \
         Column(Integer, ForeignKey('resource_adapter_config.id'))
