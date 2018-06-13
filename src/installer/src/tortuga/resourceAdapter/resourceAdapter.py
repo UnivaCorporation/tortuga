@@ -108,7 +108,7 @@ class ResourceAdapter(UserDataMixin): \
 
     def start(self, addNodesRequest: dict, dbSession: Session,
               dbHardwareProfile: HardwareProfile,
-              dbSoftwareProfile: Optional[Union[SoftwareProfile, None]] = None): \
+              dbSoftwareProfile: Optional[SoftwareProfile] = None): \
             # pylint: disable=unused-argument
         self.__trace(
             addNodesRequest, dbSession, dbHardwareProfile,
@@ -152,7 +152,8 @@ class ResourceAdapter(UserDataMixin): \
     def stop(self, hardwareProfileName: str, deviceName: str):
         self.__trace(hardwareProfileName, deviceName)
 
-    def updateNode(self, session: Session, node: Node, updateNodeRequest: dict): \
+    def updateNode(self, session: Session, node: Node,
+                   updateNodeRequest: dict): \
             # pylint: disable=unused-argument
         self.__trace(session, node, updateNodeRequest)
 
@@ -559,7 +560,7 @@ class ResourceAdapter(UserDataMixin): \
                         return int(row[1])
 
             return 1
-        except Exception as exc:
+        except Exception as exc:  # pylint: disable=broad-except
             self.getLogger().error(
                 'Error processing instance type mapping'
                 ' [{0}] (exc=[{1}]). Using default value'.format(fn, exc))
