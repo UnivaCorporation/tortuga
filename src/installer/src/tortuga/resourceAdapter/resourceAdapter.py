@@ -60,9 +60,11 @@ class ResourceAdapter(UserDataMixin): \
     """
     settings = {}
 
-    def __init__(self, addHostSession: Optional[Union[str, None]] = None):
-        if '__adaptername__' not in self.__class__.__dict__:
-            raise NotImplementedError(
+    __adaptername__ = None
+
+    def __init__(self, addHostSession: Optional[str] = None):
+        if not self.__adaptername__:
+            raise AttributeError(
                 'Subclasses of ResourceAdapter must have __adaptername__'
                 ' defined')
 
