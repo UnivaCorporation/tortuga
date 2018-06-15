@@ -281,15 +281,26 @@ class ResourceAdapter(UserDataMixin): \
 
         overrideConfigDict = self._loadConfigDict(sectionName)
 
-        # Override defaults with hardware profile specific settings
-        return dict(
-            list(defaultResourceAdapterConfigDict.items()) +
-            list(overrideConfigDict.items()))
+        return self._normalize_resource_adapter_config(
+            defaultResourceAdapterConfigDict,
+            override_config=overrideConfigDict)
 
     def _normalize_resource_adapter_config(
-            self, configDict: Dict[str, Any]) -> Dict[str, Any]:
-        # no-op by default
-        return configDict
+            self, default_config: Dict[str, str],
+            override_config: Optional[Dict[str, Any]]) -> dict:
+        """
+        'default_config' is from the 'default' resource adapter
+        configuration profile; 'override_config' is applied on top of
+        the default.
+
+        Override this method to handle any mutually exclusive and/or
+        conflicting settings.
+        """
+
+        result = dict(default_config)
+        if override_config:
+            result.update(override_config)
+        return result
 
     def _loadConfigDict(self, sectionName: Union[str, None] = None) \
             -> Dict[str, str]:
@@ -577,7 +588,11 @@ class ResourceAdapter(UserDataMixin): \
 
         default_config = self._loadConfigDict()
 
-        if node.instance and node.instance.resource_adapter_configuration:
+        override_config: Union[Dict[str, Any], None] = None
+
+        if node.instance and \
+                node.instance.resource_adapter_configuration and \
+                node.instance.resource_adapter_configuration.name != 'default':
             # break db relationship into key-value pairs for dict
             override_config = {
                 c.key: c.value
@@ -585,12 +600,11 @@ class ResourceAdapter(UserDataMixin): \
                 node.instance.resource_adapter_configuration.settings
             }
 
-            # override any settings in the configuration profile
-            default_config.update(override_config)
+        return self._normalize_resource_adapter_config(
+            default_config, override_config=override_config)
 
-        return self._normalize_resource_adapter_config(default_config)
-
-    def load_resource_adapter_config(self, session: Session, name: str) \
+    def load_resource_adapter_config(self, session: Session,
+                                     name: Optional[str] = None) \
             -> ResourceAdapterConfig:
         """
         Helper method to get resource adapter configuration
