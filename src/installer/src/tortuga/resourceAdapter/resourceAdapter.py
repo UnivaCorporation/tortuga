@@ -287,7 +287,7 @@ class ResourceAdapter(UserDataMixin): \
 
     def _normalize_resource_adapter_config(
             self, default_config: Dict[str, str],
-            override_config: Optional[Dict[str, Any]]) -> dict:
+            override_config: Optional[Dict[str, str]]) -> dict:
         """
         'default_config' is from the 'default' resource adapter
         configuration profile; 'override_config' is applied on top of
