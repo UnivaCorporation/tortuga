@@ -55,4 +55,7 @@ class UserDataMixin: \
             'dns_domain': configDict['dns_domain'],
         }
 
+        if node:
+            tmpl_vars['fqdn'] = node.name
+
         return template.render(tmpl_vars)
