@@ -273,13 +273,11 @@ class ResourceAdapter(UserDataMixin): \
         try:
             # Load default values
             defaultResourceAdapterConfigDict = self._loadConfigDict()
-
-            if sectionName is None or sectionName == 'default':
-                return defaultResourceAdapterConfigDict
         except ResourceNotFound:
-            defaultResourceAdapterConfigDict = {}
+            defaultResourceAdapterConfigDict = None
 
-        overrideConfigDict = self._loadConfigDict(sectionName)
+        overrideConfigDict = self._loadConfigDict(sectionName) \
+            if sectionName and sectionName != 'default' else None
 
         return self._normalize_resource_adapter_config(
             defaultResourceAdapterConfigDict,
@@ -297,7 +295,7 @@ class ResourceAdapter(UserDataMixin): \
         conflicting settings.
         """
 
-        result = dict(default_config)
+        result = dict.copy(default_config or {})
         if override_config:
             result.update(override_config)
         return result
