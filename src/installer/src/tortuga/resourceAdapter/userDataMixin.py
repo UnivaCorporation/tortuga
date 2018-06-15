@@ -33,8 +33,7 @@ class UserDataMixin: \
 
     def expand_cloud_init_user_data_template(
             self, configDict: dict,
-            node: Optional[Union[Node, None]] = None) -> str: \
-            # pylint: disable=unused-argument
+            node: Optional[Node] = None) -> str:
         """
         Return cloud-init script template
         """
