@@ -41,10 +41,6 @@ class UserDataMixin: \
         if 'cloud_init_script_template' not in configDict:
             raise ConfigurationError('cloud-init script template not defined')
 
-        self.getLogger().info(
-            'Using cloud-init user-data template [{}]'.format(
-                configDict['cloud_init_script_template']))
-
         srcpath, srcfile = os.path.split(
             configDict['cloud_init_script_template'])
 
