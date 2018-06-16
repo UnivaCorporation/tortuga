@@ -92,8 +92,6 @@ class tortuga_kit_base::core::install::virtualenv::pre_install {
     apt::ppa { 'ppa:deadsnakes/ppa':
       ensure => present,
     }
-
-    notify { 'here': }
   }
 }
 
