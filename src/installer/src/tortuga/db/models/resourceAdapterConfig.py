@@ -36,7 +36,6 @@ class ResourceAdapterConfig(ModelBase):
                          backref='resource_adapter_config')
 
     resourceadapter = relationship('ResourceAdapter',
-                                   uselist=False,
                                    backref='resource_adapter_config')
 
     settings = relationship('ResourceAdapterSetting',

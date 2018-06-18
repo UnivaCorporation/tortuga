@@ -1,6 +1,6 @@
 % Tortuga 6.3.0 Installation and Administration Guide
 % Univa Corporation &lt;support@univa.com&gt;
-% May 2018 -- Version 1.24
+% June 2018 -- Version 1.25
 
 \newpage
 
@@ -855,87 +855,148 @@ nodes in Tortuga.
 
 #### Overview
 
-A *hardware profile* tells Tortuga about *what* and *where* a node is, be it physical, virtual, or cloud-based. The hardware profile gives Tortuga the information it must know to manage the node - for example, what virtualization or cloud provider might be used.
+A *hardware profile* tells Tortuga about *what* and *where* a node is, be
+it physical, virtual, or cloud-based. The hardware profile gives Tortuga
+the information it must know to manage the node - for example, what
+virtualization or cloud provider might be used.
 
-Hardware profiles also specify the default operating system kernel. Since public cloud providers frequently bundle hardware information with a base software image, this allows Tortuga to properly manage them. For example, Amazon EC2 specifies an 'AMI' which not only dictates things like disk storage, but also a complete image of the root filesystem and kernel.
+Hardware profiles also specify the default operating system kernel. Since
+public cloud providers frequently bundle hardware information with a base
+software image, this allows Tortuga to properly manage them. For example,
+Amazon EC2 specifies an 'AMI' which not only dictates things like disk
+storage, but also a complete image of the root filesystem and kernel.
 
 The hardware profile of a node cannot be changed.
 
-Tortuga creates a hardware profile called `Installer` automatically. This profile is specifically reserved for use by the installer, and should not be used for other nodes. It cannot be modified or deleted.
+Tortuga creates a hardware profile called `Installer` automatically. This
+profile is specifically reserved for use by the installer, and should not
+be used for other nodes. It cannot be modified or deleted.
 
 #### Creating Hardware Profiles
 
 Hardware profiles are created using the `create-hardware-profile` command.
 
-For example, to create a hardware profile using the default hardware profile template:
+For example, to create a hardware profile using the default hardware
+profile template:
 
-    create-hardware-profile --name LocalIron
+```shell
+create-hardware-profile --name LocalIron
+```
 
 This command will create a hardware profile that represents physical nodes.
 
-To get a list of the available templates, run `create-hardware-profile --list-templates`.
-
-If `--xml-file` is not specified, the default hardware profile template (found in `$TORUTGA_ROOT/share/templates/hardware/defaultHardwareProfile.tmpl.xml`) is used.
-
-See [Appendix B](#appendix_b) for more information on the templates shipped with Tortuga.
-
 The following arguments are optional:
 
-- `--xml-file <TEMPLATEPATH>` or `-x <TEMPLATEPATH>` -- The full path of the XML hardware profile template.
-- `--name <NAME>` -- The name of the hardware profile. Best kept to a short descriptive name such as "LocalIron" or "Mfg_model_500".
-- `--description <DESCRIPTION>` -- A human-readable description of the intended use for the hardware profile. Stored, but not interpreted, by Tortuga. The description may contain spaces, if quoted.
+- `--name <NAME>` -- The name of the hardware profile. Best kept to a short
+  descriptive name such as "LocalIron" or "Mfg_model_500".
+- `--description <DESCRIPTION>` -- A human-readable description of the
+  intended use for the hardware profile. Stored, but not interpreted, by
+  Tortuga. The description may contain spaces, if quoted.
+- `--os <name-version-arch>` -- If provisioning is enabled and multiple OS
+  kits are installed, this selects the OS for the profile. If unspecified,
+  the OS running on the installer node is used.
+- `--idleSoftwareProfile <PROFILENAME>` -- Used for physical nodes.
+  If a node is idled using the `idle-node` command, it is forced into this
+  software profile.
 
-- `--os <name-version-arch>` -- If provisioning is enabled and multiple OS kits are installed, this selects the OS for the profile. If unspecified, the OS running on the installer node is used.
-- `--idleSoftwareProfile <PROFILENAME>` -- Used for physical nodes. If a node is idled using the `idle-node` command, it is forced into this software profile.
+Idle profiles are useful when a software profile (see below) includes an
+application with an "expensive" or limited license. When the node is idled,
+the idle profile eliminates the application from the node, freeing up the
+license. This is generally unnecessary for virtual machine nodes, which are
+deleted entirely instead of idled.
 
-Idle profiles are useful when a software profile (see below) includes an application with an "expensive" or limited license. When the node is idled, the idle profile eliminates the application from the node, freeing up the license. This is generally unnecessary for virtual machine nodes, which are deleted entirely instead of idled.
+The nodes using a given hardware profile do not actually need to have
+*identical* hardware. They must, however, be interchangeable in terms of
+how they can be managed (created, deleted, turned on or off, etc) at the
+hardware level.
 
-The nodes using a given hardware profile do not actually need to have *identical* hardware. They must, however, be interchangeable in terms of how they can be managed (created, deleted, turned on or off, etc) at the hardware level.
-
-Virtual machines which will be created and managed outside of Tortuga should be treated as physical machines. Tortuga does not 'detect' if a node is physical or virtual.
+Virtual machines which will be created and managed outside of Tortuga
+should be treated as physical machines. Tortuga does not 'detect' if a node
+is physical or virtual.
 
 ##### Network Settings
 
-Before a hardware profile can be used, it must have an associated provisioning NIC and network.  This identifies the network settings for all nodes created in that hardware profile and defines the connectivity between the Tortuga installer and compute nodes.
+Before a hardware profile can be used, it must have an associated
+provisioning NIC and network.  This identifies the network settings for all
+nodes created in that hardware profile and defines the connectivity between
+the Tortuga installer and compute nodes.
 
-The network parameters are set using `update-hardware-profile` and the options `--add-provisioning-nic` and `--add-network` to associate a provisioning NIC and network, respectively.
+The network parameters are set using `update-hardware-profile` and the
+options `--add-provisioning-nic` and `--add-network` to associate a
+provisioning NIC and network, respectively.
 
-For example, when provisioning VMware vSphere-based compute nodes, if the provisioning NIC (that is, the NIC connected to the provisioning/management network on the Tortuga installer) has an IP address `10.0.0.1` and the provisioning/management network is "10.0.0.0/255.255.255.0", the following command-line would be used:
+For example, when provisioning VMware vSphere-based compute nodes, if the
+provisioning NIC (that is, the NIC connected to the provisioning/management
+network on the Tortuga installer) has an IP address `10.0.0.1` and the
+provisioning/management network is "10.0.0.0/255.255.255.0", the following
+command-line would be used:
 
-    update-hardware-profile --name PROFILE --add-provisioning-nic 10.0.0.1 \
-        --add-network 10.0.0.0/255.255.255.0/eth0
+```shell
+update-hardware-profile --name PROFILE --add-provisioning-nic 10.0.0.1 \
+    --add-network 10.0.0.0/255.255.255.0/eth0
+```
 
-Effectively, this command sets up the specified hardware profile to be connected to the Tortuga installer via the network interface with the IP address *10.0.0.1* on the network *10.0.0.0/255.255.255.0*.
+Effectively, this command sets up the specified hardware profile to be
+connected to the Tortuga installer via the network interface with the IP
+address *10.0.0.1* on the network *10.0.0.0/255.255.255.0*.
 
-Note: the device name `eth0` reflects the name of the NIC **on the compute node**, not the device name of the provisioning NIC on the installer.
+Note: the device name `eth0` reflects the name of the NIC **on the compute
+node**, not the device name of the provisioning NIC on the installer.
 
-Traditionally, the public network device name on the Tortuga installer would be `eth0` and the provisioning/management network device name would be `eth1`.
+Traditionally, the public network device name on the Tortuga installer
+would be `eth0` and the provisioning/management network device name would
+be `eth1`.
 
-#### Updating hardware profiles
+#### Updating hardware profile settings
 
-The list of current hardware profiles is given by `get-hardware-profile-list`. Detailed information is available using `get-hardware-profile --name <HWPROFILENAME>`.
+The list of current hardware profiles is given by
+`get-hardware-profile-list`. Detailed information is available using
+`get-hardware-profile --name <HWPROFILENAME>`.
 
-To modify a hardware profile, use `update-hardware-profile`. Most fields can be updated, but things set during provisioning (such as the OS, kernel, and name format) will only take effect for *future* nodes, not *existing* nodes.
+To modify a hardware profile, use `update-hardware-profile`. Most fields
+can be updated, but things set during provisioning (such as the OS, kernel,
+and name format) will only take effect for *future* nodes, not *existing*
+nodes.
 
 The following command changes the host name format of the hardware profile `Rack2`:
 
-    update-hardware-profile --name Rack2 --name-format rack2-#NN
+```shell
+update-hardware-profile --name Rack2 --name-format rack2-#NN
+```
 
-Nodes not provisioned and/or managed by Tortuga can be added by setting the hardware profile location to be "remote", using the command `update-hardware-profile --name <NAME> --location remote`. This is useful in cases where Tortuga must be aware of, but not necessarily manage, a node. For example, this allows the addition of externally managed hypervisors and/or other infrastructure nodes to the cluster.
+Nodes not provisioned and/or managed by Tortuga can be added by setting the
+hardware profile location to be "remote", using the command
+`update-hardware-profile --name <NAME> --location remote`. This is useful
+in cases where Tortuga must be aware of, but not necessarily manage, a
+node. For example, this allows the addition of externally managed
+hypervisors and/or other infrastructure nodes to the cluster.
 
-Hardware profiles used for virtual machines require a hypervisor software profile. The relationship of (hardware profile) virtual machine, hosted by a (software profile) hypervisor, running on a (hardware profile) physical machine, is configured using:
+Hardware profiles used for virtual machines require a hypervisor software
+profile. The relationship of (hardware profile) virtual machine, hosted by
+a (software profile) hypervisor, running on a (hardware profile) physical
+machine, is configured using:
 
-    update-hardware-profile --name <NAME> --hypervisor-profile PROFILE
+```shell
+update-hardware-profile --name <NAME> --hypervisor-profile PROFILE
+```
 
-Additionally, virtual machine hardware profiles require a *resource adapter*, used to manage the hypervisor. This is done using the `--resource-adapter <ADAPTER>` option and tells Tortuga what API will be used for management. See the kit documentation supplying the resource adapter for more details.
+Additionally, virtual machine hardware profiles require a *resource
+adapter*, used to manage the hypervisor. This is done using the
+`--resource-adapter <ADAPTER>` option and tells Tortuga what API will be
+used for management. See the kit documentation supplying the resource
+adapter for more details.
 
 The command `get-resource-adapter-list` lists available resource adapters.
 
 #### Deleting hardware profiles
 
-Hardware profiles can be deleted using the `delete-hardware-profile` command. Hardware profiles  cannot be deleted until associated nodes nodes are first deleted.
+Hardware profiles can be deleted using the `delete-hardware-profile`
+command. Hardware profiles  cannot be deleted until associated nodes nodes
+are first deleted.
 
-    delete-hardware-profile --name Rack2
+```shell
+delete-hardware-profile --name Rack2
+```
 
 ### Software profiles
 
@@ -2311,65 +2372,145 @@ section of the Puppet documentation.
 
 # Resource Adapters
 
-Resource adapters are the "connectors" between Tortuga and virtualization and cloud platforms.
+Resource adapters are the "connectors" between Tortuga and virtualization
+and cloud platforms.
 
 ## Resource adapter configuration profiles
 
-Starting with Tortuga 6.3.0, resource adapter configuration is managed using
-the `adapter-mgmt` command-line interface. This functionality obsoletes the
-need for resource adapter configuration files previously found in
-`$TORTUGA_ROOT/config/adapter-defaults-*.conf`.
+Starting with Tortuga 6.3.0, resource adapter configuration is managed
+using the `adapter-mgmt` command-line interface. This functionality
+obsoletes the need for resource adapter configuration files previously
+found in `$TORTUGA_ROOT/config/adapter-defaults-*.conf`.
 
-It is also no longer necessary to create resource adapter configuration profiles mapped to hardware profile names.
+It is also no longer necessary to create resource adapter configuration
+profile names matching hardware profile names.
 
 ### Creating a resource adapter configuration profile
 
-Create a resource adapter configuration profile named "example" for the "aws" resource adapter:
+Create a resource adapter configuration profile named "example" for the
+"aws" resource adapter:
 
-    adapter-mgmt create --resource-adapter aws --profile example \
-        --setting key=value
+```shell
+adapter-mgmt create --resource-adapter aws --profile example \
+    --setting key=value
+```
 
-This command creates a resource adapter configuration profile named "example" with one setting (*key=value*).
+**Hint:** `-r NAME` and `-p NAME` are shortcuts for `--resource-adapter
+NAME` and `--profile NAME` arguments, respectively.
 
-Using the `-A example` option when running `add-nodes` would instruct Tortuga to obtain resource adapter configuration from this profile.
+This command creates a resource adapter configuration profile named
+"example" with one setting (*key=value*).
 
-### Adding nodes using resource adapter configuration profile
+Using the `-A example` option when running `add-nodes` would instruct
+Tortuga to obtain resource adapter configuration from this profile.
 
-The `default` resource adapter configuration profile is used for all `add-nodes` requests that do not override the resource adapter configuration profile.
+### Setting default resource adapter configuration profile
 
-When the option `-A <profile name>` is specified, the resource adapter configuration profile with the specified name is used. If this profile does not exist, an error will be displayed. If the profile specified does not contain the full set of resource adapter configuration settings (ie. credentials), the system will automatically use the "missing" values from the `default` profile.
+Use the following command-line syntax to specify a default resource adapter
+configuration profile:
 
-### Importing an existing resource adapter configuration
+```shell
+update-hardware-profile --name aws \
+    --default-resource-adapter-configuration-profile nondefault
+```
 
-For users of Tortuga versions prior to 6.3.0, the resource adapter configuration was contained within a file. These existing resource adapter configurations may be imported as follows:
+**Hint:** use the `-A` shortcut instead of
+`--default-resource-adapter-configuration-profile`
 
-    adapter-mgmt import --resource-adapter aws --adapter-config <filename>
+In this example, the default resource adapter configuration profile is set
+to `nondefault` for the hardware profile `aws`. As described above, the
+resource adapter configuration profile `nondefault` must be previously
+created using `adapter-mgmt create -r XXX -p nondefault`.
 
-This will create a `default` resource adapter configuration profile for the specific resource adapter as well as individual configuration profiles for all sections listed in the adapter configuration file.
+Now when adding nodes using `add-nodes`, the resource adapter configuration
+profile `nondefault` will be used for all nodes added to the `aws` hardware
+profile.
+
+It is also possible to specify `-A profilename` to override the default
+resource adapter configuration profile:
+
+```shell
+add-nodes ... --hardware-profile aws -A otherprofile
+```
+
+Nodes added to the `aws` hardware profile will use the `otherprofile`
+resource adapter configuration profile regardless of the default resoure
+adapter configuration profile set on the hardware profile.
+
+#### Importing an existing resource adapter configuration
+
+For users of Tortuga versions prior to 6.3.0, the resource adapter
+configuration was contained within a file. These existing resource adapter
+configurations may be imported as follows:
+
+```shell
+adapter-mgmt import --resource-adapter aws --adapter-config <filename>
+```
+
+This will create a `default` resource adapter configuration profile for the
+specific resource adapter as well as individual configuration profiles for
+all sections listed in the adapter configuration file.
 
 ### List all resource adapter configuration profiles
 
-For example, to list all resource adapter configuration profiles for the "aws" resource adapter, use the following command-line:
+For example, to list all resource adapter configuration profiles for the
+"aws" resource adapter, use the following command-line:
 
-    adapter-mgmt list --resource-adapter aws
+```shell
+adapter-mgmt list --resource-adapter aws
+```
 
 ### Show specific resource adapter configuration profile
 
-To display all settings for a specific resource adapter configuration profile:
+To display all settings for a specific resource adapter configuration
+profile:
 
-    adapter-mgmt show --resource-adapter aws --profile default
+```shell
+adapter-mgmt show --resource-adapter aws --profile default
+```
 
-All "secret" information (ie. AWS access/secret keys, passwords, etc.) will be
-hidden from the output of `adapter-mgmt show` by default. To display *all*
-information, add the `--all` argument. For example:
+All "secret" information (ie. AWS access/secret keys, passwords, etc.) will
+be hidden from the output of `adapter-mgmt show` by default. To display
+*all* information, add the `--all` argument. For example:
 
-    adapter-mgmt show --all --resource-adapter aws --profile default
+```shell
+adapter-mgmt show --all --resource-adapter aws --profile default
+```
 
 ### Deleting resource adapter configuration profiles
 
-Delete the resource adapter configuration profile "example" from the "aws" resource adapter:
+Delete the resource adapter configuration profile "example" from the "aws"
+resource adapter:
 
-    adapter-mgmt delete --resource-adapter aws --profile example
+```shell
+adapter-mgmt delete --resource-adapter aws --profile example
+```
+
+### Specify resource adapter configuration profile when adding nodes
+
+Use `--resource-adapter-configuration-profile` (or its preferred shortcut
+`-A`) to specify the resource adapter configuration profile used when
+adding nodes:
+
+```shell
+add-nodes --count N \
+    --hardware-profile aws --software-profile execd -A profilename
+```
+
+If the option `-A <profilename>` is provided, the specified resource
+adapter configuration profile is used. If this profile does not exist, an
+error will be displayed. If the profile specified does not contain the full
+set of resource adapter configuration settings (ie. credentials), the
+system will automatically use the "missing" values from the `default`
+resource adapter configuration profile.
+
+If the default resource adapter configuration profile is not set (as
+described above), the `default` resource adapter
+configuration profile is used.
+
+**Note:** it is also possible to override the hardware profile default
+resource adapter configuration using `--resource-adapter-configuration` on
+the `add-nodes` command-line
 
 # Troubleshooting
 

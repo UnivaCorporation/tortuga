@@ -107,6 +107,13 @@ class UpdateHardwareProfileCli(TortugaCli):
                        dest='resourceAdapter',
                        help=_('Tortuga resource adapter.'))
 
+        self.addOption(
+            '--default-resource-adapter-configuration-profile',
+            '-A',
+            dest='default_adapter_config',
+            help=_('Default resource adapter configuration profile')
+        )
+
         self.addOption('--add-provisioning-nic',
                        dest='addPNic',
                        action='append',
@@ -214,6 +221,10 @@ class UpdateHardwareProfileCli(TortugaCli):
             resourceAdapter = ResourceAdapter(
                 name=self.getArgs().resourceAdapter)
             hp.setResourceAdapter(resourceAdapter)
+
+        if self.getArgs().default_adapter_config:
+            hp.setDefaultResourceAdapterConfig(
+                self.getArgs().default_adapter_config)
 
         if self.getArgs().deletePNic is not None:
             out = TortugaObjectList()
