@@ -14,7 +14,7 @@
 
 import os.path
 
-from .schemas import resource_adapter_settings as schemas
+from marshmallow import fields, Schema, post_load
 
 
 SETTING_TYPES = {}
@@ -63,6 +63,18 @@ class SettingMeta(type):
         SETTING_TYPES[cls.type] = cls
 
 
+class BaseSettingSchema(Schema):
+    """
+    Marshmallow schema for resource adapter settings.
+
+    """
+    type: fields.Field = fields.String(dump_only=True)
+    required: fields.Field = fields.Boolean()
+    secret: fields.Field = fields.Boolean()
+    mutually_exclusive: fields.Field = fields.List(fields.String())
+    requires: fields.Field = fields.List(fields.String())
+
+
 class BaseSetting(metaclass=SettingMeta):
     """
     A resoruce adapter configuration variable.
@@ -91,7 +103,7 @@ class BaseSetting(metaclass=SettingMeta):
         """
         if not self.type:
             raise Exception('Setting type not set')
-        self.validate_values()
+        self.validate_values(value)
 
     def validate_values(self, value):
         """
@@ -107,9 +119,20 @@ class BaseSetting(metaclass=SettingMeta):
                 'Value must be one of: {}'.format(self.values))
 
 
+class BooleanSettingSchema(BaseSettingSchema):
+    """
+    Marshmallow schema for the BooleanSetting class.
+    """
+    default: fields.Field = fields.Boolean()
+
+    @post_load
+    def make_instance(self, data: dict) -> 'BooleanSetting':
+        return BooleanSetting(**data)
+
+
 class BooleanSetting(BaseSetting):
     type = 'boolean'
-    schema = schemas.BooleanSettingSchema
+    schema = BooleanSettingSchema
 
     def validate(self, value):
         if not isinstance(value, bool):
@@ -117,9 +140,32 @@ class BooleanSetting(BaseSetting):
         super().validate(value)
 
 
+class StringSettingSchema(BaseSettingSchema):
+    """
+    Marshmallow schema for the StringSetting class.
+    """
+    default: fields.Field = fields.String()
+    values: fields.Field = fields.List(fields.String())
+
+    @post_load
+    def make_instance(self, data: dict) -> 'StringSetting':
+        return StringSetting(**data)
+
+
+class FileSettingSchema(StringSettingSchema):
+    """
+    Marshmallow schema for the FileSetting class.
+    """
+    must_exist: fields.Field = fields.Boolean()
+
+    @post_load
+    def make_instance(self, data: dict) -> 'FileSetting':
+        return FileSetting(**data)
+
+
 class FileSetting(BaseSetting):
     type = 'file'
-    schema = schemas.FileSettingSchema
+    schema = FileSettingSchema
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -133,9 +179,21 @@ class FileSetting(BaseSetting):
             raise SettingValidationError('File does not exist')
 
 
+class IntegerSettingSchema(BaseSettingSchema):
+    """
+    Marshmallow schema for the IntegerSetting class.
+    """
+    default: fields.Field = fields.Integer()
+    values: fields.Field = fields.List(fields.Integer())
+
+    @post_load
+    def make_instance(self, data: dict) -> 'IntegerSetting':
+        return IntegerSetting(**data)
+
+
 class IntegerSetting(BaseSetting):
     type = 'integer'
-    schema = schemas.IntegerSettingSchema
+    schema = IntegerSettingSchema
 
     def validate(self, value):
         if not isinstance(value, int):
@@ -145,7 +203,7 @@ class IntegerSetting(BaseSetting):
 
 class StringSetting(BaseSetting):
     type = 'string'
-    schema = schemas.StringSettingSchema
+    schema = StringSettingSchema
 
     def validate(self, value):
         if not isinstance(value, str):

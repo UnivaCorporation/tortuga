@@ -14,10 +14,10 @@
 
 from typing import Any, Dict, Iterable, Optional
 
-from tortuga.objects.resourceadapter_settings.base import BaseSettingSchema
 from tortuga.objects.tortugaObject import TortugaObject
 
-from .resourceadapter_settings import BaseSetting, get_setting_class
+from tortuga.objects.resource_adapter_settings import BaseSetting, \
+    BaseSettingSchema, get_setting_class
 
 
 class ResourceAdapter(TortugaObject): \

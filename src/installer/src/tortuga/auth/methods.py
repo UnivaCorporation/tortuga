@@ -216,6 +216,7 @@ class JwtAuthenticationMethod(AuthenticationMethod):
     SECRET_FILE_NAME = 'jwt.secret'
 
     def __init__(self, secret: str = None):
+        self._cm = ConfigManager()
         self._secret: str = secret
         if not secret:
             self._load_secret()
@@ -236,9 +237,10 @@ class JwtAuthenticationMethod(AuthenticationMethod):
         except jwt.DecodeError:
             raise AuthenticationFailed()
 
-        username = decoded.get('username', None)
-        if not username:
-            raise AuthenticationFailed()
+        # username = decoded.get('name', None)
+        # if not username:
+        #     raise AuthenticationFailed()
+        username = self._cm.getCfmUser()
 
         principal: AuthPrincipal = AuthManager().get_principal(username)
         if not principal:
