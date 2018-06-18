@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from logging import getLogger
 import os
 import sys
+from logging import getLogger
 from pathlib import Path
 
+from tortuga.config.configManager import ConfigManager
 
 from .registry import discover_kit_installers
-from tortuga.config.configManager import ConfigManager
 
 
 logger = getLogger(__name__)

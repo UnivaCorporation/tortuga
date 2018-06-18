@@ -29,7 +29,6 @@ from sqlalchemy.orm.session import Session
 from tortuga.addhost.addHostManager import AddHostManager
 from tortuga.config.configManager import ConfigManager
 from tortuga.db.dbManager import DbManager
-from tortuga.events.types.node import NodeStateChanged
 from tortuga.db.models.hardwareProfile import HardwareProfile
 from tortuga.db.models.network import Network
 from tortuga.db.models.nic import Nic
@@ -38,11 +37,12 @@ from tortuga.db.models.resourceAdapterConfig import ResourceAdapterConfig
 from tortuga.db.models.softwareProfile import SoftwareProfile
 from tortuga.db.resourceAdapterConfigDbHandler import \
     ResourceAdapterConfigDbHandler
+from tortuga.events.types.node import NodeStateChanged
 from tortuga.exceptions.configurationError import ConfigurationError
 from tortuga.exceptions.nicNotFound import NicNotFound
 from tortuga.exceptions.resourceNotFound import ResourceNotFound
-from tortuga.objects.node import Node as TortugaNode
 from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
+from tortuga.objects.node import Node as TortugaNode
 from tortuga.os_utility.osUtility import getOsObjectFactory
 from tortuga.parameter.parameterApi import ParameterApi
 from tortuga.schema import ResourceAdapterConfigSchema
@@ -60,9 +60,11 @@ class ResourceAdapter(UserDataMixin): \
     """
     settings = {}
 
-    def __init__(self, addHostSession: Optional[Union[str, None]] = None):
-        if '__adaptername__' not in self.__class__.__dict__:
-            raise NotImplementedError(
+    __adaptername__ = None
+
+    def __init__(self, addHostSession: Optional[str] = None):
+        if not self.__adaptername__:
+            raise AttributeError(
                 'Subclasses of ResourceAdapter must have __adaptername__'
                 ' defined')
 
@@ -108,7 +110,7 @@ class ResourceAdapter(UserDataMixin): \
 
     def start(self, addNodesRequest: dict, dbSession: Session,
               dbHardwareProfile: HardwareProfile,
-              dbSoftwareProfile: Optional[Union[SoftwareProfile, None]] = None): \
+              dbSoftwareProfile: Optional[SoftwareProfile] = None): \
             # pylint: disable=unused-argument
         self.__trace(
             addNodesRequest, dbSession, dbHardwareProfile,
@@ -152,7 +154,8 @@ class ResourceAdapter(UserDataMixin): \
     def stop(self, hardwareProfileName: str, deviceName: str):
         self.__trace(hardwareProfileName, deviceName)
 
-    def updateNode(self, session: Session, node: Node, updateNodeRequest: dict): \
+    def updateNode(self, session: Session, node: Node,
+                   updateNodeRequest: dict): \
             # pylint: disable=unused-argument
         self.__trace(session, node, updateNodeRequest)
 
@@ -270,23 +273,32 @@ class ResourceAdapter(UserDataMixin): \
         try:
             # Load default values
             defaultResourceAdapterConfigDict = self._loadConfigDict()
-
-            if sectionName is None or sectionName == 'default':
-                return defaultResourceAdapterConfigDict
         except ResourceNotFound:
-            defaultResourceAdapterConfigDict = {}
+            defaultResourceAdapterConfigDict = None
 
-        overrideConfigDict = self._loadConfigDict(sectionName)
+        overrideConfigDict = self._loadConfigDict(sectionName) \
+            if sectionName and sectionName != 'default' else None
 
-        # Override defaults with hardware profile specific settings
-        return dict(
-            list(defaultResourceAdapterConfigDict.items()) +
-            list(overrideConfigDict.items()))
+        return self._normalize_resource_adapter_config(
+            defaultResourceAdapterConfigDict,
+            override_config=overrideConfigDict)
 
     def _normalize_resource_adapter_config(
-            self, configDict: Dict[str, Any]) -> Dict[str, Any]:
-        # no-op by default
-        return configDict
+            self, default_config: Dict[str, str],
+            override_config: Optional[Dict[str, str]]) -> dict:
+        """
+        'default_config' is from the 'default' resource adapter
+        configuration profile; 'override_config' is applied on top of
+        the default.
+
+        Override this method to handle any mutually exclusive and/or
+        conflicting settings.
+        """
+
+        result = dict.copy(default_config or {})
+        if override_config:
+            result.update(override_config)
+        return result
 
     def _loadConfigDict(self, sectionName: Union[str, None] = None) \
             -> Dict[str, str]:
@@ -559,28 +571,38 @@ class ResourceAdapter(UserDataMixin): \
                         return int(row[1])
 
             return 1
-        except Exception as exc:
+        except Exception as exc:  # pylint: disable=broad-except
             self.getLogger().error(
                 'Error processing instance type mapping'
                 ' [{0}] (exc=[{1}]). Using default value'.format(fn, exc))
 
             return 1
 
-    def get_node_resource_adapter_config(self, node: Node) -> Dict[str, Any]:
+    def get_node_resource_adapter_config(self, node: Node) \
+            -> Dict[str, Any]:
         """
         Deserialize resource adapter configuration to key/value pairs
         """
 
-        if node.instance and node.instance.resource_adapter_configuration:
-            return self._normalize_resource_adapter_config(
-                {c.key: c.value for c in node.instance.resource_adapter_configuration.settings}
-            )
+        default_config = self._loadConfigDict()
 
-        # this should never happen... every node should have an associated
-        # resource adapter configuration
-        return self.getResourceAdapterConfig()
+        override_config: Union[Dict[str, Any], None] = None
 
-    def load_resource_adapter_config(self, session: Session, name: str) \
+        if node.instance and \
+                node.instance.resource_adapter_configuration and \
+                node.instance.resource_adapter_configuration.name != 'default':
+            # break db relationship into key-value pairs for dict
+            override_config = {
+                c.key: c.value
+                for c in
+                node.instance.resource_adapter_configuration.settings
+            }
+
+        return self._normalize_resource_adapter_config(
+            default_config, override_config=override_config)
+
+    def load_resource_adapter_config(self, session: Session,
+                                     name: Optional[str] = None) \
             -> ResourceAdapterConfig:
         """
         Helper method to get resource adapter configuration

@@ -40,11 +40,20 @@ class NodeProvisioningListener(BaseListener):
         return event.node['state'] == 'Provisioned'
 
     def run(self, event: NodeStateChanged):
+        if not event.node['name']:
+            return
+
         from tortuga.node.nodeManager import NodeManager
+        from tortuga.exceptions.nodeNotFound import NodeNotFound
 
         manager: NodeManager = NodeManager()
-        node = manager.getNode(event.node['name'])
 
-        if node.getState() != NodeManager.NODE_STATE_INSTALLED:
-            manager.updateNodeStatus(node.getName(),
-                                     NodeManager.NODE_STATE_UNRESPONSIVE)
+        try:
+            node = manager.getNode(event.node['name'])
+
+            if node.getState() != NodeManager.NODE_STATE_INSTALLED:
+                manager.updateNodeStatus(node.getName(),
+                                         NodeManager.NODE_STATE_UNRESPONSIVE)
+        except NodeNotFound:
+            # node has been deleted; nothing to do
+            pass

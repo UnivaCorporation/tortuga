@@ -14,8 +14,10 @@
 
 # pylint: disable=no-member
 
-from tortuga.objects.tortugaObject import TortugaObject
+from typing import Iterable, Optional
+
 import tortuga.objects.osFamilyInfo
+from tortuga.objects.tortugaObject import TortugaObject
 
 
 class OsInfo(TortugaObject): \
@@ -98,7 +100,7 @@ class OsInfo(TortugaObject): \
         return ['id', 'name', 'version', 'arch']
 
     @classmethod
-    def getFromDict(cls, _dict):
+    def getFromDict(cls, _dict, ignore: Optional[Iterable[str]] = None):
         """ Get os info from dict. """
 
         osInfo = super(OsInfo, cls).getFromDict(_dict)
@@ -114,8 +116,8 @@ class OsInfo(TortugaObject): \
         return osInfo
 
     @classmethod
-    def getFromDbDict(cls, _dict):
-        osInfo = super(OsInfo, cls).getFromDict(_dict)
+    def getFromDbDict(cls, _dict, ignore: Optional[Iterable[str]] = None):
+        osInfo = super(OsInfo, cls).getFromDict(_dict, ignore=ignore)
 
         osFamilyDict = _dict.get(
             tortuga.objects.osFamilyInfo.OsFamilyInfo.ROOT_TAG)

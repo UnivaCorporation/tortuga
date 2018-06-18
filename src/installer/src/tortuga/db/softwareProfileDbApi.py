@@ -95,6 +95,12 @@ class SoftwareProfileDbApi(TortugaDbApi):
 
         self.loadRelations(software_profile, dict(tags=True))
 
+        # if 'components' is specified, ensure 'kit' relationship is
+        # also serialized
+        if options and 'components' in options and options['components']:
+            for component in software_profile.components:
+                self.loadRelation(component, 'kit')
+
         software_profile_obj = SoftwareProfile.getFromDbDict(
             software_profile.__dict__)
 

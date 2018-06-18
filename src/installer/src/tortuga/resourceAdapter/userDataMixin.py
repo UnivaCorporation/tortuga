@@ -33,18 +33,13 @@ class UserDataMixin: \
 
     def expand_cloud_init_user_data_template(
             self, configDict: dict,
-            node: Optional[Union[Node, None]] = None) -> str: \
-            # pylint: disable=unused-argument
+            node: Optional[Node] = None) -> str:
         """
         Return cloud-init script template
         """
 
         if 'cloud_init_script_template' not in configDict:
             raise ConfigurationError('cloud-init script template not defined')
-
-        self.getLogger().info(
-            'Using cloud-init user-data template [{}]'.format(
-                configDict['cloud_init_script_template']))
 
         srcpath, srcfile = os.path.split(
             configDict['cloud_init_script_template'])
@@ -59,5 +54,8 @@ class UserDataMixin: \
             'override_dns_domain': configDict['override_dns_domain'],
             'dns_domain': configDict['dns_domain'],
         }
+
+        if node:
+            tmpl_vars['fqdn'] = node.name
 
         return template.render(tmpl_vars)

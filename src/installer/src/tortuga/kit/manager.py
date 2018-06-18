@@ -30,6 +30,7 @@ from tortuga.exceptions.eulaAcceptanceRequired import EulaAcceptanceRequired
 from tortuga.exceptions.kitAlreadyExists import KitAlreadyExists
 from tortuga.exceptions.kitInstallError import KitInstallError
 from tortuga.exceptions.kitNotFound import KitNotFound
+from tortuga.exceptions.operationFailed import OperationFailed
 from tortuga.exceptions.osNotSupported import OsNotSupported
 from tortuga.exceptions.softwareProfileComponentAlreadyExists import \
     SoftwareProfileComponentAlreadyExists
@@ -158,11 +159,10 @@ class KitManager(TortugaObjectManager, Singleton):
         kit_meta = utils.get_metadata_from_archive(kit_pkg_path)
         requires_core = kit_meta.get('requires_core', VERSION)
         if not version_is_compatible(requires_core):
-            self.getLogger().error(
-                'The {} kit requires tortuga core >= {}'.format(
-                    kit_meta['name'],requires_core)
-            )
-            return
+            errmsg = 'The {} kit requires tortuga core >= {}'.format(
+                kit_meta['name'],requires_core)
+
+            raise OperationFailed(errmsg)
 
         #
         # Unpack the archive

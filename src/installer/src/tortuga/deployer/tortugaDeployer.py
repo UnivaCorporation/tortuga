@@ -14,42 +14,40 @@
 
 # pylint: disable=no-name-in-module,no-member
 
-import os
-import sys
+import configparser
 import gettext
-import socket
-import time
 import glob
+import itertools
+import os
 import pwd
 import random
-import subprocess
-import itertools
-import configparser
 import shutil
-from six import print_
-import yaml
+import socket
+import subprocess
+import sys
+import time
 
-from tortuga.config.configManager import ConfigManager
-from tortuga.os_utility import osUtility
-from tortuga.os_utility import tortugaSubprocess
-from tortuga.helper.osHelper import getOsInfo
-from tortuga.exceptions.softwareAlreadyDeployed \
-    import SoftwareAlreadyDeployed
-from tortuga.exceptions.invalidMachineConfiguration \
-    import InvalidMachineConfiguration
-from tortuga.os_utility.osUtility import getOsObjectFactory
-from tortuga.deployer import dbUtility
-from tortuga.exceptions.eulaAcceptanceRequired \
-    import EulaAcceptanceRequired
+import yaml
+from six import print_
+
 from tortuga.admin.api import AdminApi
-from tortuga.kit.kitApi import KitApi
-from tortuga.exceptions.configurationError import ConfigurationError
-from tortuga.softwareprofile.softwareProfileApi import SoftwareProfileApi
-from tortuga.node.nodeApi import NodeApi
+from tortuga.config.configManager import ConfigManager
+from tortuga.deployer import dbUtility
 from tortuga.exceptions.commandFailed import CommandFailed
+from tortuga.exceptions.eulaAcceptanceRequired import EulaAcceptanceRequired
 from tortuga.exceptions.invalidArgument import InvalidArgument
+from tortuga.exceptions.invalidMachineConfiguration import \
+    InvalidMachineConfiguration
 from tortuga.exceptions.kitNotFound import KitNotFound
+from tortuga.exceptions.softwareAlreadyDeployed import SoftwareAlreadyDeployed
+from tortuga.helper.osHelper import getOsInfo
+from tortuga.kit.kitApi import KitApi
+from tortuga.kit.loader import load_kits
 from tortuga.kit.utils import get_metadata_from_archive
+from tortuga.node.nodeApi import NodeApi
+from tortuga.os_utility import osUtility, tortugaSubprocess
+from tortuga.os_utility.osUtility import getOsObjectFactory
+from tortuga.softwareprofile.softwareProfileApi import SoftwareProfileApi
 
 
 class TortugaDeployer(object): \
@@ -63,9 +61,14 @@ class TortugaDeployer(object): \
 
         self._settings = self.__load_settings(cmdline_options)
 
+        self._settings['installer_software_profile'] = 'Installer'
+        self._settings['installer_hardware_profile'] = 'Installer'
+
         self._settings['eulaAccepted'] = False
 
         self._settings['fqdn'] = self._getfqdn()
+
+        self._settings['osInfo'] = getOsInfo()
 
         self._forceCleaning = False
         self._depotCreated = False
@@ -88,9 +91,7 @@ class TortugaDeployer(object): \
         self.gettext = gettext.gettext
         self._ = self.gettext
 
-        self._osInfo = getOsInfo()
-
-        self._logger.info('Detected OS: [%s]' % (self._osInfo))
+        self._logger.info('Detected OS: [{}]' % (self._settings['osInfo']))
 
     def __load_settings(self, cmdline_options):
         settings = dict(list(cmdline_options.items()))
@@ -197,7 +198,7 @@ class TortugaDeployer(object): \
         Additional arguments will be used to substitute variables in the
         message output
         """
-        if len(args) > 0:
+        if args:
             mesg = self.gettext(message) % args
         else:
             mesg = self.gettext(message)
@@ -209,7 +210,7 @@ class TortugaDeployer(object): \
         Additional arguments will be used to substitute variables in the
         message output
         """
-        if len(args) > 0:
+        if args:
             mesg = self.gettext(message) % args
         else:
             mesg = self.gettext(message)
@@ -286,8 +287,8 @@ class TortugaDeployer(object): \
         else:
             cmd = 'more %s\n' % (license_file)
 
-            print ("To install Tortuga you must read and agree to "
-                   "the following EULA.")
+            print("To install Tortuga you must read and agree to "
+                  "the following EULA.")
 
             print("Press 'Enter' to continue...")
 
@@ -299,8 +300,8 @@ class TortugaDeployer(object): \
                 answer = input('').lower()
 
                 if answer not in ['yes', 'no', 'y', 'n']:
-                    print ('Invalid response. Please respond \'Yes\''
-                           ' or \'No\'')
+                    print('Invalid response. Please respond \'Yes\''
+                          ' or \'No\'')
 
                     continue
                 break
@@ -634,8 +635,9 @@ class TortugaDeployer(object): \
             self.out('  * Removing database [%s]\n' % (dbSchema))
 
             dbManager.destroyDb(dbSchema)
-        except Exception as ex:   # pylint: disable=W0703
-            self._logger.exception('Could not destroy existing db')
+        except Exception as ex:   # pylint: disable=broad-except
+            self._logger.exception(
+                'Could not destroy existing db: {}'.format(ex))
 
         # Remove DB password file
         osUtility.removeFile(self._cm.getDbPasswordFile())
@@ -699,8 +701,6 @@ class TortugaDeployer(object): \
 
             self.installKits()
 
-            self._logger.debug('Enabling default components')
-
             self.enableComponents()
 
             self.prepSudo()
@@ -708,7 +708,7 @@ class TortugaDeployer(object): \
             self.puppetApply()
 
             self.out('\nTortuga installation completed successfully!\n\n')
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             self._logger.exception('Fatal error occurred during setup')
 
             self.out('\nInstallation failed...\n')
@@ -887,21 +887,20 @@ class TortugaDeployer(object): \
 
         dbm = DbManager()
 
+        # create database
         dbm.init_database()
 
         # Prime the database previously created as part of the bootstrap
         with dbm.session() as session:
             try:
-                dbUtility.primeDb(
-                    session, self._settings['fqdn'], self._osInfo,
-                    self._settings)
+                dbUtility.primeDb(session, self._settings)
 
                 dbUtility.init_global_parameters(session, self._settings)
 
                 print_(_('done'))
 
                 session.commit()
-            except Exception as exc:
+            except Exception as exc:  # pylint: disable=broad-except
                 session.rollback()
 
                 print_(_('failed.'))
@@ -970,20 +969,7 @@ class TortugaDeployer(object): \
 
         self._logger.info('Done installing kits')
 
-    def __getBaseKit(self): \
-            # pylint: disable=no-self-use
-        kitApi = KitApi()
-
-        k = None
-
-        for k in kitApi.getKitList():
-            if k.getName() == 'base':
-                break
-        else:
-            raise ConfigurationError(
-                'Unable to find \"base\" kit. Check Tortuga installation')
-
-        return k
+        load_kits()
 
     def enableComponents(self):
         """
@@ -993,11 +979,12 @@ class TortugaDeployer(object): \
 
         self._logger.info('Enabling \'installer\' component')
 
-        k = self.__getBaseKit()
+        base_kit = KitApi().getKit('base')
 
         enabledComponents = ['installer']
 
-        components = [c for c in k.getComponentList()
+        # get list of components from 'base' kit
+        components = [c for c in base_kit.getComponentList()
                       if c.getName() in enabledComponents]
 
         installerNode = NodeApi().getInstallerNode()
@@ -1005,8 +992,10 @@ class TortugaDeployer(object): \
         for component in components:
             SoftwareProfileApi().enableComponent(
                 installerNode.getSoftwareProfile().getName(),
-                k.getName(), k.getVersion(), k.getIteration(),
-                component.getName(), component.getVersion(),
+                base_kit.getName(),
+                base_kit.getVersion(),
+                base_kit.getIteration(),
+                component.getName(), compVersion=component.getVersion(),
                 sync=False)
 
     def promptForAdminCredentials(self):

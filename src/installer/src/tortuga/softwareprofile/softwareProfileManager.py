@@ -440,9 +440,10 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
 
         return kits[0]
 
-    def enableComponent(self, software_profile_name, kit_name, kit_version,
-                        kit_iteration, comp_name, comp_version=None,
-                        sync=True):
+    def enableComponent(self, software_profile_name: str, kit_name: str,
+                        kit_version: str, kit_iteration: str,
+                        comp_name: str, comp_version: Optional[str] = None,
+                        sync: bool = True):
         """
         Enable a component on a software profile.
 

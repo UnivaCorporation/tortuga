@@ -15,6 +15,7 @@
 # pylint: disable=no-member
 
 from functools import cmp_to_key
+from typing import Iterable, Optional
 
 import tortuga.objects.admin
 import tortuga.objects.component
@@ -210,7 +211,7 @@ class SoftwareProfile(TortugaObject): \
                 'kernelParams', 'type', 'minNodes', 'isIdle', 'metadata']
 
     @classmethod
-    def getFromDict(cls, _dict):
+    def getFromDict(cls, _dict, ignore: Optional[Iterable[str]] = None):
         """ Get software profile from _dict. """
 
         softwareProfile = super(SoftwareProfile, cls).getFromDict(_dict)
@@ -244,8 +245,9 @@ class SoftwareProfile(TortugaObject): \
         return softwareProfile
 
     @classmethod
-    def getFromDbDict(cls, _dict):
-        softwareProfile = super(SoftwareProfile, cls).getFromDict(_dict)
+    def getFromDbDict(cls, _dict, ignore: Optional[Iterable[str]] = None):
+        softwareProfile = super(SoftwareProfile, cls).getFromDict(
+            _dict, ignore=ignore)
 
         softwareProfile.setAdmins(
             tortuga.objects.admin.Admin.getListFromDbDict(_dict))

@@ -14,13 +14,13 @@
 
 # pylint: disable=no-member
 
-import signal
 import errno
+import signal
 
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.kit.actions.manager import KitActionsManager
-from tortuga.softwareprofile.softwareProfileFactory \
-    import getSoftwareProfileApi
+from tortuga.kit.loader import load_kits
+from tortuga.softwareprofile.softwareProfileApi import SoftwareProfileApi
 
 
 class PreAddHostCli(TortugaCli):
@@ -47,14 +47,14 @@ class PreAddHostCli(TortugaCli):
     def runCommand(self):
         self.parseArgs()
 
+        load_kits()
+
         if self.getArgs().softwareProfile:
             # Check for valid software profile - will throw exception and exit
             # if it doesn't exist
 
-            swpApi = getSoftwareProfileApi(self.getUsername(),
-                                           self.getPassword())
-
-            swpApi.getSoftwareProfile(self.getArgs().softwareProfile)
+            SoftwareProfileApi().getSoftwareProfile(
+                self.getArgs().softwareProfile)
 
         # Restore default signal masks/handlers so subprocesses don't inherit
         # unexpected signal masks

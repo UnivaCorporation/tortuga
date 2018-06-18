@@ -120,7 +120,7 @@ class GetSoftwareProfileCli(TortugaCli):
 
         if self.getArgs().json:
             print(json.dumps({
-                'swprofile': swprofile.getCleanDict(),
+                'softwareprofile': swprofile.getCleanDict(),
             }, sort_keys=True, indent=4, separators=(',', ': ')))
         elif self.getArgs().xml:
             print(swprofile.getXmlRep())

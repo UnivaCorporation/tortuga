@@ -14,12 +14,10 @@
 
 # pylint: disable=no-member
 
-import glob
-import json
 import argparse
-
+import json
 import os.path
-from jinja2 import Template
+
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.cli.utils import ParseOperatingSystemArgAction
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
@@ -42,7 +40,8 @@ class CreateSoftwareProfileCli(TortugaCli):
 
         self.addOptionToGroup(option_group_name,
                               '--template', dest='jsonTemplatePath',
-                              help=_('Path to JSON-formatted hardware profile'
+                              metavar='PATH',
+                              help=_('Path to JSON-formatted software profile'
                                      ' creation template'))
 
         self.addOptionToGroup(option_group_name, '--name',
@@ -86,22 +85,11 @@ class CreateSoftwareProfileCli(TortugaCli):
     def runCommand(self):
         self.parseArgs(_('Create software profile'))
 
-        if self.getArgs().jsonTemplatePath:
-            # load from template
-            if self.getArgs().jsonTemplatePath and \
-                    not os.path.exists(self.getArgs().jsonTemplatePath):
-                raise InvalidCliRequest(
-                    _('Cannot read template from %s') % (
-                        self.getArgs().jsonTemplatePath))
-
-            try:
-                with open(self.getArgs().jsonTemplatePath) as fp:
-                    tmpl_dict = json.load(fp)
-            except Exception as exc:
-                raise InvalidProfileCreationTemplate(
-                    'Invalid profile creation template: {}'.format(exc))
-        else:
-            tmpl_dict = {}
+        # load template if specified with '--template', otherwise build
+        # template
+        tmpl_dict = {} if not self.getArgs().jsonTemplatePath else \
+            self.get_software_profile_template(
+                self.getArgs().jsonTemplatePath)
 
         if self.getArgs().name:
             tmpl_dict['name'] = self.getArgs().name
@@ -134,6 +122,32 @@ class CreateSoftwareProfileCli(TortugaCli):
         }
 
         api.createSoftwareProfile(sw_profile_spec, settings_dict)
+
+    def load_software_profile_template(self, tmplpath: str) -> dict:
+        """
+        Raises:
+            InvalidProfileCreationTemplate
+            InvalidCliRequest
+        """
+
+        # load from template
+        if tmplpath and not os.path.exists(tmplpath):
+            raise InvalidCliRequest(
+                _('Cannot read software profile template [%s]') % (tmplpath))
+
+        try:
+            with open(tmplpath) as fp:
+                result = json.load(fp)
+
+                if 'softwareprofile' not in result:
+                    raise InvalidProfileCreationTemplate(
+                        'Missing \"softwareprofile\" envelope'
+                    )
+
+                return result['softwareprofile']
+        except Exception as exc:
+            raise InvalidProfileCreationTemplate(
+                'Invalid software profile template: {}'.format(exc))
 
 
 def main():

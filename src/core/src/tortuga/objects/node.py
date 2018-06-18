@@ -14,6 +14,8 @@
 
 # pylint: disable=no-member
 
+from typing import Iterable, Optional
+
 import tortuga.objects.hardwareProfile
 import tortuga.objects.nic
 import tortuga.objects.softwareProfile
@@ -173,7 +175,7 @@ class Node(TortugaObject): \
         ]
 
     @classmethod
-    def getFromDict(cls, _dict, ignore=None):
+    def getFromDict(cls, _dict, ignore: Optional[Iterable[str]] = None):
         """ Get node from _dict. """
 
         node = super(Node, cls).getFromDict(_dict)
@@ -199,7 +201,7 @@ class Node(TortugaObject): \
         return node
 
     @classmethod
-    def getFromDbDict(cls, _dict, ignore=None):
+    def getFromDbDict(cls, _dict, ignore: Optional[Iterable[str]] = None):
         node = super(Node, cls).getFromDict(_dict, ignore=ignore)
 
         # nics (relation)

@@ -53,8 +53,9 @@ class Node(ModelBase):
         backref='nodes'
     )
 
-    instance = relationship('InstanceMapping', uselist=False,
-                            back_populates='node')
+    instance = relationship(
+        'InstanceMapping', uselist=False, back_populates='node',
+        cascade='all,delete-orphan')
 
     def __repr__(self):
         return 'Node(name=%s)' % (self.name)

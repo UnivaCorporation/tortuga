@@ -16,7 +16,7 @@
 # Not to be confused with 'installer' :)
 
 class tortuga_kit_base::core::install::virtualenv::package {
-  require tortuga::packages
+  require tortuga_kit_base::core::install::virtualenv::pre_install
 
   if $facts['os']['family'] == 'RedHat' {
     if $facts['os']['name'] == 'Amazon' {
@@ -53,10 +53,6 @@ class tortuga_kit_base::core::install::virtualenv::package {
       ensure_packages($pkgs, {'ensure' => 'installed'})
     }
   } elsif $facts['os']['name'] == 'Ubuntu' {
-      include apt
-
-      # install PPA containing Python 3.6
-      apt::ppa { 'ppa:deadsnakes/ppa': }
 
       $pkgs = [
         'python3.6',
@@ -77,7 +73,7 @@ class tortuga_kit_base::core::install::virtualenv::package {
 }
 
 class tortuga_kit_base::core::install::virtualenv::pip {
-  require tortuga::packages
+  require tortuga_kit_base::core::install::virtualenv::pre_install
 
 #   ensure_resource('package', 'virtualenv', {
 #     ensure   => installed,
@@ -85,7 +81,23 @@ class tortuga_kit_base::core::install::virtualenv::pip {
 #   })
 }
 
+# set up any repositories required to bootstrap virtualenv
+class tortuga_kit_base::core::install::virtualenv::pre_install {
+  require tortuga::packages
+
+  if $facts['os']['name'] == 'Ubuntu' {
+    include apt
+
+    # install PPA containing Python 3.6
+    apt::ppa { 'ppa:deadsnakes/ppa':
+      ensure => present,
+    }
+  }
+}
+
 class tortuga_kit_base::core::install::virtualenv {
+  contain tortuga_kit_base::core::install::virtualenv::pre_install
+
   case $::osfamily {
     'RedHat', 'Debian': { contain tortuga_kit_base::core::install::virtualenv::package }
     'Suse': { contain tortuga_kit_base::core::install::virtualenv::pip }

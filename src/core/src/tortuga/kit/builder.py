@@ -46,7 +46,7 @@ DEFAULT_INCLUDE_FILES = [
 
 DEFAULT_EXCLUDE_FILES = [
     '.pyc',
-    '.__pycache__',
+    '__pycache__',
     '.svn',
     '.gitignore',
     '.cvsignore',

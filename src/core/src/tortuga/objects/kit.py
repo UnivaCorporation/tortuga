@@ -14,6 +14,8 @@
 
 # pylint: disable=no-self-use,no-member
 
+from typing import Iterable, Optional
+
 import tortuga.objects.component
 import tortuga.objects.kitSource
 from tortuga.objects.tortugaObject import TortugaObject, TortugaObjectList
@@ -231,7 +233,7 @@ class Kit(TortugaObject): \
             'isRemovable', 'isOs']
 
     @classmethod
-    def getFromDict(cls, dict_):
+    def getFromDict(cls, dict_, ignore: Optional[Iterable[str]] = None):
         """ Get kit from dict. """
 
         kit = super(Kit, cls).getFromDict(dict_)
@@ -245,11 +247,13 @@ class Kit(TortugaObject): \
         return kit
 
     @classmethod
-    def getFromDbDict(cls, _dict):
+    def getFromDbDict(cls, _dict, ignore: Optional[Iterable[str]] = None):
         kit = super(Kit, cls).getFromDict(_dict)
 
-        kit.setComponentList(
-            tortuga.objects.component.Component.getListFromDbDict(_dict))
+        if not ignore or 'components' not in ignore:
+            kit.setComponentList(
+                tortuga.objects.component.Component.getListFromDbDict(
+                    _dict, ignore=('kit',)))
 
         kit.setSources(
             tortuga.objects.kitSource.KitSource.getListFromDbDict(_dict))
