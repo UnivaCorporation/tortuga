@@ -199,6 +199,12 @@ class HardwareProfile(TortugaObject): \
         """ Return resource adapter. """
         return self.get('resourceadapter')
 
+    def setDefaultResourceAdapterConfig(self, value):
+        self['default_resource_adapter_config'] = value
+
+    def getDefaultResourceAdapterConfig(self):
+        return self.get('default_resource_adapter_config')
+
     def getProvisioningNetwork(self):
         '''
         A hardware profile may have multiple networks that are marked as
@@ -246,6 +252,7 @@ class HardwareProfile(TortugaObject): \
             'idleSoftwareProfileId', 'location', 'localBootParams',
             'hypervisorSoftwareProfileId',
             'cost',
+            'default_resource_adapter_config',
         ]
 
     @classmethod
@@ -301,6 +308,15 @@ class HardwareProfile(TortugaObject): \
             hardwareProfile.setResourceAdapter(
                 tortuga.objects.resourceAdapter.ResourceAdapter.getFromDict(
                     resourceAdapterDict.__dict__))
+
+        defaultResourceAdapterConfig = _dict.get(
+            'default_resource_adapter_config'
+        )
+
+        if defaultResourceAdapterConfig:
+            hardwareProfile.setDefaultResourceAdapterConfig(
+                defaultResourceAdapterConfig.name
+            )
 
         if _dict.get('idlesoftwareprofile'):
             hardwareProfile.setIdleSoftwareProfile(

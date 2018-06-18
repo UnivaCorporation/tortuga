@@ -135,14 +135,19 @@ class GetHardwareProfileCli(TortugaCli):
 
         print(' ' * 2 + '- Name format: {0}'.format(hwprofile.getNameFormat()))
 
-        if hwprofile.getLocation() == 'local' and \
-                not hwprofile.getResourceAdapter():
-            pass
-        else:
+        if hwprofile.getLocation() != 'local' and \
+                hwprofile.getResourceAdapter():
+            # display add'l information for non-default resource adapter
+
             print(' ' * 2 + '- Resource adapter: {0}'
                   ' (location: {1}, cost: {2})'.format(
                       hwprofile.getResourceAdapter().getName(),
                       hwprofile.getLocation(), hwprofile.getCost()))
+
+            print(' ' * 6 + '- Default configuration profile: {}'.format(
+                hwprofile.getDefaultResourceAdapterConfig()
+                if hwprofile.getDefaultResourceAdapterConfig() else
+                'default'))
 
         if self.getArgs().getAdmins:
             if hwprofile.getAdmins():

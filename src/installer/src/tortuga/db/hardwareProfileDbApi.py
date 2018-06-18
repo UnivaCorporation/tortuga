@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Optional
+from typing import Optional, Dict
 
 import sqlalchemy.exc
 from sqlalchemy.orm.session import Session
@@ -36,6 +36,7 @@ from tortuga.exceptions.configurationError import ConfigurationError
 from tortuga.exceptions.hardwareProfileAlreadyExists import \
     HardwareProfileAlreadyExists
 from tortuga.exceptions.hardwareProfileNotFound import HardwareProfileNotFound
+from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.networkNotFound import NetworkNotFound
 from tortuga.exceptions.nicNotFound import NicNotFound
 from tortuga.exceptions.tortugaException import TortugaException
@@ -46,6 +47,9 @@ from tortuga.objects.tortugaObject import TortugaObjectList
 from .models.hardwareProfile import HardwareProfile as HardwareProfileModel
 from .models.hardwareProfileNetwork import HardwareProfileNetwork
 from .models.networkDevice import NetworkDevice
+
+
+OptionDict = Dict[str, bool]
 
 
 class HardwareProfileDbApi(TortugaDbApi):
@@ -77,25 +81,24 @@ class HardwareProfileDbApi(TortugaDbApi):
                 DbError
         """
 
-        session = DbManager().openSession()
+        with DbManager().session() as session:
+            try:
+                dbHardwareProfile = \
+                    self._hardwareProfilesDbHandler.getHardwareProfile(
+                        session, name)
 
-        try:
-            dbHardwareProfile = \
-                self._hardwareProfilesDbHandler.getHardwareProfile(
-                    session, name)
+                self.loadRelations(dbHardwareProfile, get_default_relations(optionDict))
 
-            self.loadRelations(dbHardwareProfile, optionDict)
-            self.loadRelations(dbHardwareProfile, dict(tags=True))
+                # self.loadRelations(dbHardwareProfile, optionDict)
+                # self.loadRelations(dbHardwareProfile, dict(tags=True))
 
-            return HardwareProfile.getFromDbDict(
-                dbHardwareProfile.__dict__)
-        except TortugaException:
-            raise
-        except Exception as ex:
-            self.getLogger().exception('%s' % ex)
-            raise
-        finally:
-            DbManager().closeSession()
+                return HardwareProfile.getFromDbDict(
+                    dbHardwareProfile.__dict__)
+            except TortugaException:
+                raise
+            except Exception as ex:
+                self.getLogger().exception('%s' % ex)
+                raise
 
     def getHardwareProfileById(self, hardwareProfileId: int,
                                optionDict: Optional[dict] = None):
@@ -115,7 +118,8 @@ class HardwareProfileDbApi(TortugaDbApi):
             dbHardwareProfile = self._hardwareProfilesDbHandler.\
                 getHardwareProfileById(session, hardwareProfileId)
 
-            self.loadRelations(dbHardwareProfile, optionDict)
+            self.loadRelations(
+                dbHardwareProfile, get_default_relations(optionDict))
 
             return HardwareProfile.getFromDbDict(
                 dbHardwareProfile.__dict__)
@@ -148,12 +152,18 @@ class HardwareProfileDbApi(TortugaDbApi):
 
             for dbHardwareProfile in dbHardwareProfileList:
                 # For now expand networks
-                self.loadRelation(
-                    dbHardwareProfile, 'hardwareprofilenetworks')
+                # self.loadRelation(
+                #     dbHardwareProfile, 'hardwareprofilenetworks')
 
-                self.loadRelations(dbHardwareProfile, optionDict)
+                # self.loadRelations(dbHardwareProfile, optionDict)
 
-                self.loadRelations(dbHardwareProfile, dict(tags=True))
+                # self.loadRelations(dbHardwareProfile, dict(tags=True))
+
+                options = dict.copy(optionDict)
+                options['hardwareprofilenetworks'] = True
+
+                self.loadRelations(
+                    dbHardwareProfile, get_default_relations(options))
 
                 hardwareProfileList.append(
                     HardwareProfile.getFromDbDict(
@@ -405,28 +415,27 @@ class HardwareProfileDbApi(TortugaDbApi):
             DbManager().closeSession()
 
     def updateHardwareProfile(self, hardwareProfileObject):
-        """ Update Hardware Profile Object """
+        """
+        Update Hardware Profile Object
+        """
 
-        session = DbManager().openSession()
+        with DbManager().session() as session:
+            try:
+                dbHardwareProfile = \
+                    self._hardwareProfilesDbHandler.getHardwareProfileById(
+                        session, hardwareProfileObject.getId())
 
-        try:
-            dbHardwareProfile = self._hardwareProfilesDbHandler.\
-                getHardwareProfileById(session,
-                                       hardwareProfileObject.getId())
+                self.__populateHardwareProfile(
+                    session, hardwareProfileObject, dbHardwareProfile)
 
-            self.__populateHardwareProfile(
-                session, hardwareProfileObject, dbHardwareProfile)
-
-            session.commit()
-        except TortugaException:
-            session.rollback()
-            raise
-        except Exception as ex:
-            session.rollback()
-            self.getLogger().exception('%s' % ex)
-            raise
-        finally:
-            DbManager().closeSession()
+                session.commit()
+            except TortugaException:
+                session.rollback()
+                raise
+            except Exception as ex:
+                session.rollback()
+                self.getLogger().exception('%s' % ex)
+                raise
 
     def __getInstallerNode(self, session):
         return self._nodesDbHandler.getNode(
@@ -442,9 +451,10 @@ class HardwareProfileDbApi(TortugaDbApi):
             # pylint: disable=no-self-use
         return session.query(NetworkDevice).all()
 
-    def __populateHardwareProfile(self, session: Session,
-                                  hardwareProfile: HardwareProfileModel,
-                                  dbHardwareProfile: Optional[HardwareProfileModel] = None) -> HardwareProfileModel:
+    def __populateHardwareProfile(
+            self, session: Session, hardwareProfile: HardwareProfile,
+            dbHardwareProfile: Optional[HardwareProfileModel] = None) -> \
+        HardwareProfileModel:
         """
         Helper function for creating / updating hardware profiles. If
         'dbHardwareProfile' is specified, this is an update (vs. add)
@@ -453,6 +463,7 @@ class HardwareProfileDbApi(TortugaDbApi):
         Raises:
             NicNotFound
             ResourceAdapterNotFound
+            InvalidArgument
         """
 
         # Preload provisioning nics and networks
@@ -516,6 +527,29 @@ class HardwareProfileDbApi(TortugaDbApi):
         dbHardwareProfile.resourceadapter = \
             self._resourceAdaptersDbHandler.getResourceAdapter(
                 session, resource_adapter_name)
+
+        if hardwareProfile.getDefaultResourceAdapterConfig():
+            adapter_cfg = None
+
+            self.getLogger().debug('Setting default resource adapter config: {}'.format(
+                hardwareProfile.getDefaultResourceAdapterConfig()
+            ))
+
+            for adapter_cfg in \
+                    dbHardwareProfile.resourceadapter.resource_adapter_config:
+                if adapter_cfg.name == \
+                        hardwareProfile.getDefaultResourceAdapterConfig():
+                    break
+            else:
+                raise InvalidArgument(
+                    'Resource adapter configuration profile [{}] is'
+                    ' invalid'.format(
+                        hardwareProfile.getDefaultResourceAdapterConfig())
+                )
+
+            dbHardwareProfile.default_resource_adapter_config = adapter_cfg
+        else:
+            dbHardwareProfile.default_resource_adapter_config = None
 
         # Add networks
         networks = []
@@ -675,3 +709,21 @@ class HardwareProfileDbApi(TortugaDbApi):
             raise
         finally:
             DbManager().closeSession()
+
+
+def get_default_relations(relations: OptionDict):
+    """
+    Ensure hardware and software profiles and tags are populated when
+    serializing node records.
+    """
+
+    result = relations.copy() if relations else {}
+
+    # ensure software and hardware profile relations are loaded
+    result.update({
+        'tags': True,
+        'resourceadapter': True,
+        'default_resource_adapter_config': True,
+    })
+
+    return result
