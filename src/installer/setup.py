@@ -127,7 +127,7 @@ setup(
         'kombu==4.1.0',
         'tortuga-core',
         'Jinja2',
-        'CherryPy',
+        'CherryPy==15.0.0',
         'PyYAML',
         'SQLAlchemy',
         'Routes',
