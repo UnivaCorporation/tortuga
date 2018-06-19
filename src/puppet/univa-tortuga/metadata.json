@@ -3,7 +3,7 @@
   "version": "6.3.0",
   "author": "Univa Corporation",
   "summary": "Tortuga integration module",
-  "license": "Commercial",
+  "license": "Apache 2.0",
   "source": "Univa Corporation",
   "issues_url": "http://suppport.univa.com",
   "description": "Tortuga integration module",
