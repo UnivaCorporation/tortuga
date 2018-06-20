@@ -12,12 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import jwt
 import pytest
 
 from tortuga.auth.methods import AuthenticationMethod, \
-    MultiAuthentionMethod, UsernamePasswordAuthenticationMethod,\
-    JwtAuthenticationMethod
+    MultiAuthentionMethod, UsernamePasswordAuthenticationMethod
 from tortuga.exceptions.authenticationFailed import AuthenticationFailed
 
 
