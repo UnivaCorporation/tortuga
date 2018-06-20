@@ -35,12 +35,6 @@ class ResourceAdapter(ModelBase):
 
     kit = relationship('Kit')
 
-    def __init__(self, name, kitId=None):
-        super().__init__()
-
-        self.name = name
-        self.kitId = kitId
-
     @property
     def settings(self) -> Dict[str, BaseSetting]:
         """

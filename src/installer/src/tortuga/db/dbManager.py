@@ -63,12 +63,10 @@ class DbManagerBase(TortugaObjectManager):
             if self._dbConfig['engine'] == 'sqlite' and \
                     not os.path.exists(self._dbConfig['path']):
                 # Ensure SQLite database file is created with proper permissions
-                try:
-                    fd = os.open(self._dbConfig['path'],
-                                 os.O_CREAT,
-                                 mode=0o600)
-                finally:
-                    os.close(fd)
+                fd = os.open(
+                    self._dbConfig['path'], os.O_CREAT, mode=0o600)
+
+                os.close(fd)
 
             if self._dbConfig['engine'] == 'mysql':
                 # Set default SQLAlchemy engine arguments for MySQL

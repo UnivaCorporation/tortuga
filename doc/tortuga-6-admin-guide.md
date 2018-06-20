@@ -1,6 +1,6 @@
 # Tortuga 6.3.0 Installation and Administration Guide
 ### Univa Corporation &lt;support@univa.com&gt;
-### May 2018 -- Version 1.24
+### June 2018 -- Version 1.26
 
 About This Guide
 ================
@@ -341,11 +341,9 @@ Commands listed in this "Quickstart" section are intended to be run as the `root
 
 12. Install Univa Grid Engine
 
-        Now that the Tortuga base installation is complete, it is necessary to
-        install Univa Grid Engine.
+    Now that the Tortuga base installation is complete, it is necessary to install Univa Grid Engine.
 
-        In this example, the Grid Engine `qmaster` will be run on the Tortuga
-        installer node.
+    In this example, the Grid Engine `qmaster` will be run on the Tortuga installer node.
 
     1.  Install UGE kit
 
@@ -760,22 +758,16 @@ Hardware profiles are created using the `create-hardware-profile` command.
 
 For example, to create a hardware profile using the default hardware profile template:
 
-    create-hardware-profile --name LocalIron
+``` shell
+create-hardware-profile --name LocalIron
+```
 
 This command will create a hardware profile that represents physical nodes.
 
-To get a list of the available templates, run `create-hardware-profile --list-templates`.
-
-If `--xml-file` is not specified, the default hardware profile template (found in `$TORUTGA_ROOT/share/templates/hardware/defaultHardwareProfile.tmpl.xml`) is used.
-
-See [Appendix B](#appendix_b) for more information on the templates shipped with Tortuga.
-
 The following arguments are optional:
 
--   `--xml-file <TEMPLATEPATH>` or `-x <TEMPLATEPATH>` -- The full path of the XML hardware profile template.
 -   `--name <NAME>` -- The name of the hardware profile. Best kept to a short descriptive name such as "LocalIron" or "Mfg\_model\_500".
 -   `--description <DESCRIPTION>` -- A human-readable description of the intended use for the hardware profile. Stored, but not interpreted, by Tortuga. The description may contain spaces, if quoted.
-
 -   `--os <name-version-arch>` -- If provisioning is enabled and multiple OS kits are installed, this selects the OS for the profile. If unspecified, the OS running on the installer node is used.
 -   `--idleSoftwareProfile <PROFILENAME>` -- Used for physical nodes. If a node is idled using the `idle-node` command, it is forced into this software profile.
 
@@ -793,8 +785,10 @@ The network parameters are set using `update-hardware-profile` and the options `
 
 For example, when provisioning VMware vSphere-based compute nodes, if the provisioning NIC (that is, the NIC connected to the provisioning/management network on the Tortuga installer) has an IP address `10.0.0.1` and the provisioning/management network is "10.0.0.0/255.255.255.0", the following command-line would be used:
 
-    update-hardware-profile --name PROFILE --add-provisioning-nic 10.0.0.1 \
-        --add-network 10.0.0.0/255.255.255.0/eth0
+``` shell
+update-hardware-profile --name PROFILE --add-provisioning-nic 10.0.0.1 \
+    --add-network 10.0.0.0/255.255.255.0/eth0
+```
 
 Effectively, this command sets up the specified hardware profile to be connected to the Tortuga installer via the network interface with the IP address *10.0.0.1* on the network *10.0.0.0/255.255.255.0*.
 
@@ -802,7 +796,7 @@ Note: the device name `eth0` reflects the name of the NIC **on the compute node*
 
 Traditionally, the public network device name on the Tortuga installer would be `eth0` and the provisioning/management network device name would be `eth1`.
 
-#### Updating hardware profiles
+#### Updating hardware profile settings
 
 The list of current hardware profiles is given by `get-hardware-profile-list`. Detailed information is available using `get-hardware-profile --name <HWPROFILENAME>`.
 
@@ -810,13 +804,17 @@ To modify a hardware profile, use `update-hardware-profile`. Most fields can be 
 
 The following command changes the host name format of the hardware profile `Rack2`:
 
-    update-hardware-profile --name Rack2 --name-format rack2-#NN
+``` shell
+update-hardware-profile --name Rack2 --name-format rack2-#NN
+```
 
 Nodes not provisioned and/or managed by Tortuga can be added by setting the hardware profile location to be "remote", using the command `update-hardware-profile --name <NAME> --location remote`. This is useful in cases where Tortuga must be aware of, but not necessarily manage, a node. For example, this allows the addition of externally managed hypervisors and/or other infrastructure nodes to the cluster.
 
 Hardware profiles used for virtual machines require a hypervisor software profile. The relationship of (hardware profile) virtual machine, hosted by a (software profile) hypervisor, running on a (hardware profile) physical machine, is configured using:
 
-    update-hardware-profile --name <NAME> --hypervisor-profile PROFILE
+``` shell
+update-hardware-profile --name <NAME> --hypervisor-profile PROFILE
+```
 
 Additionally, virtual machine hardware profiles require a *resource adapter*, used to manage the hypervisor. This is done using the `--resource-adapter <ADAPTER>` option and tells Tortuga what API will be used for management. See the kit documentation supplying the resource adapter for more details.
 
@@ -826,7 +824,9 @@ The command `get-resource-adapter-list` lists available resource adapters.
 
 Hardware profiles can be deleted using the `delete-hardware-profile` command. Hardware profiles cannot be deleted until associated nodes nodes are first deleted.
 
-    delete-hardware-profile --name Rack2
+``` shell
+delete-hardware-profile --name Rack2
+```
 
 ### Software profiles
 
@@ -846,7 +846,9 @@ The list of current software profiles is given by `get-software-profile-list`.
 
 #### Display software profile detail
 
-Detailed information (in XML format) is available using `get-software-profile --name <NAME>`.
+Use `get-software-profile --name <NAME>` to display information about specified software profile.
+
+The command `get-software-profile --name <NAME> --json` will output the software profile in JSON format. This can be redirected to a file and used as a software profile template as described below.
 
 #### Creating a software profile
 
@@ -854,38 +856,52 @@ Create software profiles using the \`create-software-profile command.
 
 The following arguments are optional:
 
--   `--xml-file <PATH>` or `-x <PATH>` -- The full path of the template.
+-   `--template <PATH>` -- Full path to JSON software profile template
 -   `--name <NAME>` -- The name of the software profile. Best kept to a short descriptive name such as "AppName" or "Engineering\_Dept".
 -   `--description <DESCRIPTION>` -- A human-readable description of the intended use for the software profile. Stored, but not interpreted, by Tortuga. The description may contain spaces, if quoted.
 -   `--os <name-version-arch>` -- If provisioning is enabled and multiple OS kits are installed, this selects the default OS for the profile. This option requires that the hardware profile used allows the software profile to override the OS spec.
 
-If `--xml-file` is not specified, the default software profile template (found in `$TORUTGA_ROOT/share/templates/software/defaultSoftwareProfile.tmpl.xml`) is used.
+If the JSON software profile template is not specified, a barebones software profile is created. **Note:** the barebones software profile may not contain sufficient parameters to provision some nodes (ie. on-premise/physical).
 
-To get a list of the available software profile templates, run `create-software-profile --list-templates`.
-
-See [Appendix B](#appendix_b) for more information on the templates shipped with Tortuga.
-
-The default software profile template (`defaultSoftwareProfile.tmpl.xml`) file defines a swap partition size of 0 and a root partition with the `<grow>true</grow>` option set. This causes Tortuga to create a swap partition using the operating system recommended size, and allocate all remaining disk space space for the root partition.
-
-Note that Linux operating systems can take a long time to format a large partition when the grow option is set.
-
-Disk partitioning information is relevant when provisioning an operating system, but is otherwise ignored. Changing the partitioning information in a software profile only affects new nodes created with that profile, and does not reconfigure existing nodes.
-
-##### Example
+##### Examples
 
 The following command will create a software profile named `Compute` provisioned with the same operating system as the Tortuga installer:
 
-    create-software-profile --name Compute
+``` shell
+create-software-profile --name Compute
+```
 
-It is also possible to create software profiles for different operating systems (assuming the OS kit has already been installed. See below for more details.). This command would set the operating system of nodes created in the `Compute` software profile to RHEL 6.4 x86\_64:
+It is also possible to create software profiles for different operating systems (assuming the OS kit has already been installed. See below for more details). This command would set the operating system of nodes created in the `Compute` software profile to RHEL 7.5 x86\_64:
 
-    create-software-profile --name Compute --os rhel-7.3-x86_64
+``` shell
+create-software-profile --name Compute --os rhel-7.5-x86_64
+```
+
+**Note:** the specified operating system kit must be installed prior to running `create-software-profile`.
 
 When creating software profiles to represent cloud-based nodes, the argument `--no-os-media-required` can be used to avoid the need to install OS installation media:
 
-    create-software-profile --name Compute --no-os-media-required
+``` shell
+create-software-profile --name Compute --no-os-media-required
+```
 
 The `--no-os-media-required` argument is **only** effective when provisioning cloud-based compute nodes, which have an operating system image defined and a pre-existing operating system installation.
+
+##### Creating from JSON software profile template
+
+Dump an existing software profile to a JSON file:
+
+``` shell
+get-software-profile --name execd --json >mytemplate.json
+```
+
+Use the template to create new software profile(s):
+
+``` shell
+create-software-profile --name newexecd --template mytemplate.json
+```
+
+**Hint:** use `--name` when creating from the template to override the software profile name defined in the template.
 
 #### Updating software profiles
 
@@ -893,7 +909,9 @@ To modify a software profile, use `update-software-profile`. Most fields can be 
 
 Software profiles can be edited using the following command:
 
-    update-software-profile --name <NAME> ...
+``` shell
+update-software-profile --name <NAME> ...
+```
 
 **Note:** it is not possible to change the operating system of an existing software profile.
 
@@ -905,7 +923,9 @@ Software profiles can be deleted using the `delete-software-profile` command. So
 
 Example:
 
-    delete-software-profile --name Compute
+``` shell
+delete-software-profile --name Compute
+```
 
 ### Hardware and software profile mapping
 
@@ -915,8 +935,10 @@ For example, this prevents addition of non-functioning nodes. As an example, it 
 
 The Tortuga administrator can create mappings using the command:
 
-    set-profile-mapping --hardware-profile <HWPROFILE> \
-        --software-profile <SWPROFILE>
+``` shell
+set-profile-mapping --hardware-profile <HWPROFILE> \
+    --software-profile <SWPROFILE>
+```
 
 Hardware and software profiles are unmapped using the `delete-profile-mapping` command.
 
@@ -936,7 +958,9 @@ Kits distributed are as bzip2 compressed archive files.
 
 The kit filename has the following format:
 
-    kit-<name>-<version>-<iteration>.tar.bz2
+``` shell
+kit-<name>-<version>-<iteration>.tar.bz2
+```
 
 ### Display list of installed kits
 
@@ -956,13 +980,17 @@ uge-8.5.4-0
 
 To display operating system kits only, use the `--os` argument:
 
-    get-kit-list --os
+``` shell
+get-kit-list --os
+```
 
 ### Installing kits
 
 Kits are installed using the following command:
 
-    install-kit kit-sample-1.0-0.tar.bz2
+``` shell
+install-kit kit-sample-1.0-0.tar.bz2
+```
 
 ### Components
 
@@ -976,20 +1004,22 @@ See the kit documentation for details on what components it provides, what those
 
 Use `get-component-list` to display all available components.
 
-    [root@tortuga ~]# get-component-list
-    snmp-6.3.0-0 snmpd-6.3
-    base-6.3.0-0 core-6.3
-    base-6.3.0-0 installer-6.3
-    base-6.3.0-0 dhcpd-6.3
-    base-6.3.0-0 dns-6.3
-    awsadapter-6.3.0-0 management-6.3
-    gceadapter-6.3.0-0 management-6.3
-    uge-8.5.4-0 qmaster-8.5.4
-    uge-8.5.4-0 execd-8.5.4
-    simple_policy_engine-6.3.0-0 engine-6.3
-    ganglia-3.7.2-1 gmetad-3.7.2
-    ganglia-3.7.2-1 gmond-3.7.2
-    centos-7.0-0 centos-7.0-x86_64-7.0
+``` shell
+[root@tortuga ~]# get-component-list
+snmp-6.3.0-0 snmpd-6.3
+base-6.3.0-0 core-6.3
+base-6.3.0-0 installer-6.3
+base-6.3.0-0 dhcpd-6.3
+base-6.3.0-0 dns-6.3
+awsadapter-6.3.0-0 management-6.3
+gceadapter-6.3.0-0 management-6.3
+uge-8.5.4-0 qmaster-8.5.4
+uge-8.5.4-0 execd-8.5.4
+simple_policy_engine-6.3.0-0 engine-6.3
+ganglia-3.7.2-1 gmetad-3.7.2
+ganglia-3.7.2-1 gmond-3.7.2
+centos-7.0-0 centos-7.0-x86_64-7.0
+```
 
 ### Display list of enabled components
 
@@ -997,29 +1027,39 @@ Using the argument `--software-profile` or `-p` (shortcut to `--software-profile
 
 For example, to display the components enabled on the Tortuga installer:
 
-    [root@tortuga ~]# get-component-list --software-profile Installer
-    base-6.3.0-0 installer-6.3
-    base-6.3.0-0 dns-6.3
-    uge-8.5.4-0 qmaster-8.5.4
-    simple_policy_engine-6.3.0-0 engine-6.3
+``` shell
+[root@tortuga ~]# get-component-list --software-profile Installer
+base-6.3.0-0 installer-6.3
+base-6.3.0-0 dns-6.3
+uge-8.5.4-0 qmaster-8.5.4
+simple_policy_engine-6.3.0-0 engine-6.3
+```
 
 or using the shortcut:
 
-    get-component-list -p
+``` shell
+get-component-list -p
+```
 
 To display the components enabled on software profile "Compute":
 
-    get-component-list --software-profile Compute
+``` shell
+get-component-list --software-profile Compute
+```
 
 ### Enabling Components
 
 Components are enabled per software profile using the `enable-component` command. For example, to enable the `pdsh` component on the Tortuga installer:
 
-    enable-component -p base-6.3.0-0 pdsh-6.3
+``` shell
+enable-component -p base-6.3.0-0 pdsh-6.3
+```
 
 **Hint:** Since it is unlikely to be another component named "pdsh", use the command-line shortcut:
 
-    enable-component -p pdsh
+``` shell
+enable-component -p pdsh
+```
 
 Components are disabled using the `disable-component` command.
 
@@ -1031,7 +1071,9 @@ The `schedule-update` command must be used after components have been enabled/di
 
 Kits are removed using the `delete-kit` command. A kit may not be deleted if any of its components are enabled on a software profile. The 'base' and 'clonezilla' kits may not be deleted at all.
 
-    delete-kit --name badkit --version 6.3 --iteration 0
+``` shell
+delete-kit --name badkit --version 6.3 --iteration 0
+```
 
 **Never** attempt to delete a kit if a component was enabled or disabled, and the cluster is currently being synchronized. Doing so will lead to unpredictable results.
 
@@ -1065,7 +1107,6 @@ This component must be enabled to provision *local* (non-cloud) nodes.
 Enable the `dhcpd` component with the command:
 
     enable-component -p base-6.3.0-0 dhcpd-6.3
-    /opt/puppetlabs/bin/puppet agent --onetime --no-daemonize --verbose
 
 `/opt/puppetlabs/bin/puppet agent --onetime --no-daemonize` is used to synchronize only the Tortuga installer. `schedule-update` could also be used (as described above), however since this component is only applicable to the installer node, it is unnecessary to schedule an entire cluster update.
 
@@ -1079,8 +1120,9 @@ When enabled, the Tortuga installer node will automatically set up and configure
 
 Enable the `dns` component with the command:
 
-    enable-component -p base-6.3.0-0 dns-6.3
-    /opt/puppetlabs/bin/puppet agent --onetime --no-daemonize
+``` shell
+enable-component -p base-6.3.0-0 dns-6.3
+```
 
 ##### Configuring Tortuga private DNS domain
 
@@ -1088,13 +1130,17 @@ The global Tortuga private DNS domain is used when Tortuga generates a compute n
 
 On Tortuga 6.3.0 (and later), the `set-private-dns-zone` command-line is used to display the current "private" DNS zone by calling it without an argument:
 
-    [root@tortuga ~]# set-private-dns-zone
-    cloud.univa.com
+``` shell
+[root@tortuga ~]# set-private-dns-zone
+cloud.univa.com
+```
 
 On Tortuga versions prior to 6.3.0, use `ucparam` to get the current (private) DNS domain. The Tortuga default private DNS domain is `private`.
 
-    [root@tortuga ~]# ucparam get DNSZone
-    cloud.univa.com
+``` shell
+[root@tortuga ~]# ucparam get DNSZone
+cloud.univa.com
+```
 
 Use `set-private-dns-zone <DOMAIN>` to set (private) DNS domain. For example:
 
@@ -1118,11 +1164,15 @@ Any modifications made to the [Dnsmasq](http://www.thekelleys.org.uk/dnsmasq/doc
 
 RHEL/CentOS 5/6:
 
-    service dnsmasq restart
+``` shell
+service dnsmasq restart
+```
 
 RHEL/CentOS 7:
 
-    systemctl restart dnsmasq
+``` shell
+systemctl restart dnsmasq
+```
 
 Consult [Dnsmasq](http://www.thekelleys.org.uk/dnsmasq/doc.html "Dnsmasq") documentation for further configuration details.
 
@@ -1170,15 +1220,21 @@ Adding the Provisioning NIC
 
 Provisioning network(s) are registered with Tortuga using the `add-nic` utility. For example:
 
-    add-nic --nic <interface>
+``` shell
+add-nic --nic <interface>
+```
 
 A typical dual-homed Tortuga installer may have the private/provisioning network connected to the `eth1` device. The follow command-line would be used to register the private/provisioning network:
 
-    add-nic --nic eth1
+``` shell
+add-nic --nic eth1
+```
 
 If the interface is associated with a VLAN (in this example, VLAN ID 100), the command-line would be as follows:
 
-    add-nic --nic eth1.100
+``` shell
+add-nic --nic eth1.100
+```
 
 **Hint:** `add-nic --autodetect` to get a list of detected network interfaces on the Tortuga installer node.
 
@@ -1192,17 +1248,21 @@ Tortuga supports multiple private/provisioning network subnets.
 
 For example, if `eth1` and `eth2` on the Tortuga installer were connected to private/provisioning network subnets, the provisioning NICs would be added successively as follows:
 
-    add-nic --nic=eth1
-    add-nic --nic=eth2
+``` shell
+add-nic --nic=eth1
+add-nic --nic=eth2
+```
 
 When multiple provisioning networks are used, it is necessary to configure Tortuga to uniquely identify the provisioning subnets.
 
 Add the following to the `[dns]` section in the DNS component configuration file (`$TORTUGA_ROOT/config/base/dns-component.conf`):
 
-    [dns]
-    ...
-    enable_interface_aliases = True
-    ...
+``` shell
+[dns]
+...
+enable_interface_aliases = True
+...
+```
 
 This will configure the Tortuga DNS host name assignment such that the Tortuga installer has a unique identifier on each private/provisioning subnet.
 
@@ -1222,8 +1282,10 @@ Enable the following base components on the installer for provisioning:
 
 These components are enabled using `enable-component`. For example:
 
-    enable-component -p base-6.3.0-0 dhcpd-6.3
-    enable-component -p base-6.3.0-0 dns-6.3
+``` shell
+enable-component -p base-6.3.0-0 dhcpd-6.3
+enable-component -p base-6.3.0-0 dns-6.3
+```
 
 Use `get-component-list` to see the exact name of the components and versions.
 
@@ -1257,25 +1319,33 @@ Note that symbolic linking is supported only for directories, where the files ar
 
 Install (proxy) OS media through a mirror:
 
-    install-os-kit --mirror --media http://<CentOS mirror URL>/centos-6.4-x86_64/
+``` shell
+install-os-kit --mirror --media http://<CentOS mirror URL>/centos-6.4-x86_64/
+```
 
 If using this method of installing OS media, it is *highly recommended* that the URL is for a host on your local network due to performance reasons. Specifying a remote URL, for example that of a "true" CentOS mirror, will result in much slower compute node provisioning time.
 
 Install OS media from locally mounted media:
 
-    install-os-kit --media /media/disc1,/media/disc2
+``` shell
+install-os-kit --media /media/disc1,/media/disc2
+```
 
 This copies the contents of the OS media found in subdirectories `/media/disc1` and `/media/disc2` into Tortuga.
 
 Install (symlink) OS media from locally mounted media:
 
-    install-os-kit --media /media/disc1,/media/disc2 --symlinks
+``` shell
+install-os-kit --media /media/disc1,/media/disc2 --symlinks
+```
 
 Note: this requires that the media is *always* available at the specified paths.
 
 Install OS media from ISOs:
 
-    install-os-kit --media /isos/centos1.iso,/isos/centos2.iso
+``` shell
+install-os-kit --media /isos/centos1.iso,/isos/centos2.iso
+```
 
 Image-based Node Provisioning
 -----------------------------
@@ -1291,11 +1361,15 @@ Nodes using package-based provisioning are provisioned using the standard Anacon
 
 It is also possible to create software profile specific Kickstart files using the following naming convention:
 
-    $TORTUGA_ROOT/config/kickstart-<NAME>.tmpl
+``` shell
+$TORTUGA_ROOT/config/kickstart-<NAME>.tmpl
+```
 
 where *NAME* is the case-sensitive software profile name. In the following example, the kickstart template would be used by the Compute software profile:
 
-    $TORTUGA_ROOT/config/kickstart-Compute.tmpl
+``` shell
+$TORTUGA_ROOT/config/kickstart-Compute.tmpl
+```
 
 Consult Red Hat Enterprise Linux Installation Guide for Kickstart syntax reference.
 
@@ -1303,11 +1377,15 @@ Consult Red Hat Enterprise Linux Installation Guide for Kickstart syntax referen
 
 As an example, the `$timezone` variable in the default `kickstart.tmpl` is set using `ucparam` as follows:
 
-    ucparam set Timezone_zone <TZSPEC>
+``` shell
+ucparam set Timezone_zone <TZSPEC>
+```
 
 where `<TZSPEC>` is the exact time zone specification as output by `timedatectl list-timezones`. For example,
 
-    ucparam set Timezone_zone America/New_York
+``` shell
+ucparam set Timezone_zone America/New_York
+```
 
 Please note, the Tortuga configuration setting `Timezone_utc` is not currently used in the default Kickstarte template file. Set this manually in the Kickstart file template as appropriate.
 
@@ -1322,11 +1400,15 @@ Some important items to note about the provisioning network:
 
 The `--start-ip` option can be used to change the lowest (start) IP address that will be given out via DHCP. This is useful if you have pre-allocated and placed systems on the provisioning network which will *not* be managed or known to Tortuga. For example to change the start IP of the network 10.2.0.0/255.255.255.0 to 10.2.0.3, the following command can be used:
 
-    update-network --network 10.2.0.0/255.255.255.0 --start-ip 10.2.0.3
+``` shell
+update-network --network 10.2.0.0/255.255.255.0 --start-ip 10.2.0.3
+```
 
 The `--increment` option allows you to reserve multiple IP addresses for each node which is provisioned, if needed:
 
-    update-network --network 10.2.0.0/255.255.255.0 --increment 2
+``` shell
+update-network --network 10.2.0.0/255.255.255.0 --increment 2
+```
 
 Nodes provisioned will be assigned every other IP addresses.
 
@@ -1354,9 +1436,7 @@ In this example, it is assumed `eth0` on the Tortuga installer is connected to t
 Managing Clusters
 =================
 
-Managing a cluster in Tortuga essentially means just a few things. Nodes can be
-added and removed, and configured (as well as transitioned between
-configurations).
+Managing a cluster in Tortuga essentially means just a few things. Nodes can be added and removed, and configured (as well as transitioned between configurations).
 
 Adding Nodes
 ------------
@@ -2048,30 +2128,53 @@ Resource adapter configuration profiles
 
 Starting with Tortuga 6.3.0, resource adapter configuration is managed using the `adapter-mgmt` command-line interface. This functionality obsoletes the need for resource adapter configuration files previously found in `$TORTUGA_ROOT/config/adapter-defaults-*.conf`.
 
-It is also no longer necessary to create resource adapter configuration profiles mapped to hardware profile names.
+It is also no longer necessary to create resource adapter configuration profile names matching hardware profile names.
 
 ### Creating a resource adapter configuration profile
 
 Create a resource adapter configuration profile named "example" for the "aws" resource adapter:
 
-    adapter-mgmt create --resource-adapter aws --profile example \
-        --setting key=value
+``` shell
+adapter-mgmt create --resource-adapter aws --profile example \
+    --setting key=value
+```
+
+**Hint:** `-r NAME` and `-p NAME` are shortcuts for `--resource-adapter NAME` and `--profile NAME` arguments, respectively.
 
 This command creates a resource adapter configuration profile named "example" with one setting (*key=value*).
 
 Using the `-A example` option when running `add-nodes` would instruct Tortuga to obtain resource adapter configuration from this profile.
 
-### Adding nodes using resource adapter configuration profile
+### Setting default resource adapter configuration profile
 
-The `default` resource adapter configuration profile is used for all `add-nodes` requests that do not override the resource adapter configuration profile.
+Use the following command-line syntax to specify a default resource adapter configuration profile:
 
-When the option `-A <profile name>` is specified, the resource adapter configuration profile with the specified name is used. If this profile does not exist, an error will be displayed. If the profile specified does not contain the full set of resource adapter configuration settings (ie. credentials), the system will automatically use the "missing" values from the `default` profile.
+``` shell
+update-hardware-profile --name aws \
+    --default-resource-adapter-configuration-profile nondefault
+```
 
-### Importing an existing resource adapter configuration
+**Hint:** use the `-A` shortcut instead of `--default-resource-adapter-configuration-profile`
+
+In this example, the default resource adapter configuration profile is set to `nondefault` for the hardware profile `aws`. As described above, the resource adapter configuration profile `nondefault` must be previously created using `adapter-mgmt create -r XXX -p nondefault`.
+
+Now when adding nodes using `add-nodes`, the resource adapter configuration profile `nondefault` will be used for all nodes added to the `aws` hardware profile.
+
+It is also possible to specify `-A profilename` to override the default resource adapter configuration profile:
+
+``` shell
+add-nodes ... --hardware-profile aws -A otherprofile
+```
+
+Nodes added to the `aws` hardware profile will use the `otherprofile` resource adapter configuration profile regardless of the default resoure adapter configuration profile set on the hardware profile.
+
+#### Importing an existing resource adapter configuration
 
 For users of Tortuga versions prior to 6.3.0, the resource adapter configuration was contained within a file. These existing resource adapter configurations may be imported as follows:
 
-    adapter-mgmt import --resource-adapter aws --adapter-config <filename>
+``` shell
+adapter-mgmt import --resource-adapter aws --adapter-config <filename>
+```
 
 This will create a `default` resource adapter configuration profile for the specific resource adapter as well as individual configuration profiles for all sections listed in the adapter configuration file.
 
@@ -2079,23 +2182,46 @@ This will create a `default` resource adapter configuration profile for the spec
 
 For example, to list all resource adapter configuration profiles for the "aws" resource adapter, use the following command-line:
 
-    adapter-mgmt list --resource-adapter aws
+``` shell
+adapter-mgmt list --resource-adapter aws
+```
 
 ### Show specific resource adapter configuration profile
 
 To display all settings for a specific resource adapter configuration profile:
 
-    adapter-mgmt show --resource-adapter aws --profile default
+``` shell
+adapter-mgmt show --resource-adapter aws --profile default
+```
 
 All "secret" information (ie. AWS access/secret keys, passwords, etc.) will be hidden from the output of `adapter-mgmt show` by default. To display *all* information, add the `--all` argument. For example:
 
-    adapter-mgmt show --all --resource-adapter aws --profile default
+``` shell
+adapter-mgmt show --all --resource-adapter aws --profile default
+```
 
 ### Deleting resource adapter configuration profiles
 
 Delete the resource adapter configuration profile "example" from the "aws" resource adapter:
 
-    adapter-mgmt delete --resource-adapter aws --profile example
+``` shell
+adapter-mgmt delete --resource-adapter aws --profile example
+```
+
+### Specify resource adapter configuration profile when adding nodes
+
+Use `--resource-adapter-configuration-profile` (or its preferred shortcut `-A`) to specify the resource adapter configuration profile used when adding nodes:
+
+``` shell
+add-nodes --count N \
+    --hardware-profile aws --software-profile execd -A profilename
+```
+
+If the option `-A <profilename>` is provided, the specified resource adapter configuration profile is used. If this profile does not exist, an error will be displayed. If the profile specified does not contain the full set of resource adapter configuration settings (ie. credentials), the system will automatically use the "missing" values from the `default` resource adapter configuration profile.
+
+If the default resource adapter configuration profile is not set (as described above), the `default` resource adapter configuration profile is used.
+
+**Note:** it is also possible to override the hardware profile default resource adapter configuration using `--resource-adapter-configuration` on the `add-nodes` command-line
 
 Troubleshooting
 ===============
@@ -2248,19 +2374,6 @@ Licensed under the Apache License, Version 2.0 (the "License"); you may not use 
 http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
-
-
-Appendix B: Univa-supplied Hardware and Software Profile Templates
-==================================================================
-
-The following hardware profile templates are supplied with the base installation of Tortuga:
-
--   `defaultHardwareProfile.tmpl.xml` -- This template is normally the one you will use to build both physical and virtual nodes without special requirements. You normally will create a hardware profile from this template, and then (if needed) modify it. This template without modification is suitable for physical nodes and virtual nodes which you manually create on a hypervisor.
-
-The following software profile templates are supplied with the base installation of Tortuga:
-
--   `defaultSoftwareProfile.tmpl.xml` -- This template is normally the one you will use for compute nodes. It allocates a swap partition using the recommended operating system size and the remainder is used by the the root filesystem. If the node is virtual, it will by default allocate a 16GB disk.
--   `defaultIdleComputeSoftwareProfile.tmpl.xml` -- This template can be used to create an "idle" software profile for use by a physical node hardware profile (see the hardware profile section for details). It creates the same minimal disk layout as the "small" template above, intended to hold nothing except the operating system.
 
 
 Appendix C: Uninstalling Tortuga

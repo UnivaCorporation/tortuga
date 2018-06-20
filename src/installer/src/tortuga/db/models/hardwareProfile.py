@@ -48,6 +48,10 @@ class HardwareProfile(ModelBase):
     resourceAdapterId = Column(Integer, ForeignKey('resourceadapters.id'))
     cost = Column(Integer, default=0)
 
+    resourceAdapterConfigId = Column(
+        Integer, ForeignKey('resource_adapter_config.id')
+    )
+
     admins = relationship('Admin', secondary='hardwareprofile_admins',
                           backref='hardwareprofiles')
     hardwareprofilenetworks = relationship('HardwareProfileNetwork',
@@ -61,6 +65,10 @@ class HardwareProfile(ModelBase):
 
     resourceadapter = relationship('ResourceAdapter',
                                    backref='hardwareprofiles')
+
+    default_resource_adapter_config = relationship(
+        'ResourceAdapterConfig', backref='hardwarprofiles'
+    )
 
     tags = relationship(
         'Tag',

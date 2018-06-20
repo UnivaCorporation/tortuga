@@ -225,15 +225,12 @@ def dbm():
 
         installer_node.softwareprofile.components.append(ra_component)
         installer_node.softwareprofile.components.append(installer_component)
-        session.commit()
 
         # create 'default' resource adapter
-        default_adapter = ResourceAdapter(name='default')
-        default_adapter.kit = kit
+        default_adapter = ResourceAdapter(name='default', kit=kit)
 
         # create resource adapter
-        aws_adapter = ResourceAdapter(name='aws')
-        aws_adapter.kit = ra_kit
+        aws_adapter = ResourceAdapter(name='aws', kit=ra_kit)
 
         aws_adapter_cfg = ResourceAdapterConfig(
             name='default',
@@ -242,6 +239,10 @@ def dbm():
 
         aws_adapter_cfg.settings.append(
             ResourceAdapterSetting(key='ami', value='ami-XXXXXX')
+        )
+
+        aws_adapter_cfg.settings.append(
+            ResourceAdapterSetting(key='use_instance_hostname', value='true')
         )
 
         aws_adapter.resource_adapter_config.append(aws_adapter_cfg)
@@ -253,14 +254,29 @@ def dbm():
             ResourceAdapterSetting(key='another_key', value='another_value')
         )
 
+        aws_adapter.resource_adapter_config.append(aws_adapter_cfg2)
+
         session.add(aws_adapter)
 
         # create 'aws' hardware profile
+        # does *not* have a default resource adapter config
         aws_hwprofile = HardwareProfile(name='aws')
         aws_hwprofile.location = 'remote'
         aws_hwprofile.resourceadapter = aws_adapter
+        aws_hwprofile.nameFormat = '*'
 
         session.add(aws_hwprofile)
+
+        # add hardware profile 'aws2' with non-default configuration profile
+        aws_hwprofile2 = HardwareProfile(
+            name='aws2',
+            location='remote',
+            resourceadapter=aws_adapter,
+            default_resource_adapter_config=aws_adapter_cfg2,
+            nameFormat='*',
+        )
+
+        session.add(aws_hwprofile2)
 
         # create 'compute' software profile
         compute_swprofile = SoftwareProfile(name='compute')
@@ -274,14 +290,21 @@ def dbm():
                                              components=[core_component],
                                              type='compute')
 
-        # map 'aws' to 'compute'
-        aws_hwprofile.mappedsoftwareprofiles.append(compute_swprofile)
+        # map 'aws' and 'aws2' to 'compute'
+        compute_swprofile.hardwareprofiles.extend((
+            aws_hwprofile, aws_hwprofile2
+        ))
 
         # create 'localiron' hardware profile
-        localiron_hwprofile = HardwareProfile(name='localiron', nameFormat='compute-#NN')
+        localiron_hwprofile = HardwareProfile(
+            name='localiron',
+            nameFormat='compute-#NN'
+        )
         localiron_hwprofile.resourceadapter = default_adapter
-        localiron_hwprofile.mappedsoftwareprofiles.append(compute_swprofile)
-        localiron_hwprofile.mappedsoftwareprofiles.append(compute2_swprofile)
+        localiron_hwprofile.mappedsoftwareprofiles = [
+            compute_swprofile,
+            compute2_swprofile
+        ]
 
         localiron_hwprofile.hardwareprofilenetworks.append(hwpn1)
 
@@ -345,10 +368,14 @@ def dbm():
                                      type='compute',
                                      tags=[all_tags[0]])
 
+        session.add(swprofile1)
+
         swprofile2 = SoftwareProfile(name='swprofile2',
                                      os=os_,
                                      type='compute',
                                      tags=[all_tags[1]])
+
+        session.add(swprofile2)
 
         session.commit()
 
