@@ -204,6 +204,13 @@ def dbm():
         core_component.family = [rhel7_os_family]
         core_component.kit = kit
 
+        # add component not enabled by default
+        pdsh_component = Component(name='pdsh',
+                                   version='6.3',
+                                   description='pdsh component')
+        pdsh_component.family = [rhel7_os_family]
+        pdsh_component.kit = kit
+
         session.add(kit)
 
         # create OS kit

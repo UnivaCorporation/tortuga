@@ -14,14 +14,18 @@
 
 # pylint: disable=not-callable,multiple-statements,no-member
 
+from typing import List
+
 from sqlalchemy import and_, or_
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.orm.session import Session
 
 from tortuga.db.componentsDbHandler import ComponentsDbHandler
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
 from tortuga.exceptions.hardwareProfileNotFound import HardwareProfileNotFound
 from tortuga.exceptions.partitionAlreadyExists import PartitionAlreadyExists
 from tortuga.exceptions.partitionNotFound import PartitionNotFound
+from tortuga.exceptions.resourceNotFound import ResourceNotFound
 from tortuga.exceptions.softwareProfileComponentAlreadyExists import \
     SoftwareProfileComponentAlreadyExists
 from tortuga.exceptions.softwareProfileComponentNotFound import \
@@ -32,7 +36,9 @@ from tortuga.exceptions.softwareUsesHardwareAlreadyExists import \
 from tortuga.exceptions.softwareUsesHardwareNotFound import \
     SoftwareUsesHardwareNotFound
 
+from .models.component import Component
 from .models.hardwareProfile import HardwareProfile
+from .models.kit import Kit
 from .models.partition import Partition
 from .models.softwareProfile import SoftwareProfile
 
@@ -333,3 +339,24 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
                 partitionName, softwareProfileName))
 
         dbSoftwareProfile.partitions.remove(dbPartition)
+
+    def get_software_profiles_with_component(
+            self, session: Session, kit_name: str, component_name: str) \
+        -> List[SoftwareProfile]:
+        """
+        Return list of software profiles with component enabled.
+
+        Raises:
+            ResourceNotFound
+        """
+
+        try:
+            component = session.query(Component).join(Kit).filter(
+                and_(Kit.name == kit_name, Component.name == component_name)).one()
+        except NoResultFound:
+            raise ResourceNotFound(
+                f'Component [{component_name}] (from kit [{kit_name}]) not'
+                ' found'
+            )
+
+        return component.softwareprofiles
