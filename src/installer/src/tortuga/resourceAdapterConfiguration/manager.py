@@ -63,7 +63,7 @@ class ResourceAdapterConfigurationManager:
         cfg = ResourceAdapterConfig(name=name)
 
         for entry in configuration or []:
-            cfg.settings.append(
+            cfg.configuration.append(
                 ResourceAdapterSetting(
                     key=entry['key'],
                     value=entry['value']
