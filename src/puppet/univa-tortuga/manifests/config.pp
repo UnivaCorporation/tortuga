@@ -17,4 +17,6 @@ class tortuga::config (
   $installer_fqdn = $tortuga::params::installer_fqdn
 ) inherits tortuga::params {
   $config_dir = "${instroot}/config"
+
+  $bin_dir = "${instroot}/bin"
 }
