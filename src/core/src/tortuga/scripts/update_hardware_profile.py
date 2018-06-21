@@ -277,7 +277,7 @@ class UpdateHardwareProfileCli(TortugaCli):
                 else:
                     # Not a NIC we are deleting
                     print('Ignoring deletion of non-existent network:'
-                           ' %s/%s/%s' % (dnet, dmask, ddev))
+                          ' %s/%s/%s' % (dnet, dmask, ddev))
 
             hp.setNetworks(out)
 

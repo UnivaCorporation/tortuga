@@ -50,6 +50,7 @@ from .models.networkDevice import NetworkDevice
 
 
 OptionDict = Dict[str, bool]
+Tags = Dict[str, str]
 
 
 class HardwareProfileDbApi(TortugaDbApi):
@@ -70,7 +71,7 @@ class HardwareProfileDbApi(TortugaDbApi):
         self._networksDbHandler = NetworksDbHandler()
 
     def getHardwareProfile(self, name: str,
-                           optionDict: Optional[dict] = None):
+                           optionDict: Optional[OptionDict] = None):
         """
         Get hardwareProfile from the db.
 
@@ -87,10 +88,8 @@ class HardwareProfileDbApi(TortugaDbApi):
                     self._hardwareProfilesDbHandler.getHardwareProfile(
                         session, name)
 
-                self.loadRelations(dbHardwareProfile, get_default_relations(optionDict))
-
-                # self.loadRelations(dbHardwareProfile, optionDict)
-                # self.loadRelations(dbHardwareProfile, dict(tags=True))
+                self.loadRelations(
+                    dbHardwareProfile, get_default_relations(optionDict))
 
                 return HardwareProfile.getFromDbDict(
                     dbHardwareProfile.__dict__)
@@ -101,7 +100,7 @@ class HardwareProfileDbApi(TortugaDbApi):
                 raise
 
     def getHardwareProfileById(self, hardwareProfileId: int,
-                               optionDict: Optional[dict] = None):
+                               optionDict: Optional[OptionDict] = None):
         """
         Get hardwareProfile from the db.
 
@@ -131,8 +130,9 @@ class HardwareProfileDbApi(TortugaDbApi):
         finally:
             DbManager().closeSession()
 
-    def getHardwareProfileList(self, optionDict: Optional[dict] = None,
-                               tags: Optional[dict] = None):
+    def getHardwareProfileList(self,
+            optionDict: Optional[OptionDict] = None,
+            tags: Optional[Tags] = None):
         """
         Get list of all available hardwareProfiles from the db.
 
@@ -145,21 +145,14 @@ class HardwareProfileDbApi(TortugaDbApi):
         session = DbManager().openSession()
 
         try:
-            dbHardwareProfileList = self._hardwareProfilesDbHandler.\
-                getHardwareProfileList(session, tags=tags)
+            dbHardwareProfileList = \
+                self._hardwareProfilesDbHandler.getHardwareProfileList(
+                    session, tags=tags)
 
             hardwareProfileList = TortugaObjectList()
 
             for dbHardwareProfile in dbHardwareProfileList:
-                # For now expand networks
-                # self.loadRelation(
-                #     dbHardwareProfile, 'hardwareprofilenetworks')
-
-                # self.loadRelations(dbHardwareProfile, optionDict)
-
-                # self.loadRelations(dbHardwareProfile, dict(tags=True))
-
-                options = dict.copy(optionDict)
+                options = dict.copy(optionDict or {})
                 options['hardwareprofilenetworks'] = True
 
                 self.loadRelations(
@@ -178,8 +171,9 @@ class HardwareProfileDbApi(TortugaDbApi):
         finally:
             DbManager().closeSession()
 
-    def setIdleSoftwareProfile(self, hardwareProfileName,
-                               softwareProfileName=None):
+    def setIdleSoftwareProfile(self, hardwareProfileName: str,
+                               softwareProfileName: Optional[str] = None) \
+        -> None:
         """
         Sets the idle software profile
 
@@ -213,7 +207,8 @@ class HardwareProfileDbApi(TortugaDbApi):
         finally:
             DbManager().closeSession()
 
-    def addHardwareProfile(self, hardwareProfile, session=None):
+    def addHardwareProfile(self, hardwareProfile: HardwareProfile,
+                           session: Session = Optional[None]):
         """
         Insert hardwareProfile into the db.
 
@@ -266,7 +261,7 @@ class HardwareProfileDbApi(TortugaDbApi):
             if session is None:
                 DbManager().closeSession()
 
-    def deleteHardwareProfile(self, name):
+    def deleteHardwareProfile(self, name: str) -> None:
         """
         Delete hardwareProfile from the db.
 
@@ -308,8 +303,8 @@ class HardwareProfileDbApi(TortugaDbApi):
         finally:
             DbManager().closeSession()
 
-    def copyHardwareProfile(self, srcHardwareProfileName,
-                            dstHardwareProfileName):
+    def copyHardwareProfile(self, srcHardwareProfileName: str,
+                            dstHardwareProfileName: str):
         session = DbManager().openSession()
 
         try:
