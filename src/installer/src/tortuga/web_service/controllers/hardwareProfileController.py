@@ -127,7 +127,7 @@ class HardwareProfileController(TortugaController):
             response = {
                 'hardwareprofiles': hardwareProfiles.getCleanDict(),
             }
-        except Exception as ex:
+        except Exception as ex:  # pylint: disable=broad-except
             self.getLogger().exception(
                 'hardware profile WS API getHardwareProfiles() failed')
 
