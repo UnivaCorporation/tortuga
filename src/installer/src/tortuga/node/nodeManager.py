@@ -22,7 +22,7 @@ from sqlalchemy.orm.session import Session
 
 from tortuga.addhost.addHostManager import AddHostManager
 from tortuga.addhost.addHostServerLocal import AddHostServerLocal
-from tortuga.config.configManager import ConfigManager
+from tortuga.config.configManager import ConfigManager, getfqdn
 from tortuga.db.dbManager import DbManager
 from tortuga.db.hardwareProfileDbApi import HardwareProfileDbApi
 from tortuga.db.models.hardwareProfile import HardwareProfile
@@ -445,7 +445,7 @@ class NodeManager(TortugaObjectManager): \
             NodeNotFound
         """
 
-        installer_hostname = socket.getfqdn().split('.', 1)[0]
+        installer_hostname = getfqdn().split('.', 1)[0]
 
         session = DbManager().openSession()
 

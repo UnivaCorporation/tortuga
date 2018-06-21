@@ -14,10 +14,9 @@
 
 # pylint: disable=no-member
 
-import socket
-
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.wsapi import nodeWsApi
+from tortuga.config.configManager import getfqdn
 
 
 class UpdateNodeStatusCli(TortugaCli):
@@ -26,7 +25,7 @@ class UpdateNodeStatusCli(TortugaCli):
     """
 
     def parseArgs(self, usage=None):
-        nodeName = socket.getfqdn()
+        nodeName = getfqdn()
 
         self.addOption("--node", dest='nodeName', default=nodeName,
                        help='Name of the node for which status is being'

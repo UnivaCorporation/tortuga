@@ -14,14 +14,12 @@
 
 # pylint: disable=no-member
 
-import socket
 import os
 import xml.etree.cElementTree as ET
 
 from tortuga.cli.tortugaCli import TortugaCli
+from tortuga.config.configManager import ConfigManager, getfqdn
 from tortuga.wsapi.nodeWsApi import NodeWsApi
-from tortuga.config.configManager import ConfigManager
-from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
 
 
 class GenerateNiiProfileCli(TortugaCli):
@@ -30,7 +28,7 @@ class GenerateNiiProfileCli(TortugaCli):
     """
 
     def parseArgs(self, usage=None):
-        self.addOption("--node", dest='nodeName', default=socket.getfqdn(),
+        self.addOption("--node", dest='nodeName', default=getfqdn(),
                        help='Name of the node for which NII profile is being'
                             ' generated')
 

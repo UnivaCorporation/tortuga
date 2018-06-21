@@ -12,11 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-class tortuga::installer::config {
-  include tortuga::config
+import socket
 
-  exec { 'ssh_keys':
-    command => "${tortuga::config::bin_dir}/create-ssh-keys",
-    unless  => "${tortuga::config::bin_dir}/create-ssh-keys --stdout | diff -qU 4 /etc/puppet/modules/tortuga/manifests/compute/install_ssh_keys.pp - >/dev/null 2>&1",
-  }
-}
+from tortuga.config.configManager import ConfigManager, getfqdn
+
+
+def test_instantiation():
+    cm = ConfigManager()
+
+    assert cm
+
+    assert cm.getRoot()
+
+
+def test_getfqdn():
+    fqdn = socket.getfqdn()
+
+    expected_fqdn = getfqdn()
+
+    if '.' in fqdn:
+        assert fqdn == expected_fqdn
+    else:
+        assert fqdn.split('.', 1)[0] == expected_fqdn.split('.', 1)[0]

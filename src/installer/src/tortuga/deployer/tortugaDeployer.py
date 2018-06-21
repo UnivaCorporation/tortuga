@@ -31,7 +31,7 @@ import yaml
 from six import print_
 
 from tortuga.admin.api import AdminApi
-from tortuga.config.configManager import ConfigManager
+from tortuga.config.configManager import ConfigManager, getfqdn
 from tortuga.deployer import dbUtility
 from tortuga.exceptions.commandFailed import CommandFailed
 from tortuga.exceptions.eulaAcceptanceRequired import EulaAcceptanceRequired
@@ -66,7 +66,7 @@ class TortugaDeployer(object): \
 
         self._settings['eulaAccepted'] = False
 
-        self._settings['fqdn'] = self._getfqdn()
+        self._settings['fqdn'] = getfqdn()
 
         self._settings['osInfo'] = getOsInfo()
 
@@ -785,32 +785,6 @@ class TortugaDeployer(object): \
                     default_flow_style=False).encode())
 
         self._generateDbPassword()
-
-    def _getfqdn(self): \
-            # pylint: disable=no-self-use
-        # socket.getfqdn() may not return a fully-qualified host name
-        reported_fqdn = socket.getfqdn()
-        if '.' in reported_fqdn:
-            return reported_fqdn
-
-        # Attempt to append search domain
-        search_domain = None
-
-        with open('/etc/resolv.conf') as fp:
-            for buf in fp.readlines():
-                if buf.startswith('search'):
-                    try:
-                        search_domain = buf.split(' ', 1)[1].rstrip()
-                    except IndexError:
-                        # Malformed 'search' entry in resolv.conf
-                        pass
-
-        if search_domain:
-            # Append search domain from resolv.conf
-            return '%s.%s' % (reported_fqdn, search_domain)
-
-        # Fallback to default behaviour...
-        return reported_fqdn
 
     def pre_init_db(self):
         # If using 'mysql' as the database backend, we need to install the
