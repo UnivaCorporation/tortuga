@@ -208,7 +208,7 @@ class HardwareProfileDbApi(TortugaDbApi):
             DbManager().closeSession()
 
     def addHardwareProfile(self, hardwareProfile: HardwareProfile,
-                           session: Session = Optional[None]):
+                           session: Optional[Session] = None):
         """
         Insert hardwareProfile into the db.
 
