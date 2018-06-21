@@ -38,6 +38,6 @@ class ResourceAdapterConfig(ModelBase):
     resourceadapter = relationship('ResourceAdapter',
                                    backref='resource_adapter_config')
 
-    settings = relationship('ResourceAdapterSetting',
-                            back_populates='resource_adapter_config',
-                            cascade='all,delete-orphan')
+    configuration = relationship('ResourceAdapterSetting',
+                                 back_populates='resource_adapter_config',
+                                 cascade='all,delete-orphan')

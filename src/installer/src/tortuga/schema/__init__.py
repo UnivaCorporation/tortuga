@@ -130,8 +130,8 @@ class ResourceAdapterConfigSchema(ModelSchema):
     resourceadapter = fields.Nested('ResourceAdapterSchema',
                                     only=('id', 'name'))
     admin = fields.Nested('AdminSchema', only=('id', 'username'))
-    settings = fields.Nested('ResourceAdapterConfigSettingSchema',
-                             only=('id', 'key', 'value'), many=True)
+    configuration = fields.Nested('ResourceAdapterConfigSettingSchema',
+                                  only=('id', 'key', 'value'), many=True)
 
     class Meta:
         model = ResourceAdapterConfigModel

@@ -12,14 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 from logging import getLogger
 import os
 from typing import List
 
-import jwt
+from oic.oic import Client
+from oic.utils.jwt import JWT
+from oic.oic.message import RegistrationResponse
+from oic.utils.authn.client import CLIENT_AUTHN_METHOD
 from passlib.hash import pbkdf2_sha256
 
-from tortuga.auth.principal import AuthPrincipal
+from tortuga.admin.api import AdminApi
 from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.authenticationFailed import AuthenticationFailed
 from .manager import AuthManager
@@ -209,64 +213,87 @@ class JwtAuthenticationMethod(AuthenticationMethod):
     Authenticate a user via JWT tokens.
 
     """
-    ALGORITHMS = ['HS256', 'RS256']
     #
-    # The path to the JWT secret file, as found under $TORTUGA_HOME/etc
+    # The path to the OpenID Connect Client configuration. See docs below
+    # for the format of this file.
     #
-    SECRET_FILE_NAME = 'jwt.secret'
+    OPENID_CONNECT_CONFIG = 'openid_connect_client.json'
 
-    def __init__(self, secret: str = None):
-        self._secret: str = secret
-        if not secret:
-            self._load_secret()
+    def __init__(self, openid_connect_client: Client = None):
+        self._client: Client = openid_connect_client
+        if not openid_connect_client:
+            self._configure_client()
 
     def do_authentication(self, **kwargs) -> str:
-        if not self._secret:
-            logger.debug('No secret set for JWT authentication')
+        if not self._client:
+            logger.debug('No OpenID Connect Client configured')
             raise AuthenticationFailed()
 
         token: str = kwargs.get('token', None)
         if not token:
+            logger.debug('No JWT token provided')
             raise AuthenticationFailed()
 
         try:
-            decoded = jwt.decode(token, self._secret,
-                                 algorithms=self.ALGORITHMS)
+            jwt = JWT(keyjar=self._client.keyjar).unpack(token)
+            self._client.verify_id_token(jwt, authn_req={})
+            username = jwt['name']
 
-        except jwt.DecodeError:
+        except Exception as ex:
+            logger.info(str(ex))
             raise AuthenticationFailed()
 
-        username = decoded.get('username', None)
-        if not username:
-            raise AuthenticationFailed()
-
-        principal: AuthPrincipal = AuthManager().get_principal(username)
-        if not principal:
-            raise AuthenticationFailed()
+        #
+        # Assuming the token is valid, if we can't find the user, we
+        # add them as an admin
+        #
+        if not AuthManager().get_principal(username):
+            self._create_admin(username)
 
         return username
 
+    def _create_admin(self, username):
+        admin_api = AdminApi()
+        admin_api.addAdmin(name=username)
+
     @staticmethod
-    def secret_path():
+    def openid_client_config_path():
+        """
+        The path to the OpenID Connect Client configuration. This is a JSON
+        file with the following three settings:
+
+        {
+            "issuer": "http://example.com:123456/dex",
+            "client_id": "client-id-1234",
+            "client_secret": "AbcDef134..."
+        }
+
+        If this file does not exist, JWT authentication will be disabled.
+
+        """
         cm = ConfigManager()
 
         return os.path.join(
             cm.getRoot(),
             'etc',
-            JwtAuthenticationMethod.SECRET_FILE_NAME
+            JwtAuthenticationMethod.OPENID_CONNECT_CONFIG
         )
 
-    def _load_secret(self):
-        """
-        Loads the JWT shared secret from the secret file, if it exists.
+    def _configure_client(self):
+        config_file_path = JwtAuthenticationMethod.openid_client_config_path()
 
-        """
-        secret_file_path = JwtAuthenticationMethod.secret_path()
-
-        if not os.path.exists(secret_file_path):
-            logger.info('No JWT secret found, JWT authentication will not '
-                        'work: {}'.format(secret_file_path))
+        if not os.path.exists(config_file_path):
+            logger.info('No OpenID Connect configuration found,'
+                        'JWT authentication will not '
+                        'work: {}'.format(config_file_path))
             return
 
-        with open(secret_file_path) as fp:
-            self._secret = fp.read().strip()
+        with open(config_file_path) as fp:
+            config = json.loads(fp.read())
+            self._client = Client(client_authn_method=CLIENT_AUTHN_METHOD)
+            self._client.provider_config(config['issuer'])
+            client_registration = RegistrationResponse(
+                client_id=config['client_id'],
+                client_secret=config['client_secret']
+            )
+            self._client.store_registration_info(client_registration)

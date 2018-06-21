@@ -207,7 +207,7 @@ class AdapterMgmtCLI(TortugaCli):
 
             if args.setting:
                 # Display only specified configuration setting
-                for cfgitem in cfg['settings']:
+                for cfgitem in cfg['configuration']:
                     if cfgitem['key'] == args.setting:
                         sys.stdout.write(cfgitem['value'] + '\n')
 
@@ -242,10 +242,10 @@ class AdapterMgmtCLI(TortugaCli):
                     'password',
                 ]
 
-                if cfg['settings']:
+                if cfg['configuration']:
                     sys.stdout.write('Configuration:\n')
 
-                    for cfgitem in cfg['settings']:
+                    for cfgitem in cfg['configuration']:
                         value = cfgitem['value'] \
                             if args.show_all or \
                             cfgitem['key'] not in secret_keys else '<REDACTED>'

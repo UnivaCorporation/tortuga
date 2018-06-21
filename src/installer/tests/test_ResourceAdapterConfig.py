@@ -18,6 +18,6 @@ from tortuga.db.models.resourceAdapterSetting import ResourceAdapterSetting
 
 def test_instantiation():
     adapter_cfg = ResourceAdapterConfig(name='default')
-    adapter_cfg.settings.append(
+    adapter_cfg.configuration.append(
         ResourceAdapterSetting(key='test_key', value='test_value')
     )
