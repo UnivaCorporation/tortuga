@@ -22,6 +22,7 @@ from typing import Any, Dict, List, NoReturn, Optional, Union
 
 from jinja2 import Template
 
+from tortuga.config.configManager import getfdqn
 from tortuga.db.globalParameterDbApi import GlobalParameterDbApi
 from tortuga.db.helper import get_installer_hostname_suffix
 from tortuga.db.models.hardwareProfile import HardwareProfile
@@ -409,7 +410,7 @@ dd if=/dev/zero of=$d%s bs=512 count=1
         softwareprofile = softwareprofile \
             if softwareprofile else node.softwareprofile
 
-        installer_public_fqdn: str = socket.getfqdn()
+        installer_public_fqdn: str = getfqdn()
         installer_hostname: str = installer_public_fqdn.split('.')[0]
 
         installer_private_ip: str = hardwareprofile.nics[0].ip

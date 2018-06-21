@@ -14,11 +14,11 @@
 
 # pylint: disable=no-member
 
-import socket
 from typing import Dict, List, Optional
 
 from sqlalchemy.orm.session import Session
 
+from tortuga.config.configManager import getfqdn
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.objects.node import Node
@@ -31,7 +31,6 @@ from .globalParameterDbApi import GlobalParameterDbApi
 from .models.node import Node as NodeModel
 from .nodesDbHandler import NodesDbHandler
 from .tortugaDbApi import TortugaDbApi
-
 
 OptionsDict = Dict[str, bool]
 
@@ -228,7 +227,7 @@ class NodeDbApi(TortugaDbApi):
                 # manually inject value for 'installer'
                 p = Parameter(name='Installer')
 
-                hostName = socket.gethostname().split('.', 1)[0]
+                hostName = getfqdn().split('.', 1)[0]
 
                 if '.' in dbNode.name:
                     nodeDomain = dbNode.name.split('.', 1)[1]

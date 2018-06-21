@@ -13,12 +13,13 @@
 # limitations under the License.
 
 import socket
+import sys
 
 import pytest
 from passlib.hash import pbkdf2_sha256
 from sqlalchemy import create_engine
 
-from tortuga.config.configManager import ConfigManager
+from tortuga.config.configManager import ConfigManager, getfqdn
 from tortuga.db import (adminDbApi, globalParameterDbApi, hardwareProfileDbApi,
                         kitDbApi, networkDbApi, nodeDbApi,
                         softwareProfileDbApi)
@@ -35,17 +36,17 @@ from tortuga.db.models.node import Node
 from tortuga.db.models.operatingSystem import OperatingSystem
 from tortuga.db.models.operatingSystemFamily import OperatingSystemFamily
 from tortuga.db.models.resourceAdapter import ResourceAdapter
+from tortuga.db.models.resourceAdapterConfig import ResourceAdapterConfig
+from tortuga.db.models.resourceAdapterSetting import ResourceAdapterSetting
 from tortuga.db.models.softwareProfile import SoftwareProfile
 from tortuga.db.models.tag import Tag
 from tortuga.deployer.dbUtility import init_global_parameters, primeDb
 from tortuga.node import nodeManager
-from tortuga.tasks.celery import app
 from tortuga.objects import osFamilyInfo, osInfo
 from tortuga.objectstore import manager as objectstore_manager
+from tortuga.tasks.celery import app
 
 from .mocks.redis import MockRedis
-from tortuga.db.models.resourceAdapterConfig import ResourceAdapterConfig
-from tortuga.db.models.resourceAdapterSetting import ResourceAdapterSetting
 
 
 @pytest.fixture(autouse=True)
@@ -108,8 +109,6 @@ def dbm():
     os_info = osInfo.OsInfo('centos', '7.4', 'x86_64')
     os_info.setOsFamilyInfo(rhel7_os_family_info)
 
-    installer_fqdn = socket.getfqdn()
-
     settings = {
         'language': 'en',
         'keyboard': 'en_US',
@@ -121,7 +120,7 @@ def dbm():
         'eulaAccepted': 'true',
         'depotpath': '/opt/tortuga/depot',
         'osInfo': os_info,
-        'fqdn': installer_fqdn,
+        'fqdn': getfqdn(),
         'installer_software_profile': 'Installer',
         'installer_hardware_profile': 'Installer',
     }
@@ -141,7 +140,7 @@ def dbm():
             all_tags.append(tag)
 
         installer_node = session.query(Node).filter(
-            Node.name == installer_fqdn).one()
+            Node.name == settings['fqdn']).one()
 
         os_ = session.query(OperatingSystem).filter(
             OperatingSystem.name == 'centos').one()

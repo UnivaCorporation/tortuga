@@ -15,9 +15,10 @@
 # limitations under the License.
 
 import os
-import sys
-import socket
 import subprocess
+import sys
+
+from tortuga.config.configManager import getfqdn
 
 
 def readSshPublicKey(filename):
@@ -41,7 +42,7 @@ def main():
             '/root/.ssh/id_dsa.pub')
     else:
         # Create a default SSH key
-        hostName = socket.gethostname()
+        hostName = getfqdn()
 
         cmd = 'ssh-keygen -t rsa -N "" -C "root@%s" -f /root/.ssh/id_rsa' % (
             hostName)

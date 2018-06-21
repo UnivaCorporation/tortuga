@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Union, Optional
+from typing import Union, Optional, List
 
 
 def parse_tag_query_string(tag_dict):
@@ -34,7 +34,7 @@ def parse_tag_query_string(tag_dict):
 
 def make_options_from_query_string(
         value: Union[list, str, None],
-        default_options: Optional[Union[list, None]] = None) -> dict:
+        default_options: Optional[List[str]] = None) -> dict:
     # take string or list of strings and convert into dict of key=True
     # for use with query methods that take settingsDict. Defaults can
     # be provided as a list of strings

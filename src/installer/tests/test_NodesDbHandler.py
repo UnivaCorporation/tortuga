@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import socket
 import unittest
 
 import pytest
 
 from tortuga.db.nodesDbHandler import NodesDbHandler
 from tortuga.exceptions.nodeNotFound import NodeNotFound
+from tortuga.config.configManager import getfqdn
 
 
 @pytest.mark.usefixtures('dbm_class')
@@ -36,7 +36,7 @@ class TestNodesDbHandler(unittest.TestCase):
         super(TestNodesDbHandler, self).tearDown()
 
     def test_getNode(self):
-        result = NodesDbHandler().getNode(self.session, socket.getfqdn())
+        result = NodesDbHandler().getNode(self.session, getfqdn())
 
         assert result.nics
 
@@ -50,7 +50,7 @@ class TestNodesDbHandler(unittest.TestCase):
     def test_getNodeByIp(self):
         result = NodesDbHandler().getNodeByIp(self.session, '10.2.0.1')
 
-        assert result.name == socket.getfqdn()
+        assert result.name == getfqdn()
 
         assert result.nics
 
