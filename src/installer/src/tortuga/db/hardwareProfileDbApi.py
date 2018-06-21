@@ -151,15 +151,7 @@ class HardwareProfileDbApi(TortugaDbApi):
             hardwareProfileList = TortugaObjectList()
 
             for dbHardwareProfile in dbHardwareProfileList:
-                # For now expand networks
-                # self.loadRelation(
-                #     dbHardwareProfile, 'hardwareprofilenetworks')
-
-                # self.loadRelations(dbHardwareProfile, optionDict)
-
-                # self.loadRelations(dbHardwareProfile, dict(tags=True))
-
-                options = dict.copy(optionDict)
+                options = dict.copy(optionDict or {})
                 options['hardwareprofilenetworks'] = True
 
                 self.loadRelations(
