@@ -14,7 +14,6 @@
 
 import crypt
 import os.path
-import socket
 import string
 import time
 from random import choice
@@ -22,7 +21,7 @@ from typing import Any, Dict, List, NoReturn, Optional, Union
 
 from jinja2 import Template
 
-from tortuga.config.configManager import getfdqn
+from tortuga.config.configManager import getfqdn
 from tortuga.db.globalParameterDbApi import GlobalParameterDbApi
 from tortuga.db.helper import get_installer_hostname_suffix
 from tortuga.db.models.hardwareProfile import HardwareProfile
@@ -71,10 +70,11 @@ class OSSupport(OsSupportBase):
 
         self._cm.setDepotDir(depot_dir)
 
-    def getPXEReinstallSnippet(self, ksurl: str, node: Node,
-                               hardwareprofile: Optional[Union[HardwareProfile, None]] = None,
-                               softwareprofile: Optional[Union[SoftwareProfile, None]] = None) -> str: \
-            # pylint: disable=no-self-use
+    def getPXEReinstallSnippet(
+            self, ksurl: str, node: Node,
+            hardwareprofile: Optional[HardwareProfile] = None,
+            softwareprofile: Optional[SoftwareProfile] = None) \
+            -> str:  # pylint: disable=no-self-use
         # General kickstart/kernel parameters
 
         # Find the first nic marked as bootable
