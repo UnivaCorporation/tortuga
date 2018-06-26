@@ -43,8 +43,6 @@ class HardwareProfile(ModelBase):
     idleSoftwareProfileId = Column(Integer, ForeignKey('softwareprofiles.id'))
     location = Column(String(45), default='local')
     localBootParams = Column(String(255))
-    hypervisorSoftwareProfileId = Column(Integer,
-                                         ForeignKey('softwareprofiles.id'))
     resourceAdapterId = Column(Integer, ForeignKey('resourceadapters.id'))
     cost = Column(Integer, default=0)
 

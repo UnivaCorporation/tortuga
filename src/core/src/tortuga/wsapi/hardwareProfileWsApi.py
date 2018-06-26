@@ -84,32 +84,6 @@ class HardwareProfileWsApi(TortugaWsApi):
         except Exception as ex:
             raise TortugaException(exception=ex)
 
-    def getHypervisorNodes(self, hardwareProfileName):
-        url = 'v1/hardwareprofiles/%s/virtualContainerNodes' % (
-            hardwareProfileName)
-
-        try:
-            (response, responseDict) = self.sendSessionRequest(url)
-
-            nodeList = []
-
-            if 'nodes' in responseDict:
-                nDicts = responseDict.get('nodes')
-                for nDict in nDicts:
-                    node = tortuga.objects.node.Node.getFromDict(nDict)
-                    nodeList.append(node)
-            elif 'node' in responseDict:
-                node = tortuga.objects.node.Node.getFromDict(
-                    responseDict['node'])
-
-                nodeList.append(node)
-
-            return nodeList
-        except TortugaException as ex:
-            raise
-        except Exception as ex:
-            raise TortugaException(exception=ex)
-
     def getHardwareProfileList(self,
                                optionDict: Optional[Union[dict, None]] = None,
                                tags=None): \

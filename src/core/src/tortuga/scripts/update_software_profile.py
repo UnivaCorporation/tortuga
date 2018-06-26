@@ -14,7 +14,6 @@
 
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
-from tortuga.objects.softwareProfile import SoftwareProfile
 from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
 
@@ -32,10 +31,10 @@ class UpdateSoftwareProfileCli(TortugaCli):
 
     def parseArgs(self, usage=None):
         # Simple Options
-        self.addOption('--name', dest='name',
+        self.addOption('--name', required=True,
                        help=_('Name of software profile'))
 
-        self.addOption('--new-name', dest='newName',
+        self.addOption('--new-name',
                        help=_('New name for software profile'))
 
         self.addOption('--description', dest='description',
@@ -50,9 +49,29 @@ class UpdateSoftwareProfileCli(TortugaCli):
         self.addOption('--initrd', dest='initrd',
                        help=_('Initrd for software profile'))
 
-        self.addOption('--min-nodes', dest='minNodes',
-                       help=_('Minimum number of nodes required to remain in'
-                              ' this profile.'))
+        self.addOption('--min-nodes',
+                       help=_('Minimum number of nodes required in'
+                              ' this software profile.'))
+
+        self.addOption('--max-nodes',
+                       help=_('Maximum number of nodes allowed in this'
+                              ' software profile'))
+
+        excl_group = self.getParser().add_mutually_exclusive_group()
+
+        excl_group.add_argument('--soft-locked', action='store_true',
+                                default=None,
+                                help=_('Nodes cannot be added to or removed'
+                                       ' without \'--force\' argument'))
+
+        excl_group.add_argument('--hard-locked', dest='soft_locked',
+                                action='store_false',
+                                default=None,
+                                help=_('Nodes cannot be added to or removed'
+                                       'from this software profile.'))
+
+        self.addOption('--unlock', help=_('Reset locked state'),
+                       action='store_true')
 
         # Complex Options
         self.addOption('--add-partition', dest='addPartition',
@@ -141,21 +160,15 @@ class UpdateSoftwareProfileCli(TortugaCli):
 Updates software profile in the Tortuga system.
 """))
 
-        software_profile_name = self.getArgs().name
-
         api = SoftwareProfileWsApi(username=self.getUsername(),
                                    password=self.getPassword(),
                                    baseurl=self.getUrl())
 
-
-        if software_profile_name is None:
-            raise InvalidCliRequest(_('Missing software profile name'))
-
-        sp = api.getSoftwareProfile(software_profile_name,
+        sp = api.getSoftwareProfile(self.getArgs().name,
                                     UpdateSoftwareProfileCli.optionDict)
 
-        if self.getArgs().newName is not None:
-            sp.setName(self.getArgs().newName)
+        if self.getArgs().new_name is not None:
+            sp.setName(self.getArgs().new_name)
 
         if self.getArgs().description is not None:
             sp.setDescription(self.getArgs().description)
@@ -169,8 +182,53 @@ Updates software profile in the Tortuga system.
         if self.getArgs().initrd is not None:
             sp.setInitrd(self.getArgs().initrd)
 
-        if self.getArgs().minNodes is not None:
-            sp.setMinNodes(self.getArgs().minNodes)
+        if self.getArgs().unlock:
+            if self.getArgs().soft_locked is not None:
+                raise InvalidCliRequest(
+                    '--soft-locked/--hard-locked arguments and --unlock'
+                    ' argument are mutually exclusive'
+                )
+
+            sp.setLockedState('Unlocked')
+
+        if self.getArgs().soft_locked is not None:
+            sp.setLockedState(
+                'SoftLocked' if self.getArgs().soft_locked else 'HardLocked')
+
+        if self.getArgs().min_nodes is not None:
+            # update min_nodes value
+            try:
+                if self.getArgs().min_nodes.lower() == 'none':
+                    min_nodes = -1
+                else:
+                    min_nodes = int(self.getArgs().min_nodes)
+            except ValueError:
+                raise InvalidCliRequest(
+                    'Invalid argument value for --min-nodes')
+
+            sp.setMinNodes(min_nodes)
+        else:
+            min_nodes = sp.getMinNodes()
+
+        if self.getArgs().max_nodes:
+            try:
+                max_nodes = -1 \
+                    if self.getArgs().max_nodes.lower() == 'none' else \
+                    int(self.getArgs().max_nodes)
+            except ValueError:
+                raise InvalidCliRequest(
+                    'Invalid argument value for --max-nodes'
+                )
+
+            # update maxNodes value
+            if max_nodes < min_nodes:
+                # do not allow max nodes to be less than min nodes
+                raise InvalidCliRequest(
+                    'Maximum number of allowed nodes must be greater or equal'
+                    ' to the mininum number of required nodes'
+                )
+
+            sp.setMaxNodes(max_nodes)
 
         if self.getArgs().deletePartition is not None:
 

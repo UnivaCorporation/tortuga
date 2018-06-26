@@ -92,17 +92,6 @@ class UpdateHardwareProfileCli(TortugaCli):
                        help=_('Grub configuration contents for member'
                               ' nodes.'))
 
-        self.addOption('--hypervisor-profile',
-                       dest='vcProfile',
-                       help=_('"Parent" software profile of this hardware'
-                              ' profile.'))
-
-        self.addOption('--clear-hypervisor-profile',
-                       dest='bClearHypervisorProfile',
-                       action='store_true', default=False,
-                       help=_('Unset the current hypervisor software'
-                              'profile'))
-
         self.addOption('--resource-adapter',
                        dest='resourceAdapter',
                        help=_('Tortuga resource adapter.'))
@@ -205,14 +194,6 @@ class UpdateHardwareProfileCli(TortugaCli):
 
         if self.getArgs().localBootParameters is not None:
             hp.setLocalBootParams(self.getArgs().localBootParameters)
-
-        if self.getArgs().vcProfile is not None:
-            sp = spApi.getSoftwareProfile(self.getArgs().vcProfile)
-
-            hp.setHypervisorSoftwareProfileId(sp.getId())
-
-        if self.getArgs().bClearHypervisorProfile:
-            hp.setHypervisorSoftwareProfileId(None)
 
         if self.getArgs().cost is not None:
             hp.setCost(self.getArgs().cost)

@@ -1,6 +1,6 @@
 # Tortuga 6.3.0 Installation and Administration Guide
 ### Univa Corporation &lt;support@univa.com&gt;
-### June 2018 -- Version 1.26
+### June 2018 -- Version 1.27
 
 About This Guide
 ================
@@ -834,7 +834,7 @@ delete-hardware-profile --name Rack2
 
 A *software profile* describes the software "stack" or configuration (applications + operating system), as well as the disk setup for a managed node.
 
-Software profiles may explicitly require that certain software packages be installed via YUM. The software profile also indicates the components (defined within software kits) that should be enabled and configured.
+The software profile also indicates the components (defined within software kits) that should be enabled and configured.
 
 Nodes are added to software profiles when they are added to the cluster. Unlike the associated hardware profile, the software profile associated with a node can be changed at any time. When the software profile of a node is changed, the entire node, including the operating system, is reinstalled to ensure the software configuration is "clean".
 
@@ -916,6 +916,62 @@ update-software-profile --name <NAME> ...
 **Note:** it is not possible to change the operating system of an existing software profile.
 
 The `schedule-update` command will then synchronize the cluster.
+
+##### Locked state
+
+Software profiles can be *optionally* locked to disallow adding or removing nodes. This feature is useful for applications where only a fixed set of nodes is supported.
+
+The default lock state of a newly created software profile is "Unlocked".
+
+Set the locked state to "SoftLocked" with the following command:
+
+``` shell
+update-software-profile --name NAME --soft-locked
+```
+
+This will "soft lock" the software profile such that nodes cannot be added and/or removed without the use of the `--force` argument specified to `add-nodes` or `delete-node`, respectively.
+
+Use `update-software-profile --name NAME --hard-locked` to "hard lock" the software profile which prevents all `add-nodes` or `delete-node` operations, regardless of the usage of the `--force` flag. In order to add or delete nodes from a hard locked software profile, it is necessary to first revert the lock to "soft locked" or disable it entirely.
+
+Clear (or remove) any software profile lock with the following command:
+
+``` shell
+update-software-profile --name NAME --unlock
+```
+
+##### Software profile minimum and maximum nodes
+
+Software profiles do not have imposed minimums or maximums. That is, all software profiles may have an unlimited number of software profiles.
+
+The following command imposes a software profile minimum:
+
+``` shell
+update-software-profile --name NAME --min-nodes 16
+```
+
+When a minimum is applied, nodes in the specified software profile cannot be deleted without using the `--force` argument. This is irrespective of any software profile locks.
+
+Conversely, it is also possible to impose a maximum number of nodes within a software profile:
+
+``` shell
+update-software-profile --name NAME --max-nodes 16
+```
+
+Any requests to add additional nodes beyond the imposed maximum of 16 will be rejected.
+
+Clear minimum or maximum limits by specifying `none` as the argument to `--min-nodes` or `--max-nodes` respectively:
+
+``` shell
+update-software-profile --name NAME --min-nodes none
+```
+
+``` shell
+update-software-profile --name NAME --max-nodes none
+```
+
+``` shell
+update-software-profile --name NAME --min-nodes none --max-nodes none
+```
 
 #### Deleting software profiles
 
