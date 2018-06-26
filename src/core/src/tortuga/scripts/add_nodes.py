@@ -72,6 +72,11 @@ class AddNodes(TortugaCli): \
             dest='softwareProfileName',
             help=_('Associate new node(s) with given software profile.'))
 
+        self.addOptionToGroup(
+            mainGroup, '--force', action='store_true', default=False,
+            help=_('Allow addition of nodes to soft locked software profile.')
+        )
+
         # This is a deprecated argument (replaced with '--count')
         self.addOptionToGroup(
             mainGroup, '--node-count',
@@ -140,12 +145,16 @@ class AddNodes(TortugaCli): \
                 sys.stderr.write('Ignoring \'--count\' option when importing'
                                  ' from MAC file\n')
 
-        addHostWsApi = AddHostWsApi(username=self.getUsername(),
-                                    password=self.getPassword(),
-                                    baseurl=self.getUrl()
+        addHostWsApi = AddHostWsApi(
+            username=self.getUsername(),
+            password=self.getPassword(),
+            baseurl=self.getUrl()
         )
 
-        addNodesRequest = dict(isIdle=self.getArgs().isIdle)
+        addNodesRequest = {
+            'isIdle': self.getArgs().isIdle,
+            'force': self.getArgs().force,
+        }
 
         if self.getArgs().hardwareProfileName:
             addNodesRequest['hardwareProfile'] = \
@@ -177,7 +186,10 @@ class AddNodes(TortugaCli): \
 
         if not self.getArgs().hardwareProfileName and \
                 not self.getArgs().softwareProfileName:
-            self.getParser().error('--software-profile or --hardware-profile and --software-profile must be specified')
+            self.getParser().error(
+                '--software-profile or --hardware-profile and '
+                ' --software-profile must be specified'
+            )
 
         if self.getArgs().tags:
             addNodesRequest['tags'] = _split_key_value_pairs(

@@ -17,37 +17,56 @@
 .LP
 add-nodes \- Add nodes to the system.
 .SH "SYNTAX"
-
-\fBadd-nodes [--idle] [--rack \fIRACKNUMBER\fB] [-n \fICOUNT\fB] [--software-profile \fISOFTWAREPROFILENAME\fB] --hardware-profile \fIHARDWAREPROFILENAME\fB
-
+.LP
+.B add-nodes
+[\fB\-\-rack\fR \fINUMBER\fR]
+[\fB\-n\fR \fICOUNT\fR]
+[\fB\-\-software-profile\fR \fINAME\fR]
+\fB\-\-hardware-profile\fR \fINAME\fR
+[\fB\-\-force\fR]
+.LP
+.B add-nodes \-\-mac-addr \fIxx:xx:xx:xx:xx:xx\fR
+[\fB\-\-rack\fR \fINUMBER\fR]
+[\fB\-\-software-profile\fR \fINAME\fR]
+\fB\-\-hardware-profile\fR \fINAME\fR
+[\fB\-\-force\fR]
+.LP
+.B add-nodes \-\-idle
+[\fB\-\-rack\fR \fINUMBER\fR]
+[\fB\-n \fICOUNT\fR]
+[\fB\-\-software-profile\fR \fINAME\fR]
+\fB\-\-hardware-profile\fR \fINAME\fR
+[\fB\-\-force\fR]
 .SH "DESCRIPTION"
 .LP
-The add-nodes command runs in the foreground and starts accepting new nodes in the given hardware profile and displays information on each new node created.
+The add-nodes command runs in the foreground and starts accepting new
+nodes in the given hardware profile and displays information on each new
+node created.
 .LP
-If the -n option is given, add-nodes terminates once the count is satisfied. Without the -n option, add-nodes runs until interrupted by the keyboard (CTRL-C).
-.LP
-The add-nodes command associates the new nodes with the software profile given by the required --software-profile option.
+The add-nodes command associates the new nodes with the software profile
+given by the required \fB--software-profile\fR option.
 
 .SH "OPTIONS"
 .LP
 .TP
-\fB--software-profile=\fPSOFTWAREPROFILENAME
+\fB--software-profile=\fPNAME
 Create new nodes based on this software profile.
 .TP
-\fB--hardware-profile=\fPHARDWAREPROFILENAME
+\fB--hardware-profile=\fPNAME
 Create new nodes based on this hardware profile.
 .TP
 \fB--idle
 Create new idle nodes.
 .TP
-\fB--rack=\fPRACKNUMBER
-Replacement value for "#RR" in hardware profile name format when creating node names.
+\fB--rack=\fPNUMBER
+Replacement value for "\fI#RR\fR" in hardware profile name format when creating node names.
 .TP
-\fB-n=\fPCOUNT
+\fB--count=\fpCOUNT, -n=\fPCOUNT
 Create specific number of nodes only.
-
+.TP
+.B \-\-force
+Allow adding nodes to soft locked software profile.
 .SH "Single MAC Import Options"
-.LP
 .TP
 \fB--mac-addr=\fPMACADDR
 MAC address to be added to cluster
@@ -65,7 +84,6 @@ Set the IP address for the node being imported
 File containing list of MAC addresses to be added to cluster
 .LP
 .SH "Common Tortuga Options"
-.LP
 .TP
 \fB-h, --help
 show this help message and exit.
@@ -85,11 +103,26 @@ Credential to use when not running as root on the Installer.
 \fB--password=\fPPASSWORD
 Credential to use when not running as root on the Installer.
 .SH "EXAMPLES"
-.LP
-add-nodes [--rack rackNumber] [-n COUNT] --software-profile SOFTWAREPROFILE --hardware-profile HARDWAREPROFILE
+Add 3 nodes to software profile \fIexecd\fR and hardware profile \fIaws\fR:
+.PP
+.nf
+.RS
+add-nodes -n3 --software-profile execd --hardware-profile aws
+.RE
+.fi
+.PP
+Add physical/on-premise node or VM by MAC address:
+.PP
+.nf
+.RS
+add-nodes --mac-addr 00:00:00:00:00:01 \\
+    --software-profile compute --hardware-profile localiron
+.RE
+.fi
+.PP
 .SH "AUTHORS"
-.LP
 Univa Support <support@univa.com>
 .SH "SEE ALSO"
-.LP
-idle-active-node(8)
+.BR idle-node(8),
+.BR get-node-status(8),
+.BR delete-node(8)

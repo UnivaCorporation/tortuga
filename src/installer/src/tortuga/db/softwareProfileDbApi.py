@@ -713,6 +713,8 @@ class SoftwareProfileDbApi(TortugaDbApi):
         dbSoftwareProfile.os = dbOs
         dbSoftwareProfile.type = softwareProfile.getType()
         dbSoftwareProfile.minNodes = softwareProfile.getMinNodes()
+        dbSoftwareProfile.maxNodes = softwareProfile.getMaxNodes()
+        dbSoftwareProfile.lockedState = softwareProfile.getLockedState()
         dbSoftwareProfile.isIdle = softwareProfile.getIsIdle()
 
         # Add partitions

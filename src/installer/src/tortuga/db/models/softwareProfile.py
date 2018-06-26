@@ -19,6 +19,7 @@ from sqlalchemy.orm import relationship
 
 from .base import ModelBase
 
+
 softwareprofile_admins = Table(
     'softwareprofile_admins',
     ModelBase.metadata,
@@ -41,7 +42,9 @@ class SoftwareProfile(ModelBase):
     initrd = Column(String(255))
     osId = Column(Integer, ForeignKey('operatingsystems.id'), nullable=False)
     type = Column(String(20), nullable=False)
-    minNodes = Column(Integer)
+    minNodes = Column(Integer, default=-1)
+    maxNodes = Column(Integer, default=-1)
+    lockedState = Column(String(20), nullable=False, default='Unlocked')
     isIdle = Column(Boolean, nullable=False, default=False)
 
     admins = relationship(
@@ -68,12 +71,6 @@ class SoftwareProfile(ModelBase):
         'HardwareProfile',
         foreign_keys='HardwareProfile.idleSoftwareProfileId',
         backref='idlesoftwareprofile'
-    )
-
-    children = relationship(
-        'HardwareProfile',
-        foreign_keys='HardwareProfile.hypervisorSoftwareProfileId',
-        backref='hypervisor'
     )
 
     kitsources = relationship(

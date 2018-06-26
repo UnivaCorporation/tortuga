@@ -140,9 +140,9 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def deleteNode(self, nodespec: str):
+    def deleteNode(self, nodespec: str, force: bool = False):
         try:
-            return self._nodeManager.deleteNode(nodespec)
+            return self._nodeManager.deleteNode(nodespec, force=force)
         except TortugaException:
             raise
         except Exception as ex:
