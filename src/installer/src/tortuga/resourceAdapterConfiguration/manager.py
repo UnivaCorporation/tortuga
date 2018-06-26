@@ -140,7 +140,7 @@ class ResourceAdapterConfigurationManager:
         cfg = self._resourceAdapterConfigDbHandler.get(
             session, resadapter_name, name)
 
-        self.__update_settings(session, configuration, cfg.settings)
+        self.__update_settings(session, configuration, cfg.configuration)
 
         session.commit()
 

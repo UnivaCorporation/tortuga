@@ -246,7 +246,7 @@ class Node(TortugaObject): \
             node.setInstance(
                 InstanceMappingSchema(
                     exclude=('node',
-                             'resource_adapter_configuration.settings')
+                             'resource_adapter_configuration.configuration')
                 ).dump(instance_mapping_dict).data)
 
         return node
