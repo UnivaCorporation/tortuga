@@ -14,13 +14,20 @@
 
 # pylint: disable=no-member
 
+from random import choice
+import string
+
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.auth.manager import AuthManager
 from tortuga.db.adminDbApi import AdminDbApi
 
 
 class AdminManager(TortugaObjectManager):
-    """Class for cluster admin management"""
+    """
+    Class for cluster admin management
+
+    """
+    RANDOM_PASSWORD_LENGTH = 16
 
     def __init__(self):
         super(AdminManager, self).__init__()
@@ -38,12 +45,41 @@ class AdminManager(TortugaObjectManager):
 
     def addAdmin(self, name, password, isCrypted, realname=None,
                  description=None):
+        """
+        Adds an admin user.
+
+        :param str name:        the admin username
+        :param str password:    the admin password, if None, a random one is
+                                generated
+        :param bool isCrypted:  if False, the password is encrypted before
+                                saving
+        :param str realname:    the full/real name for the user
+        :param str description: the description of the user
+
+        """
+        if not password:
+            password = self._generate_random_password()
+            isCrypted = False
+
         if not isCrypted:
             password = AuthManager().cryptPassword(password)
 
         self._adminDbApi.addAdmin(name, password, realname, description)
 
         AuthManager().reloadPrincipals()
+
+    def _generate_random_password(self) -> str:
+        """
+        Generates a random password, RANDOM_PASSWORD_LENGTH characters long.
+
+        :return str: the random password
+
+        """
+        string_chars: str = string.ascii_letters + string.digits
+        return ''.join(
+            [choice(string_chars) for _ in
+             range(AdminManager.RANDOM_PASSWORD_LENGTH)]
+        )
 
     def deleteAdmin(self, admin):
         self._adminDbApi.deleteAdmin(admin)

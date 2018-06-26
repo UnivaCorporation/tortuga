@@ -21,26 +21,7 @@ from tortuga.exceptions.nodeTransferNotValid import NodeTransferNotValid
 from tortuga.kit.actions.manager import KitActionsManager
 from tortuga.node.nodeApi import NodeApi
 from tortuga.events.types import NodeStateChanged
-
-
-class MockBootHostManager:
-    def setNodeForNetworkBoot(self, dbNode):
-        dbNode.state = 'Expired'
-
-    def writePXEFile(self, *args, **kwargs):
-        return
-
-    def addDhcpLease(self, *args, **kwargs):
-        pass
-
-
-class MockOsObjectFactory:
-    def getOsBootHostManager(self):
-        return MockBootHostManager()
-
-
-def get_os_object_factory(osName: str = None):
-    return MockOsObjectFactory()
+from .osUtilityMock import get_os_object_factory
 
 
 def get_kit_installer(kit_spec):

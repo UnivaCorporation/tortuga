@@ -16,18 +16,19 @@
 
 import socket
 import time
-from typing import Dict, List, NoReturn, Optional, Tuple, Any
+from typing import Any, Dict, List, NoReturn, Optional, Tuple
 
 from sqlalchemy.orm.session import Session
-
 from tortuga.addhost.addHostManager import AddHostManager
 from tortuga.addhost.addHostServerLocal import AddHostServerLocal
-from tortuga.config.configManager import ConfigManager
+from tortuga.config.configManager import ConfigManager, getfqdn
 from tortuga.db.dbManager import DbManager
 from tortuga.db.hardwareProfileDbApi import HardwareProfileDbApi
-from tortuga.db.models.hardwareProfile import HardwareProfile
+from tortuga.db.models.hardwareProfile import \
+    HardwareProfile as HardwareProfileModel
 from tortuga.db.models.node import Node as NodeModel
-from tortuga.db.models.softwareProfile import SoftwareProfile
+from tortuga.db.models.softwareProfile import \
+    SoftwareProfile as SoftwareProfileModel
 from tortuga.db.nodeDbApi import NodeDbApi
 from tortuga.db.nodesDbHandler import NodesDbHandler
 from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
@@ -44,6 +45,7 @@ from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
 from tortuga.exceptions.volumeDoesNotExist import VolumeDoesNotExist
 from tortuga.kit.actions import KitActionsManager
+from tortuga.kit.loader import load_kits
 from tortuga.objects.node import Node
 from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
@@ -53,7 +55,6 @@ from tortuga.san import san
 from tortuga.softwareprofile.softwareProfileManager import \
     SoftwareProfileManager
 from tortuga.sync.syncApi import SyncApi
-from tortuga.kit.loader import load_kits
 
 
 OptionDict = Dict[str, bool]
@@ -81,7 +82,7 @@ class NodeManager(TortugaObjectManager): \
 
         self._kitmgr = KitActionsManager()
 
-    def __validateHostName(self, hostname: str, name_format: str) -> NoReturn:
+    def __validateHostName(self, hostname: str, name_format: str) -> None:
         """
         Raises:
             ConfigurationError
@@ -101,8 +102,8 @@ class NodeManager(TortugaObjectManager): \
                 'Hardware profile requires host names to be set')
 
     def createNewNode(self, session: Session, addNodeRequest: dict,
-                      dbHardwareProfile: HardwareProfile,
-                      dbSoftwareProfile: Optional[SoftwareProfile] = None,
+                      dbHardwareProfile: HardwareProfileModel,
+                      dbSoftwareProfile: Optional[SoftwareProfileModel] = None,
                       validateIp: bool = True, bGenerateIp: bool = True,
                       dns_zone: Optional[str] = None) -> NodeModel:
         """
@@ -437,7 +438,7 @@ class NodeManager(TortugaObjectManager): \
 
         return result, nodes_deleted
 
-    def deleteNode(self, nodespec: str):
+    def deleteNode(self, nodespec: str, force: bool = False):
         """
         Delete node by nodespec
 
@@ -445,71 +446,127 @@ class NodeManager(TortugaObjectManager): \
             NodeNotFound
         """
 
-        installer_hostname = socket.getfqdn().split('.', 1)[0]
+        installer_hostname = getfqdn().split('.', 1)[0]
 
-        session = DbManager().openSession()
+        with DbManager().session() as session:
+            try:
+                nodes = []
 
-        try:
-            nodes = []
+                for node in \
+                        self._nodesDbHandler.expand_nodespec(session, nodespec):
+                    if node.name.split('.', 1)[0] == installer_hostname:
+                        self.getLogger().info(
+                            'Ignoring request to delete installer node'
+                            ' ([{0}])'.format(node.name))
 
-            for node in \
-                    self._nodesDbHandler.expand_nodespec(session, nodespec):
-                if node.name.split('.', 1)[0] == installer_hostname:
-                    self.getLogger().info(
-                        'Ignoring request to delete installer node'
-                        ' ([{0}])'.format(node.name))
+                        continue
 
+                    nodes.append(node)
+
+                if not nodes:
+                    raise NodeNotFound(
+                        'No nodes matching nodespec [%s]' % (nodespec))
+
+                self.__validate_delete_nodes_request(nodes, force)
+
+                self.__preDeleteHost(nodes)
+
+                nodeErrorDict = self.__delete_node(session, nodes)
+
+                # REALLY!?!? Convert a list of Nodes objects into a list of
+                # node names so we can report the list back to the end-user.
+                # This needs to be FIXED!
+
+                result, nodes_deleted = self.__process_nodeErrorDict(nodeErrorDict)
+
+                session.commit()
+
+                # ============================================================
+                # Perform actions *after* node deletion(s) have been committed
+                # to database.
+                # ============================================================
+
+                self.__postDeleteHost(nodes_deleted)
+
+                addHostSessions = set(
+                    [tmpnode['addHostSession'] for tmpnode in nodes_deleted]
+                )
+
+                if addHostSessions:
+                    AddHostManager().delete_sessions(addHostSessions)
+
+                for nodeName in result['NodesDeleted']:
+                    # Remove the Puppet cert
+                    self._bhm.deletePuppetNodeCert(nodeName)
+
+                    self._bhm.nodeCleanup(nodeName)
+
+                    self.getLogger().info('Node [%s] deleted' % (nodeName))
+
+                # Schedule a cluster update
+                self.__scheduleUpdate()
+
+                return result
+            except Exception:
+                session.rollback()
+
+                raise
+
+    def __validate_delete_nodes_request(self, nodes: List[NodeModel],
+                                        force: bool):
+        """
+        Raises:
+            DeleteNodeFailed
+        """
+
+        swprofile_distribution: Dict[SoftwareProfileModel, int] = {}
+
+        for node in nodes:
+            if node.softwareprofile not in swprofile_distribution:
+                swprofile_distribution[node.softwareprofile] = 0
+
+            swprofile_distribution[node.softwareprofile] += 1
+
+        errors: List[str] = []
+
+        for software_profile, num_nodes_deleted in \
+                swprofile_distribution.items():
+            if software_profile.lockedState == 'HardLocked':
+                errors.append(
+                    f'Nodes cannot be deleted from hard locked software'
+                    ' profile [{software_profile.name}]'
+                )
+
+                continue
+
+            if software_profile.minNodes and \
+                    len(software_profile.nodes) - num_nodes_deleted < \
+                        software_profile.minNodes:
+                if force and software_profile.lockedState == 'SoftLocked':
+                    # allow deletion of nodes when force is set and profile
+                    # is soft locked
                     continue
 
-                nodes.append(node)
+                # do not allow number of software profile nodes to drop
+                # below configured minimum
+                errors.append(
+                    'Software profile [{}] requires minimum of {} nodes;'
+                    ' denied request to delete {} node(s)'.format(
+                        software_profile.name, software_profile.minNodes,
+                        num_nodes_deleted
+                    )
+                )
 
-            if not nodes:
-                raise NodeNotFound(
-                    'No nodes matching nodespec [%s]' % (nodespec))
+                continue
 
-            self.__preDeleteHost(nodes)
+            if software_profile.lockedState == 'SoftLocked' and not force:
+                errors.append(
+                    'Nodes cannot be deleted from soft locked software'
+                    f' profile [{software_profile.name}]'
+                )
 
-            nodeErrorDict = self.__delete_node(session, nodes)
-
-            # REALLY!?!? Convert a list of Nodes objects into a list of
-            # node names so we can report the list back to the end-user.
-            # This needs to be FIXED!
-
-            result, nodes_deleted = self.__process_nodeErrorDict(nodeErrorDict)
-
-            session.commit()
-
-            # ============================================================
-            # Perform actions *after* node deletion(s) have been committed
-            # to database.
-            # ============================================================
-
-            self.__postDeleteHost(nodes_deleted)
-
-            addHostSessions = set([tmpnode['addHostSession']
-                                   for tmpnode in nodes_deleted])
-
-            if addHostSessions:
-                AddHostManager().delete_sessions(addHostSessions)
-
-            for nodeName in result['NodesDeleted']:
-                # Remove the Puppet cert
-                self._bhm.deletePuppetNodeCert(nodeName)
-
-                self._bhm.nodeCleanup(nodeName)
-
-                self.getLogger().info('Node [%s] deleted' % (nodeName))
-
-            # Schedule a cluster update
-            self.__scheduleUpdate()
-
-            return result
-        except Exception:
-            session.rollback()
-
-            raise
-        finally:
-            DbManager().closeSession()
+        if errors:
+            raise OperationFailed('\n'.join(errors))
 
     def __delete_node(self, session: Session, dbNodes: List[NodeModel]) \
             -> Dict[str, List[NodeModel]]:
@@ -518,14 +575,14 @@ class NodeManager(TortugaObjectManager): \
             DeleteNodeFailed
         """
 
-        result = {
+        result: Dict[str, list] = {
             'NodesDeleted': [],
             'DeleteNodeFailed': [],
             'SoftwareProfileLocked': [],
             'SoftwareProfileHardLocked': [],
         }
 
-        nodes = {}
+        nodes: List[HardwareProfileModel, List[NodeModel]] = {}
         events_to_fire = []
 
         #
@@ -686,9 +743,9 @@ class NodeManager(TortugaObjectManager): \
         return self._nodeDbApi.getProvisioningInfo(nodeName)
 
     def __group_by_hwprofile(self, results: List[Dict[str, Any]]) \
-            -> Dict[HardwareProfile, List[Dict[str, Any]]]:
+            -> Dict[HardwareProfileModel, List[Dict[str, Any]]]:
         # group nodes by hardware profile
-        result: Dict[HardwareProfile, List[Dict[str, Any]]] = {}
+        result: Dict[HardwareProfileModel, List[Dict[str, Any]]] = {}
 
         for transferResultDict in results:
             hardware_profile = transferResultDict['node'].hardwareprofile
@@ -703,8 +760,8 @@ class NodeManager(TortugaObjectManager): \
     def __process_transfer_requests(
         self,
         session: Session,
-        hwProfileMap: Dict[HardwareProfile, List[Dict[str, Any]]],
-        dst_swprofile: SoftwareProfile) \
+        hwProfileMap: Dict[HardwareProfileModel, List[Dict[str, Any]]],
+        dst_swprofile: SoftwareProfileModel) \
             -> Dict[str, Dict[str, List[NodeModel]]]:
         """
 
@@ -1486,7 +1543,7 @@ class NodeManager(TortugaObjectManager): \
                 optionDict=get_default_relations(optionDict)))
 
     def __processNodeList(self, dbNodes: List[Node]) \
-            -> Dict[HardwareProfile, Dict[str, list]]:
+            -> Dict[HardwareProfileModel, Dict[str, list]]:
         """
         Returns dict indexed by hardware profile, each with a list of
         nodes in the hardware profile
@@ -1504,7 +1561,7 @@ class NodeManager(TortugaObjectManager): \
 
         return d
 
-    def __getResourceAdapter(self, hardwareProfile: HardwareProfile):
+    def __getResourceAdapter(self, hardwareProfile: HardwareProfileModel):
         """
         Raises:
             OperationFailed
@@ -1526,8 +1583,8 @@ class NodeManager(TortugaObjectManager): \
             self.__isNodeStateInstalled(dbNode)
 
     def __getNodeTransferCandidates(
-            self, dbSrcSoftwareProfile: SoftwareProfile,
-            dbDstSoftwareProfile: SoftwareProfile, compare_func):
+            self, dbSrcSoftwareProfile: SoftwareProfileModel,
+            dbDstSoftwareProfile: SoftwareProfileModel, compare_func):
         """
         Helper method for determining which nodes should be considered for
         transfer.
@@ -1555,8 +1612,8 @@ class NodeManager(TortugaObjectManager): \
             compare_func(dbNode)]
 
     def __getTransferrableNodes(
-            self, dbSrcSoftwareProfile: SoftwareProfile,
-            dbDstSoftwareProfile: SoftwareProfile) -> List[Node]:
+            self, dbSrcSoftwareProfile: SoftwareProfileModel,
+            dbDstSoftwareProfile: SoftwareProfileModel) -> List[Node]:
         """
         Return list of Unlocked nodes
         """
@@ -1566,8 +1623,8 @@ class NodeManager(TortugaObjectManager): \
             self.__isNodeTransferrable)
 
     def __getSoftLockedNodes(
-            self, dbSrcSoftwareProfile: SoftwareProfile,
-            dbDstSoftwareProfile: SoftwareProfile) -> List[Node]:
+            self, dbSrcSoftwareProfile: SoftwareProfileModel,
+            dbDstSoftwareProfile: SoftwareProfileModel) -> List[Node]:
         """
         Return list of SoftLocked nodes
         """

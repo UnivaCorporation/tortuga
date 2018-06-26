@@ -92,20 +92,16 @@ class UpdateHardwareProfileCli(TortugaCli):
                        help=_('Grub configuration contents for member'
                               ' nodes.'))
 
-        self.addOption('--hypervisor-profile',
-                       dest='vcProfile',
-                       help=_('"Parent" software profile of this hardware'
-                              ' profile.'))
-
-        self.addOption('--clear-hypervisor-profile',
-                       dest='bClearHypervisorProfile',
-                       action='store_true', default=False,
-                       help=_('Unset the current hypervisor software'
-                              'profile'))
-
         self.addOption('--resource-adapter',
                        dest='resourceAdapter',
                        help=_('Tortuga resource adapter.'))
+
+        self.addOption(
+            '--default-resource-adapter-configuration-profile',
+            '-A',
+            dest='default_adapter_config',
+            help=_('Default resource adapter configuration profile')
+        )
 
         self.addOption('--add-provisioning-nic',
                        dest='addPNic',
@@ -199,14 +195,6 @@ class UpdateHardwareProfileCli(TortugaCli):
         if self.getArgs().localBootParameters is not None:
             hp.setLocalBootParams(self.getArgs().localBootParameters)
 
-        if self.getArgs().vcProfile is not None:
-            sp = spApi.getSoftwareProfile(self.getArgs().vcProfile)
-
-            hp.setHypervisorSoftwareProfileId(sp.getId())
-
-        if self.getArgs().bClearHypervisorProfile:
-            hp.setHypervisorSoftwareProfileId(None)
-
         if self.getArgs().cost is not None:
             hp.setCost(self.getArgs().cost)
 
@@ -214,6 +202,10 @@ class UpdateHardwareProfileCli(TortugaCli):
             resourceAdapter = ResourceAdapter(
                 name=self.getArgs().resourceAdapter)
             hp.setResourceAdapter(resourceAdapter)
+
+        if self.getArgs().default_adapter_config:
+            hp.setDefaultResourceAdapterConfig(
+                self.getArgs().default_adapter_config)
 
         if self.getArgs().deletePNic is not None:
             out = TortugaObjectList()
@@ -266,7 +258,7 @@ class UpdateHardwareProfileCli(TortugaCli):
                 else:
                     # Not a NIC we are deleting
                     print('Ignoring deletion of non-existent network:'
-                           ' %s/%s/%s' % (dnet, dmask, ddev))
+                          ' %s/%s/%s' % (dnet, dmask, ddev))
 
             hp.setNetworks(out)
 

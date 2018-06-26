@@ -44,7 +44,7 @@ def test_create_unique(dbm):
 
         assert cfg.name == cfg_name
 
-        for setting in cfg.settings:
+        for setting in cfg.configuration:
             if setting.key == 'test_default_key':
                 break
         else:

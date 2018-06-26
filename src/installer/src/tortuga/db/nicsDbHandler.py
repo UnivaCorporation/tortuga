@@ -87,8 +87,8 @@ class NicsDbHandler(TortugaDbObjectHandler):
             ip=nic.getIp(),
             boot=nic.getBoot())
 
-        dbNic.networkdevice = self._networkDevicesDbHandler.\
-            createNetworkDeviceIfNotExists(
+        dbNic.networkdevice = \
+            self._networkDevicesDbHandler.createNetworkDeviceIfNotExists(
                 session, nic.getNetworkDevice().getName())
 
         return dbNic

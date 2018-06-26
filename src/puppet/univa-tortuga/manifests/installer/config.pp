@@ -16,7 +16,7 @@ class tortuga::installer::config {
   include tortuga::config
 
   exec { 'ssh_keys':
-    command => "${tortuga::config::instroot}/etc/puppet/create_ssh_keys.py",
-    unless  => "${tortuga::config::instroot}/etc/puppet/create_ssh_keys.py --stdout | diff -qU 4 /etc/puppet/modules/tortuga/manifests/compute/install_ssh_keys.pp - >/dev/null 2>&1",
+    command => "${tortuga::config::bin_dir}/create-ssh-keys",
+    unless  => "${tortuga::config::bin_dir}/create-ssh-keys --stdout | diff -qU 4 /etc/puppet/modules/tortuga/manifests/compute/install_ssh_keys.pp - >/dev/null 2>&1",
   }
 }

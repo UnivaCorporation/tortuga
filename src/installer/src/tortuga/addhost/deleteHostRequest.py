@@ -16,13 +16,15 @@
 
 import datetime
 import logging
-from tortuga.node.nodeApi import NodeApi
+
+from tortuga.addhost.addHostManager import AddHostManager
 from tortuga.db.dbManager import DbManager
 from tortuga.db.nodeRequestsDbHandler import NodeRequestsDbHandler
 from tortuga.events.types import DeleteNodeRequestComplete
-from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.exceptions.nodeNotFound import NodeNotFound
-from tortuga.addhost.addHostManager import AddHostManager
+from tortuga.exceptions.operationFailed import OperationFailed
+from tortuga.exceptions.tortugaException import TortugaException
+from tortuga.node.nodeApi import NodeApi
 
 
 logger = logging.getLogger(__name__)
@@ -31,53 +33,54 @@ logger.addHandler(logging.NullHandler())
 ahm = AddHostManager()
 
 
-def process_delete_host_request(transaction_id, nodespec):
-    session = DbManager().openSession()
-
-    try:
-        req = NodeRequestsDbHandler().get_by_addHostSession(
-            session, transaction_id)
-        if req is None:
-            # Session was deleted prior to being process. Nothing to do...
-            return
-
-        #
-        # Save this data so that we have it for firing the event below
-        #
-        evt_req_id = req.id
-        evt_req_request = {
-            'name': nodespec
-        }
-
-        ahm.update_session(transaction_id, running=True)
-
-        logger.debug(
-            'process_delete_host_request(): transaction_id=[{0}],'
-            ' nodespec=[{1}]'.format(transaction_id, nodespec))
-
+def process_delete_host_request(transaction_id: str, nodespec: str,
+                                force: bool = False):
+    with DbManager().session() as session:
         try:
-            NodeApi().deleteNode(nodespec)
+            req = NodeRequestsDbHandler().get_by_addHostSession(
+                session, transaction_id)
+            if req is None:
+                # Session was deleted prior to being process. Nothing to do...
+                return
 
-            ahm.delete_session(transaction_id)
+            #
+            # Save this data so that we have it for firing the event below
+            #
+            evt_req_id = req.id
+            evt_req_request = {
+                'name': nodespec
+            }
 
-            session.delete(req)
+            ahm.update_session(transaction_id, running=True)
 
-            DeleteNodeRequestComplete.fire(request_id=evt_req_id,
-                                           request=evt_req_request)
-        except NodeNotFound:
-            ahm.delete_session(transaction_id)
+            logger.debug(
+                'process_delete_host_request(): transaction_id=[{0}],'
+                ' nodespec=[{1}]'.format(transaction_id, nodespec))
 
-            session.delete(req)
-        except TortugaException as exc:
-            logger.exception('Exception while deleting nodes')
+            try:
+                NodeApi().deleteNode(nodespec, force=force)
 
-            req.message = str(exc)
+                ahm.delete_session(transaction_id)
 
-            req.state = 'error'
+                session.delete(req)
 
-            req.last_update = datetime.datetime.utcnow()
+                DeleteNodeRequestComplete.fire(request_id=evt_req_id,
+                                               request=evt_req_request)
+            except (OperationFailed, NodeNotFound):
+                ahm.delete_session(transaction_id)
+
+                session.delete(req)
+
+                raise
+            except TortugaException as exc:
+                logger.exception('Exception while deleting nodes')
+
+                req.message = str(exc)
+
+                req.state = 'error'
+
+                req.last_update = datetime.datetime.utcnow()
+            finally:
+                ahm.update_session(transaction_id, running=False)
         finally:
-            ahm.update_session(transaction_id, running=False)
-    finally:
-        session.commit()
-        DbManager().closeSession()
+            session.commit()

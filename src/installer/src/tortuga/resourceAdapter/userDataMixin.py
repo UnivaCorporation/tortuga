@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import os.path
-from typing import Optional, Union
+from typing import Optional
 
 from jinja2 import Environment, FileSystemLoader
 
@@ -33,20 +33,27 @@ class UserDataMixin: \
 
     def expand_cloud_init_user_data_template(
             self, configDict: dict,
-            node: Optional[Node] = None) -> str:
+            node: Optional[Node] = None,
+            template=None) -> str:
         """
         Return cloud-init script template
+
+        Raises:
+            ConfigurationError
         """
 
         if 'cloud_init_script_template' not in configDict:
             raise ConfigurationError('cloud-init script template not defined')
 
-        srcpath, srcfile = os.path.split(
-            configDict['cloud_init_script_template'])
+        if template is None:
+            srcpath, srcfile = os.path.split(
+                configDict['cloud_init_script_template'])
 
-        env = Environment(loader=FileSystemLoader(srcpath))
+            env = Environment(loader=FileSystemLoader(srcpath))
 
-        template = env.get_template(srcfile)
+            template_ = env.get_template(srcfile)
+        else:
+            template_ = template
 
         tmpl_vars = {
             'installer': self.installer_public_hostname,
@@ -58,4 +65,4 @@ class UserDataMixin: \
         if node:
             tmpl_vars['fqdn'] = node.name
 
-        return template.render(tmpl_vars)
+        return template_.render(tmpl_vars)

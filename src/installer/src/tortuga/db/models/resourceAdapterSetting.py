@@ -32,7 +32,7 @@ class ResourceAdapterSetting(ModelBase):
     resource_adapter_config_id = Column(
         Integer, ForeignKey('resource_adapter_config.id'))
     resource_adapter_config = relationship(
-        "ResourceAdapterConfig", back_populates='settings')
+        "ResourceAdapterConfig", back_populates='configuration')
 
     def __repr__(self):
         return ('<ResourceAdapterSetting(resource_adapter_config=[{}]:'

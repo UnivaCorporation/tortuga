@@ -183,14 +183,6 @@ class HardwareProfile(TortugaObject): \
         """ Return local boot params. """
         return self.get('localBootParams')
 
-    def setHypervisorSoftwareProfileId(self, hypervisorSoftwareProfileId):
-        """ Set hypervisor software profile. """
-        self['hypervisorSoftwareProfileId'] = hypervisorSoftwareProfileId
-
-    def getHypervisorSoftwareProfileId(self):
-        """ Return the parent hardware profile. """
-        return self.get('hypervisorSoftwareProfileId')
-
     def setResourceAdapter(self, resourceAdapter):
         """ Set resource adapter. """
         self['resourceadapter'] = resourceAdapter
@@ -198,6 +190,12 @@ class HardwareProfile(TortugaObject): \
     def getResourceAdapter(self):
         """ Return resource adapter. """
         return self.get('resourceadapter')
+
+    def setDefaultResourceAdapterConfig(self, value):
+        self['default_resource_adapter_config'] = value
+
+    def getDefaultResourceAdapterConfig(self):
+        return self.get('default_resource_adapter_config')
 
     def getProvisioningNetwork(self):
         '''
@@ -241,11 +239,20 @@ class HardwareProfile(TortugaObject): \
     @staticmethod
     def getKeys():
         return [
-            'id', 'name', 'description', 'nameFormat', 'installType',
-            'kernel', 'kernelParams', 'initrd', 'softwareOverrideAllowed',
-            'idleSoftwareProfileId', 'location', 'localBootParams',
-            'hypervisorSoftwareProfileId',
+            'id',
+            'name',
+            'description',
+            'nameFormat',
+            'installType',
+            'kernel',
+            'kernelParams',
+            'initrd',
+            'softwareOverrideAllowed',
+            'idleSoftwareProfileId',
+            'location',
+            'localBootParams',
             'cost',
+            'default_resource_adapter_config',
         ]
 
     @classmethod
@@ -301,6 +308,15 @@ class HardwareProfile(TortugaObject): \
             hardwareProfile.setResourceAdapter(
                 tortuga.objects.resourceAdapter.ResourceAdapter.getFromDict(
                     resourceAdapterDict.__dict__))
+
+        defaultResourceAdapterConfig = _dict.get(
+            'default_resource_adapter_config'
+        )
+
+        if defaultResourceAdapterConfig:
+            hardwareProfile.setDefaultResourceAdapterConfig(
+                defaultResourceAdapterConfig.name
+            )
 
         if _dict.get('idlesoftwareprofile'):
             hardwareProfile.setIdleSoftwareProfile(
