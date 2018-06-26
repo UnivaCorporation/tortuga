@@ -12,4 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .version import version_is_compatible, VERSION
+
+class MockBootHostManager:
+    def setNodeForNetworkBoot(self, dbNode):
+        dbNode.state = 'Expired'
+
+    def writePXEFile(self, *args, **kwargs): \
+            # pylint: disable=unused-argument
+        return
+
+    def addDhcpLease(self, *args, **kwargs): \
+            # pylint: disable=unused-argument
+        pass
+
+
+class MockOsObjectFactory:
+    def getOsBootHostManager(self):
+        return MockBootHostManager()
+
+
+def get_os_object_factory(osName: str = None): \
+        # pylint: disable=unused-argument
+    return MockOsObjectFactory()
+

@@ -261,12 +261,9 @@ class HardwareProfileManager(TortugaObjectManager, Singleton):
         self.getLogger().info('Deleted hardware profile [%s]' % (name))
 
     def updateSoftwareOverrideAllowed(self, hardwareProfileName: str,
-                                      flag: bool) -> NoReturn:
+                                      flag: bool) -> None:
         self._hpDbApi.updateSoftwareOverrideAllowed(
             hardwareProfileName, flag)
-
-    def getHypervisorNodes(self, hardwareProfileName: str):
-        return self._hpDbApi.getHypervisorNodes(hardwareProfileName)
 
     def setProvisioningNic(self, hardwareProfileName: str, nicId: int):
         return self._hpDbApi.setProvisioningNic(hardwareProfileName, nicId)

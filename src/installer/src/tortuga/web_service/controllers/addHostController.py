@@ -22,8 +22,6 @@ from marshmallow import Schema, fields
 
 from tortuga.addhost.addHostManager import AddHostManager
 from tortuga.addhost.task import enqueue_addnodes_request
-from tortuga.addhost.utility import validate_addnodes_request
-from tortuga.db.models.nodeRequest import NodeRequest
 from tortuga.db.nodeRequestsDbHandler import NodeRequestsDbHandler
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.notFound import NotFound
@@ -93,7 +91,8 @@ class AddHostController(TortugaController):
             }
         except Exception as ex:  # pylint: disable=broad-except
             if not isinstance(ex, TortugaException):
-                self.getLogger().exception('Exception occurred while adding hosts')
+                self.getLogger().exception(
+                    'Exception occurred while adding hosts')
 
             self.handleException(ex)
 
@@ -124,7 +123,7 @@ class AddHostController(TortugaController):
             self.handleException(ex)
             code = self.getTortugaStatusCode(ex)
             response = self.notFoundErrorResponse(str(ex), code)
-        except Exception as ex:
+        except Exception as ex:  # pylint: disable=broad-except
             self.getLogger().error('Exception retrieving addhost status')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
@@ -147,7 +146,7 @@ class AddHostController(TortugaController):
                 result = NodeRequestsDbHandler().get_all(cherrypy.request.db)
 
             response = NodeRequestSchema().dump(result, many=True).data
-        except Exception as ex:
+        except Exception as ex:  # pylint: disable=broad-except
             self.getLogger().error('Exception retrieving add host request(s)')
             self.handleException(ex)
             response = self.errorResponse(str(ex))

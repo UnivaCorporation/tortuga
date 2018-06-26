@@ -228,7 +228,8 @@ class Node(TortugaObject): \
             if softwareProfileDict:
                 node.setSoftwareProfile(
                     tortuga.objects.softwareProfile.SoftwareProfile.
-                    getFromDbDict(softwareProfileDict.__dict__))
+                    getFromDbDict(
+                        softwareProfileDict.__dict__, ignore=('nodes',)))
 
         tags = dict()
 

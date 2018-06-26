@@ -1,6 +1,6 @@
 % Tortuga 6.3.0 Installation and Administration Guide
 % Univa Corporation &lt;support@univa.com&gt;
-% June 2018 -- Version 1.26
+% June 2018 -- Version 1.27
 
 \newpage
 
@@ -1003,23 +1003,23 @@ delete-hardware-profile --name Rack2
 #### Overview
 
 A *software profile* describes the software "stack" or configuration
-(applications + operating system), as well as the disk setup for a managed node.
+(applications + operating system), as well as the disk setup for a managed
+node.
 
-Software profiles may explicitly require that certain software packages be
-installed via YUM. The software profile also indicates the components (defined
-within software kits) that should be enabled and configured.
+The software profile also indicates the components (defined within software
+kits) that should be enabled and configured.
 
-Nodes are added to software profiles when they are added to the cluster. Unlike
-the associated hardware profile, the software profile associated with a node can
-be changed at any time. When the software profile of a node is changed, the
-entire node, including the operating system, is reinstalled to ensure the
-software configuration is "clean".
+Nodes are added to software profiles when they are added to the cluster.
+Unlike the associated hardware profile, the software profile associated
+with a node can be changed at any time. When the software profile of a node
+is changed, the entire node, including the operating system, is reinstalled
+to ensure the software configuration is "clean".
 
-The software profile `Installer` is automatically created when Tortuga is first
-installed. This profile is specifically reserved for use by the installer, and
-should *not* be used to provision additional nodes. Components may be enabled
-and disabled on this profile to configure features, but the profile cannot be
-deleted.
+The software profile `Installer` is automatically created when Tortuga is
+first installed. This profile is specifically reserved for use by the
+installer, and should *not* be used to provision additional nodes.
+Components may be enabled and disabled on this profile to configure
+features, but the profile cannot be deleted.
 
 #### Display list existing software profiles
 
@@ -1041,13 +1041,20 @@ Create software profiles using the `create-software-profile command.
 The following arguments are optional:
 
 - `--template <PATH>` -- Full path to JSON software profile template
-- `--name <NAME>` -- The name of the software profile. Best kept to a short descriptive name such as "AppName" or "Engineering_Dept".
-- `--description <DESCRIPTION>` -- A human-readable description of the intended use for the software profile. Stored, but not interpreted, by Tortuga. The description may contain spaces, if quoted.
-- `--os <name-version-arch>` -- If provisioning is enabled and multiple OS kits are installed, this selects the default OS for the profile. This option requires that the hardware profile used allows the software profile to override the OS spec.
+- `--name <NAME>` -- The name of the software profile. Best kept to a
+  short descriptive name such as "AppName" or "Engineering_Dept".
+- `--description <DESCRIPTION>` -- A human-readable description of the
+  intended use for the software profile. Stored, but not interpreted, by
+  Tortuga. The description may contain spaces, if quoted.
+- `--os <name-version-arch>` -- If provisioning is enabled and multiple OS
+  kits are installed, this selects the default OS for the profile. This
+  option requires that the hardware profile used allows the software
+  profile to override the OS spec.
 
-If the JSON software profile template is not specified, a barebones software
-profile is created. **Note:** the barebones software profile may not contain
-sufficient parameters to provision some nodes (ie. on-premise/physical).
+If the JSON software profile template is not specified, a barebones
+software profile is created. **Note:** the barebones software profile may
+not contain sufficient parameters to provision some nodes (ie.
+on-premise/physical).
 
 ##### Examples
 
@@ -1101,7 +1108,11 @@ software profile name defined in the template.
 
 #### Updating software profiles
 
-To modify a software profile, use `update-software-profile`. Most fields can be updated, but things set during provisioning (such as the OS, kernel, name format, or disk partitioning) will only affect *future* nodes, not *existing* nodes. Software packages are updated on all existing nodes the next time the cluster is updated.
+To modify a software profile, use `update-software-profile`. Most fields
+can be updated, but things set during provisioning (such as the OS,
+kernel, name format, or disk partitioning) will only affect *future* nodes,
+not *existing* nodes. Software packages are updated on all existing nodes
+the next time the cluster is updated.
 
 Software profiles can be edited using the following command:
 
@@ -1109,13 +1120,87 @@ Software profiles can be edited using the following command:
 update-software-profile --name <NAME> ...
 ```
 
-**Note:** it is not possible to change the operating system of an existing software profile.
+**Note:** it is not possible to change the operating system of an existing
+software profile.
 
 The `schedule-update` command will then synchronize the cluster.
 
+##### Locked state
+
+Software profiles can be *optionally* locked to disallow adding or removing
+nodes. This feature is useful for applications where only a fixed set of nodes
+is supported.
+
+The default lock state of a newly created software profile is "Unlocked".
+
+Set the locked state to "SoftLocked" with the following command:
+
+```shell
+update-software-profile --name NAME --soft-locked
+```
+
+This will "soft lock" the software profile such that nodes cannot be added
+and/or removed without the use of the `--force` argument specified to
+`add-nodes` or `delete-node`, respectively.
+
+Use `update-software-profile --name NAME --hard-locked` to "hard lock" the
+software profile which prevents all `add-nodes` or `delete-node`
+operations, regardless of the usage of the `--force` flag. In order to add
+or delete nodes from a hard locked software profile, it is necessary to
+first revert the lock to "soft locked" or disable it entirely.
+
+Clear (or remove) any software profile lock with the following command:
+
+```shell
+update-software-profile --name NAME --unlock
+```
+
+##### Software profile minimum and maximum nodes
+
+Software profiles do not have imposed minimums or maximums. That is, all
+software profiles may have an unlimited number of software profiles.
+
+The following command imposes a software profile minimum:
+
+```shell
+update-software-profile --name NAME --min-nodes 16
+```
+
+When a minimum is applied, nodes in the specified software profile cannot
+be deleted without using the `--force` argument. This is irrespective of
+any software profile locks.
+
+Conversely, it is also possible to impose a maximum number of nodes within
+a software profile:
+
+```shell
+update-software-profile --name NAME --max-nodes 16
+```
+
+Any requests to add additional nodes beyond the imposed maximum of 16 will
+be rejected.
+
+Clear minimum or maximum limits by specifying `none` as the argument to
+`--min-nodes` or `--max-nodes` respectively:
+
+```shell
+update-software-profile --name NAME --min-nodes none
+```
+
+```shell
+update-software-profile --name NAME --max-nodes none
+```
+
+```shell
+update-software-profile --name NAME --min-nodes none --max-nodes none
+```
+
 #### Deleting software profiles
 
-Software profiles can be deleted using the `delete-software-profile` command. Software profiles with associated nodes cannot be deleted until the nodes are first deleted. In addition, hypervisor software profiles cannot be deleted if they are referenced in an existing hardware profile.
+Software profiles can be deleted using the `delete-software-profile` command.
+Software profiles with associated nodes cannot be deleted until the nodes are
+first deleted. In addition, hypervisor software profiles cannot be deleted
+if they are referenced in an existing hardware profile.
 
 Example:
 

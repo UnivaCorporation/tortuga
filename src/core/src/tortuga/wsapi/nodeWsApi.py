@@ -161,8 +161,10 @@ class NodeWsApi(TortugaWsApi):
         except Exception as ex:
             raise TortugaException(exception=ex)
 
-    def deleteNode(self, nodespec):
+    def deleteNode(self, nodespec: str, force: bool = False) -> dict:
         url = 'v1/nodes/%s' % (urllib.parse.quote_plus(nodespec))
+
+        url += '?force={}'.format('true' if force else 'false')
 
         try:
             _, responseDict = self.sendSessionRequest(url, method='DELETE')

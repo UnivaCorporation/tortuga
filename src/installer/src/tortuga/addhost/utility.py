@@ -14,7 +14,7 @@
 
 # pylint: disable=no-member
 
-from typing import NoReturn
+from typing import Any, Dict
 
 from tortuga.config.configManager import ConfigManager
 from tortuga.db.dbManager import DbManager
@@ -25,18 +25,20 @@ from tortuga.db.models.softwareProfile import SoftwareProfile
 from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.nodeAlreadyExists import NodeAlreadyExists
+from tortuga.exceptions.operationFailed import OperationFailed
 from tortuga.exceptions.profileMappingNotAllowed import \
     ProfileMappingNotAllowed
 from tortuga.resourceAdapter import resourceAdapterFactory
 
 
-def validate_addnodes_request(addNodesRequest: dict):
+def validate_addnodes_request(addNodesRequest: Dict[str, Any]):
     """
     Raises:
         HardwareProfileNotFound
         SoftwareProfileNotFound
         ProfileMappingNotAllowed
         InvalidArgument
+        OperationFailed
     """
 
     if 'hardwareProfile' not in addNodesRequest and \
@@ -55,9 +57,7 @@ def validate_addnodes_request(addNodesRequest: dict):
     nodeCount = int(addNodesRequest.get('count', 0))
     rackNumber = addNodesRequest.get('rack')
 
-    session = DbManager().openSession()
-
-    try:
+    with DbManager().session() as session:
         # Look up hardware profile
         hp = hpapi.getHardwareProfile(session, hardwareProfileName) \
             if hardwareProfileName else None
@@ -121,6 +121,8 @@ def validate_addnodes_request(addNodesRequest: dict):
         # Validate 'nodeDetails'
 
         if nodeDetails:
+            swprofile_node_count = len(sp.nodes)
+
             # Reconcile nodeDetails that contain hostnames with hwp name
             # format
             bWildcardNameFormat = hp.nameFormat == '*'
@@ -151,6 +153,28 @@ def validate_addnodes_request(addNodesRequest: dict):
                     raise NodeAlreadyExists(
                         'Node [%s] already exists' % (hostname))
 
+        # check if software profile is locked
+        if sp.lockedState:
+            if sp.lockedState == 'HardLocked':
+                raise OperationFailed(
+                    'Nodes cannot be added to hard locked software'
+                    ' profile [{}]'.format(sp.name))
+            elif sp.lockedState == 'SoftLocked':
+                if 'force' not in addNodesRequest or \
+                        not addNodesRequest['force']:
+                    raise OperationFailed(
+                        'Use --force argument to add nodes to soft locked'
+                        f' software profile [{sp.name}]'
+                    )
+
+        # ensure adding nodes does not exceed imposed limits
+        if sp.maxNodes > 0 and \
+                (swprofile_node_count + nodeCount) > sp.maxNodes:
+            raise OperationFailed(
+                'Request to add {} node(s) exceeds software profile'
+                ' limit of {} nodes'.format(nodeCount, sp.maxNodes)
+            )
+
         # Prohibit running add-host against installer
         validate_hwprofile(hp)
 
@@ -166,8 +190,6 @@ def validate_addnodes_request(addNodesRequest: dict):
 
         adapter.validate_start_arguments(
             addNodesRequest, hp, dbSoftwareProfile=sp)
-    finally:
-        DbManager().closeSession()
 
 
 def checkProfilesMapped(swProfile: SoftwareProfile, hwProfile: HardwareProfile):
@@ -185,7 +207,7 @@ def checkProfilesMapped(swProfile: SoftwareProfile, hwProfile: HardwareProfile):
         ' profile [%s]' % (swProfile.name, hwProfile.name))
 
 
-def validate_hwprofile(hp: HardwareProfile) -> NoReturn:
+def validate_hwprofile(hp: HardwareProfile) -> None:
     """
     Raises InvalidArgument if specified hardware profile is that of the
     installer node

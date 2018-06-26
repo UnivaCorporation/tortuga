@@ -183,14 +183,6 @@ class HardwareProfile(TortugaObject): \
         """ Return local boot params. """
         return self.get('localBootParams')
 
-    def setHypervisorSoftwareProfileId(self, hypervisorSoftwareProfileId):
-        """ Set hypervisor software profile. """
-        self['hypervisorSoftwareProfileId'] = hypervisorSoftwareProfileId
-
-    def getHypervisorSoftwareProfileId(self):
-        """ Return the parent hardware profile. """
-        return self.get('hypervisorSoftwareProfileId')
-
     def setResourceAdapter(self, resourceAdapter):
         """ Set resource adapter. """
         self['resourceadapter'] = resourceAdapter
@@ -247,10 +239,18 @@ class HardwareProfile(TortugaObject): \
     @staticmethod
     def getKeys():
         return [
-            'id', 'name', 'description', 'nameFormat', 'installType',
-            'kernel', 'kernelParams', 'initrd', 'softwareOverrideAllowed',
-            'idleSoftwareProfileId', 'location', 'localBootParams',
-            'hypervisorSoftwareProfileId',
+            'id',
+            'name',
+            'description',
+            'nameFormat',
+            'installType',
+            'kernel',
+            'kernelParams',
+            'initrd',
+            'softwareOverrideAllowed',
+            'idleSoftwareProfileId',
+            'location',
+            'localBootParams',
             'cost',
             'default_resource_adapter_config',
         ]

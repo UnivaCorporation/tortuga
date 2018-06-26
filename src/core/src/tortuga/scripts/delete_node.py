@@ -39,20 +39,20 @@ class DeleteNodeCli(TortugaCli):
             '--name', dest='nodeList',
             help=_('Name or list of node(s) to delete'))
 
-        # This is a deprecated option. Accept the '--force' argument, but
-        # don't do anything with it.
         self.addOption('--force', action='store_true',
                        default=False,
-                       help=argparse.SUPPRESS)
+                       help=_('Allow deletion of nodes from soft locked'
+                              ' software profile.'))
 
         super().parseArgs(usage=usage)
 
     def runCommand(self):
         self.parseArgs()
 
-        node_api = NodeWsApi(username=self.getUsername(),
-                             password=self.getPassword(),
-                             baseurl=self.getUrl()
+        node_api = NodeWsApi(
+            username=self.getUsername(),
+            password=self.getPassword(),
+            baseurl=self.getUrl()
         )
 
         if self.getArgs().nodeList[0] == '-':
@@ -68,9 +68,11 @@ class DeleteNodeCli(TortugaCli):
 
                     nodes = []
 
-            node_api.deleteNode(','.join(nodes))
+            node_api.deleteNode(
+                ','.join(nodes), force=self.getArgs().force)
         else:
-            node_api.deleteNode(self.getArgs().nodeList)
+            node_api.deleteNode(
+                self.getArgs().nodeList, force=self.getArgs().force)
 
 
 def main():

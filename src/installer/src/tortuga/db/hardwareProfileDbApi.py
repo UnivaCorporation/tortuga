@@ -12,12 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Optional, Dict
+from typing import Dict, Optional
 
 import sqlalchemy.exc
-from sqlalchemy.orm.session import Session
-
 import tortuga.objects.nic
+from sqlalchemy.orm.session import Session
 from tortuga.config.configManager import ConfigManager
 from tortuga.db.adminsDbHandler import AdminsDbHandler
 from tortuga.db.dbManager import DbManager
@@ -41,12 +40,10 @@ from tortuga.exceptions.networkNotFound import NetworkNotFound
 from tortuga.exceptions.nicNotFound import NicNotFound
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.objects.hardwareProfile import HardwareProfile
-from tortuga.objects.node import Node
 from tortuga.objects.tortugaObject import TortugaObjectList
 
 from .models.hardwareProfile import HardwareProfile as HardwareProfileModel
 from .models.hardwareProfileNetwork import HardwareProfileNetwork
-from .models.networkDevice import NetworkDevice
 
 
 OptionDict = Dict[str, bool]
@@ -59,7 +56,7 @@ class HardwareProfileDbApi(TortugaDbApi):
     """
 
     def __init__(self):
-        TortugaDbApi.__init__(self)
+        super().__init__()
 
         self._hardwareProfilesDbHandler = HardwareProfilesDbHandler()
         self._nodesDbHandler = NodesDbHandler()
@@ -71,7 +68,8 @@ class HardwareProfileDbApi(TortugaDbApi):
         self._networksDbHandler = NetworksDbHandler()
 
     def getHardwareProfile(self, name: str,
-                           optionDict: Optional[OptionDict] = None):
+                           optionDict: Optional[OptionDict] = None) \
+            -> HardwareProfile:
         """
         Get hardwareProfile from the db.
 
@@ -114,14 +112,14 @@ class HardwareProfileDbApi(TortugaDbApi):
         session = DbManager().openSession()
 
         try:
-            dbHardwareProfile = self._hardwareProfilesDbHandler.\
-                getHardwareProfileById(session, hardwareProfileId)
+            dbHardwareProfile = \
+                self._hardwareProfilesDbHandler.getHardwareProfileById(
+                    session, hardwareProfileId)
 
             self.loadRelations(
                 dbHardwareProfile, get_default_relations(optionDict))
 
-            return HardwareProfile.getFromDbDict(
-                dbHardwareProfile.__dict__)
+            return HardwareProfile.getFromDbDict(dbHardwareProfile.__dict__)
         except TortugaException:
             raise
         except Exception as ex:
@@ -130,8 +128,8 @@ class HardwareProfileDbApi(TortugaDbApi):
         finally:
             DbManager().closeSession()
 
-    def getHardwareProfileList(self,
-            optionDict: Optional[OptionDict] = None,
+    def getHardwareProfileList(
+            self, optionDict: Optional[OptionDict] = None,
             tags: Optional[Tags] = None):
         """
         Get list of all available hardwareProfiles from the db.
@@ -173,7 +171,7 @@ class HardwareProfileDbApi(TortugaDbApi):
 
     def setIdleSoftwareProfile(self, hardwareProfileName: str,
                                softwareProfileName: Optional[str] = None) \
-        -> None:
+            -> None:
         """
         Sets the idle software profile
 
@@ -442,14 +440,10 @@ class HardwareProfileDbApi(TortugaDbApi):
     def __get_all_networks(self, session):
         return self._networksDbHandler.getNetworkList(session)
 
-    def __get_network_devices(self, session): \
-            # pylint: disable=no-self-use
-        return session.query(NetworkDevice).all()
-
     def __populateHardwareProfile(
             self, session: Session, hardwareProfile: HardwareProfile,
-            dbHardwareProfile: Optional[HardwareProfileModel] = None) -> \
-        HardwareProfileModel:
+            dbHardwareProfile: Optional[HardwareProfileModel] = None) \
+            -> HardwareProfileModel:
         """
         Helper function for creating / updating hardware profiles. If
         'dbHardwareProfile' is specified, this is an update (vs. add)
@@ -459,13 +453,12 @@ class HardwareProfileDbApi(TortugaDbApi):
             NicNotFound
             ResourceAdapterNotFound
             InvalidArgument
+            ConfigurationError
         """
 
         # Preload provisioning nics and networks
         prov_nics = self.__get_provisioning_nics(session)
         all_networks = self.__get_all_networks(session)
-
-        networkdevices = self.__get_network_devices(session)
 
         # Validate hw profile
         if hardwareProfile.getName() is None:
@@ -499,19 +492,17 @@ class HardwareProfileDbApi(TortugaDbApi):
 
         if hardwareProfile.getLocation() != 'remote':
             dbHardwareProfile.kernel = hardwareProfile.getKernel()
-            dbHardwareProfile.kernelParams = hardwareProfile.\
-                getKernelParams()
+            dbHardwareProfile.kernelParams = \
+                hardwareProfile.getKernelParams()
             dbHardwareProfile.initrd = hardwareProfile.getInitrd()
-            dbHardwareProfile.localBootParams = hardwareProfile.\
-                getLocalBootParams()
+            dbHardwareProfile.localBootParams = \
+                hardwareProfile.getLocalBootParams()
 
         dbHardwareProfile.softwareOverrideAllowed = hardwareProfile.\
             getSoftwareOverrideAllowed()
         dbHardwareProfile.idleSoftwareProfileId = idleSoftwareProfileId
         dbHardwareProfile.location = hardwareProfile.getLocation()
 
-        dbHardwareProfile.hypervisorSoftwareProfileId = hardwareProfile.\
-            getHypervisorSoftwareProfileId()
         dbHardwareProfile.cost = hardwareProfile.getCost()
 
         # Add resource adapter
@@ -526,9 +517,10 @@ class HardwareProfileDbApi(TortugaDbApi):
         if hardwareProfile.getDefaultResourceAdapterConfig():
             adapter_cfg = None
 
-            self.getLogger().debug('Setting default resource adapter config: {}'.format(
-                hardwareProfile.getDefaultResourceAdapterConfig()
-            ))
+            self.getLogger().debug(
+                'Setting default resource adapter config: {}'.format(
+                    hardwareProfile.getDefaultResourceAdapterConfig())
+            )
 
             for adapter_cfg in \
                     dbHardwareProfile.resourceadapter.resource_adapter_config:
@@ -558,20 +550,15 @@ class HardwareProfileDbApi(TortugaDbApi):
                 raise NetworkNotFound(
                     'Network [%s] does not exist' % (network.getAddress()))
 
-            # Lookup network device
-            for network_device in networkdevices:
-                if network.getNetworkDevice().getName() == network_device.name:
-                    dbNetworkDevice = network_device
-
-                    break
-            else:
-                dbNetworkDevice = NetworkDevice()
-                dbNetworkDevice.name = network.getNetworkDevice().getName()
+            dbNetworkDevice = \
+                self._networkDevicesDbHandler.createNetworkDeviceIfNotExists(
+                    session, network.getNetworkDevice().getName())
 
             # Now check if we have this one already...
             for dbHardwareProfileNetwork in \
                     dbHardwareProfile.hardwareprofilenetworks:
-                if dbHardwareProfileNetwork.networkDeviceId == dbNetworkDevice.id and \
+                if dbHardwareProfileNetwork.networkDeviceId == \
+                        dbNetworkDevice.id and \
                         dbHardwareProfileNetwork.networkId == dbNetwork.id:
                     break
             else:
@@ -626,31 +613,6 @@ class HardwareProfileDbApi(TortugaDbApi):
                 dbHardwareProfile.nics.append(dbNic)
 
         return dbHardwareProfile
-
-    def getHypervisorNodes(self, hardwareProfileName):
-        """
-        Get list of nodes that belong to hypervisorSoftwareProfileId
-        assigned to the given hardware profile name.
-        """
-
-        session = DbManager().openSession()
-
-        try:
-            dbHardwareProfile = self._hardwareProfilesDbHandler.\
-                getHardwareProfile(session, hardwareProfileName)
-
-            if not dbHardwareProfile.hypervisor:
-                return TortugaObjectList()
-
-            return self.getTortugaObjectList(
-                Node, dbHardwareProfile.hypervisor.nodes)
-        except TortugaException:
-            raise
-        except Exception as ex:
-            self.getLogger().exception('%s' % ex)
-            raise
-        finally:
-            DbManager().closeSession()
 
     def setProvisioningNic(self, hardwareProfileName, nicId):
         session = DbManager().openSession()

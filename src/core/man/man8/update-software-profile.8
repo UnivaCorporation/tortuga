@@ -14,22 +14,21 @@
 
 .TH "update-software-profile" "8" "6.3" "Univa" "Tortuga"
 .SH "NAME"
-.LP
 update-software-profile - Update an existing software profile in the Tortuga system.
 .SH "SYNTAX"
+.B update-software-profile
+--name=\fINAME\fB [--new-name=\fINAME\fB --description=\fIDESCRIPTION\fB --kernel=\fIKERNEL\fB --kernel-parameters=\fIKERNELPARAMETERS\fB  --initrd=\fIINITRD\fB --min-nodes=\fIMINNODES\fB --add-package=\fIPACKAGENAME\fB --delete-package=\fIPACKAGENAME\fB]
 .LP
-\fBupdate-software-profile --name=\fISOFTWAREPROFILENAME\fB [--new-name=\fISOFTWAREPROFILENAME\fB --description=\fIDESCRIPTION\fB --kernel=\fIKERNEL\fB --kernel-parameters=\fIKERNELPARAMETERS\fB  --initrd=\fIINITRD\fB --min-nodes=\fIMINNODES\fB --add-package=\fIPACKAGENAME\fB --delete-package=\fIPACKAGENAME\fB]
-
-\fBupdate-software-profile --name=\fISOFTWAREPROFILENAME\fB --add-partition=\fIPARTITION\fB --device=\fIDEVICE\fB --mount-point=\fIMOUNTPOINT\fB --file-system=\fIFILESYSTEM\fB --size=\fISIZE\fB --options=\fIOPTIONS\fB [ --preserve | --no-preserve ]\fB [ --boot-loader | --no-boot-loader ]\fB
-
-\fBupdate-software-profile --name=\fISOFTWAREPROFILENAME\fB --update-partition=\fIPARTITION\fB [--device=\fIDEVICE\fB --mount-point=\fIMOUNTPOINT\fB --file-system=\fIFILESYSTEM\fB --size=\fISIZE\fB --options=\fIOPTIONS\fB [ --preserve | --no-preserve ]\fB [ --boot-loader | --no-boot-loader ]\fB
-
-\fBupdate-software-profile --name=\fISOFTWAREPROFILENAME\fB --delete-partition=\fIPARTITION\fB
-
+.B update-software-profile
+--name=\fINAME\fB --add-partition=\fIPARTITION\fB --device=\fIDEVICE\fB --mount-point=\fIMOUNTPOINT\fB --file-system=\fIFILESYSTEM\fB --size=\fISIZE\fB --options=\fIOPTIONS\fB [ --preserve | --no-preserve ]\fB [ --boot-loader | --no-boot-loader ]\fB
+.LP
+.B update-software-profile
+--name=\fINAME\fB --update-partition=\fIPARTITION\fB [--device=\fIDEVICE\fB --mount-point=\fIMOUNTPOINT\fB --file-system=\fIFILESYSTEM\fB --size=\fISIZE\fB --options=\fIOPTIONS\fB [ --preserve | --no-preserve ]\fB [ --boot-loader | --no-boot-loader ]\fB
+.LP
+.B update-software-profile
+--name=\fINAME\fB --delete-partition=\fIPARTITION\fB
 .SH "DESCRIPTION"
-.LP
 The update-software-profile tool updates an existing software profile in the Tortuga system. Nodes receive several configuration parameters from the software profile they are associated with.
-.LP
 .SH "OPTIONS"
 .LP
 .TP
@@ -51,14 +50,24 @@ Kernel parameters for software profile.
 \fB--initrd=\fIINITRD
 Initrd for software profile.
 .TP
-\fB--min-nodes=\fIMINNODES
-Minimum number of nodes required to remain in this profile
+\fB--min-nodes=\fICOUNT\fR
+Minimum number of nodes required to remain in this profile. Specify "\fInone\fR"
+to clear minimum nodes.
 .TP
-\fB--add-package=\fIPACKAGENAME
-Name of software package to add to the software profile.
+\fB--max-nodes=\fICOUNT\fR
+Maximum number of nodes permitted in this profile. Specify "\fInone\fR"
+to clear maximum nodes.
 .TP
-\fB--delete-package=\fIPACKAGENAME
-Name of software package to delete from the software profile.
+.B \-\-hard-locked
+Set "hard lock" to disallow nodes from being added and removed.
+.TP
+.B \-\-soft-locked
+Set "soft lock" to disallow nodes from being added or removed unless \fI\-\-force\fR
+is specified to \fBadd-nodes\fR or \fBdelete-node\fR, respectively.
+.TP
+.B \-\-unlock
+(Re)set software profile to "unlocked" state imposing no restrictions when
+adding or deleting nodes.
 .TP
 \fB--add-partition=ADDPARTITION
 A new partition to add to the software profile.
@@ -79,7 +88,7 @@ The mount location of the partition.
 The filesystem type for the partition.
 .TP
 \fB--size=SIZE
-The size of the partition.  Use \'GB\' suffix for gigabytes or \'MB\' for megabytes.  Default units are megabytes. 
+The size of the partition.  Use \'GB\' suffix for gigabytes or \'MB\' for megabytes.  Default units are megabytes.
 .TP
 \fB--options=OPTIONS
 Options to pass to the mount command.
@@ -133,46 +142,64 @@ Credential to use when not running as root on the Installer.
 \fB--password=\fPPASSWORD
 Credential to use when not running as root on the Installer.
 .SH "EXAMPLES"
-.LP
-\fBUpdate some simple fields 
-.TP
-\fRupdate-software-profile --name SwTest --description "Changed for Demo"  --kernel overridden --initrd overridden
-.LP
-\fBAdd some packages 
-.TP
-\fRupdate-software-profile --name SwTest --add-package SUNWvim --add-package SUNWgcc
-.LP
-\fBDelete a package 
-.TP
-\fRupdate-software-profile --name SwTest --delete-package SUNWvim
-.LP
-\fBDelete a partition 
-.TP
-\fRupdate-software-profile --name SwTest --delete-partition root --delete-partition swap --delete-partition boot
-.LP
-\fBCreate a partition 
-.TP
-\fRupdate-software-profile --name SwTest --add-partition boot --device 1.1 \
-  --mount-point /boot --file-system zfs --size 8000 --options default \
+Update some simple fields:
+.PP
+.nf
+.RS
+update-software-profile --name SwTest --description "Changed for Demo" \\
+    --kernel overridden --initrd overridden
+.RE
+.fi
+.PP
+Delete a partition
+.PP
+.nf
+.RS
+update-software-profile --name SwTest --delete-partition root \\
+    --delete-partition swap --delete-partition boot
+.RE
+.fi
+.PP
+Create a partition
+.PP
+.nf
+.RS
+update-software-profile --name SwTest --add-partition boot --device 1.1 \\
+  --mount-point /boot --file-system zfs --size 8000 --options default \\
   --no-preserve --no-boot-loader
-.LP
+.RE
+.fi
+.PP
 The same example using the 'GB' suffix on the --size parameter.
-.LP
-\fRupdate-software-profile --name SwTest --add-partition boot --device 1.1 \
-  --mount-point /boot --file-system zfs --size 8GB --options default \
+.PP
+.nf
+.RS
+update-software-profile --name SwTest --add-partition boot --device 1.1 \\
+  --mount-point /boot --file-system zfs --size 8GB --options default \\
   --no-preserve --no-boot-loader
-.LP
-\fBUpdate a partition: 
-.TP
-\fRupdate-software-profile --name SwTest --update-partition boot --size 16000
-.LP
-Again, the same example using the 'GB' suffix on the --size parameter.
-.LP
-\fRupdate-software-profile --name SwTest --update-partition boot --size 16GB
-.LP
+.RE
+.fi
+.PP
+Update a partition:
+.PP
+.nf
+.RS
+update-software-profile --name SwTest --update-partition boot --size 16000
+.RE
+.fi
+.PP
+Using the 'GB' suffix on the \fI\-\-size\fR parameter.
+.PP
+.nf
+.RS
+update-software-profile --name SwTest --update-partition boot --size 16GB
+.RE
+.fi
+.PP
 .SH "AUTHORS"
 .LP
 Univa Support <support@univa.com>
 .SH "SEE ALSO"
-.LP
-get-software-profile(8)
+.BR get-software-profile(8),
+.BR get-software-profile-list(8),
+.BR delete-software-profile(8)
