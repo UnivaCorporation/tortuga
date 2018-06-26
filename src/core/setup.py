@@ -26,13 +26,26 @@ import setuptools.command.sdist
 srcRoot = 'tortuga'
 module_name = 'tortuga-core'
 
-maj_version = '6.3'
-version = maj_version + '.0'
-module_version = version
+version = '6.3.1a1'
 
 
-if os.getenv('BUILD_NUMBER'):
-    module_version += '.dev{0}'.format(os.getenv('BUILD_NUMBER'))
+def get_git_revision():
+    cmd = 'git rev-parse --short HEAD'
+
+    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+    result, _ = p.communicate()
+    p.wait()
+
+    return result.decode().rstrip()
+
+
+git_revision = get_git_revision()
+
+module_version = f'{version}+rev{git_revision}'
+
+
+if os.getenv('CI_PIPELINE_ID'):
+    module_version += '.{}'.format(os.getenv('CI_PIPELINE_ID'))
 
 
 def walkfiles(d):
@@ -48,25 +61,12 @@ def walkfiles(d):
 
 def generate_release_file(build_identifier=None):
     with open('etc/tortuga-release', 'w') as fp:
-        buf = 'Tortuga %s' % (version)
-
-        if build_identifier is not None:
-            buf += ' (%s)' % (build_identifier)
-        else:
-            cmd = 'git rev-parse --short HEAD'
-
-            p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
-            result, _ = p.communicate()
-            p.wait()
-
-            buf += ' (Git {0})'.format(result.decode().rstrip())
-
-        fp.write(buf + '\n')
+        fp.write(f'Tortuga {build_identifier}\n')
 
 
 class CommonBuildStep(object):
     def pre_build(self):
-        generate_release_file()
+        generate_release_file(build_identifier=module_version)
 
 
 class BuildPyCommand(setuptools.command.build_py.build_py, CommonBuildStep):
