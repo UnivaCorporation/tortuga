@@ -264,7 +264,7 @@ class SoftwareProfile(TortugaObject): \
         softwareProfile.setComponents(
             tortuga.objects.component.Component.getListFromDbDict(_dict))
 
-        if ignore and 'nodes' not in ignore:
+        if not ignore or 'nodes' not in ignore:
             softwareProfile.setNodes(
                 tortuga.objects.node.Node.getListFromDbDict(_dict))
 
