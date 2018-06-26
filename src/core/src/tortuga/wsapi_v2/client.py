@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import logging
+from typing import Optional, Union
 
 from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.userNotAuthorized import UserNotAuthorized
@@ -25,12 +26,14 @@ logger = logging.getLogger(__name__)
 class TortugaWsApiClient:
     """
     Tortuga ws api client class.
-    
+
     """
     API_VERSION = 'v2'
 
-    def __init__(self, endpoint: str = None, username: str = None,
-                 password: str = None, base_url: str = None):
+    def __init__(self, endpoint: Optional[str] = None,
+                 username: Optional[str] = None,
+                 password: Optional[str] = None,
+                 base_url: Optional[str] = None) -> None:
         logger.addHandler(logging.NullHandler())
 
         #
@@ -45,7 +48,7 @@ class TortugaWsApiClient:
                 'Either a base_url or an endpoint must be provided, not both')
 
         self._cm = ConfigManager()
-        self._sm: sessionManager.SessionManager = None
+        self._sm: Union[sessionManager.SessionManager, None] = None
 
         #
         # Initialize the base URL
@@ -119,18 +122,15 @@ class TortugaWsApiClient:
 
         return response
 
-    def _build_query_string(self, params: dict) -> str:
-        query_list = []
-        for k, v in params.items():
-            query_list.append('{}={}'.format(k, v))
+    def _build_query_string(self, params: dict) \
+            -> str:  # pylint: disable=no-self-use
+        return '&'.join([f'{k}={v}' for k, v in params.items()])
 
-        return '&'.join(query_list)
-
-    def get(self, id: str) -> str:
+    def get(self, id_: str) -> str:
         #
         # Build URL
         #
-        url = '{}/{}'.format(self._svr_endpoint_url, id)
+        url = '{}/{}'.format(self._svr_endpoint_url, id_)
         _, response = self.send_session_request(url)
 
         return response
