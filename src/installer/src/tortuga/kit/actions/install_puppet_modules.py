@@ -43,18 +43,15 @@ class InstallPuppetModulesAction(KitActionBase):
             )
         )
         if not files:
-            logger.error(
-                'Unable to find Puppet module {}'.format(module_name))
-            raise ConfigurationError('Missing Puppet module for Base kit')
+            errmsg = f'Unable to find Puppet module {module_name}'
+
+            logger.error(errmsg)
+
+            raise ConfigurationError(errmsg)
 
         logger.info('Installing Puppet module {}'.format(module_name))
 
-        module_path = files[0]
-        if not os.path.exists(module_path):
-            raise ConfigurationError(
-                'File does not exist: {}'.format(module_path))
-
         cmd = ('/opt/puppetlabs/bin/puppet module install --color false'
-               ' {}'.format(module_path))
+               ' {}'.format(files[0]))
 
         tortugaSubprocess.executeCommand(cmd)
