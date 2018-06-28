@@ -16,7 +16,7 @@ from typing import Any, Dict, Iterable, Optional
 
 from tortuga.objects.tortugaObject import TortugaObject
 
-from tortuga.objects.resource_adapter_settings import BaseSetting, \
+from tortuga.resourceAdapterConfiguration.settings import BaseSetting, \
     BaseSettingSchema, get_setting_class
 
 

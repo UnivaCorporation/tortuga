@@ -77,7 +77,7 @@ class BaseSettingSchema(Schema):
 
 class BaseSetting(metaclass=SettingMeta):
     """
-    A resoruce adapter configuration variable.
+    A resource adapter configuration variable.
 
     """
     type = None
@@ -89,6 +89,7 @@ class BaseSetting(metaclass=SettingMeta):
         self.secret = kwargs.get('secret', False)
         self.values = kwargs.get('values', [])
         self.mutually_exclusive = kwargs.get('mutually_exclusive', [])
+        self.requires = kwargs.get('requires', [])
         self.default = kwargs.get('default')
 
     def validate(self, value):
@@ -122,6 +123,7 @@ class BaseSetting(metaclass=SettingMeta):
 class BooleanSettingSchema(BaseSettingSchema):
     """
     Marshmallow schema for the BooleanSetting class.
+
     """
     default: fields.Field = fields.Boolean()
 
@@ -143,6 +145,7 @@ class BooleanSetting(BaseSetting):
 class StringSettingSchema(BaseSettingSchema):
     """
     Marshmallow schema for the StringSetting class.
+
     """
     default: fields.Field = fields.String()
     values: fields.Field = fields.List(fields.String())
@@ -155,6 +158,7 @@ class StringSettingSchema(BaseSettingSchema):
 class FileSettingSchema(StringSettingSchema):
     """
     Marshmallow schema for the FileSetting class.
+
     """
     must_exist: fields.Field = fields.Boolean()
 
@@ -182,6 +186,7 @@ class FileSetting(BaseSetting):
 class IntegerSettingSchema(BaseSettingSchema):
     """
     Marshmallow schema for the IntegerSetting class.
+
     """
     default: fields.Field = fields.Integer()
     values: fields.Field = fields.List(fields.Integer())
