@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from tortuga.node import state
+
 
 class MockBootHostManager:
     def setNodeForNetworkBoot(self, dbNode):
-        dbNode.state = 'Expired'
+        dbNode.state = state.NODE_STATE_EXPIRED
 
     def writePXEFile(self, *args, **kwargs): \
             # pylint: disable=unused-argument

@@ -20,6 +20,7 @@ import shutil
 
 from tortuga.os_objects.osObjectManager import OsObjectManager
 from tortuga.config.configManager import ConfigManager
+from tortuga.node import state
 
 
 class OsBootHostManagerCommon(OsObjectManager):
@@ -96,7 +97,7 @@ class OsBootHostManagerCommon(OsObjectManager):
 
     def setNodeForNetworkBoot(self, dbNode):
         # Update node status to "Expired" and boot from network
-        dbNode.state = 'Expired'
+        dbNode.state = state.NODE_STATE_EXPIRED
         dbNode.bootFrom = 0
 
         self.deletePuppetNodeCert(dbNode.name)

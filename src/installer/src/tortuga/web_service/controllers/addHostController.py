@@ -69,8 +69,6 @@ class AddHostController(TortugaController):
     @cherrypy.tools.json_in()
     @authentication_required()
     def addNodes(self):
-        response = None
-
         try:
             if 'node' not in cherrypy.request.json:
                 raise InvalidArgument('Malformed request')

@@ -31,6 +31,7 @@ from .globalParameterDbApi import GlobalParameterDbApi
 from .models.node import Node as NodeModel
 from .nodesDbHandler import NodesDbHandler
 from .tortugaDbApi import TortugaDbApi
+from tortuga.node import state
 
 OptionsDict = Dict[str, bool]
 
@@ -137,20 +138,30 @@ class NodeDbApi(TortugaDbApi):
                 self.getLogger().exception('%s' % ex)
                 raise
 
-    def __convert_nodes_to_TortugaObjectList(
-            self, nodes: List[NodeModel],
-            optionDict: OptionsDict = None) -> TortugaObjectList:
+    def __convert_nodes_to_TortugaObjectList(self, nodes: List[NodeModel],
+                                             optionDict: OptionsDict = None,
+                                             deleting: bool = True
+                                             ) -> TortugaObjectList:
         """
         Return TortugaObjectList of nodes with relations populated
 
-        :param nodes: List of Nodes objects
-        :param relations: dict of relations to be loaded
-        :return: TortugaObjectList
-        """
+        :param nodes:      list of Node objects
+        :param optionDict:
+        :param deleting:   whether or not to include nodes in the deleting
+                           state
 
+        :return: TortugaObjectList
+
+        """
         nodeList = TortugaObjectList()
 
         for node in nodes:
+            #
+            # Don't include nodes in the deleting state if deleting=False
+            #
+            if not deleting and node.state.startswith(state.DELETING_PREFIX):
+                continue
+
             self.loadRelations(node, optionDict)
 
             # ensure 'resourceadapter' relation is always loaded. This one
@@ -163,7 +174,8 @@ class NodeDbApi(TortugaDbApi):
         return nodeList
 
     def getNodeList(self, tags: Optional[dict] = None,
-                    optionDict: OptionsDict = None) \
+                    optionDict: OptionsDict = None,
+                    deleting: bool = False) \
             -> TortugaObjectList:
         """
         Get list of all available nodes from the db.
@@ -178,7 +190,9 @@ class NodeDbApi(TortugaDbApi):
             try:
                 return self.__convert_nodes_to_TortugaObjectList(
                     self._nodesDbHandler.getNodeList(session, tags=tags),
-                    optionDict=optionDict)
+                    optionDict=optionDict,
+                    deleting=deleting
+                )
             except TortugaException:
                 raise
             except Exception as ex:

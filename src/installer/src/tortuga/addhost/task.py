@@ -27,9 +27,7 @@ from .addHostManager import AddHostManager
 
 def enqueue_addnodes_request(session: Session, addNodesRequest: dict):
     validate_addnodes_request(addNodesRequest['addNodesRequest'])
-
-    request = init_node_request_record(addNodesRequest)
-
+    request = _init_node_add_request(addNodesRequest)
     session.add(request)
     session.commit()
 
@@ -47,7 +45,7 @@ def enqueue_addnodes_request(session: Session, addNodesRequest: dict):
     return request.addHostSession
 
 
-def init_node_request_record(addNodesRequest):
+def _init_node_add_request(addNodesRequest):
     request = NodeRequest(json.dumps(addNodesRequest['addNodesRequest']))
     request.timestamp = datetime.datetime.utcnow()
     request.addHostSession = AddHostManager().createNewSession()
