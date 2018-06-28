@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import base64
 from logging import getLogger
 
 import cherrypy
-from cherrypy.lib import httpauth
 
 from tortuga.auth.methods import AuthenticationMethod, \
     JwtAuthenticationMethod, UsernamePasswordAuthenticationMethod
@@ -23,6 +23,27 @@ from tortuga.exceptions.authenticationFailed import AuthenticationFailed
 
 
 logger = getLogger(__name__)
+
+
+class AuthorizationHeaderMixin:
+    @staticmethod
+    def parse_authorization_header() -> (str, str):
+        """
+        Parses an authorization header.
+
+        :return (str, str): the (scheme, value) of the authorization header
+
+        """
+        if 'authorization' not in cherrypy.request.headers:
+            raise AuthenticationFailed()
+
+        header = cherrypy.request.headers['authorization']
+        parts = header.split(' ', 1)
+
+        if len(parts) != 2:
+            raise AuthenticationFailed()
+
+        return parts[0], parts[1]
 
 
 class HttpSessionAuthenticationMethod(AuthenticationMethod):
@@ -46,25 +67,38 @@ class HttpSessionAuthenticationMethod(AuthenticationMethod):
         cherrypy.session[self.SESSION_KEY] = None
 
 
-class HttpBasicAuthenticationMethod(UsernamePasswordAuthenticationMethod):
+class HttpBasicAuthenticationMethod(AuthorizationHeaderMixin,
+                                    UsernamePasswordAuthenticationMethod):
     """
     Authenticate a user via username password, via HTTP basic authentication.
 
     """
-    SCHEME = 'basic'
-
     def do_authentication(self, **kwargs) -> str:
-        username = None
-        password = None
+        scheme, value = self.parse_authorization_header()
+        if scheme.lower() != 'basic':
+            raise AuthenticationFailed()
 
-        if 'authorization' in cherrypy.request.headers:
-            authorization = cherrypy.request.headers['authorization']
-            ah = httpauth.parseAuthorization(authorization)
-            if ah['auth_scheme'] == 'basic':
-                username = ah['username']
-                password = ah['password']
+        username, password = self.parse_username_password(value)
 
         return super().do_authentication(username=username, password=password)
+
+    def parse_username_password(self, encoded: str) -> (str, str):
+        """
+        Parses an base64 encoded header value and extracts the username
+        and password.
+
+        :param encoded: the encoded string
+
+        :return (str, str): the username and password
+
+        """
+        decoded: str = base64.b64decode(encoded).decode()
+        parts = decoded.split(':')
+
+        if len(parts) != 2:
+            raise AuthenticationFailed()
+
+        return parts[0], parts[1]
 
 
 class HttpPostAuthenticatonMethod(UsernamePasswordAuthenticationMethod):
@@ -85,42 +119,18 @@ class HttpPostAuthenticatonMethod(UsernamePasswordAuthenticationMethod):
                                          password=password, **kwargs)
 
 
-class HttpJwtAuthenticationMethod(JwtAuthenticationMethod):
+class HttpJwtAuthenticationMethod(AuthorizationHeaderMixin,
+                                  JwtAuthenticationMethod):
     """
     Authenticate a user via a HTTP JWT.
 
     """
     def do_authentication(self, **kwargs) -> str:
-        if 'authorization' not in cherrypy.request.headers:
-            raise AuthenticationFailed()
-
-        authorization = cherrypy.request.headers['authorization']
-        scheme, value = self._parse_authorization_header(authorization)
-        if not value or not scheme or scheme.lower() != 'bearer':
+        scheme, value = self.parse_authorization_header()
+        if scheme.lower() != 'bearer':
             raise AuthenticationFailed()
 
         return super().do_authentication(token=value)
-
-    @staticmethod
-    def _parse_authorization_header(header: str) -> (str, str):
-        """
-        Parses an authentication header.
-
-        :param str header: the header string to parse
-
-        :return (str, str): the (scheme, value) of the authorization header
-
-        """
-        scheme = None
-        value = None
-
-        parts = header.split(' ', 1)
-        if parts:
-            scheme = parts[0]
-        if len(parts) > 1:
-            value = parts[1]
-
-        return scheme, value
 
 
 class WsUsernamePasswordAuthenticationMethod(
