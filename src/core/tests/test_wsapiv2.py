@@ -12,11 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from distutils.version import LooseVersion
+import pytest
+
+from tortuga.wsapi_v2.client import TortugaWsApiClient
 
 
-VERSION = '6.3.1-alpha+008'
+@pytest.mark.parametrize('params,expected', [
+    ({
+        'key1': 'value1',
+        'key2': 'value2',
+        'key3': 'value3',
+    }, 'key1=value1&key2=value2&key3=value3'
+    ),
+    ({
+        'key1': 'value1',
+    }, 'key1=value1',
+    ),
+    ({}, ''),
+])
+def test_build_query_string(params, expected):
+    result = TortugaWsApiClient(
+        endpoint='https://blah:1234')._build_query_string(params)
 
-
-def version_is_compatible(version_string: str):
-    return LooseVersion(VERSION) >= LooseVersion(version_string)
+    assert result == expected

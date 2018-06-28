@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from tortuga.node import state
 from .base import BaseListener
 from ..types import NodeStateChanged
 
@@ -51,9 +52,9 @@ class NodeProvisioningListener(BaseListener):
         try:
             node = manager.getNode(event.node['name'])
 
-            if node.getState() != NodeManager.NODE_STATE_INSTALLED:
+            if node.getState() != state.NODE_STATE_INSTALLED:
                 manager.updateNodeStatus(node.getName(),
-                                         NodeManager.NODE_STATE_UNRESPONSIVE)
+                                         state.NODE_STATE_UNRESPONSIVE)
         except NodeNotFound:
             # node has been deleted; nothing to do
             pass

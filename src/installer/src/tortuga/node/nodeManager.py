@@ -14,7 +14,6 @@
 
 # pylint: disable=no-self-use,no-member,no-name-in-module
 
-import socket
 import time
 from typing import Any, Dict, List, NoReturn, Optional, Tuple
 
@@ -55,6 +54,7 @@ from tortuga.san import san
 from tortuga.softwareprofile.softwareProfileManager import \
     SoftwareProfileManager
 from tortuga.sync.syncApi import SyncApi
+from . import state
 
 
 OptionDict = Dict[str, bool]
@@ -62,10 +62,6 @@ OptionDict = Dict[str, bool]
 
 class NodeManager(TortugaObjectManager): \
         # pylint: disable=too-many-public-methods
-
-    NODE_STATE_INSTALLED = 'Installed'
-    NODE_STATE_DELETED = 'Deleted'
-    NODE_STATE_UNRESPONSIVE = 'Unresponsive'
 
     def __init__(self):
         super(NodeManager, self).__init__()
@@ -203,21 +199,26 @@ class NodeManager(TortugaObjectManager): \
                 ip, optionDict=get_default_relations(optionDict))])[0]
 
     def getNodeList(self, tags=None,
-                    optionDict: OptionDict = None) \
+                    optionDict: OptionDict = None,
+                    deleting: bool = False) \
             -> List[Node]:
         """
         Return all nodes
-        """
 
+        """
         return self.__populate_nodes(
             self._nodeDbApi.getNodeList(
-                tags=tags, optionDict=get_default_relations(optionDict)))
+                tags=tags,
+                optionDict=get_default_relations(optionDict),
+                deleting=deleting
+            )
+        )
 
     def __populate_nodes(self, nodes: List[Node]) -> List[Node]:
         """
         Expand non-database fields in Node objects
-        """
 
+        """
         swprofile_map = {}
 
         # dict keyed on resource adapter name, value is resource adapter class
@@ -295,8 +296,9 @@ class NodeManager(TortugaObjectManager): \
             node_dict = Node.getFromDbDict(node.__dict__).getCleanDict()
 
             if 'state' in updateNodeRequest:
-                run_post_install = node.state == 'Allocated' and \
-                    updateNodeRequest['state'] == 'Provisioned'
+                run_post_install = \
+                    node.state == state.NODE_STATE_ALLOCATED and \
+                    updateNodeRequest['state'] == state.NODE_STATE_PROVISIONED
 
                 node.state = updateNodeRequest['state']
                 node_dict['state'] = updateNodeRequest['state']
@@ -598,7 +600,7 @@ class NodeManager(TortugaObjectManager): \
                 'node': Node.getFromDbDict(dbNode.__dict__).getCleanDict()
             }
 
-            dbNode.state = 'Deleted'
+            dbNode.state = state.NODE_STATE_DELETED
             event_data['node']['state'] = 'Deleted'
 
             if dbNode.hardwareprofile not in nodes:
@@ -1646,11 +1648,11 @@ class NodeManager(TortugaObjectManager): \
         return dbNode.state
 
     def __isNodeStateDeleted(self, node: Node) -> bool:
-        return self.__getNodeState(node) == self.NODE_STATE_DELETED
+        return self.__getNodeState(node) == state.NODE_STATE_DELETED
 
     def __isNodeStateInstalled(self, dbNode: Node) -> bool:
         return self.__getNodeState(dbNode) == \
-            self.NODE_STATE_INSTALLED
+            state.NODE_STATE_INSTALLED
 
 
 def get_default_relations(relations: OptionDict):
