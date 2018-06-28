@@ -15,18 +15,19 @@
 .TH "schedule-update" "8" "6.3" "Univa" "Tortuga"
 .SH "NAME"
 .LP
-schedule-update - Schedule a cluster update
+schedule-update \- Schedule a cluster update
 .SH "SYNTAX"
 .LP
-\fBschedule-update
+.B schedule-update
+[reason]
 .SH "DESCRIPTION"
 .LP
-The schedule-update tool schedules a cluster update (runs cfmsync).
+The schedule-update tool schedules a cluster update.
 .LP
 .SH "OPTIONS"
 .LP
 .TP
-This command has no options.
+[reason] descriptive reason for the update
 .LP
 .SH "Common Tortuga Options"
 .LP
@@ -52,6 +53,3 @@ Credential to use when not running as root on the Installer.
 .SH "AUTHORS"
 .LP
 Univa Support <support@univa.com>
-.SH "SEE ALSO"
-.LP
-cfmsync(8)
