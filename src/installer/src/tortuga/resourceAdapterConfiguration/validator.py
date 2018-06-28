@@ -1,5 +1,5 @@
 from collections.abc import MutableMapping
-from typing import Any, Dict, Optional, Iterator
+from typing import Dict, Optional, Iterator
 
 from .settings import BaseSetting, SettingValidationError
 
@@ -55,24 +55,31 @@ class ConfigurationValidator(MutableMapping):
             if v.default:
                 self[k] = v.default
 
-    def __setitem__(self, k: Any, v: Any) -> None:
+    def __setitem__(self, k: str, v: str) -> None:
         return self._storage.__setitem__(k, v)
 
-    def __delitem__(self, v: Any) -> None:
+    def __delitem__(self, v: str) -> None:
         return self._storage.__delitem__(v)
 
-    def __getitem__(self, k: Any):
+    def __getitem__(self, k: str):
         return self._storage.__getitem__(k)
 
     def __len__(self) -> int:
         return self._storage.__len__()
 
-    def __iter__(self) -> Iterator[Any]:
+    def __iter__(self) -> Iterator[str]:
         return self._storage.__iter__()
 
-    def validate(self) -> None:
+    def validate(self, full: bool = True) -> None:
         """
         Validate the resource adapter settings profile.
+
+        :param bool full: perform a full validation. A full validation
+                          validates required fields, mutually exclusive,
+                          and requires. A partial validation makes sure
+                          that non-valid field names are not permitted,
+                          and validates the content of any existing
+                          fields.
 
         :raises: SettingValidationError
 
@@ -91,9 +98,10 @@ class ConfigurationValidator(MutableMapping):
         #
         for k, v in self._settings.items():
             try:
-                self._validate_required(k, v)
-                self._validate_requires(v)
-                self._validate_mutually_exclusive(v)
+                if full:
+                    self._validate_required(k, v)
+                    self._validate_requires(v)
+                    self._validate_mutually_exclusive(v)
                 if k in self._storage.keys():
                     v.validate(self._storage[k])
             except SettingValidationError as err:
@@ -152,10 +160,10 @@ class ConfigurationValidator(MutableMapping):
                 raise SettingValidationError(
                     'Mutually exclusive with {}'.format(mk))
 
-    def dump(self, secure: bool = True):
+    def dump(self, secure: bool = True) -> Dict[str, str]:
         """
-        Dumps as a plain dict. Data is validated prior to performing the
-        dump.
+        Dumps as a plain dict. A partial validation is performed prior to
+        dumping the data.
 
         :param bool secure: Whether or not to redact secure values from the
                             dumped output.
@@ -164,7 +172,7 @@ class ConfigurationValidator(MutableMapping):
         :raises ResourceAdapterProfileValidationError:
 
         """
-        self.validate()
+        self.validate(full=False)
 
         result = {}
 
@@ -178,9 +186,10 @@ class ConfigurationValidator(MutableMapping):
 
         return result
 
-    def load(self, data: dict):
+    def load(self, data: Dict[str, str]):
         """
-        Loads a plain dict. Validates the data after performing the load.
+        Loads a plain dict. Performs a partial validation of the data after
+        performing the load.
 
         :param dict data: the data dict to load and validate
 
@@ -189,5 +198,4 @@ class ConfigurationValidator(MutableMapping):
         """
         for k, v in data.items():
             self[k] = v
-
-        self.validate()
+        self.validate(full=False)

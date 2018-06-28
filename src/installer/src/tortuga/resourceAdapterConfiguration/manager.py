@@ -26,6 +26,7 @@ from tortuga.db.resourceAdaptersDbHandler import ResourceAdaptersDbHandler
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.resourceAlreadyExists import ResourceAlreadyExists
 from tortuga.exceptions.resourceNotFound import ResourceNotFound
+from .validator import ConfigurationValidator
 
 
 class ResourceAdapterConfigurationManager:
@@ -46,6 +47,7 @@ class ResourceAdapterConfigurationManager:
 
         adapter = self._resourceAdaptersDbHandler.getResourceAdapter(
             session, resadapter_name)
+        validator = ConfigurationValidator(adapter.settings)
 
         try:
             self._resourceAdapterConfigDbHandler.get(
