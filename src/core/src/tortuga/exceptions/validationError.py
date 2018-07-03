@@ -12,11 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from distutils.version import LooseVersion
+from tortuga.exceptions.tortugaException import TortugaException
+from tortuga.utility import tortugaStatus
 
 
-VERSION = '6.3.1-alpha+009'
+class ValidationError(TortugaException):
+    """
+    Data validation error.
 
-
-def version_is_compatible(version_string: str):
-    return LooseVersion(VERSION) >= LooseVersion(version_string)
+    """
+    def __init__(self, error="", **kwargs):
+        TortugaException.__init__(
+            self, error, tortugaStatus.TORTUGA_USER_ABORTED_ERROR,
+            **kwargs)

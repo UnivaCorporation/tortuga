@@ -45,6 +45,9 @@ from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
 from tortuga.objects.node import Node as TortugaNode
 from tortuga.os_utility.osUtility import getOsObjectFactory
 from tortuga.parameter.parameterApi import ParameterApi
+from tortuga.resourceAdapterConfiguration.settings import BaseSetting
+from tortuga.resourceAdapterConfiguration.validator import \
+    ConfigurationValidator, ValidationError
 from tortuga.schema import ResourceAdapterConfigSchema
 
 from .userDataMixin import UserDataMixin
@@ -58,7 +61,7 @@ class ResourceAdapter(UserDataMixin): \
     subclass did not implement the action.
 
     """
-    settings = {}
+    settings: Dict[str, BaseSetting] = {}
 
     __adaptername__ = None
 
@@ -260,65 +263,109 @@ class ResourceAdapter(UserDataMixin): \
         return self._logger
 
     def getResourceAdapterConfig(self,
-                                 sectionName: Union[str, None] = None) -> dict:
+                                 sectionName: str = 'default'
+                                 ) -> Dict[str, Any]:
         """
         Raises:
             ResourceNotFound
         """
-
         self.getLogger().debug(
             'getResourceAdapterConfig(sectionName=[{0}])'.format(
                 sectionName if sectionName else '(none)'))
 
+        #
+        # Default settings dict is blank
+        #
+        config: Dict[str, str] = {}
+
+        #
+        # Load settings from class settings definitions if any of them
+        # have default values
+        #
+        config.update(self._load_config_from_class())
+
+        #
+        # Load settings from default profile in database, if it exists
+        #
+        config.update(self._load_config_from_database())
+
+        #
+        # Load settings from a specific profile, if one was specified
+        #
+        if sectionName and sectionName != 'default':
+            config.update(self._load_config_from_database(sectionName))
+
+        #
+        # Validate the settings and dump the config with transformed
+        # values
+        #
         try:
-            # Load default values
-            defaultResourceAdapterConfigDict = self._loadConfigDict()
-        except ResourceNotFound:
-            defaultResourceAdapterConfigDict = None
+            validator = ConfigurationValidator(self.settings)
+            validator.load(config)
+            validator.validate()
+            processed_config: Dict[str, Any] = validator.dump(secure=False)
+        except ValidationError as ex:
+            raise ConfigurationError(str(ex))
 
-        overrideConfigDict = self._loadConfigDict(sectionName) \
-            if sectionName and sectionName != 'default' else None
+        #
+        # Perform any required additional processing on the config
+        #
+        self.process_config(processed_config)
 
-        return self._normalize_resource_adapter_config(
-            defaultResourceAdapterConfigDict,
-            override_config=overrideConfigDict)
+        return processed_config
 
-    def _normalize_resource_adapter_config(
-            self, default_config: Dict[str, str],
-            override_config: Optional[Dict[str, str]]) -> dict:
+    def _load_config_from_class(self) -> Dict[str, str]:
         """
-        'default_config' is from the 'default' resource adapter
-        configuration profile; 'override_config' is applied on top of
-        the default.
+        Load the settings from the resource adapter class default values
+        into the config dict, overriding what is in there already.
 
-        Override this method to handle any mutually exclusive and/or
-        conflicting settings.
+        :returns Dict[str, str]: the configuration
+
         """
+        config: Dict[str, str] = {}
+        for k, v in self.settings.items():
+            if v.default is not None:
+                config[k] = v.default
 
-        result = dict.copy(default_config or {})
-        if override_config:
-            result.update(override_config)
-        return result
+        return config
 
-    def _loadConfigDict(self, sectionName: Union[str, None] = None) \
-            -> Dict[str, str]:
+    def _load_config_from_database(self,
+                                   profile: str = 'default'
+                                   ) -> Dict[str, str]:
         """
-        Retrieve resource adapter configuration from database.
+        Loads a configuration profile from the database.
 
-        Raises:
-            ResourceNotFound
+        :param profile: the name of the configuration profile
+
+        :return Dict[str, str]: the configuration
+
         """
+        config = {}
 
-        self.getLogger().debug(
-            '_loadConfigDict(): sectionName=[{}]'.format(
-                sectionName if sectionName else 'default'))
+        db_handler = ResourceAdapterConfigDbHandler()
 
         with DbManager().session() as session:
-            cfg = ResourceAdapterConfigSchema().dump(
-                self.load_resource_adapter_config(session, sectionName)
-            ).data
+            try:
+                db_config = db_handler.get(session, self.__adaptername__,
+                                           profile)
+                cfg_list = ResourceAdapterConfigSchema().dump(db_config).data
+                for s in cfg_list['configuration']:
+                    config[s['key']] = s['value']
+            except ResourceNotFound:
+                pass
 
-            return {s['key']: s['value'] for s in cfg['configuration']}
+        return config
+
+    def process_config(self, config: Dict[str, Any]):
+        """
+        Override this method in subclasses to perform any additional
+        processing on the config. Changes to the config are performed
+        in-place (i.e. config is mutable).
+
+        :param Dict[str, Any] config: the configuration dict
+
+        """
+        pass
 
     def __getAddHostApi(self):
         """Get and cache the Add Host API"""
@@ -582,24 +629,55 @@ class ResourceAdapter(UserDataMixin): \
             -> Dict[str, Any]:
         """
         Deserialize resource adapter configuration to key/value pairs
+
         """
 
-        default_config = self._loadConfigDict()
+        #
+        # Default settings dict is blank
+        #
+        config: Dict[str, str] = {}
 
-        override_config: Union[Dict[str, Any], None] = None
+        #
+        # Load settings from class settings definitions if any of them
+        # have default values
+        #
+        config.update(self._load_config_from_class())
 
+        #
+        # Load settings from default profile in database, if it exists
+        #
+        config.update(self._load_config_from_database())
+
+        #
+        # Load node specific settings
+        #
+        override_config: Dict[str, Any] = {}
         if node.instance and \
                 node.instance.resource_adapter_configuration and \
                 node.instance.resource_adapter_configuration.name != 'default':
-            # break db relationship into key-value pairs for dict
-            override_config = {
-                c.key: c.value
-                for c in
-                node.instance.resource_adapter_configuration.settings
-            }
+            for c in node.instance.resource_adapter_configuration.settings:
+                override_config[c.key] = c.value
 
-        return self._normalize_resource_adapter_config(
-            default_config, override_config=override_config)
+        config.update(override_config)
+
+        #
+        # Dump the config with transformed values. Don't bother validating
+        # here, as we will consider the node already exists in it's current
+        # state
+        #
+        try:
+            validator = ConfigurationValidator(self.settings)
+            validator.load(config)
+            processed_config: Dict[str, Any] = validator.dump(secure=False)
+        except ValidationError as ex:
+            raise ConfigurationError(str(ex))
+
+        #
+        # Perform any required additional processing on the config
+        #
+        self.process_config(processed_config)
+
+        return processed_config
 
     def load_resource_adapter_config(self, session: Session,
                                      name: Optional[str] = None) \

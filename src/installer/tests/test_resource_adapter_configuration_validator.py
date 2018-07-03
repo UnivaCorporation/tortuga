@@ -6,9 +6,41 @@ from tortuga.resourceAdapterConfiguration import \
     settings as settings
 
 
+def test_partial_validation():
+    s = {
+        'integer': settings.IntegerSetting(required=True),
+        'string': settings.StringSetting()
+    }
+    p = ConfigurationValidator(s)
+
+    #
+    # Assert that missing fields do not raise a validation error for
+    # partial validation
+    #
+    p.validate(full=False)
+
+    #
+    # Assert that partial validation does validate field values
+    #
+    p['integer'] = 'abc'
+    with pytest.raises(ValidationError) as err_info:
+        p.validate()
+    err: ValidationError = err_info.value
+    assert 'integer' in err.errors.keys()
+
+    #
+    # Assert that partial validation does validate field names
+    #
+    p['xyz'] = 'abc'
+    with pytest.raises(ValidationError) as err_info:
+        p.validate()
+    err: ValidationError = err_info.value
+    assert 'xyz' in err.errors.keys()
+
+
 def test_defaults():
     s = {
-        'integer': settings.IntegerSetting(default=3),
+        'integer': settings.IntegerSetting(default='3'),
         'string': settings.StringSetting(default='abc')
     }
     p = ConfigurationValidator(s)
@@ -16,7 +48,7 @@ def test_defaults():
     #
     # Assert default values are set
     #
-    assert p['integer'] == 3
+    assert p['integer'] == '3'
     assert p['string'] == 'abc'
 
 
@@ -47,7 +79,7 @@ def test_required():
     #
     # Assert that if the value is in fact provided, no errors are raised
     #
-    p['integer'] = 5
+    p['integer'] = '5'
     p.validate()
 
 
@@ -61,7 +93,7 @@ def test_validate_mutually_exclusive():
     #
     # Assert no validation errors raised
     #
-    p['integer'] = 1
+    p['integer'] = '1'
     p.validate()
 
     #
@@ -93,7 +125,7 @@ def test_validate_requires():
     #
     # Assert requires validation error raised
     #
-    p['integer'] = 1
+    p['integer'] = '1'
     with pytest.raises(ValidationError) as err_info:
         p.validate()
     err: ValidationError = err_info.value
@@ -114,37 +146,50 @@ def test_validate_requires():
     p.validate()
 
 
-def test_dump_load():
+def test_dump():
     s = {
         'bool': settings.BooleanSetting(),
+        'list_bool': settings.BooleanSetting(list=True),
         'integer': settings.IntegerSetting(),
+        'list_integer': settings.IntegerSetting(list=True),
         'string': settings.StringSetting(),
+        'list_string': settings.StringSetting(list=True),
         'file': settings.FileSetting(must_exist=False)
     }
     p = ConfigurationValidator(s)
 
-    p['bool'] = True
-    p['integer'] = 3
-    p['string'] = 'abc'
-    p['file'] = 'file.txt'
+    #
+    # Test data loading
+    #
+    data_to_load = {
+        'bool': 'True',
+        'list_bool': 'True, false',
+        'integer': '3',
+        'list_integer': '4, 5',
+        'string': 'abc',
+        'list_string': 'wz, yz',
+        'file': 'file.txt'
+    }
+    p.load(data_to_load)
 
     #
-    # Assert that what we dump is what we would expect
+    # Perform full validation
+    #
+    p.validate(full=True)
+
+    #
+    # Assert that dumped data is properly transformed
     #
     expected_data = {
         'bool': True,
+        'list_bool': [True, False],
         'integer': 3,
+        'list_integer': [4, 5],
         'string': 'abc',
+        'list_string': ['wz', 'yz'],
         'file': 'file.txt'
     }
     assert p.dump() == expected_data
-
-    #
-    # Make sure that loading the data does the same thing
-    #
-    p2 = ConfigurationValidator(s)
-    p2.load(expected_data)
-    assert p2.dump() == expected_data
 
 
 def test_secret():

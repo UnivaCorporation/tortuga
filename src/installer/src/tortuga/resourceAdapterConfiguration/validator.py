@@ -1,5 +1,5 @@
 from collections.abc import MutableMapping
-from typing import Dict, Optional, Iterator
+from typing import Any, Dict, Optional, Iterator
 
 from .settings import BaseSetting, SettingValidationError
 
@@ -20,7 +20,7 @@ class ValidationError(Exception):
         super().__init__(*args, **kwargs)
 
     def __str__(self):
-        return str(self.errors)
+        return str({k: str(v) for k, v in self.errors.items()})
 
 
 class ConfigurationValidator(MutableMapping):
@@ -39,11 +39,12 @@ class ConfigurationValidator(MutableMapping):
                                                           resource adapter
 
         """
-        self._settings = {}
+        self._settings: Dict[str, BaseSetting] = {}
         if settings:
             self._settings = settings
 
-        self._storage = {}
+        self._storage: Dict[str, str] = {}
+
         self._initialize_defaults()
 
     def _initialize_defaults(self) -> None:
@@ -55,13 +56,33 @@ class ConfigurationValidator(MutableMapping):
             if v.default:
                 self[k] = v.default
 
-    def __setitem__(self, k: str, v: str) -> None:
+    def __setitem__(self, k: str, v: Optional[str]):
+        #
+        # Setting a key to None should delete it if it exists, and
+        # do nothing if it does not exist
+        #
+        if v is None:
+            self._storage.pop(k, None)
+            return
+        #
+        # Validate the key type
+        #
+        if not isinstance(k, str):
+            raise ValueError(
+                'Only strings can be used for keys: {}'.format(k))
+        #
+        # validate the value type
+        #
+        if not isinstance(v, str):
+            raise ValueError(
+                'Only strings can be used for values: {}'.format(v)
+            )
         return self._storage.__setitem__(k, v)
 
-    def __delitem__(self, v: str) -> None:
+    def __delitem__(self, v: str):
         return self._storage.__delitem__(v)
 
-    def __getitem__(self, k: str):
+    def __getitem__(self, k: str) -> Optional[str]:
         return self._storage.__getitem__(k)
 
     def __len__(self) -> int:
@@ -91,7 +112,7 @@ class ConfigurationValidator(MutableMapping):
         #
         for k in self._storage.keys():
             if k not in self._settings.keys():
-                errors[k] = SettingValidationError('Unknown setting')
+                errors[k] = SettingValidationError('Invalid setting name')
 
         #
         # Validate each setting
@@ -100,8 +121,12 @@ class ConfigurationValidator(MutableMapping):
             try:
                 if full:
                     self._validate_required(k, v)
-                    self._validate_requires(v)
-                    self._validate_mutually_exclusive(v)
+                    #
+                    # Don't bother validating if the key isn't set
+                    #
+                    if k in self._storage.keys():
+                        self._validate_requires(v)
+                        self._validate_mutually_exclusive(v)
                 if k in self._storage.keys():
                     v.validate(self._storage[k])
             except SettingValidationError as err:
@@ -160,16 +185,16 @@ class ConfigurationValidator(MutableMapping):
                 raise SettingValidationError(
                     'Mutually exclusive with {}'.format(mk))
 
-    def dump(self, secure: bool = True) -> Dict[str, str]:
+    def dump(self, secure: bool = True) -> Dict[str, Any]:
         """
-        Dumps as a plain dict. A partial validation is performed prior to
-        dumping the data.
+        Dumps as a plain dict, with values transformed into their concrete
+        data types. A partial validation is performed prior to dumping to
+        ensure that any transformations will succeed.
 
         :param bool secure: Whether or not to redact secure values from the
                             dumped output.
 
-        :return dict: a dict of the data
-        :raises ResourceAdapterProfileValidationError:
+        :return Dict[str, Any]: a dict of the transformed data
 
         """
         self.validate(full=False)
@@ -177,10 +202,11 @@ class ConfigurationValidator(MutableMapping):
         result = {}
 
         for k, v in self._storage.items():
-            v_out = v
-
-            if secure and self._settings[k].secret:
+            setting = self._settings[k]
+            if secure and setting.secret:
                 v_out = self.REDACTED_STRING
+            else:
+                v_out = setting.dump(v)
 
             result[k] = v_out
 
@@ -188,14 +214,12 @@ class ConfigurationValidator(MutableMapping):
 
     def load(self, data: Dict[str, str]):
         """
-        Loads a plain dict. Performs a partial validation of the data after
-        performing the load.
+        Loads a plain dict, expecting string values only for both keys
+        and values. If one of the values of the dict is not a string,
+        it will be converted to one prior to storing.
 
-        :param dict data: the data dict to load and validate
-
-        :raises ResourceAdapterProfileValidationError:
+        :param dict data: the data dict to load for validation
 
         """
         for k, v in data.items():
             self[k] = v
-        self.validate(full=False)

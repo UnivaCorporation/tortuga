@@ -10,21 +10,35 @@ def test_boolean():
     # Assert that a non boolean value raises a validation error
     #
     with pytest.raises(settings.SettingValidationError):
-        bs.validate(1)
+        bs.validate('1')
 
     #
     # Assert that a boolean value does not raise a validation error
     #
-    bs.validate(True)
-    bs.validate(False)
+    bs.validate('True')
+    bs.validate('False')
+
+    #
+    # Assert that list validation works too
+    #
+    bs.list = True
+    bs.validate('True, False')
+    bs.list = False
 
     #
     # Assert value is in values list
     #
-    bs.values = [True]
+    bs.values = ['True']
     with pytest.raises(settings.SettingValidationError):
-        bs.validate(False)
-    bs.validate(True)
+        bs.validate('False')
+    bs.validate('True')
+
+    #
+    # Assert dump returns valid values
+    #
+    assert bs.dump('True') is True
+    bs.list = True
+    assert bs.dump('True, False') == [True, False]
 
 
 def test_string():
@@ -49,6 +63,13 @@ def test_string():
         ss.validate('ghi')
     ss.validate('def')
 
+    #
+    # Assert dump returns valid values
+    #
+    assert ss.dump('abc') == 'abc'
+    ss.list = True
+    assert ss.dump('abc, def') == ['abc', 'def']
+
 
 def test_integer():
     is_ = settings.IntegerSetting()
@@ -62,15 +83,29 @@ def test_integer():
     #
     # Assert that an integer value does not raise a validation error
     #
-    is_.validate(3)
+    is_.validate('3')
+
+    #
+    # Assert that list validation works too
+    #
+    is_.list = True
+    is_.validate('3, 4, 5')
+    is_.list = False
 
     #
     # Assert value is in values list
     #
-    is_.values = [1, 2]
+    is_.values = ['1', '2']
     with pytest.raises(settings.SettingValidationError):
-        is_.validate(3)
-    is_.validate(1)
+        is_.validate('3')
+    is_.validate('1')
+
+    #
+    # Assert dump returns valid values
+    #
+    assert is_.dump('1') == 1
+    is_.list = True
+    assert is_.dump('1, 2') == [1, 2]
 
 
 def test_file():

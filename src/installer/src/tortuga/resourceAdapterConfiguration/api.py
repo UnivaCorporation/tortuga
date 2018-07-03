@@ -13,19 +13,50 @@
 # limitations under the License.
 
 # pylint: disable=no-member
+from typing import Dict, List
 
-from ..utility.tortugaApi import TortugaApi
+from sqlalchemy.orm.session import Session
+
+from tortuga.exceptions.validationError import ValidationError
+from . import validator
 from .manager import ResourceAdapterConfigurationManager
+from ..utility.tortugaApi import TortugaApi
 
 
 class ResourceAdapterConfigurationApi(TortugaApi):
-    def create(self, session, resadapter_name, name, configuration):
+    def create(self, session: Session, resadapter_name: str, name: str,
+               configuration: List[Dict[str, str]],
+               force: bool = False):
+        """
+        Creates a new resource adapter profile.
+
+        :param Session session:                    the current database
+                                                   session
+        :param str resadapter_name:                the name of the resource
+                                                   adapter
+        :param str name:                           the name of the resource
+                                                   adapter profile
+        :param List[Dict[str, str]] configuration: the list of configuration
+                                                   settings
+        :param bool force:                         when True, will not
+                                                   validate the configuration
+                                                   settings
+
+        :raises ResourceAlreadyExists:
+        :raises ResourceAdapterNotFound:
+        :raises ValidationError:
+
+        """
         self.getLogger().debug(
             'create(resadapter_name=[{}], name=[{}],'
             ' configuration=[...])'.format(resadapter_name, name))
 
-        ResourceAdapterConfigurationManager().create(
-            session, resadapter_name, name, configuration)
+        try:
+            ResourceAdapterConfigurationManager().create(
+                session, resadapter_name, name, configuration, force)
+
+        except validator.ValidationError as ex:
+            raise ValidationError(str(ex))
 
     def get(self, session, resadapter_name, name):
         self.getLogger().debug(
@@ -48,10 +79,36 @@ class ResourceAdapterConfigurationApi(TortugaApi):
         ResourceAdapterConfigurationManager().delete(
             session, resadapter_name, name)
 
-    def update(self, session, resadapter_name, name, configuration):
+    def update(self, session: Session, resadapter_name: str, name: str,
+               configuration: List[Dict[str, str]],
+               force: bool = False):
+        """
+        Updates an existing resource adapter profile.
+
+        :param Session session:                    the current database
+                                                   session
+        :param str resadapter_name:                the name of the resource
+                                                   adapter
+        :param str name:                           the name of the resource
+                                                   adapter profile
+        :param List[Dict[str, str]] configuration: the list of configuration
+                                                   settings
+        :param bool force:                         when True, will not
+                                                   validate the configuration
+                                                   settings
+
+        :raises ResourceAlreadyExists:
+        :raises ResourceAdapterNotFound:
+        :raises ValidationError:
+
+        """
         self.getLogger().debug(
             'update(resadapter_name=[{}], name=[{}],'
             ' configuration=[...])'.format(resadapter_name, name))
 
-        ResourceAdapterConfigurationManager().update(
-            session, resadapter_name, name, configuration)
+        try:
+            ResourceAdapterConfigurationManager().update(
+                session, resadapter_name, name, configuration, force)
+
+        except validator.ValidationError as ex:
+            raise ValidationError(str(ex))
