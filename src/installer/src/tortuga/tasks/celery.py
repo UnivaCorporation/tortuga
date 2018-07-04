@@ -12,14 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 import os
 from typing import List
 
 from celery import Celery
 from celery.contrib.testing.app import TestApp
-
 from tortuga.kit.loader import load_kits
 from tortuga.kit.registry import get_all_kit_installers
+
+
+logging.getLogger('tortuga').setLevel(logging.DEBUG)
+logging.getLogger('tortuga_kits').setLevel(logging.DEBUG)
 
 
 #
