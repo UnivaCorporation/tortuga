@@ -273,35 +273,30 @@ class ResourceAdapter(UserDataMixin): \
             'getResourceAdapterConfig(sectionName=[{0}])'.format(
                 sectionName if sectionName else '(none)'))
 
-        #
-        # Default settings dict is blank
-        #
-        config: Dict[str, str] = {}
+        validator = ConfigurationValidator(self.settings)
 
         #
         # Load settings from class settings definitions if any of them
         # have default values
         #
-        config.update(self._load_config_from_class())
+        validator.load(self._load_config_from_class())
 
         #
         # Load settings from default profile in database, if it exists
         #
-        config.update(self._load_config_from_database())
+        validator.load(self._load_config_from_database())
 
         #
         # Load settings from a specific profile, if one was specified
         #
         if sectionName and sectionName != 'default':
-            config.update(self._load_config_from_database(sectionName))
+            validator.load(self._load_config_from_database(sectionName))
 
         #
         # Validate the settings and dump the config with transformed
         # values
         #
         try:
-            validator = ConfigurationValidator(self.settings)
-            validator.load(config)
             validator.validate()
             processed_config: Dict[str, Any] = validator.dump(secure=False)
         except ValidationError as ex:

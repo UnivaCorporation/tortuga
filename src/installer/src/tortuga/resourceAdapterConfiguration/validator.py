@@ -91,6 +91,9 @@ class ConfigurationValidator(MutableMapping):
     def __iter__(self) -> Iterator[str]:
         return self._storage.__iter__()
 
+    def __str__(self) -> str:
+        return self._storage.__str__()
+
     def validate(self, full: bool = True) -> None:
         """
         Validate the resource adapter settings profile.
@@ -135,7 +138,7 @@ class ConfigurationValidator(MutableMapping):
         if errors:
             raise ValidationError(errors)
 
-    def _validate_required(self, k: str, v: BaseSetting) -> None:
+    def _validate_required(self, k: str, v: BaseSetting):
         """
         Validates the required flag on a setting.
 
@@ -148,7 +151,19 @@ class ConfigurationValidator(MutableMapping):
         if not v.required:
             return
 
-        if k not in self._storage.keys():
+        if k in self._storage.keys():
+            return
+
+        if v.mutually_exclusive:
+            for alternate_key in v.mutually_exclusive:
+                if alternate_key in self._storage.keys():
+                    return
+            valid_values = ', '.join(v.mutually_exclusive)
+
+            raise SettingValidationError(
+                'This or {} is required'.format(valid_values))
+
+        else:
             raise SettingValidationError('Setting is required')
 
     def _validate_requires(self, v: BaseSetting):
@@ -202,7 +217,7 @@ class ConfigurationValidator(MutableMapping):
         result = {}
 
         for k, v in self._storage.items():
-            setting = self._settings[k]
+            setting: BaseSetting = self._settings[k]
             if secure and setting.secret:
                 v_out = self.REDACTED_STRING
             else:
@@ -222,4 +237,16 @@ class ConfigurationValidator(MutableMapping):
 
         """
         for k, v in data.items():
+            #
+            # Fail silently if the setting isn't found, we will
+            # let validation take care of that instead
+            #
+            setting: BaseSetting = self._settings.get(k)
+            if setting:
+                #
+                # Override settings, if required
+                #
+                for override in setting.overrides:
+                    if override in self._storage.keys():
+                        self._storage.pop(override)
             self[k] = v
