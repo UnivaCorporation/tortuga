@@ -12,11 +12,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Optional
+import pytest
+
+from tortuga.utility.helper import str2bool
 
 
-def str2bool(value, default: Optional[bool] = False):
-    """Convert value to bool type"""
+@pytest.mark.parametrize('argument,expected', [
+    ('true', True),
+    ('false', False),
+    ('True', True),
+    ('False', False),
+    (True, True),
+    (False, False),
+    ('t', True),
+    ('y', True),
+    ('1', True),
+    ('f', False),
+    (None, False),
+    ])
+def test_str2bool(argument, expected):
+    result = str2bool(argument)
 
-    return value if isinstance(value, bool) else \
-        str(value)[0].lower() in ('1', 't', 'y') if value else default
+    assert result == expected
+
+
+def test_str2bool_with_default_override():
+    result = str2bool(None, default=True)
+
+    assert result
