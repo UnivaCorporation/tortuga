@@ -20,7 +20,7 @@ from typing import Any, Dict, List, NoReturn, Optional, Tuple
 from sqlalchemy.orm.session import Session
 from tortuga.addhost.addHostManager import AddHostManager
 from tortuga.addhost.addHostServerLocal import AddHostServerLocal
-from tortuga.config.configManager import ConfigManager, getfqdn
+from tortuga.config.configManager import ConfigManager
 from tortuga.db.dbManager import DbManager
 from tortuga.db.hardwareProfileDbApi import HardwareProfileDbApi
 from tortuga.db.models.hardwareProfile import \
@@ -54,6 +54,7 @@ from tortuga.san import san
 from tortuga.softwareprofile.softwareProfileManager import \
     SoftwareProfileManager
 from tortuga.sync.syncApi import SyncApi
+
 from . import state
 
 
@@ -440,7 +441,7 @@ class NodeManager(TortugaObjectManager): \
 
         return result, nodes_deleted
 
-    def deleteNode(self, nodespec: str, force: bool = False):
+    def deleteNode(self, nodespec: str, force: Optional[bool] = False):
         """
         Delete node by nodespec
 
@@ -448,23 +449,10 @@ class NodeManager(TortugaObjectManager): \
             NodeNotFound
         """
 
-        installer_hostname = getfqdn().split('.', 1)[0]
-
         with DbManager().session() as session:
             try:
-                nodes = []
-
-                for node in \
-                        self._nodesDbHandler.expand_nodespec(session, nodespec):
-                    if node.name.split('.', 1)[0] == installer_hostname:
-                        self.getLogger().info(
-                            'Ignoring request to delete installer node'
-                            ' ([{0}])'.format(node.name))
-
-                        continue
-
-                    nodes.append(node)
-
+                nodes = self._nodesDbHandler.expand_nodespec(
+                    session, nodespec, include_installer=False)
                 if not nodes:
                     raise NodeNotFound(
                         'No nodes matching nodespec [%s]' % (nodespec))
@@ -1522,7 +1510,8 @@ class NodeManager(TortugaObjectManager): \
                 state, optionDict=get_default_relations(optionDict)))
 
     def getNodesByNameFilter(self, nodespec: str,
-                             optionDict: OptionDict = None) \
+                             optionDict: OptionDict = None,
+                             include_installer: Optional[bool] = True) \
             -> TortugaObjectList:
         """
         Return TortugaObjectList of Node objects matching nodespec
@@ -1530,7 +1519,11 @@ class NodeManager(TortugaObjectManager): \
 
         return self.__populate_nodes(
             self._nodeDbApi.getNodesByNameFilter(
-                nodespec, optionDict=get_default_relations(optionDict)))
+                nodespec,
+                optionDict=get_default_relations(optionDict),
+                include_installer=include_installer
+            )
+        )
 
     def getNodesByAddHostSession(self, addHostSession: str,
                                  optionDict: OptionDict = None) \

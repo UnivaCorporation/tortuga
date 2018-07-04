@@ -88,21 +88,26 @@ class NodeDbApi(TortugaDbApi):
                 raise
 
     def getNodesByNameFilter(self, nodespec: str,
-                             optionDict: OptionsDict = None) \
+                             optionDict: OptionsDict = None,
+                             include_installer: Optional[bool] = True) \
             -> TortugaObjectList:
         """
-        Get node(s) from db based on the name filter
+        Get node(s) from db based on the name filter; set 'include_installer'
+        to False to exclude installer node from results.
         """
 
         with DbManager().session() as session:
             try:
                 return self.__convert_nodes_to_TortugaObjectList(
-                    self._nodesDbHandler.expand_nodespec(session, nodespec),
+                    self._nodesDbHandler.expand_nodespec(
+                        session,
+                        nodespec,
+                        include_installer=include_installer),
                     optionDict=optionDict)
-            except TortugaException:
-                raise
             except Exception as ex:
-                self.getLogger().exception('%s' % ex)
+                if not isinstance(ex, TortugaException):
+                    self.getLogger().exception('%s' % ex)
+
                 raise
 
     def getNodeById(self, nodeId: int, optionDict: OptionsDict = None) \

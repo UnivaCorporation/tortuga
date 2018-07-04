@@ -193,6 +193,41 @@ def test_getNodesByNameFilter(dbm, nodespec):
                 'No matching nodes: nodespec=[{}]'.format(nodespec))
 
 
+def test_getNodesByNameFilter_without_installer(dbm):
+    installer = getfqdn()
+
+    with dbm.session() as session:
+        result = NodesDbHandler().getNodesByNameFilter(
+            session, '%', include_installer=False)
+
+        assert result and \
+            isinstance(result, list) and \
+            installer not in [node.name for node in result]
+
+
+def test_getNodesByNameFilter_with_installer(dbm):
+    installer = getfqdn()
+
+    with dbm.session() as session:
+        result = NodesDbHandler().getNodesByNameFilter(
+            session, '%', include_installer=True)
+
+        assert result and \
+            isinstance(result, list) and \
+            installer in [node.name for node in result]
+
+
+def test_getNodesByNameFilter_default(dbm):
+    installer = getfqdn()
+
+    with dbm.session() as session:
+        result = NodesDbHandler().getNodesByNameFilter(session, '%')
+
+        assert result and \
+            isinstance(result, list) and \
+            installer in [node.name for node in result]
+
+
 def match_all_nodes(result):
     # Match expected tags
     return not set(['compute-01.private',
@@ -200,6 +235,36 @@ def match_all_nodes(result):
                     'compute-03.private',
                     'compute-04.private']) - \
         set([node.name for node in result])
+
+
+def test_build_node_filterspec_all():
+    result = NodesDbHandler().build_node_filterspec('*')
+
+    assert result[0] == '%'
+
+
+def test_build_node_filterspec_spec():
+    result = NodesDbHandler().build_node_filterspec('compute*')
+
+    assert result[0] == 'compute%'
+
+
+def test_build_node_filterspec_spec1():
+    result = NodesDbHandler().build_node_filterspec('a*,b*,c*')
+
+    assert result[0] == 'a%' and result[1] == 'b%' and result[2] == 'c%'
+
+
+def test_expand_nodespec_default(dbm):
+    installer = getfqdn()
+
+    with dbm.session() as session:
+        result = NodesDbHandler().expand_nodespec(session, '*')
+
+        # the default in 'expand_nodespec' is to include the installer
+        assert result and isinstance(result, list) and \
+            installer in [node.name for node in result]
+
 
 
 if __name__ == '__main__':
