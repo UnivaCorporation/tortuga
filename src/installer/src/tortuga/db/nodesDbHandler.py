@@ -19,7 +19,7 @@ from typing import List, Optional, Tuple, Union
 from sqlalchemy import and_, func, or_
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.session import Session
-
+from tortuga.config.configManager import getfqdn
 from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
 from tortuga.exceptions.nodeNotFound import NodeNotFound
@@ -27,6 +27,7 @@ from tortuga.exceptions.nodeNotFound import NodeNotFound
 from .models.nic import Nic
 from .models.node import Node
 from .models.softwareProfile import SoftwareProfile
+
 
 Tags = List[Tuple[str, str]]
 
@@ -97,10 +98,16 @@ class NodesDbHandler(TortugaDbObjectHandler):
         return session.query(Node).filter(
             Node.addHostSession == ahSession).order_by(Node.name).all()
 
-    def getNodesByNameFilter(self, session: Session,
-                             filter_spec: Union[str, list]) -> List[Node]:
+    def getNodesByNameFilter(
+            self,
+            session: Session,
+            filter_spec: Union[str, list],
+            include_installer: Optional[bool] = True) -> List[Node]:
         """
         Filter follows SQL "LIKE" semantics (ie. "something%")
+
+        Exclude installer node from node list by setting
+        'include_installer' to False.
 
         Returns a list of Node
         """
@@ -123,6 +130,16 @@ class NodesDbHandler(TortugaDbObjectHandler):
             # Match fully-qualified node names exactly
             # (ie. "hostname-01.domain")
             node_filter.append(Node.name.like(filter_spec_item))
+
+        if not include_installer:
+            installer_fqdn = getfqdn()
+
+            return session.query(Node).filter(
+                and_(
+                    Node.name != installer_fqdn,
+                    or_(*node_filter)
+                )
+            ).all()
 
         return session.query(Node).filter(or_(*node_filter)).all()
 
@@ -170,8 +187,9 @@ class NodesDbHandler(TortugaDbObjectHandler):
         self.getLogger().debug('getNodeList()')
 
         if softwareProfile:
-            dbSoftwareProfile = self._softwareProfilesDbHandler.\
-                getSoftwareProfile(session, softwareProfile)
+            dbSoftwareProfile = \
+                self._softwareProfilesDbHandler.getSoftwareProfile(
+                    session, softwareProfile)
 
             return dbSoftwareProfile.nodes
 
@@ -216,7 +234,7 @@ class NodesDbHandler(TortugaDbObjectHandler):
         return session.query(Node).join(Nic).filter(
             Nic.mac.in_(usedMacList)).all()
 
-    def build_node_filterspec(self, nodespec):
+    def build_node_filterspec(self, nodespec: str) -> List[str]:
         filter_spec = []
 
         for nodespec_token in nodespec.split(','):
@@ -238,7 +256,15 @@ class NodesDbHandler(TortugaDbObjectHandler):
 
         return filter_spec
 
-    def expand_nodespec(self, session: Session, nodespec: str) \
+    def expand_nodespec(self, session: Session, nodespec: str,
+                        include_installer: Optional[bool] = True) \
             -> List[Node]:
+        """
+        Expand command-line nodespec (ie. "compute*") to list of nodes
+        """
+
         return self.getNodesByNameFilter(
-            session, self.build_node_filterspec(nodespec))
+            session,
+            self.build_node_filterspec(nodespec),
+            include_installer=include_installer
+        )

@@ -92,7 +92,7 @@ class NodeController(TortugaController):
         },
         {
             'name': 'deleteNode',
-            'path': '/v1/nodes/:(name)',
+            'path': '/v1/nodes/:(nodespec)',
             'action': 'deleteNode',
             'method': ['DELETE'],
         },
@@ -494,16 +494,17 @@ class NodeController(TortugaController):
 
     @cherrypy.tools.json_out()
     @authentication_required()
-    def deleteNode(self, name, **kwargs):
+    def deleteNode(self, nodespec, **kwargs):
         """
-        Handle /nodes/:(name) (DELETE)
+        Handle /nodes/:(nodespec) (DELETE)
         """
 
         try:
-            force = kwargs['force'] if 'force' in kwargs else False
-
             transaction_id = enqueue_delete_hosts_request(
-                cherrypy.request.db, name, force)
+                cherrypy.request.db,
+                nodespec,
+                str2bool(kwargs.get('force'))
+            )
 
             self.getLogger().debug(
                 'NodeController.deleteNode(): delete request queued: %s' % (
@@ -525,6 +526,11 @@ class NodeController(TortugaController):
 
 
 def enqueue_delete_hosts_request(session, nodespec: str, force: bool):
+    """
+    Raises:
+        NodeNotFound
+    """
+
     request = _init_node_delete_request(nodespec)
     session.add(request)
     session.commit()
@@ -544,12 +550,16 @@ def enqueue_delete_hosts_request(session, nodespec: str, force: bool):
     # first, as we don't want multiple prepends...
     #
     nm = NodeManager()
-    node = nm.getNode(nodespec)
-    if not node.getState().startswith(state.DELETING_PREFIX):
-        nm.updateNodeStatus(
-            nodespec,
-            state='{}{}'.format(state.DELETING_PREFIX, node.getState())
-        )
+    nodes = nm.getNodesByNameFilter(nodespec, include_installer=False)
+    if not nodes:
+        raise NodeNotFound('No nodes matching nodespec [{}]'.format(nodespec))
+
+    for node in nodes:
+        if not node.getState().startswith(state.DELETING_PREFIX):
+            nm.updateNodeStatus(
+                node.getName(),
+                state='{}{}'.format(state.DELETING_PREFIX, node.getState())
+            )
 
     #
     # Run async task
