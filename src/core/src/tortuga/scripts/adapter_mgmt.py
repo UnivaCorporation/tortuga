@@ -448,7 +448,7 @@ class AdapterMgmtCLI(TortugaCli):
 
                     continue
 
-                configuration.append(dict(key=name.lower(), value=value))
+                configuration.append(dict(key=name, value=value))
 
             sys.stdout.write(
                 'Creating profile [{0}] for resource adapter'
@@ -496,11 +496,11 @@ class AdapterMgmtCLI(TortugaCli):
 def key_value_pair(arg):
     key, value = arg.split('=', 1)
 
-    return key.lower(), value
+    return key, value
 
 
 def cfgkey(arg):
-    return arg.lower()
+    return arg
 
 
 def _raise_profile_already_exists(adapter_name, profile_name):
