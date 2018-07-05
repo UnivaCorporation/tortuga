@@ -216,14 +216,25 @@ class FileSetting(BaseSetting):
     def validate(self, value):
         super().validate(value)
 
-        path = value
-
-        if self.base_path:
-            path = os.path.join(self.base_path, path)
+        path = self._get_full_path(value)
 
         if self.must_exist and not os.path.exists(path):
             raise SettingValidationError(
                 'File does not exist: {}'.format(path))
+
+    def dump(self, value: str) -> Union[str, List[str]]:
+        dumped = super().dump(value)
+
+        if isinstance(dumped, list):
+            return [self._get_full_path(v) for v in dumped]
+
+        return self._get_full_path(value)
+
+    def _get_full_path(self, path: str) -> str:
+        if not path.startswith('/') and self.base_path:
+            path = os.path.join(self.base_path, path)
+
+        return path
 
 
 class IntegerSetting(BaseSetting):
