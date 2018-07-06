@@ -68,9 +68,13 @@ class AdapterMgmtCLI(TortugaCli):
             '--resource-adapter', '-r', metavar='NAME', required=True,
             help='Resource adapter name')
         settings_args.add_argument(
-            '--all', dest='show_all', required=False, action='store_true',
-            default=False,
-            help='Display all settings, including advanced')
+            '--optional', '-o', dest='show_optional', required=False,
+            action='store_true', default=False,
+            help='Display optional settings')
+        settings_args.add_argument(
+            '--advanced', '-v', dest='show_advanced', required=False,
+            action='store_true', default=False,
+            help='Display advanced settings')
         subparsers.add_parser('settings', parents=[settings_args])
 
         # show
@@ -87,7 +91,7 @@ class AdapterMgmtCLI(TortugaCli):
             help='Display all settings, including passwords/keys')
         show_args.add_argument(
             '--setting', '-s', metavar='KEY',
-            help='Display specfied setting only')
+            help='Display specified setting only')
         subparsers.add_parser('show',
                               parents=[show_args, show_list_common_args])
         
@@ -269,7 +273,7 @@ class AdapterMgmtCLI(TortugaCli):
             is_secret = setting.get('secret', False)
 
             value = cfgitem['value']
-            if not show_all and not is_secret:
+            if not show_all and is_secret:
                 value = '<REDACTED>'
 
             sys.stdout.write('  - {} = {}\n'.format(key, value))
@@ -282,11 +286,12 @@ class AdapterMgmtCLI(TortugaCli):
             sys.stdout.write(
                 'Resource adapter: {}\n'.format(args.resource_adapter))
             sys.stdout.write('Profile: {}\n'.format(args.profile))
-            sys.stdout.write('Validation:\n')
 
             if not validation:
-                sys.stdout.write('  No validation errors found\n')
+                sys.stdout.write('No errors found\n')
                 return
+
+            sys.stdout.write('Errors:\n')
 
             for k, v in validation.items():
                 sys.stdout.write('  - {}: {}\n'.format(k, v))
@@ -300,17 +305,52 @@ class AdapterMgmtCLI(TortugaCli):
         ra = self._get_resource_adapter(args.resource_adapter)
 
         sys.stdout.write('Resource adapter: {}\n'.format(ra['name']))
-        sys.stdout.write('Settings:\n')
 
         settings = ra.get('settings', {})
         if not settings:
-            sys.stdout.write('  No settings available\n')
+            sys.stdout.write('No settings available\n')
             return
 
+        print(settings)
+
+        sys.stdout.write('Required:\n')
+        required_found = False
+
         for name, setting in settings.items():
-            if setting.get('advanced', False) and not args.show_all:
+            if not setting.get('required', False):
                 continue
+            required_found = True
             self._print_setting(name, setting)
+
+        if not required_found:
+            print('  No required settings')
+
+        if args.show_optional:
+            optional_found = False
+            sys.stdout.write('Optional:\n')
+
+            for name, setting in settings.items():
+                if setting.get('required', False) or \
+                        setting.get('advanced', False):
+                    continue
+                optional_found = True
+                self._print_setting(name, setting)
+
+            if not optional_found:
+                print('  No optional settings available')
+
+        if args.show_advanced:
+            advanced_found = False
+            sys.stdout.write('Advanced:\n')
+
+            for name, setting in settings.items():
+                if not setting.get('advanced', False):
+                    continue
+                advanced_found = True
+                self._print_setting(name, setting)
+
+            if not advanced_found:
+                print('  No advanced settings available')
 
     def _get_resource_adapter(self, name: str) -> Optional[dict]:
         """
@@ -339,8 +379,6 @@ class AdapterMgmtCLI(TortugaCli):
         sys.stdout.write('  - {}:\n'.format(name))
 
         output: dict = dict()
-
-        output['Required'] = "yes" if setting.get('required', False) else "no"
 
         if setting.get('description', None):
             output['Description'] = setting['description']

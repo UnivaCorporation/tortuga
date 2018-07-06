@@ -208,7 +208,7 @@ class ResourceAdapterConfigurationController(TortugaController):
 
         except ValidationError as exc:
             response = {}
-            for k, v in exc.errors:
+            for k, v in exc.errors.items():
                 response[k] = str(v)
 
         except TortugaException as exc:
