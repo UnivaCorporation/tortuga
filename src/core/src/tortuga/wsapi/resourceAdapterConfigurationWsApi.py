@@ -53,6 +53,29 @@ class ResourceAdapterConfigurationWsApi(TortugaWsApi):
         except Exception as ex:
             raise TortugaException(exception=ex)
 
+    def validate(self, resadapter_name: str, name: str):
+        """
+        Validate resource adapter configuration
+
+        :param str resadapter_name: the name of the resource adapter
+        :param str name:            the name of the configuration profile
+
+        """
+
+        url = 'v1/resourceadapters/{}/profile/{}/validate'.format(
+            resadapter_name, name)
+
+        try:
+            _, responseDict = self.sendSessionRequest(url)
+
+            return responseDict
+
+        except TortugaException:
+            raise
+
+        except Exception as ex:
+            raise TortugaException(exception=ex)
+
     def get_profile_names(self, resadapter_name):
         url = 'v1/resourceadapters/{0}/profile/'.format(resadapter_name)
 

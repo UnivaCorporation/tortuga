@@ -28,8 +28,6 @@ class ConfigurationValidator(MutableMapping):
     This class represents a validator for a resource adapter configuration.
 
     """
-    REDACTED_STRING = '**********'
-
     def __init__(self, settings: Optional[Dict[str, BaseSetting]] = None):
         """
         Initialization.
@@ -200,14 +198,11 @@ class ConfigurationValidator(MutableMapping):
                 raise SettingValidationError(
                     'Mutually exclusive with {}'.format(mk))
 
-    def dump(self, secure: bool = True) -> Dict[str, Any]:
+    def dump(self) -> Dict[str, Any]:
         """
         Dumps as a plain dict, with values transformed into their concrete
         data types. A partial validation is performed prior to dumping to
         ensure that any transformations will succeed.
-
-        :param bool secure: Whether or not to redact secure values from the
-                            dumped output.
 
         :return Dict[str, Any]: a dict of the transformed data
 
@@ -218,12 +213,7 @@ class ConfigurationValidator(MutableMapping):
 
         for k, v in self._storage.items():
             setting: BaseSetting = self._settings[k]
-            if secure and setting.secret:
-                v_out = self.REDACTED_STRING
-            else:
-                v_out = setting.dump(v)
-
-            result[k] = v_out
+            result[k] = setting.dump(v)
 
         return result
 

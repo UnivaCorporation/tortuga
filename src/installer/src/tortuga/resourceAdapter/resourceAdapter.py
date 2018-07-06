@@ -262,17 +262,18 @@ class ResourceAdapter(UserDataMixin): \
     def getLogger(self):
         return self._logger
 
-    def getResourceAdapterConfig(self,
-                                 sectionName: str = 'default'
-                                 ) -> Dict[str, Any]:
+    def validate_config(self, profile: str = 'default') -> ConfigurationValidator:
         """
-        Raises:
-            ResourceNotFound
-        """
-        self.getLogger().debug(
-            'getResourceAdapterConfig(sectionName=[{0}])'.format(
-                sectionName if sectionName else '(none)'))
+        Validates the configuration profile.
 
+        :param str profile: the name of the configuration profile to validate
+
+        :return ConfigurationValidator: the validator, loaded with the
+                                        validated data
+
+        :raises ValidationError:
+
+        """
         validator = ConfigurationValidator(self.settings)
 
         #
@@ -289,16 +290,42 @@ class ResourceAdapter(UserDataMixin): \
         #
         # Load settings from a specific profile, if one was specified
         #
-        if sectionName and sectionName != 'default':
-            validator.load(self._load_config_from_database(sectionName))
+        if profile and profile != 'default':
+            validator.load(self._load_config_from_database(profile))
+
+        #
+        # Validate the settings
+        #
+        validator.validate()
+
+        return validator
+
+    def getResourceAdapterConfig(self,
+                                 sectionName: str = 'default'
+                                 ) -> Dict[str, Any]:
+        """
+        Gets the resource adatper configuration for the specified profile.
+
+        :param str sectionName: the reousrce adapter profile to get
+
+        :return Dict[str, Any]: the configuration
+
+        :raises ConfigurationError:
+        :raises ResourceNotFound:
+
+        """
+        self.getLogger().debug(
+            'getResourceAdapterConfig(sectionName=[{0}])'.format(
+                sectionName if sectionName else '(none)'))
 
         #
         # Validate the settings and dump the config with transformed
         # values
         #
         try:
-            validator.validate()
-            processed_config: Dict[str, Any] = validator.dump(secure=False)
+            validator = self.validate_config(sectionName)
+            processed_config: Dict[str, Any] = validator.dump()
+
         except ValidationError as ex:
             raise ConfigurationError(str(ex))
 

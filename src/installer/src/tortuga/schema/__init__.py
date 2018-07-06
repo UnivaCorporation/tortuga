@@ -128,7 +128,7 @@ class ResourceAdapterConfigSettingSchema(ModelSchema):
 
 class ResourceAdapterConfigSchema(ModelSchema):
     resourceadapter = fields.Nested('ResourceAdapterSchema',
-                                    only=('id', 'name'))
+                                    only=('id', 'name', 'settings'))
     admin = fields.Nested('AdminSchema', only=('id', 'username'))
     configuration = fields.Nested('ResourceAdapterConfigSettingSchema',
                                   only=('id', 'key', 'value'), many=True)
@@ -139,9 +139,16 @@ class ResourceAdapterConfigSchema(ModelSchema):
 
 class ResourceAdapterSchema(ModelSchema):
     credentials = fields.Nested('ResourceAdapterConfigSchema')
+    settings = fields.Method('get_settings', dump_only=True)
 
     class Meta:
         model = ResourceAdapterModel
+
+    def get_settings(self, obj: ResourceAdapterModel):
+        settings = {}
+        for k, v in obj.settings.items():
+            settings[k] = v.schema().dump(v).data
+        return settings
 
 
 class InstanceMetadataSchema(ModelSchema):

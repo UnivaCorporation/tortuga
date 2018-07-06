@@ -15,6 +15,7 @@
 # pylint: disable=no-member,not-callable
 
 import http.client
+from typing import Type
 
 import cherrypy
 
@@ -22,9 +23,14 @@ from tortuga.db.resourceAdapterDbApi import ResourceAdapterDbApi
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.resourceAdapterNotFound import ResourceAdapterNotFound
 from tortuga.exceptions.resourceAlreadyExists import ResourceAlreadyExists
+from tortuga.exceptions.resourceNotFound import ResourceNotFound
 from tortuga.exceptions.tortugaException import TortugaException
+from tortuga.resourceAdapter.resourceAdapter import ResourceAdapter
+from tortuga.resourceAdapter.resourceAdapterFactory import \
+    get_resourceadapter_class
 from tortuga.resourceAdapterConfiguration.api import \
     ResourceAdapterConfigurationApi
+from tortuga.resourceAdapterConfiguration.validator import ValidationError
 from tortuga.schema import ResourceAdapterConfigSchema
 from tortuga.web_service.auth.decorators import authentication_required
 
@@ -53,6 +59,12 @@ class ResourceAdapterConfigurationController(TortugaController):
             'name': 'get_resource_adapter_configuration',
             'path': '/v1/resourceadapters/:(resadapter_name)/profile/:(name)',
             'action': 'get',
+            'method': ['GET'],
+        },
+        {
+            'name': 'validate_resource_adapter_configuration',
+            'path': '/v1/resourceadapters/:(resadapter_name)/profile/:(name)/validate',
+            'action': 'validate',
             'method': ['GET'],
         },
         {
@@ -159,6 +171,53 @@ class ResourceAdapterConfigurationController(TortugaController):
             # Unhandled server exception
             self.getLogger().exception('get() failed')
 
+            response = self.errorResponse(
+                'Internal server error',
+                http_status=http.client.INTERNAL_SERVER_ERROR)
+
+        return self.formatResponse(response)
+
+    @cherrypy.tools.json_out()
+    @authentication_required()
+    def validate(self, resadapter_name: str, name: str):
+        try:
+            #
+            # Do a lookup to make sure the configuration profile does in
+            # fact exist
+            #
+            ResourceAdapterConfigurationApi().get(
+                cherrypy.request.db, resadapter_name, name)
+
+            #
+            # Get the resource adapter class
+            #
+            ra_class: Type[ResourceAdapter] = get_resourceadapter_class(
+                resadapter_name)
+            ra = ra_class()
+
+            #
+            # Validate the configuration
+            #
+            ra.validate_config(name)
+
+            response = {}
+
+        except (ResourceAdapterNotFound, ResourceNotFound) as exc:
+            self.handleException(exc)
+            response = self.notFoundErrorResponse(str(exc))
+
+        except ValidationError as exc:
+            response = {}
+            for k, v in exc.errors:
+                response[k] = str(v)
+
+        except TortugaException as exc:
+            self.handleException(exc)
+            response = self.errorResponse(str(exc),
+                                          code=self.getTortugaStatusCode(exc))
+
+        except Exception:
+            self.getLogger().exception('validate() failed')
             response = self.errorResponse(
                 'Internal server error',
                 http_status=http.client.INTERNAL_SERVER_ERROR)
