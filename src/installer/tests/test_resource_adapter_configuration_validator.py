@@ -190,28 +190,3 @@ def test_dump():
         'file': 'file.txt'
     }
     assert p.dump() == expected_data
-
-
-def test_secret():
-    s = {
-        'string': settings.StringSetting(secret=True)
-    }
-    p = ConfigurationValidator(s)
-    p['string'] = 'abc123'
-
-    #
-    # Assert that fields marked as secret are redacted in a secure dump
-    #
-    expected_data = {
-        'string': ConfigurationValidator.REDACTED_STRING
-    }
-    assert p.dump() == expected_data
-
-    #
-    # Assert that fields are marked as secred are revealed in an insecure
-    # dump
-    #
-    expected_data = {
-        'string': 'abc123'
-    }
-    assert p.dump(secure=False) == expected_data
