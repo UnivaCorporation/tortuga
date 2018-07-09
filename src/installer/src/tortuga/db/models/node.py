@@ -26,6 +26,7 @@ class Node(ModelBase):
 
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True, nullable=False)
+    public_hostname = Column(String, unique=True, nullable=True)
     state = Column(String, default='Discovered')
     bootFrom = Column(Integer, default=0)
     lastUpdate = Column(String(20))
