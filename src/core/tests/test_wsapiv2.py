@@ -12,4 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .version import version_is_compatible, VERSION
+import pytest
+
+from tortuga.wsapi_v2.client import TortugaWsApiClient
+
+
+@pytest.mark.parametrize('params,expected', [
+    ({
+        'key1': 'value1',
+        'key2': 'value2',
+        'key3': 'value3',
+    }, 'key1=value1&key2=value2&key3=value3'
+    ),
+    ({
+        'key1': 'value1',
+    }, 'key1=value1',
+    ),
+    ({}, ''),
+])
+def test_build_query_string(params, expected):
+    result = TortugaWsApiClient(
+        endpoint='https://blah:1234')._build_query_string(params)
+
+    assert result == expected

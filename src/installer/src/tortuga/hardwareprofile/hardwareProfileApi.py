@@ -104,25 +104,6 @@ class HardwareProfileApi(TortugaApi):
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
 
-    def getHypervisorNodes(self, hardwareProfileName):
-        """
-        Get list of hypervisors for a given hardare profile.
-
-            Returns:
-               [node]
-            Throws:
-                HardwareProfileNotFound
-                TortugaException
-        """
-        try:
-            return HardwareProfileManager().\
-                getHypervisorNodes(hardwareProfileName)
-        except TortugaException as ex:
-            raise
-        except Exception as ex:
-            self.getLogger().exception('%s' % ex)
-            raise TortugaException(exception=ex)
-
     def addAdmin(self, hardwareProfileName, adminUsername):
         """
         Add an admin as an authorized user.

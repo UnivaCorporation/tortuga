@@ -25,6 +25,7 @@ from tortuga.db.models.node import Node
 from tortuga.db.models.operatingSystem import OperatingSystem
 from tortuga.db.models.operatingSystemFamily import OperatingSystemFamily
 from tortuga.db.models.softwareProfile import SoftwareProfile
+from tortuga.node import state
 from tortuga.objects.parameter import Parameter
 
 
@@ -35,7 +36,7 @@ def primeDb(session: Session, settings: Dict[str, Any]):
 
     # Create node entry for installer
     node = Node(name=settings['fqdn'])
-    node.state = 'Installed'
+    node.state = state.NODE_STATE_INSTALLED
     node.lockedState = 'HardLocked'
     node.lastUpdate = time.strftime(
         '%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
@@ -44,10 +45,13 @@ def primeDb(session: Session, settings: Dict[str, Any]):
 
     # Create Installer Software Profile
     node.softwareprofile = SoftwareProfile(
-        name=settings['installer_software_profile']
+        name=settings['installer_software_profile'],
+        description='Installer software profile',
+        type='installer',
+        minNodes=1,
+        maxNodes=1,
+        lockedState='HardLocked',
     )
-    node.softwareprofile.description = 'Installer software profile'
-    node.softwareprofile.type = 'installer'
     node.softwareprofile.os = OperatingSystem(
         name=settings['osInfo'].getName(),
         version=settings['osInfo'].getVersion(),

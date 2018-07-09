@@ -228,7 +228,8 @@ class Node(TortugaObject): \
             if softwareProfileDict:
                 node.setSoftwareProfile(
                     tortuga.objects.softwareProfile.SoftwareProfile.
-                    getFromDbDict(softwareProfileDict.__dict__))
+                    getFromDbDict(
+                        softwareProfileDict.__dict__, ignore=('nodes',)))
 
         tags = dict()
 
@@ -246,7 +247,7 @@ class Node(TortugaObject): \
             node.setInstance(
                 InstanceMappingSchema(
                     exclude=('node',
-                             'resource_adapter_configuration.settings')
+                             'resource_adapter_configuration.configuration')
                 ).dump(instance_mapping_dict).data)
 
         return node

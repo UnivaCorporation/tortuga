@@ -19,6 +19,7 @@ import pytest
 from tortuga.db.models.operatingSystem import OperatingSystem
 from tortuga.db.models.softwareProfile import SoftwareProfile
 from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
+from tortuga.exceptions.resourceNotFound import ResourceNotFound
 
 
 @pytest.mark.usefixtures('dbm_class')
@@ -70,3 +71,31 @@ class TestSoftwareProfilesDbHandler(unittest.TestCase):
         assert result and \
             len(result) == 2 and \
             not set(['swprofile1', 'swprofile2']) - set([swp.name for swp in result])
+
+    def test_get_software_profiles_with_component(self):
+        result = SoftwareProfilesDbHandler().get_software_profiles_with_component(
+            self.session, 'base', 'installer'
+        )
+
+        assert result and isinstance(result[0], SoftwareProfile)
+
+        # 'installer' component must be enabled on 'Installer' software
+        # profile as per the database fixture
+        assert result[0].name == 'Installer'
+
+    def test_get_software_profiles_with_component_none(self):
+        result = SoftwareProfilesDbHandler().get_software_profiles_with_component(
+            self.session, 'base', 'pdsh'
+        )
+
+    def test_get_software_profiles_with_component_failed(self):
+        with pytest.raises(ResourceNotFound):
+            SoftwareProfilesDbHandler().get_software_profiles_with_component(
+                self.session, 'base', 'installerEXAMPLE'
+            )
+
+    def test_get_software_profiles_with_component_failed2(self):
+        with pytest.raises(ResourceNotFound):
+            SoftwareProfilesDbHandler().get_software_profiles_with_component(
+                self.session, 'baseEXAMPLE', 'installer'
+            )

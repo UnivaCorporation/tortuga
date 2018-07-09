@@ -19,9 +19,12 @@ import datetime
 import cherrypy
 
 from tortuga.addhost.addHostManager import AddHostManager
-from tortuga.events.types import DeleteNodeRequestQueued
 from tortuga.db.models.nodeRequest import NodeRequest
+from tortuga.events.types import DeleteNodeRequestQueued
 from tortuga.exceptions.nodeNotFound import NodeNotFound
+from tortuga.exceptions.operationFailed import OperationFailed
+from tortuga.node.nodeManager import NodeManager
+from tortuga.node import state
 from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.resourceAdapter.tasks import delete_nodes
 from tortuga.schema import NodeSchema
@@ -89,7 +92,7 @@ class NodeController(TortugaController):
         },
         {
             'name': 'deleteNode',
-            'path': '/v1/nodes/:(name)',
+            'path': '/v1/nodes/:(nodespec)',
             'action': 'deleteNode',
             'method': ['DELETE'],
         },
@@ -491,25 +494,30 @@ class NodeController(TortugaController):
 
     @cherrypy.tools.json_out()
     @authentication_required()
-    def deleteNode(self, name):
+    def deleteNode(self, nodespec, **kwargs):
         """
-        Handle /nodes/:(name) (DELETE)
+        Handle /nodes/:(nodespec) (DELETE)
         """
 
         try:
             transaction_id = enqueue_delete_hosts_request(
-                cherrypy.request.db, name)
+                cherrypy.request.db,
+                nodespec,
+                str2bool(kwargs.get('force'))
+            )
 
             self.getLogger().debug(
                 'NodeController.deleteNode(): delete request queued: %s' % (
                     transaction_id))
 
             response = dict(transaction_id=transaction_id)
-        except NodeNotFound as ex:
+        except (OperationFailed, NodeNotFound) as ex:
             self.handleException(ex)
             code = self.getTortugaStatusCode(ex)
-            response = self.notFoundErrorResponse(str(ex), code)
-        except Exception as ex:
+            response = self.errorResponse(str(ex)) \
+                if isinstance(ex, OperationFailed) else \
+                self.notFoundErrorResponse(str(ex), code)
+        except Exception as ex:  # pylint: disable=broad-except
             self.getLogger().exception('node WS API deleteNode() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
@@ -517,9 +525,13 @@ class NodeController(TortugaController):
         return self.formatResponse(response)
 
 
-def enqueue_delete_hosts_request(session, nodespec):
-    request = init_node_request_record(nodespec)
+def enqueue_delete_hosts_request(session, nodespec: str, force: bool):
+    """
+    Raises:
+        NodeNotFound
+    """
 
+    request = _init_node_delete_request(nodespec)
     session.add(request)
     session.commit()
 
@@ -527,19 +539,37 @@ def enqueue_delete_hosts_request(session, nodespec):
     # Fire the delete node request queued event
     #
     evt_request = {
-        'name': nodespec
+        'name': nodespec,
+        'force': force,
     }
     DeleteNodeRequestQueued.fire(request_id=request.id, request=evt_request)
 
     #
+    # Prepend the node state with DELETING_PREFIX prior to actually
+    # attempting the delete operation. Make sure this isn't a second attempt
+    # first, as we don't want multiple prepends...
+    #
+    nm = NodeManager()
+    nodes = nm.getNodesByNameFilter(nodespec, include_installer=False)
+    if not nodes:
+        raise NodeNotFound('No nodes matching nodespec [{}]'.format(nodespec))
+
+    for node in nodes:
+        if not node.getState().startswith(state.DELETING_PREFIX):
+            nm.updateNodeStatus(
+                node.getName(),
+                state='{}{}'.format(state.DELETING_PREFIX, node.getState())
+            )
+
+    #
     # Run async task
     #
-    delete_nodes.delay(request.addHostSession, nodespec)
+    delete_nodes.delay(request.addHostSession, nodespec, force=force)
 
     return request.addHostSession
 
 
-def init_node_request_record(nodespec):
+def _init_node_delete_request(nodespec):
     request = NodeRequest(nodespec)
     request.timestamp = datetime.datetime.utcnow()
     request.addHostSession = AddHostManager().createNewSession()

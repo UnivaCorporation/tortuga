@@ -93,13 +93,6 @@ class HardwareProfileController(TortugaController):
             'action': 'deleteAdmin',
             'method': ['DELETE'],
         },
-        {
-            'name': 'getVirtualContainerNodes',
-            'path': '/v1/hardwareprofiles/:hardwareProfileName'
-                    '/virtualContainerNodes',
-            'action': 'getHypervisorNodes',
-            'method': ['GET'],
-        },
     ]
 
     @authentication_required()
@@ -127,7 +120,7 @@ class HardwareProfileController(TortugaController):
             response = {
                 'hardwareprofiles': hardwareProfiles.getCleanDict(),
             }
-        except Exception as ex:
+        except Exception as ex:  # pylint: disable=broad-except
             self.getLogger().exception(
                 'hardware profile WS API getHardwareProfiles() failed')
 
@@ -250,32 +243,6 @@ class HardwareProfileController(TortugaController):
             self.getLogger().exception(
                 'hardware profile WS API updateHardwareProfile() failed')
             self.handleException(ex)
-            response = self.errorResponse(str(ex))
-
-        return self.formatResponse(response)
-
-    @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
-    @authentication_required()
-    def getHypervisorNodes(self, hardwareProfileName):
-        # self.getLogger().debug(
-        #     'getHypervisorNodes: hardwareProfileName [%s]' % (
-        #         hardwareProfileName))
-
-        hpMgr = HardwareProfileManager()
-
-        try:
-            nodes = hpMgr.getHypervisorNodes(hardwareProfileName)
-
-            # self.getLogger().debug('Number of nodes: %s' % len(nodes))
-
-            response = nodes.getCleanDict()
-        except Exception as ex:
-            self.getLogger().exception(
-                'hardware profile WS API getHypervisorNodes() failed')
-
-            self.handleException(ex)
-
             response = self.errorResponse(str(ex))
 
         return self.formatResponse(response)

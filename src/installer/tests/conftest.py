@@ -13,12 +13,13 @@
 # limitations under the License.
 
 import socket
+import sys
 
 import pytest
 from passlib.hash import pbkdf2_sha256
 from sqlalchemy import create_engine
 
-from tortuga.config.configManager import ConfigManager
+from tortuga.config.configManager import ConfigManager, getfqdn
 from tortuga.db import (adminDbApi, globalParameterDbApi, hardwareProfileDbApi,
                         kitDbApi, networkDbApi, nodeDbApi,
                         softwareProfileDbApi)
@@ -35,17 +36,17 @@ from tortuga.db.models.node import Node
 from tortuga.db.models.operatingSystem import OperatingSystem
 from tortuga.db.models.operatingSystemFamily import OperatingSystemFamily
 from tortuga.db.models.resourceAdapter import ResourceAdapter
+from tortuga.db.models.resourceAdapterConfig import ResourceAdapterConfig
+from tortuga.db.models.resourceAdapterSetting import ResourceAdapterSetting
 from tortuga.db.models.softwareProfile import SoftwareProfile
 from tortuga.db.models.tag import Tag
 from tortuga.deployer.dbUtility import init_global_parameters, primeDb
 from tortuga.node import nodeManager
-from tortuga.tasks.celery import app
 from tortuga.objects import osFamilyInfo, osInfo
 from tortuga.objectstore import manager as objectstore_manager
+from tortuga.tasks.celery import app
 
 from .mocks.redis import MockRedis
-from tortuga.db.models.resourceAdapterConfig import ResourceAdapterConfig
-from tortuga.db.models.resourceAdapterSetting import ResourceAdapterSetting
 
 
 @pytest.fixture(autouse=True)
@@ -108,8 +109,6 @@ def dbm():
     os_info = osInfo.OsInfo('centos', '7.4', 'x86_64')
     os_info.setOsFamilyInfo(rhel7_os_family_info)
 
-    installer_fqdn = socket.getfqdn()
-
     settings = {
         'language': 'en',
         'keyboard': 'en_US',
@@ -121,7 +120,7 @@ def dbm():
         'eulaAccepted': 'true',
         'depotpath': '/opt/tortuga/depot',
         'osInfo': os_info,
-        'fqdn': installer_fqdn,
+        'fqdn': getfqdn(),
         'installer_software_profile': 'Installer',
         'installer_hardware_profile': 'Installer',
     }
@@ -141,7 +140,7 @@ def dbm():
             all_tags.append(tag)
 
         installer_node = session.query(Node).filter(
-            Node.name == installer_fqdn).one()
+            Node.name == settings['fqdn']).one()
 
         os_ = session.query(OperatingSystem).filter(
             OperatingSystem.name == 'centos').one()
@@ -205,6 +204,13 @@ def dbm():
         core_component.family = [rhel7_os_family]
         core_component.kit = kit
 
+        # add component not enabled by default
+        pdsh_component = Component(name='pdsh',
+                                   version='6.3',
+                                   description='pdsh component')
+        pdsh_component.family = [rhel7_os_family]
+        pdsh_component.kit = kit
+
         session.add(kit)
 
         # create OS kit
@@ -225,23 +231,24 @@ def dbm():
 
         installer_node.softwareprofile.components.append(ra_component)
         installer_node.softwareprofile.components.append(installer_component)
-        session.commit()
 
         # create 'default' resource adapter
-        default_adapter = ResourceAdapter(name='default')
-        default_adapter.kit = kit
+        default_adapter = ResourceAdapter(name='default', kit=kit)
 
         # create resource adapter
-        aws_adapter = ResourceAdapter(name='aws')
-        aws_adapter.kit = ra_kit
+        aws_adapter = ResourceAdapter(name='aws', kit=ra_kit)
 
         aws_adapter_cfg = ResourceAdapterConfig(
             name='default',
             description='Example default resource adapter configuration'
         )
 
-        aws_adapter_cfg.settings.append(
+        aws_adapter_cfg.configuration.append(
             ResourceAdapterSetting(key='ami', value='ami-XXXXXX')
+        )
+
+        aws_adapter_cfg.configuration.append(
+            ResourceAdapterSetting(key='use_instance_hostname', value='true')
         )
 
         aws_adapter.resource_adapter_config.append(aws_adapter_cfg)
@@ -249,18 +256,33 @@ def dbm():
         # add second resource adapter configuration
         aws_adapter_cfg2 = ResourceAdapterConfig(
             name='nondefault', admin=admin)
-        aws_adapter_cfg2.settings.append(
+        aws_adapter_cfg2.configuration.append(
             ResourceAdapterSetting(key='another_key', value='another_value')
         )
+
+        aws_adapter.resource_adapter_config.append(aws_adapter_cfg2)
 
         session.add(aws_adapter)
 
         # create 'aws' hardware profile
+        # does *not* have a default resource adapter config
         aws_hwprofile = HardwareProfile(name='aws')
         aws_hwprofile.location = 'remote'
         aws_hwprofile.resourceadapter = aws_adapter
+        aws_hwprofile.nameFormat = '*'
 
         session.add(aws_hwprofile)
+
+        # add hardware profile 'aws2' with non-default configuration profile
+        aws_hwprofile2 = HardwareProfile(
+            name='aws2',
+            location='remote',
+            resourceadapter=aws_adapter,
+            default_resource_adapter_config=aws_adapter_cfg2,
+            nameFormat='*',
+        )
+
+        session.add(aws_hwprofile2)
 
         # create 'compute' software profile
         compute_swprofile = SoftwareProfile(name='compute')
@@ -274,14 +296,21 @@ def dbm():
                                              components=[core_component],
                                              type='compute')
 
-        # map 'aws' to 'compute'
-        aws_hwprofile.mappedsoftwareprofiles.append(compute_swprofile)
+        # map 'aws' and 'aws2' to 'compute'
+        compute_swprofile.hardwareprofiles.extend((
+            aws_hwprofile, aws_hwprofile2
+        ))
 
         # create 'localiron' hardware profile
-        localiron_hwprofile = HardwareProfile(name='localiron', nameFormat='compute-#NN')
+        localiron_hwprofile = HardwareProfile(
+            name='localiron',
+            nameFormat='compute-#NN'
+        )
         localiron_hwprofile.resourceadapter = default_adapter
-        localiron_hwprofile.mappedsoftwareprofiles.append(compute_swprofile)
-        localiron_hwprofile.mappedsoftwareprofiles.append(compute2_swprofile)
+        localiron_hwprofile.mappedsoftwareprofiles = [
+            compute_swprofile,
+            compute2_swprofile
+        ]
 
         localiron_hwprofile.hardwareprofilenetworks.append(hwpn1)
 
@@ -345,10 +374,14 @@ def dbm():
                                      type='compute',
                                      tags=[all_tags[0]])
 
+        session.add(swprofile1)
+
         swprofile2 = SoftwareProfile(name='swprofile2',
                                      os=os_,
                                      type='compute',
                                      tags=[all_tags[1]])
+
+        session.add(swprofile2)
 
         session.commit()
 

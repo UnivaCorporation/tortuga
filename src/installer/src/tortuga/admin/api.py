@@ -63,18 +63,29 @@ class AdminApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def addAdmin(self, name, password, isCrypted=False, realname=None,
+    def addAdmin(self, name, password=None, isCrypted=False, realname=None,
                  description=None):
-        """Add a new admin to the system"""
+        """
+        Adds an admin user.
 
+        :param str name:        the admin username
+        :param str password:    the admin password, if None, a random one is
+                                generated
+        :param bool isCrypted:  if False, the password is encrypted before
+                                saving
+        :param str realname:    the full/real name for the user
+        :param str description: the description of the user
+
+        """
         try:
             self._adminManager.addAdmin(
                 name, password, isCrypted, realname, description)
+
         except TortugaException:
             raise
+
         except Exception as ex:
             self.getLogger().exception('addAdmin failed')
-
             raise TortugaException(exception=ex)
 
     def deleteAdmin(self, admin):

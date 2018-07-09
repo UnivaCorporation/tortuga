@@ -64,3 +64,22 @@ class TestHardwareProfilesDbHandler(unittest.TestCase):
 
         assert result and len(result) == 2 and \
             result[0].name == 'profile1' and result[1].name == 'profile2'
+
+    def test_getHardwareProfile_resource_adapter_config(self):
+        result = HardwareProfilesDbHandler().getHardwareProfile(
+            self.session, 'aws2')
+
+        assert result.default_resource_adapter_config and \
+            result.default_resource_adapter_config.name != 'default'
+
+        assert result.default_resource_adapter_config.resourceadapter == \
+            result.resourceadapter
+
+        assert result.default_resource_adapter_config.name == 'nondefault'
+
+    def test_getHardwareProfile_resource_adapter_config_no_default(self):
+        result = HardwareProfilesDbHandler().getHardwareProfile(
+            self.session, 'aws'
+        )
+
+        assert result.default_resource_adapter_config is None

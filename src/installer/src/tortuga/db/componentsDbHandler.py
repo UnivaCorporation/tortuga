@@ -23,8 +23,6 @@ from tortuga.exceptions.componentNotFound import ComponentNotFound
 from tortuga.helper import osHelper
 
 from .models.component import Component
-from .models.operatingSystem import OperatingSystem
-from .models.operatingSystemFamily import OperatingSystemFamily
 
 
 class ComponentsDbHandler(TortugaDbObjectHandler):

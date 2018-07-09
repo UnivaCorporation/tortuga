@@ -56,8 +56,6 @@ class SoftwareProfile(TortugaObject): \
         """ Return software profile id. """
         return self.get('id')
 
-    #
-
     def setName(self, name):
         """ Set software profile name."""
         self['name'] = name
@@ -65,8 +63,6 @@ class SoftwareProfile(TortugaObject): \
     def getName(self):
         """ Return software profile name. """
         return self.get('name')
-
-    #
 
     def setDescription(self, description):
         """ Set description."""
@@ -76,8 +72,6 @@ class SoftwareProfile(TortugaObject): \
         """ Return description. """
         return self.get('description')
 
-    #
-
     def setKernel(self, kernel):
         """ Set kernel."""
         self['kernel'] = kernel
@@ -85,8 +79,6 @@ class SoftwareProfile(TortugaObject): \
     def getKernel(self):
         """ Return kernel. """
         return self.get('kernel')
-
-    #
 
     def setKernelParams(self, kernelParams):
         """ Set kernel params."""
@@ -96,8 +88,6 @@ class SoftwareProfile(TortugaObject): \
         """ Return kernel params. """
         return self.get('kernelParams')
 
-    #
-
     def setInitrd(self, initrd):
         """ Set initrd."""
         self['initrd'] = initrd
@@ -105,8 +95,6 @@ class SoftwareProfile(TortugaObject): \
     def getInitrd(self):
         """ Return initird. """
         return self.get('initrd')
-
-    #
 
     def setOsId(self, osId):
         """ Set OS id."""
@@ -116,8 +104,6 @@ class SoftwareProfile(TortugaObject): \
         """ Return OS id. """
         return self.get('osId')
 
-    #
-
     def setType(self, type_):
         """ Set type."""
         self['type'] = type_
@@ -126,13 +112,23 @@ class SoftwareProfile(TortugaObject): \
         """ Return type. """
         return self.get('type')
 
-    #
-
     def setMinNodes(self, val):
         self['minNodes'] = val
 
     def getMinNodes(self):
         return self.get('minNodes')
+
+    def setMaxNodes(self, value):
+        self['maxNodes'] = value
+
+    def getMaxNodes(self):
+        return self.get('maxNodes')
+
+    def setLockedState(self, val):
+        self['lockedState'] = val
+
+    def getLockedState(self):
+        return self.get('lockedState')
 
     def setOsInfo(self, osInfo):
         """ Set OS info. """
@@ -207,8 +203,21 @@ class SoftwareProfile(TortugaObject): \
 
     @staticmethod
     def getKeys():
-        return ['id', 'name', 'osId', 'description', 'kernel', 'initrd',
-                'kernelParams', 'type', 'minNodes', 'isIdle', 'metadata']
+        return [
+            'id',
+            'name',
+            'osId',
+            'description',
+            'kernel',
+            'initrd',
+            'kernelParams',
+            'type',
+            'minNodes',
+            'maxNodes',
+            'lockedState',
+            'isIdle',
+            'metadata'
+        ]
 
     @classmethod
     def getFromDict(cls, _dict, ignore: Optional[Iterable[str]] = None):
@@ -255,8 +264,9 @@ class SoftwareProfile(TortugaObject): \
         softwareProfile.setComponents(
             tortuga.objects.component.Component.getListFromDbDict(_dict))
 
-        softwareProfile.setNodes(
-            tortuga.objects.node.Node.getListFromDbDict(_dict))
+        if not ignore or 'nodes' not in ignore:
+            softwareProfile.setNodes(
+                tortuga.objects.node.Node.getListFromDbDict(_dict))
 
         osDict = _dict.get(tortuga.objects.osInfo.OsInfo.ROOT_TAG)
 

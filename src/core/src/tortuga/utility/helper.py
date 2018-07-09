@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Optional
 
-def str2bool(value):
+
+def str2bool(value, default: Optional[bool] = False):
     """Convert value to bool type"""
 
     return value if isinstance(value, bool) else \
-        str(value)[0].lower() in ('1', 't', 'y') if value else False
+        str(value)[0].lower() in ('1', 't', 'y') if value else default

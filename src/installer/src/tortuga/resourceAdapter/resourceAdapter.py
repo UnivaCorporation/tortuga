@@ -318,7 +318,7 @@ class ResourceAdapter(UserDataMixin): \
                 self.load_resource_adapter_config(session, sectionName)
             ).data
 
-            return {s['key']: s['value'] for s in cfg['settings']}
+            return {s['key']: s['value'] for s in cfg['configuration']}
 
     def __getAddHostApi(self):
         """Get and cache the Add Host API"""

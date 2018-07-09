@@ -22,13 +22,13 @@ from tortuga.db.models.tag import Tag
 from tortuga.db.nodeDbApi import NodeDbApi
 from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
 from tortuga.db.tagsDbHandler import TagsDbHandler
-from tortuga.objectstore.manager import ObjectStoreManager
 from tortuga.exceptions.notFound import NotFound
 from tortuga.exceptions.resourceAdapterNotFound import ResourceAdapterNotFound
 from tortuga.kit.actions import KitActionsManager
 from tortuga.objects.addHostStatus import AddHostStatus
 from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
+from tortuga.objectstore.manager import ObjectStoreManager
 from tortuga.resourceAdapter import resourceAdapterFactory
 from tortuga.types import Singleton
 from tortuga.wsapi.syncWsApi import SyncWsApi
@@ -90,6 +90,8 @@ class AddHostManager(TortugaObjectManager, Singleton):
         # Apply tags to new nodes
         for node in newNodes:
             node.tags = tags
+
+        session.add_all(newNodes)
 
         # Commit new node(s) to database
         session.commit()

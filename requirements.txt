@@ -8,3 +8,4 @@ Paver
 pytest
 pytest-cov
 Babel
+tox

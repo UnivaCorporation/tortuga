@@ -12,4 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .version import version_is_compatible, VERSION
+import socket
+
+from tortuga.config.configManager import ConfigManager, getfqdn
+
+
+def test_instantiation():
+    cm = ConfigManager()
+
+    assert cm
+
+    assert cm.getRoot()
+
+
+def test_getfqdn():
+    fqdn = socket.getfqdn()
+
+    expected_fqdn = getfqdn()
+
+    if '.' in fqdn:
+        assert fqdn == expected_fqdn
+    else:
+        assert fqdn.split('.', 1)[0] == expected_fqdn.split('.', 1)[0]

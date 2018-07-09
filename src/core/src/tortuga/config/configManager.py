@@ -103,6 +103,18 @@ def get_default_dns_suffix() -> Union[str, None]:
     return search_domain_name
 
 
+def getfqdn():
+    fqdn = socket.getfqdn()
+    if '.' in fqdn:
+        return fqdn
+
+    default_dns_suffix = get_default_dns_suffix()
+    if default_dns_suffix:
+        return f'{fqdn}.{default_dns_suffix}'
+
+    return fqdn
+
+
 class ConfigManager(dict, Singleton): \
         # pylint: disable=too-many-public-methods
     """
@@ -221,14 +233,7 @@ class ConfigManager(dict, Singleton): \
 
         # Set host based on provisioning info
         if self.getProvisioningInfo() is None:
-            installer_fqdn = socket.getfqdn().lower()
-            if '.' not in installer_fqdn:
-                dns_suffix = get_default_dns_suffix()
-                if dns_suffix:
-                    # use dns suffix from /etc/resolv.conf
-                    installer_fqdn += '.{}'.format(dns_suffix)
-
-            self['installer'] = self['host'] = installer_fqdn
+            self['installer'] = self['host'] = getfqdn()
         else:
             self['host'] = self.getProvisioningInfo().getNode().getName()
 
@@ -523,7 +528,7 @@ class ConfigManager(dict, Singleton): \
 
         """
         self['websocketScheme'] = websocketScheme
-        
+
     def getWebsocketScheme(self, default: str = '__internal__') -> str:
         """
         Get the websocket scheme (ws, or wss...)

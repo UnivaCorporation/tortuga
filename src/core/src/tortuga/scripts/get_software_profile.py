@@ -143,6 +143,14 @@ class GetSoftwareProfileCli(TortugaCli):
 
         print('  - Description: {0}'.format(swprofile.getDescription()))
 
+        print('  - State: {}'.format(swprofile.getLockedState()))
+
+        print('  - Min nodes: {}, max nodes: {}'.format(
+            swprofile.getMinNodes()
+            if swprofile.getMinNodes() != -1 else '<NONE>',
+            swprofile.getMaxNodes()
+            if swprofile.getMaxNodes() != -1 else '<NONE>'))
+
         buf = swprofile.getType()
 
         if swprofile.getType() == 'compute':

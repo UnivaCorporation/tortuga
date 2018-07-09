@@ -12,4 +12,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .version import version_is_compatible, VERSION
+import pytest
+
+from tortuga.utility.helper import str2bool
+
+
+@pytest.mark.parametrize('argument,expected', [
+    ('true', True),
+    ('false', False),
+    ('True', True),
+    ('False', False),
+    (True, True),
+    (False, False),
+    ('t', True),
+    ('y', True),
+    ('1', True),
+    ('f', False),
+    (None, False),
+    ])
+def test_str2bool(argument, expected):
+    result = str2bool(argument)
+
+    assert result == expected
+
+
+def test_str2bool_with_default_override():
+    result = str2bool(None, default=True)
+
+    assert result

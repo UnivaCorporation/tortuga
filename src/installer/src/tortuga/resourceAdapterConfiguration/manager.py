@@ -63,7 +63,7 @@ class ResourceAdapterConfigurationManager:
         cfg = ResourceAdapterConfig(name=name)
 
         for entry in configuration or []:
-            cfg.settings.append(
+            cfg.configuration.append(
                 ResourceAdapterSetting(
                     key=entry['key'],
                     value=entry['value']
@@ -140,7 +140,7 @@ class ResourceAdapterConfigurationManager:
         cfg = self._resourceAdapterConfigDbHandler.get(
             session, resadapter_name, name)
 
-        self.__update_settings(session, configuration, cfg.settings)
+        self.__update_settings(session, configuration, cfg.configuration)
 
         session.commit()
 

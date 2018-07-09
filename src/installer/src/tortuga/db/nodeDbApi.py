@@ -14,11 +14,11 @@
 
 # pylint: disable=no-member
 
-import socket
 from typing import Dict, List, Optional
 
 from sqlalchemy.orm.session import Session
 
+from tortuga.config.configManager import getfqdn
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.objects.node import Node
@@ -31,7 +31,7 @@ from .globalParameterDbApi import GlobalParameterDbApi
 from .models.node import Node as NodeModel
 from .nodesDbHandler import NodesDbHandler
 from .tortugaDbApi import TortugaDbApi
-
+from tortuga.node import state
 
 OptionsDict = Dict[str, bool]
 
@@ -88,21 +88,26 @@ class NodeDbApi(TortugaDbApi):
                 raise
 
     def getNodesByNameFilter(self, nodespec: str,
-                             optionDict: OptionsDict = None) \
+                             optionDict: OptionsDict = None,
+                             include_installer: Optional[bool] = True) \
             -> TortugaObjectList:
         """
-        Get node(s) from db based on the name filter
+        Get node(s) from db based on the name filter; set 'include_installer'
+        to False to exclude installer node from results.
         """
 
         with DbManager().session() as session:
             try:
                 return self.__convert_nodes_to_TortugaObjectList(
-                    self._nodesDbHandler.expand_nodespec(session, nodespec),
+                    self._nodesDbHandler.expand_nodespec(
+                        session,
+                        nodespec,
+                        include_installer=include_installer),
                     optionDict=optionDict)
-            except TortugaException:
-                raise
             except Exception as ex:
-                self.getLogger().exception('%s' % ex)
+                if not isinstance(ex, TortugaException):
+                    self.getLogger().exception('%s' % ex)
+
                 raise
 
     def getNodeById(self, nodeId: int, optionDict: OptionsDict = None) \
@@ -138,20 +143,30 @@ class NodeDbApi(TortugaDbApi):
                 self.getLogger().exception('%s' % ex)
                 raise
 
-    def __convert_nodes_to_TortugaObjectList(
-            self, nodes: List[NodeModel],
-            optionDict: OptionsDict = None) -> TortugaObjectList:
+    def __convert_nodes_to_TortugaObjectList(self, nodes: List[NodeModel],
+                                             optionDict: OptionsDict = None,
+                                             deleting: bool = True
+                                             ) -> TortugaObjectList:
         """
         Return TortugaObjectList of nodes with relations populated
 
-        :param nodes: List of Nodes objects
-        :param relations: dict of relations to be loaded
-        :return: TortugaObjectList
-        """
+        :param nodes:      list of Node objects
+        :param optionDict:
+        :param deleting:   whether or not to include nodes in the deleting
+                           state
 
+        :return: TortugaObjectList
+
+        """
         nodeList = TortugaObjectList()
 
         for node in nodes:
+            #
+            # Don't include nodes in the deleting state if deleting=False
+            #
+            if not deleting and node.state.startswith(state.DELETING_PREFIX):
+                continue
+
             self.loadRelations(node, optionDict)
 
             # ensure 'resourceadapter' relation is always loaded. This one
@@ -164,7 +179,8 @@ class NodeDbApi(TortugaDbApi):
         return nodeList
 
     def getNodeList(self, tags: Optional[dict] = None,
-                    optionDict: OptionsDict = None) \
+                    optionDict: OptionsDict = None,
+                    deleting: bool = False) \
             -> TortugaObjectList:
         """
         Get list of all available nodes from the db.
@@ -179,7 +195,9 @@ class NodeDbApi(TortugaDbApi):
             try:
                 return self.__convert_nodes_to_TortugaObjectList(
                     self._nodesDbHandler.getNodeList(session, tags=tags),
-                    optionDict=optionDict)
+                    optionDict=optionDict,
+                    deleting=deleting
+                )
             except TortugaException:
                 raise
             except Exception as ex:
@@ -228,7 +246,7 @@ class NodeDbApi(TortugaDbApi):
                 # manually inject value for 'installer'
                 p = Parameter(name='Installer')
 
-                hostName = socket.gethostname().split('.', 1)[0]
+                hostName = getfqdn().split('.', 1)[0]
 
                 if '.' in dbNode.name:
                     nodeDomain = dbNode.name.split('.', 1)[1]
