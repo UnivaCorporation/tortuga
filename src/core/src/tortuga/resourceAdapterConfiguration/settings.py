@@ -71,7 +71,7 @@ class BaseSettingSchema(Schema):
 
     """
     type: fields.Field = fields.String(dump_only=True)
-    description: fields.String()
+    description: fields.Field = fields.String()
     required: fields.Field = fields.Boolean()
     secret: fields.Field = fields.Boolean()
     mutually_exclusive: fields.Field = fields.List(fields.String())
