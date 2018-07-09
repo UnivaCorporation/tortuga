@@ -311,8 +311,6 @@ class AdapterMgmtCLI(TortugaCli):
             sys.stdout.write('No settings available\n')
             return
 
-        print(settings)
-
         sys.stdout.write('Required:\n')
         required_found = False
 
