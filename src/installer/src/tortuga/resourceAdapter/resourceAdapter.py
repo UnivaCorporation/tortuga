@@ -690,7 +690,7 @@ class ResourceAdapter(UserDataMixin): \
         try:
             validator = ConfigurationValidator(self.settings)
             validator.load(config)
-            processed_config: Dict[str, Any] = validator.dump(secure=False)
+            processed_config: Dict[str, Any] = validator.dump()
         except ValidationError as ex:
             raise ConfigurationError(str(ex))
 
