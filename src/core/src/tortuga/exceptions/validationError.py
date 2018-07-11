@@ -1,5 +1,5 @@
-#
 # Copyright 2008-2018 Univa Corporation
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -12,9 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-class SettingNotFoundError(Exception):
-    pass
+from tortuga.exceptions.tortugaException import TortugaException
+from tortuga.utility import tortugaStatus
 
 
-class SettingValidationError(Exception):
-    pass
+class ValidationError(TortugaException):
+    """
+    Data validation error.
+
+    """
+    def __init__(self, error="", **kwargs):
+        TortugaException.__init__(
+            self, error, tortugaStatus.TORTUGA_USER_ABORTED_ERROR,
+            **kwargs)

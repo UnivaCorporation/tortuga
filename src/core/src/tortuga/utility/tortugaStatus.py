@@ -128,6 +128,7 @@ TORTUGA_UGE_CLUSTER_NOT_FOUND_ERROR = 121
 TORTUGA_UGE_CLUSTER_ALREADY_EXISTS_ERROR = 122
 TORTUGA_KIT_BUILD_ERROR = 123
 TORTUGA_KIT_INSTALL_ERROR = 124
+TORTUGA_VALIDATION_ERROR = 125
 
 exceptionMap = {
     TORTUGA_ERROR: 'exceptions.tortugaException.TortugaException',
@@ -354,6 +355,7 @@ exceptionMap = {
         'exceptions.kitBuildError.KitBuildError',
     TORTUGA_KIT_INSTALL_ERROR:
         'exceptions.kitBuildError.KitInstallError',
+    TORTUGA_VALIDATION_ERROR: 'exceptions.validationError.ValidationError',
     TORTUGA_UGE_CLUSTER_NOT_FOUND_ERROR:
         'tortuga_kits.uge_8_5_4.exceptions.ugeClusterNotFound.UgeClusterNotFound',
     TORTUGA_UGE_CLUSTER_ALREADY_EXISTS_ERROR:

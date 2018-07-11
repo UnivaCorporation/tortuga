@@ -12,9 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import socket
-import sys
-
 import pytest
 from passlib.hash import pbkdf2_sha256
 from sqlalchemy import create_engine

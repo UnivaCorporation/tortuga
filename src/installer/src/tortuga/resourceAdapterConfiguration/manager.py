@@ -26,6 +26,7 @@ from tortuga.db.resourceAdaptersDbHandler import ResourceAdaptersDbHandler
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.resourceAlreadyExists import ResourceAlreadyExists
 from tortuga.exceptions.resourceNotFound import ResourceNotFound
+from .validator import ConfigurationValidator
 
 
 class ResourceAdapterConfigurationManager:
@@ -36,31 +37,51 @@ class ResourceAdapterConfigurationManager:
         self._resourceAdaptersDbHandler = ResourceAdaptersDbHandler()
 
     def create(self, session: Session, resadapter_name: str, name: str,
-               configuration: Union[List[Dict[str, str]], None] = None) \
-            -> ResourceAdapterConfig:
+               configuration: Union[List[Dict[str, str]], None] = None,
+               force: bool = False) -> ResourceAdapterConfig:
         """
-        Raises:
-            ResourceAlreadyExists
-            ResourceAdapterNotFound
-        """
+        Creates a new resource adapter profile.
 
+        :param Session session:                    the current database
+                                                   session
+        :param str resadapter_name:                the name of the resource
+                                                   adapter
+        :param str name:                           the name of the resource
+                                                   adapter profile
+        :param List[Dict[str, str]] configuration: the list of configuration
+                                                   settings
+        :param bool force:                         when True, will not
+                                                   validate the configuration
+                                                   settings
+
+        :raises ResourceAlreadyExists:
+        :raises ResourceAdapterNotFound:
+        :raises ValidationError:
+
+        """
+        #
+        # Check for duplicates
+        #
         adapter = self._resourceAdaptersDbHandler.getResourceAdapter(
             session, resadapter_name)
 
         try:
             self._resourceAdapterConfigDbHandler.get(
                 session, resadapter_name, name)
-
             raise ResourceAlreadyExists(
                 'Resource adapter configuration [{}] already exists'.format(
                     name
                 )
             )
+
         except ResourceNotFound:
-            # good!
             pass
 
+        #
+        # Basic validation of the settings
+        #
         cfg = ResourceAdapterConfig(name=name)
+        validator = ConfigurationValidator(adapter.settings)
 
         for entry in configuration or []:
             cfg.configuration.append(
@@ -69,10 +90,15 @@ class ResourceAdapterConfigurationManager:
                     value=entry['value']
                 )
             )
+            validator[entry['key']] = entry['value']
 
+        if not force:
+            validator.validate(full=False)
+
+        #
+        # Commit resource adapter changes to database
+        #
         adapter.resource_adapter_config.append(cfg)
-
-        # commit resource adapter changes to database
         session.commit()
 
         return cfg
@@ -124,24 +150,51 @@ class ResourceAdapterConfigurationManager:
         session.delete(cfg)
 
     def update(self, session: Session, resadapter_name: str, name: str,
-               configuration: List[Dict[str, str]]) -> None:
+               configuration: List[Dict[str, str]],
+               force: bool = False) -> None:
         """
-        Update an existing resource adapter configuration
+        Updates an existing resource adapter profile.
 
-        Raises:
-            ResourceNotFound
-            ResourceAdapterNotFound
+        :param Session session:                    the current database
+                                                   session
+        :param str resadapter_name:                the name of the resource
+                                                   adapter
+        :param str name:                           the name of the resource
+                                                   adapter profile
+        :param List[Dict[str, str]] configuration: the list of configuration
+                                                   settings
+        :param bool force:                         when True, will not
+                                                   validate the configuration
+                                                   settings
+
+        :raises ResourceAlreadyExists:
+        :raises ResourceAdapterNotFound:
+        :raises ValidationError:
+
         """
-
-        # ensure resource adapter is valid
-        self._resourceAdaptersDbHandler.getResourceAdapter(
+        #
+        # Ensure resource adapter is valid
+        #
+        adapter = self._resourceAdaptersDbHandler.getResourceAdapter(
             session, resadapter_name)
 
+        #
+        # Basic validation of the settings
+        #
+        if not force:
+            validator = ConfigurationValidator(adapter.settings)
+
+            for entry in configuration or []:
+                validator[entry['key']] = entry['value']
+
+            validator.validate(full=False)
+
+        #
+        # Update the database
+        #
         cfg = self._resourceAdapterConfigDbHandler.get(
             session, resadapter_name, name)
-
         self.__update_settings(session, configuration, cfg.configuration)
-
         session.commit()
 
     def __update_settings(self, session: Session,

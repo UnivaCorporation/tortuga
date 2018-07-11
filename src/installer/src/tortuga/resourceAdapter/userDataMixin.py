@@ -58,8 +58,9 @@ class UserDataMixin: \
         tmpl_vars = {
             'installer': self.installer_public_hostname,
             'installer_ip_address': self.installer_public_ipaddress,
-            'override_dns_domain': configDict['override_dns_domain'],
-            'dns_domain': configDict['dns_domain'],
+            'override_dns_domain': configDict.get('override_dns_domain',
+                                                  False),
+            'dns_domain': configDict.get('dns_domain', ''),
         }
 
         if node:
