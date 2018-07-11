@@ -30,7 +30,7 @@ CONFIG_FILE = '/etc/ssh/ssh_config'
 
 class ComponentInstaller(ComponentInstallerBase):
     name = 'ssh'
-    version = '6.3.0'
+    version = '6.3.1'
     os_list = [
         {'family': 'rhel', 'version': '6', 'arch': 'x86_64'},
     ]

@@ -155,7 +155,7 @@ class tortuga_kit_base::core::install::install_tortuga_base {
 
   include tortuga::config
 
-  $package_version = '6.3.0'
+  $package_version = '6.3.1'
 
   $corepkg = "tortuga_core-${package_version}-py3-none-any.whl"
 

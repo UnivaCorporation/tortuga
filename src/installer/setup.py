@@ -25,13 +25,26 @@ import setuptools.command.build_py
 import setuptools.command.sdist
 
 module_name = 'tortuga-installer'
-maj_version = '6.3'
-version = maj_version + '.0'
-module_version = version
+version = '6.3.1a1'
 
 
-if os.getenv('BUILD_NUMBER'):
-    module_version += '.dev{0}'.format(os.getenv('BUILD_NUMBER'))
+def get_git_revision():
+    cmd = 'git rev-parse --short HEAD'
+
+    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+    result, _ = p.communicate()
+    p.wait()
+
+    return result.decode().rstrip()
+
+
+git_revision = get_git_revision()
+
+module_version = f'{version}+rev{git_revision}'
+
+
+if os.getenv('CI_PIPELINE_ID'):
+    module_version += '.{}'.format(os.getenv('CI_PIPELINE_ID'))
 
 
 def walkfiles(d):
