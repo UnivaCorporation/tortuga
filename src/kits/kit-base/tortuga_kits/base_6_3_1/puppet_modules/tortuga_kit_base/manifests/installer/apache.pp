@@ -26,7 +26,7 @@ class tortuga_kit_base::installer::apache::certs {
 
   exec { 'create_apache_x509_certificate':
     path    => ['/bin', '/usr/bin'],
-    command => "bash -c \"( . ${tortuga::config::instroot}/etc/tortuga.sh && ${tortuga::config::instroot}/bin/mkcert.sh --host-name ${tortuga::config::installer_fqdn},${::hostname},tortuga --destdir=${tortuga::config::instroot}/etc/certs/apache server )\"",
+    command => "bash -c \"( . ${tortuga::config::instroot}/etc/tortuga.sh && ${tortuga::config::instroot}/bin/mkcert.sh --server --host-name ${tortuga::config::installer_fqdn} --destdir=${tortuga::config::instroot}/etc/certs/apache server )\"",
     creates => [
       "${tortuga::config::instroot}/etc/certs/apache/server.crt",
       "${tortuga::config::instroot}/etc/certs/apache/server.key"
