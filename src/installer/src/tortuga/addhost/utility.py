@@ -118,13 +118,11 @@ def validate_addnodes_request(addNodesRequest: Dict[str, Any]):
         if 'hardwareProfile' not in addNodesRequest:
             addNodesRequest['hardwareProfile'] = hp.name
 
-        swprofile_node_count = 0
+        swprofile_node_count = len(sp.nodes)
 
         # Validate 'nodeDetails'
 
         if nodeDetails:
-            swprofile_node_count = len(sp.nodes)
-
             # Reconcile nodeDetails that contain hostnames with hwp name
             # format
             bWildcardNameFormat = hp.nameFormat == '*'
