@@ -53,9 +53,7 @@ class tortuga_kit_base::installer::apache::certs {
     target => "${tortuga::config::instroot}/etc/CA/ca.pem",
     owner => apache,
     group => apache,
-    require => [
-      Exec['create_apache_x509_certificate'],
-    ],
+    require => Exec['create_apache_x509_certificate'],
   }
 }
 
