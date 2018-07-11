@@ -191,7 +191,8 @@ class GetNodeStatus(TortugaCli): \
         else:
             output: Optional[str] = self.__make_full_output(grouped)
 
-        print(output)
+        if output:
+            print(output)
 
     @staticmethod
     def __filter_nodes(nodes: List[Dict[str, Any]], filter_key: Union[List[str], str], filter_value: Any,
