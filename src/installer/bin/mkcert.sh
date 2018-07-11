@@ -86,6 +86,16 @@ if [[ ! -d $ca_dir ]] || [[ ! -f $ca_dir/ca-key.pem ]] || \
   # Initialize CA
   openssl req -x509 -new -nodes -key $ca_dir/ca-key.pem -days 3650 \
       -out $ca_dir/ca.pem -subj "/CN=tortuga-ca"
+
+  # copy CA to common location
+  cp ${ca_dir}/ca.pem /etc/pki/ca-trust/source/anchors/tortuga-ca.pem
+  [[ $? -eq 0 ]] || {
+      echo "Error copying ${ca_dir}/ca.pem to CA trust. Unable to proceed" >&2
+      exit 1
+  }
+
+  # update CA
+  update-ca-trust
 fi
 
 # Create host directory if it doesn't already exist
