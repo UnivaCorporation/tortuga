@@ -33,7 +33,11 @@ class OsBootHostManagerCommon(OsObjectManager):
         try:
             self.passdata = pwd.getpwnam('apache')
         except KeyError:
-            self.passdata = pwd.getpwnam(os.getenv('USER'))
+            username = os.getenv('USER')
+            if not username:
+                self.passdata = pwd.getpwuid(os.getuid())
+            else:
+                self.passdata = pwd.getpwnam(username)
 
         self._cm = ConfigManager()
 
