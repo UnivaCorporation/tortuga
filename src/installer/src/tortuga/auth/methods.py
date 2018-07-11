@@ -283,9 +283,11 @@ class JwtAuthenticationMethod(AuthenticationMethod):
         config_file_path = JwtAuthenticationMethod.openid_client_config_path()
 
         if not os.path.exists(config_file_path):
-            logger.info('No OpenID Connect configuration found,'
-                        'JWT authentication will not '
-                        'work: {}'.format(config_file_path))
+            logger.info(
+                'OpenID Connect configuration ({}) not found, JWT'
+                ' authentication is disabled'.format(config_file_path)
+            )
+
             return
 
         with open(config_file_path) as fp:
