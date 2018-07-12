@@ -303,6 +303,16 @@ class ComponentInstaller(ComponentInstallerBase):
         self.action_configure(software_profile_name, *args, **kwargs)
         self.provider.write()
 
+    def action_post_install(self, *args, **kwargs):
+        """
+        Called post install.
+
+        :returns: None
+        """
+        self.action_configure(None)
+        self.provider.write()
+        self.provider.start_service()
+
     def action_configure(self, _, *args, **kwargs):
         """
         Configure.
