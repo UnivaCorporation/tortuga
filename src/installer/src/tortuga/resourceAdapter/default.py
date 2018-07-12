@@ -32,7 +32,7 @@ from tortuga.exceptions.nodeAlreadyExists import NodeAlreadyExists
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.exceptions.parameterNotFound import ParameterNotFound
 from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
-from tortuga.objects import resourceadapter_settings
+from tortuga.resourceAdapterConfiguration import settings as ra_settings
 from tortuga.os_utility import osUtility, tortugaSubprocess
 from tortuga.resourceAdapter.resourceAdapter import ResourceAdapter
 from tortuga.resourceAdapter.utility import (get_provisioning_nic,
@@ -60,8 +60,8 @@ def initialize_nics(installer_provisioning_nic, hardwareprofilenetworks,
 class Default(ResourceAdapter):
     __adaptername__ = 'default'
 
-    settings: Dict[str, resourceadapter_settings.BaseSetting] = {
-        'boot_host_hook_script': resourceadapter_settings.FileSetting()
+    settings: Dict[str, ra_settings.BaseSetting] = {
+        'boot_host_hook_script': ra_settings.FileSetting()
     }
 
     def __init__(self, addHostSession=None):

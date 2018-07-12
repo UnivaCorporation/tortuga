@@ -285,7 +285,7 @@ class AddHostServerLocal(TortugaApi):
         Return list of Nic objects reflecting the configuration of dbNode
         and nic definitions provided in nic_defs.
 
-        :raises NetworkNotFound:
+        :raises NetaNotFound:
         :raises InvalidMacAddress:
         :raises MacAddressAlreadyExists:
 

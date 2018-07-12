@@ -12,9 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import socket
-import sys
-
 import pytest
 from passlib.hash import pbkdf2_sha256
 from sqlalchemy import create_engine
@@ -190,7 +187,7 @@ def dbm():
         # create 'base' kit
         kit = Kit()
         kit.name = 'base'
-        kit.version = '6.3.0'
+        kit.version = '6.3.1'
         kit.iteration = '0'
         kit.description = 'Sample base kit'
 

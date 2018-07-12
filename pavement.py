@@ -15,16 +15,27 @@
 # See README.md for documentation on how to build Tortuga
 
 import os
+import subprocess
 from paver.easy import path, task, call_task, sh, info
 
 
-baseversion = '6.3.0'
-patchlevel = ''
+def get_git_revision():
+    cmd = 'git rev-parse --short HEAD'
 
-version = '%s%s' % (baseversion, patchlevel) if patchlevel else baseversion
+    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+    result, _ = p.communicate()
+    p.wait()
 
-baseName = 'tortuga-%s-b%s' % (version, os.getenv('BUILD_NUMBER')) \
-    if os.getenv('BUILD_NUMBER') else 'tortuga-%s' % (version)
+    return result.decode().rstrip()
+
+version = '6.3.1a1+rev{}'.format(get_git_revision())
+
+build_number = os.getenv('CI_PIPELINE_ID')
+if build_number:
+    version += '.{}'.format(build_number)
+
+baseName = f'tortuga-{version}'
+
 
 installRoot = path('install')
 installDir = installRoot / path(baseName)
@@ -185,3 +196,8 @@ def clean(options):
 
     for dir_name in ['build', 'dist', 'install']:
         sh('find . -type d -name {} -exec rm -r {{}} +'.format(dir_name))
+
+    # remove puppet artifacts
+    dirs = ['src/puppet', 'src/kits/kit-base/tortuga_kits/base*/puppet_modules']
+    for puppet_dir_name in dirs:
+        sh(f'find {puppet_dir_name} -type d -name pkg -print0 | xargs -0 rm -r')

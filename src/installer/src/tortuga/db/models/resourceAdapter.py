@@ -18,7 +18,7 @@ from sqlalchemy import Column, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from tortuga.exceptions.resourceNotFound import ResourceNotFound
-from tortuga.objects.resourceadapter_settings import BaseSetting
+from tortuga.resourceAdapterConfiguration.settings import BaseSetting
 
 from .base import ModelBase
 
@@ -42,7 +42,7 @@ class ResourceAdapter(ModelBase):
 
         :return dict: a dict of all settings, where the keys are the
                       name of the setting, and the value is an instance of
-                      totrgua.objects.resourceadapter_settings.BaseSetting
+                      totrgua.objects.resource_adapter_settings.BaseSetting
 
         """
         from tortuga.resourceAdapter.resourceAdapterFactory import \

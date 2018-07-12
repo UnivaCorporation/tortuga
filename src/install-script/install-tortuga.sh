@@ -30,7 +30,7 @@ enable_package_caching=1
 download_only=0
 enable_activemq=1
 force_hostname=0
-readonly tortuga_version="6.3.0"
+readonly tortuga_version="6.3.1"
 
 TEMP=$( getopt -o v,f --long force,verbose,debug,help,\
 disable-package-caching,\
