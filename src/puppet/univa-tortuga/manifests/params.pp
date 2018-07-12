@@ -22,4 +22,6 @@ class tortuga::params {
   $depot = lookup('depot')
 
   $installer_fqdn = $puppet_server
+
+  $int_web_port = 8008
 }

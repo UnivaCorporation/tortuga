@@ -17,6 +17,7 @@
 # and this file must exist to allow Puppet to run successfully.
 
 class tortuga_kit_base::core::certificate_authority {
+  include tortuga::config
 
   if $::osfamily == 'RedHat' {
     $ca_path = '/etc/pki/ca-trust/source/anchors'
@@ -29,7 +30,7 @@ class tortuga_kit_base::core::certificate_authority {
     path   => "${ca_path}/tortuga.pem",
     owner  => root,
     group  => root,
-    source => "http://${::primary_installer_hostname}:8008/ca.pem",
+    source => "http://${::primary_installer_hostname}:${tortuga::config::int_web_port}/ca.pem",
     notify => Exec['update-ca-trust'],
   }
 
