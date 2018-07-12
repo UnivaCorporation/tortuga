@@ -290,10 +290,17 @@ class JwtAuthenticationMethod(AuthenticationMethod):
 
         with open(config_file_path) as fp:
             config = json.loads(fp.read())
-            self._client = Client(client_authn_method=CLIENT_AUTHN_METHOD)
+
+            self._client = Client(
+                client_authn_method=CLIENT_AUTHN_METHOD,
+                verify_ssl='/etc/pki/tls/certs/ca-bundle.crt'
+            )
+
             self._client.provider_config(config['issuer'])
+
             client_registration = RegistrationResponse(
                 client_id=config['client_id'],
                 client_secret=config['client_secret']
             )
+
             self._client.store_registration_info(client_registration)

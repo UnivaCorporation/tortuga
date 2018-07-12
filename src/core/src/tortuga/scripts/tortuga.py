@@ -334,7 +334,8 @@ class WebsocketClient:
         """
         if self._url.startswith('wss:'):
             ssl_context = ssl.SSLContext()
-            ssl_context.verify_flags = ssl.CERT_NONE
+            ssl_context.verify_mode = ssl.CERT_REQUIRED
+            ssl_context.load_verify_locations('/etc/pki/tls/certs/ca-bundle.crt')
         else:
             ssl_context = None
 

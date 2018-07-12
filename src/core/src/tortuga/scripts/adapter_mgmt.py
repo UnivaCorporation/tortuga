@@ -12,22 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=no-member
-
-"""
-Resource adapter configuration management CLI
-"""
-
 import os.path
 import sys
 import json
 import configparser
 import argparse
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.wsapi.resourceAdapterConfigurationWsApi \
     import ResourceAdapterConfigurationWsApi
+from tortuga.wsapi.resourceAdapterWsApi import ResourceAdapterWsApi
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.exceptions.resourceAdapterNotFound \
     import ResourceAdapterNotFound
@@ -67,6 +62,21 @@ class AdapterMgmtCLI(TortugaCli):
             help='additional help',
             dest='subparser_name')
 
+        # settings
+        settings_args = argparse.ArgumentParser(add_help=False)
+        settings_args.add_argument(
+            '--resource-adapter', '-r', metavar='NAME', required=True,
+            help='Resource adapter name')
+        settings_args.add_argument(
+            '--optional', '-o', dest='show_optional', required=False,
+            action='store_true', default=False,
+            help='Display optional settings')
+        settings_args.add_argument(
+            '--advanced', '-v', dest='show_advanced', required=False,
+            action='store_true', default=False,
+            help='Display advanced settings')
+        subparsers.add_parser('settings', parents=[settings_args])
+
         # show
         show_args = argparse.ArgumentParser(add_help=False)
         show_args.add_argument(
@@ -81,19 +91,28 @@ class AdapterMgmtCLI(TortugaCli):
             help='Display all settings, including passwords/keys')
         show_args.add_argument(
             '--setting', '-s', metavar='KEY',
-            help='Display specfied setting only')
-        subparser_show = subparsers.add_parser(
-            'show', parents=[show_args, show_list_common_args])
+            help='Display specified setting only')
+        subparsers.add_parser('show',
+                              parents=[show_args, show_list_common_args])
+        
+        validate_args = argparse.ArgumentParser(add_help=False)
+        validate_args.add_argument(
+            '--resource-adapter', '-r', metavar='NAME', required=True,
+            help='Resource adapter name')
+        validate_args.add_argument(
+            '--profile', '-p', metavar='NAME', required=True,
+            help='Configuration profile name')
+        subparsers.add_parser('validate', parents=[validate_args])
 
         # create
         create_args = argparse.ArgumentParser(add_help=False)
         create_args.add_argument(
             '--profile', '-p', metavar='NAME',
             help='Configuration profile name', required=True)
-        subparser_create = subparsers.add_parser(
-            'create',
-            parents=[common_args, create_args, show_list_common_args,
-                     create_update_common_args])
+        subparsers.add_parser('create',
+                              parents=[common_args, create_args,
+                                       show_list_common_args,
+                                       create_update_common_args])
 
         # copy
         subparser_copy = subparsers.add_parser('copy')
@@ -206,56 +225,204 @@ class AdapterMgmtCLI(TortugaCli):
             cfg = self.api.get(args.resource_adapter, args.profile)
 
             if args.setting:
-                # Display only specified configuration setting
-                for cfgitem in cfg['configuration']:
-                    if cfgitem['key'] == args.setting:
-                        sys.stdout.write(cfgitem['value'] + '\n')
+                self._show_resource_adapter_config_setting(cfg, args.setting)
 
-                        break
-                else:
-                    # Requested configuration setting not found
-                    sys.stderr.write(
-                        'Error: setting \'{0}\' does not exist\n'.format(
-                            args.setting))
+            elif args.json:
+                self._show_resource_adapter_config_json(cfg)
 
-                    sys.exit(1)
-
-                sys.exit(0)
-
-            if args.json:
-                sys.stdout.write(json.dumps(cfg))
-                sys.stdout.flush()
             else:
-                sys.stdout.write(
-                    'Resource adapter: {0}\n'.format(
-                        cfg['resourceadapter']['name']))
+                self._show_resource_adapter_config_stdout(cfg, args.show_all)
 
-                sys.stdout.write('Profile: {0}\n'.format(cfg['name']))
-
-                secret_keys = [
-                    'secret',
-                    'subscription_id',
-                    'tenant_id',
-                    'client_id',
-                    'awssecretkey',
-                    'awsaccesskey',
-                    'password',
-                ]
-
-                if cfg['configuration']:
-                    sys.stdout.write('Configuration:\n')
-
-                    for cfgitem in cfg['configuration']:
-                        value = cfgitem['value'] \
-                            if args.show_all or \
-                            cfgitem['key'] not in secret_keys else '<REDACTED>'
-
-                        sys.stdout.write(
-                            '  - {0} = {1}\n'.format(cfgitem['key'], value))
         except TortugaException as exc:
             sys.stderr.write('Error: {0}\n'.format(exc))
             sys.stderr.flush()
             sys.exit(1)
+
+    def _show_resource_adapter_config_setting(self, cfg: dict, name: str):
+        for cfgitem in cfg['configuration']:
+            if cfgitem['key'] == name:
+                sys.stdout.write(cfgitem['value'] + '\n')
+                return
+
+        sys.stderr.write('Error: setting does not exist: {}\n'.format(name))
+        sys.exit(1)
+
+    def _show_resource_adapter_config_json(self, cfg: dict):
+        sys.stdout.write(json.dumps(cfg))
+        sys.stdout.flush()
+
+    def _show_resource_adapter_config_stdout(self, cfg: dict,
+                                             show_all: bool = False):
+        sys.stdout.write(
+            'Resource adapter: {}\n'.format(
+                cfg['resourceadapter']['name']))
+
+        sys.stdout.write('Profile: {}\n'.format(cfg['name']))
+
+        if not cfg['configuration']:
+            return
+
+        sys.stdout.write('Configuration:\n')
+
+        ra_settings = cfg['resourceadapter']['settings']
+
+        for cfgitem in cfg['configuration']:
+            key = cfgitem['key']
+
+            setting = ra_settings.get(key, {})
+            is_secret = setting.get('secret', False)
+
+            value = cfgitem['value']
+            if not show_all and is_secret:
+                value = '<REDACTED>'
+
+            sys.stdout.write('  - {} = {}\n'.format(key, value))
+
+    def validate_resource_adapter_config(self, args):
+        try:
+            validation: dict = self.api.validate(args.resource_adapter,
+                                                 args.profile)
+
+            sys.stdout.write(
+                'Resource adapter: {}\n'.format(args.resource_adapter))
+            sys.stdout.write('Profile: {}\n'.format(args.profile))
+
+            if not validation:
+                sys.stdout.write('No errors found\n')
+                return
+
+            sys.stdout.write('Errors:\n')
+
+            for k, v in validation.items():
+                sys.stdout.write('  - {}: {}\n'.format(k, v))
+
+        except TortugaException as exc:
+            sys.stderr.write('Error: {0}\n'.format(exc))
+            sys.stderr.flush()
+            sys.exit(1)
+
+    def settings_resource_adapter_config(self, args):
+        ra = self._get_resource_adapter(args.resource_adapter)
+
+        sys.stdout.write('Resource adapter: {}\n'.format(ra['name']))
+
+        settings = ra.get('settings', {})
+        if not settings:
+            sys.stdout.write('No settings available\n')
+            return
+
+        sys.stdout.write('Required:\n')
+        required_found = False
+
+        for name, setting in settings.items():
+            if not setting.get('required', False):
+                continue
+            required_found = True
+            self._print_setting(name, setting)
+
+        if not required_found:
+            print('  No required settings')
+
+        if args.show_optional:
+            optional_found = False
+            sys.stdout.write('Optional:\n')
+
+            for name, setting in settings.items():
+                if setting.get('required', False) or \
+                        setting.get('advanced', False):
+                    continue
+                optional_found = True
+                self._print_setting(name, setting)
+
+            if not optional_found:
+                print('  No optional settings available')
+
+        if args.show_advanced:
+            advanced_found = False
+            sys.stdout.write('Advanced:\n')
+
+            for name, setting in settings.items():
+                if not setting.get('advanced', False):
+                    continue
+                advanced_found = True
+                self._print_setting(name, setting)
+
+            if not advanced_found:
+                print('  No advanced settings available')
+
+    def _get_resource_adapter(self, name: str) -> Optional[dict]:
+        """
+        Gets a resource adapter definition by name.
+
+        :param str name: the resource adapter name
+
+        :return dict:    a dict containing the resource adapter definition,
+                         if found otherwise None
+
+        """
+        ra_api = ResourceAdapterWsApi(
+            username=self.getUsername(),
+            password=self.getPassword(),
+            baseurl=self.getUrl(),
+        )
+
+        ra_list = ra_api.getResourceAdapterList()
+        for ra in ra_list:
+            if ra['name'] == name:
+                return ra
+
+        return {}
+
+    def _print_setting(self, name: str, setting: dict):
+        sys.stdout.write('  - {}:\n'.format(name))
+
+        output: dict = dict()
+
+        if setting.get('description', None):
+            output['Description'] = setting['description']
+
+        output['Type'] = setting.get('type', 'string')
+
+        if setting.get('base_path', None):
+            output['Base path'] = setting['base_path']
+
+        if setting.get('must_exist', None) is not None:
+            output['Must exist'] = "yes" if setting['must_exist'] else "no"
+
+        if setting.get('list', False):
+            output['List'] = 'yes, using "{}" as a separator'.format(
+                setting.get('list_separator', ', '))
+
+        if setting.get('values', []):
+            output['Values'] = ', '.join(setting['values'])
+
+        if setting.get('default', None):
+            output['Default'] = setting['default']
+
+        if setting.get('requires', []):
+            output['Requires'] = ', '.join(setting['requires'])
+
+        if setting.get('mutually_exclusive', []):
+            output['Mutually exclusive'] = \
+                ', '.join(setting['mutually_exclusive'])
+
+        sys.stdout.write(self._format_output(output))
+
+    def _format_output(self, output: dict) -> str:
+        if not output:
+            return ''
+
+        longest_key = 0
+        for k in output.keys():
+            if len(k) > longest_key:
+                longest_key = len(k)
+
+        formatted_output = ''
+        for k, v in output.items():
+            space = ' ' * (longest_key - len(k))
+            formatted_output += '      {}:{} {}\n'.format(k, space, v)
+
+        return formatted_output
 
     def create_resource_adapter_config(self, args):
         try:
@@ -448,7 +615,7 @@ class AdapterMgmtCLI(TortugaCli):
 
                     continue
 
-                configuration.append(dict(key=name.lower(), value=value))
+                configuration.append(dict(key=name, value=value))
 
             sys.stdout.write(
                 'Creating profile [{0}] for resource adapter'
@@ -496,11 +663,11 @@ class AdapterMgmtCLI(TortugaCli):
 def key_value_pair(arg):
     key, value = arg.split('=', 1)
 
-    return key.lower(), value
+    return key, value
 
 
 def cfgkey(arg):
-    return arg.lower()
+    return arg
 
 
 def _raise_profile_already_exists(adapter_name, profile_name):

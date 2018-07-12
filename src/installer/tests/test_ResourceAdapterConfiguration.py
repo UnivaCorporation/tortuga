@@ -6,7 +6,9 @@ from tortuga.exceptions.resourceNotFound import ResourceNotFound
 from tortuga.resourceAdapterConfiguration.manager import \
     ResourceAdapterConfigurationManager
 
+
 mgr = ResourceAdapterConfigurationManager()
+
 
 def test_get_profile_names(dbm):
     with dbm.session() as session:
@@ -36,7 +38,7 @@ def test_create_unique(dbm):
         mgr.create(session, 'aws', cfg_name, [{
             'key': 'test_default_key',
             'value': 'test_default_value',
-        }])
+        }], True)
 
         session.commit()
 
