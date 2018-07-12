@@ -16,7 +16,7 @@
 # bootstrap process.  It is required since Puppet recipes are precompiled
 # and this file must exist to allow Puppet to run successfully.
 
-class tortuga_kit_base::provisioning::certificate_authority {
+class tortuga_kit_base::core::certificate_authority {
 
   if $::osfamily == 'RedHat' {
     $ca_path = '/etc/pki/ca-trust/source/anchors'
