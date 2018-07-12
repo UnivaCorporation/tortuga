@@ -273,6 +273,16 @@ function install_epel() {
     fi
 }
 
+function check_puppet_memory() {
+    local total_memory=$(free -g | grep "Mem:" | awk '{ print $2 }')
+
+    if [ "$total_memory" -lt "2" ] && [ "$1" -lt "1" ]; then
+        echo "Error: Puppet requires at least 2GB of memory" | tee -a /tmp/install-tortuga.log
+        echo -e "\t ...ignore with --force"
+        exit 1
+    fi
+}
+
 function install_puppetlabs_repo {
     local puppetlabspkgname="puppet5-release"
 
@@ -630,6 +640,9 @@ fi
 if [[ $distro_family == rhel ]]; then
     install_epel
 fi
+
+# Check there's enough memory for Puppet
+check_puppet_memory $FORCE
 
 # Install puppetlabs repo
 install_puppetlabs_repo

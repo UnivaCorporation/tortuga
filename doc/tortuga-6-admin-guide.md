@@ -121,6 +121,10 @@ Commands listed in this "Quickstart" section are intended to be run as the `root
 
                 yum-config-manager --enable rhui-REGION-rhel-server-optional
 
+        -   RHEL 7 on AWS
+
+                yum-config-manager --enable rhui-REGION-rhel-server-rhscl
+
 
 ### Quickstart Installation
 
