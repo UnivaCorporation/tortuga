@@ -25,18 +25,18 @@ class tortuga_kit_base::core::certificate_authority {
   }
 
   file { 'ca-pem':
-    path => "${ca_path}/tortuga.pem",
     ensure => file,
-    owner => root,
-    group => root,
+    path   => "${ca_path}/tortuga.pem",
+    owner  => root,
+    group  => root,
     source => "http://${::primary_installer_hostname}:8008/ca.pem",
     notify => Exec['update-ca-trust'],
   }
 
   exec { 'update-ca-trust':
-    command => 'update-ca-trust',
-    path => ['/bin', '/usr/bin'],
-    require => File['ca-pem'],
+    command     => 'update-ca-trust',
+    path        => ['/bin', '/usr/bin'],
+    require     => File['ca-pem'],
     refreshonly => true,
   }
 
