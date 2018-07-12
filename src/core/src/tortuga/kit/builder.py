@@ -491,7 +491,7 @@ class KitBuilder(object):
 
         if self._python_setup_found:
             logger.info('Removing python egg-info directory')
-            cmd = 'rm -rf *.egg-info'
+            cmd = 'rm -rf $(find . -type d -name \\*.egg-info)'
             self._run_command(cmd)
 
         if self._src_makefile_found:

@@ -14,15 +14,15 @@
 
 # pylint: disable=no-member,maybe-no-member
 
-import logging
-import urllib.request, urllib.error, urllib.parse
-import json
-import urllib.parse
 import http.client
-import ssl
+import json
+import logging
+import urllib.error
+import urllib.parse
+import urllib.request
 
-from tortuga.exceptions.urlErrorException import UrlErrorException
 from tortuga.exceptions.httpErrorException import HttpErrorException
+from tortuga.exceptions.urlErrorException import UrlErrorException
 from tortuga.web_client import exceptionMapper
 
 
@@ -134,15 +134,7 @@ class SessionManager:
         if self._sessionCookie is not None:
             request.add_header('Cookie', self._sessionCookie)
 
-        # Check if SSL certificate verification is available
-        if not hasattr(ssl, 'create_default_context'):
-            ssl_handler = urllib.request.HTTPSHandler()
-        else:
-            ctx = ssl.create_default_context()
-            ctx.check_hostname = False
-            ctx.verify_mode = ssl.CERT_NONE
-
-            ssl_handler = urllib.request.HTTPSHandler(context=ctx)
+        ssl_handler = urllib.request.HTTPSHandler()
 
         try:
             opener = urllib.request.build_opener(ssl_handler)
