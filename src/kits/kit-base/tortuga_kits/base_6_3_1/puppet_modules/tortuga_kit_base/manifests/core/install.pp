@@ -202,6 +202,7 @@ class tortuga_kit_base::core::install::final {
 
 class tortuga_kit_base::core::install {
   require tortuga_kit_base::core::cfmsecret
+  require tortuga_kit_base::core::certificate_authority
 
   contain tortuga_kit_base::core::install::virtualenv
   contain tortuga_kit_base::core::install::create_tortuga_instroot
