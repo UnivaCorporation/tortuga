@@ -16,7 +16,8 @@
 # bootstrap process.  It is required since Puppet recipes are precompiled
 # and this file must exist to allow Puppet to run successfully.
 
-class tortuga_kit_base::provisioning::certificate_authority {
+class tortuga_kit_base::core::certificate_authority {
+  include tortuga::config
 
   if $::osfamily == 'RedHat' {
     $ca_path = '/etc/pki/ca-trust/source/anchors'
@@ -25,18 +26,18 @@ class tortuga_kit_base::provisioning::certificate_authority {
   }
 
   file { 'ca-pem':
-    path => "${ca_path}/tortuga.pem",
     ensure => file,
-    owner => root,
-    group => root,
-    source => "http://${::primary_installer_hostname}:8008/ca.pem",
+    path   => "${ca_path}/tortuga-ca.pem",
+    owner  => root,
+    group  => root,
+    source => "http://${::primary_installer_hostname}:${tortuga::config::int_web_port}/ca.pem",
     notify => Exec['update-ca-trust'],
   }
 
   exec { 'update-ca-trust':
-    command => 'update-ca-trust',
-    path => ['/bin', '/usr/bin'],
-    require => File['ca-pem'],
+    command     => 'update-ca-trust',
+    path        => ['/bin', '/usr/bin'],
+    require     => File['ca-pem'],
     refreshonly => true,
   }
 

@@ -159,7 +159,7 @@ class tortuga_kit_base::core::install::install_tortuga_base {
 
   $corepkg = "tortuga_core-${package_version}-py3-none-any.whl"
 
-  $pkgurl = "http://${::primary_installer_hostname}:8008/${corepkg}"
+  $pkgurl = "http://${::primary_installer_hostname}:${tortuga::config::int_web_port}/${corepkg}"
 
   $pipcmd = "${tortuga::config::instroot}/bin/pip"
 
@@ -202,6 +202,7 @@ class tortuga_kit_base::core::install::final {
 
 class tortuga_kit_base::core::install {
   require tortuga_kit_base::core::cfmsecret
+  require tortuga_kit_base::core::certificate_authority
 
   contain tortuga_kit_base::core::install::virtualenv
   contain tortuga_kit_base::core::install::create_tortuga_instroot
