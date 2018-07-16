@@ -173,5 +173,15 @@ class Cli(Command):
         Runs the tortuga CLI utility.
 
         """
-        namespace = self.parser.parse_args()
-        namespace.command.execute(namespace)
+        args = self.parser.parse_args()
+        self.pre_execute(args)
+        args.command.execute(args)
+
+    def pre_execute(self, args: argparse.Namespace):
+        """
+        Executed by run prior to the actual command getting executed.
+
+        :param argparse.Namespace args: the parsed arguments
+
+        """
+        pass

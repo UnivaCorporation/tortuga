@@ -76,7 +76,7 @@ class TortugaNew(Cli):
         self.password: str = None
         super().__init__()
 
-    def execute(self, args: argparse.Namespace):
+    def pre_execute(self, args: argparse.Namespace):
         self._version(args)
         self._set_log_level(args)
         self._set_web_service_vars(args)
