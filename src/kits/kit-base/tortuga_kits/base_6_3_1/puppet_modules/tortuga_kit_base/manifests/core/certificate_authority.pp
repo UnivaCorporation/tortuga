@@ -27,7 +27,7 @@ class tortuga_kit_base::core::certificate_authority {
 
   file { 'ca-pem':
     ensure => file,
-    path   => "${ca_path}/tortuga.pem",
+    path   => "${ca_path}/tortuga-ca.pem",
     owner  => root,
     group  => root,
     source => "http://${::primary_installer_hostname}:${tortuga::config::int_web_port}/ca.pem",
