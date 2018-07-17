@@ -109,6 +109,20 @@ while true; do
     esac
 done
 
+# expect to find 'python-tortuga' in the UniCloud distribution tarball
+[[ -d python-tortuga/simple ]] || {
+    echo "Error: UniCloud distribution tarball is missing files" >&2
+    exit 1
+}
+
+# get expanded path to UniCloud Python packages
+local_tortuga_pip_repository=$(cd python-tortuga; pwd -P)
+
+# ensure UniCloud Python package repository is included
+pip_install_opts="--extra-index-url file://${local_tortuga_pip_repository}/simple"
+
+[[ ${DEBUG} -eq 0 ]] && pip_install_opts="${pip_install_opts} --quiet"
+
 if [ $DEBUG -eq 1 ]; then
     YUMCMD="yum"
 else
@@ -784,62 +798,48 @@ fi
 
 echo "done."
 
-# Update pip
-echo -n "Upgrading pip... " | tee -a /tmp/install-tortuga.log
-$TORTUGA_ROOT/bin/pip install --upgrade pip >>/tmp/install-tortuga.log 2>&1
-[[ $? -eq 0 ]] || {
-    echo "failed"
-    echo "Error upgrading pip Python packages" | tee -a /tmp/install-tortuga.log
-    exit 1
-}
-echo "done."
-
 # Tortuga pre-installation
-echo "Performing Tortuga pre-installation... " | tee -a /tmp/install-tortuga.log
+echo "Performing Tortuga pre-installation... " | \
+    tee -a /tmp/install-tortuga.log
+
+pip_install_cmd="${TORTUGA_ROOT}/bin/pip install ${pip_install_opts}"
 
 # Install Tortuga Python packages
-echo -n "Installing tortuga-core Python package... "
-$TORTUGA_ROOT/bin/pip install tortuga_core*.whl 2>&1 >>/tmp/install-tortuga.log
-$TORTUGA_ROOT/bin/pip show tortuga-core &>/dev/null || {
-    echo "failed."
-    echo
-    echo "Error installing tortuga-core package" >&2
+for module in tortuga-core tortuga-installer; do
+    echo -n "Installing ${module} Python package... " | \
+        tee -a /tmp/install-tortuga.log
+
+    ${pip_install_cmd} ${module} 2>&1 >>/tmp/install-tortuga.log
+    [[ $? -eq 0 ]] || {
+        echo "failed."
+
+        echo
+
+        echo "Check /tmp/install-tortuga.log for errors" >&2
+
+        exit 1
+    }
+
+    echo "done."
+done
+
+# copy Tortuga Python package repository
+rsync -av ${local_tortuga_pip_repository}/ ${INTWEBROOT}/python-tortuga \
+    2>&1 >>/tmp/install-tortuga.log
+[[ $? -eq 0 ]] || {
+    echo "Error copying from \"python-tortuga\" to \"${INTWEBROOT}/python-tortuga\"" >&2
+
+    echo >&2
+
+    echo "Installation failed." >&2
+
     exit 1
 }
-
-echo "done."
-
-echo -n "Installing tortuga-installer Python package... "
-$TORTUGA_ROOT/bin/pip install tortuga_installer*.whl 2>&1 >>/tmp/install-tortuga.log
-$TORTUGA_ROOT/bin/pip show tortuga-installer &>/dev/null || {
-    echo "failed."
-    echo
-    echo "Error installing tortuga-installer package" >&2
-    exit 1
-}
-
-echo "done."
 
 # Create required directories
 for dirname in var/lib var/action-log; do
     [[ -d $TORTUGA_ROOT/$dirname ]] || mkdir -p "$TORTUGA_ROOT/$dirname"
 done
-
-# Copy the base kit into the appropriate location
-
-readonly tortuga_core_tarball=$(basename $(find . -maxdepth 1 -type f -name tortuga_core\*.whl | head -1))
-[[ $? -eq 0 ]] || {
-    echo "Error: Tortuga distribution integrity error. tortuga-core Python package is not found/inaccessible" >&2
-    exit 1
-}
-
-cp -f ${tortuga_core_tarball} ${INTWEBROOT}
-
-[[ $tortuga_core_tarball == tortuga_core-${tortuga_version}-py3-none-any.whl ]] || {
-    # Symlink from tarball to "expected" tarball filename
-    ln -sf "${INTWEBROOT}/${tortuga_core_tarball}" \
-        "${INTWEBROOT}/tortuga_core-${tortuga_version}-py3-none-any.whl"
-}
 
 # Copy Puppet Hiera configuration
 readonly hiera_data_dir="/etc/puppetlabs/code/environments/production/data"
