@@ -88,7 +88,7 @@ class CreateSoftwareProfileCli(TortugaCli):
         # load template if specified with '--template', otherwise build
         # template
         tmpl_dict = {} if not self.getArgs().jsonTemplatePath else \
-            self.get_software_profile_template(
+            self.load_software_profile_template(
                 self.getArgs().jsonTemplatePath)
 
         if self.getArgs().name:
