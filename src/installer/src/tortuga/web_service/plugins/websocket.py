@@ -106,7 +106,7 @@ class WebsocketPlugin(plugins.SimplePlugin):
         ssl_context = ssl.SSLContext()
         ssl_context.load_cert_chain(websocket_cert, keyfile=cherrypy_key)
         ssl_context.verify_mode = ssl.CERT_OPTIONAL
-        ssl_context.load_verify_locations('/etc/pki/tls/certs/ca-bundle.crt')
+        ssl_context.load_default_certs()
 
         return ssl_context
 

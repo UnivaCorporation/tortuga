@@ -32,7 +32,7 @@ class tortuga_kit_base::core::actions {
   contain tortuga_kit_base::core::links
   contain tortuga_kit_base::common::nfs
   contain tortuga_kit_base::core::install
-  contain tortuga_kit_base::provisioning::certificate_authority
+  contain tortuga_kit_base::core::certificate_authority
   contain tortuga::envscript
 
   contain tortuga_kit_base::core::post_install
