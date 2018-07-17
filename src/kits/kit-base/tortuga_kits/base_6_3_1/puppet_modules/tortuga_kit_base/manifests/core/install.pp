@@ -155,17 +155,18 @@ class tortuga_kit_base::core::install::install_tortuga_base {
 
   include tortuga::config
 
-  $package_version = '6.3.1'
+  $intweburl = "http://${::primary_installer_hostname}:${tortuga::config::int_web_port}"
 
-  $corepkg = "tortuga_core-${package_version}-py3-none-any.whl"
-
-  $pkgurl = "http://${::primary_installer_hostname}:${tortuga::config::int_web_port}/${corepkg}"
+  $tortuga_pkg_url = "${intweburl}/python-tortuga/simple/"
 
   $pipcmd = "${tortuga::config::instroot}/bin/pip"
 
-  exec { 'install_tortuga_base':
-    command => "${tortuga::config::instroot}/bin/pip install ${pkgurl}",
-    unless => "${tortuga::config::instroot}/bin/pip freeze | grep -q -x \"^tortuga-core.*$\"",
+  $pip_install_opts = "--extra-index-url ${tortuga_pkg_url} \
+--trusted-host ${::primary_installer_hostname}"
+
+  exec { 'install tortuga-core Python package':
+    command => "${pipcmd} install ${pip_install_opts} tortuga-core",
+    unless  => "${pipcmd} show tortuga-core",
   }
 }
 
