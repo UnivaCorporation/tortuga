@@ -18,10 +18,10 @@ import os
 import ssl
 import threading
 
-import cherrypy
-from cherrypy.process import plugins
 import websockets
 
+import cherrypy
+from cherrypy.process import plugins
 from tortuga.config.configManager import ConfigManager
 from tortuga.web_service.websocket.state_manager import StateManager
 
@@ -105,8 +105,8 @@ class WebsocketPlugin(plugins.SimplePlugin):
 
         ssl_context = ssl.SSLContext()
         ssl_context.load_cert_chain(websocket_cert, keyfile=cherrypy_key)
-        ssl_context.verify_mode = ssl.CERT_REQUIRED
-        ssl_context.load_verify_locations('/etc/pki/tls/certs/ca-bundle.crt')
+        ssl_context.verify_mode = ssl.CERT_OPTIONAL
+        ssl_context.load_default_certs()
 
         return ssl_context
 
