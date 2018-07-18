@@ -20,6 +20,7 @@ import logging
 import urllib.error
 import urllib.parse
 import urllib.request
+import ssl
 
 from tortuga.exceptions.httpErrorException import HttpErrorException
 from tortuga.exceptions.urlErrorException import UrlErrorException
@@ -134,7 +135,10 @@ class SessionManager:
         if self._sessionCookie is not None:
             request.add_header('Cookie', self._sessionCookie)
 
-        ssl_handler = urllib.request.HTTPSHandler()
+        ctx = ssl.create_default_context()
+        ctx.load_default_certs()
+
+        ssl_handler = urllib.request.HTTPSHandler(context=ctx)
 
         try:
             opener = urllib.request.build_opener(ssl_handler)

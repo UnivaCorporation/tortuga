@@ -72,6 +72,7 @@ class BaseSettingSchema(Schema):
     """
     type: fields.Field = fields.String(dump_only=True)
     description: fields.Field = fields.String()
+    group: fields.Field = fields.String()
     required: fields.Field = fields.Boolean()
     secret: fields.Field = fields.Boolean()
     mutually_exclusive: fields.Field = fields.List(fields.String())
@@ -96,6 +97,7 @@ class BaseSetting(metaclass=SettingMeta):
 
     def __init__(self, **kwargs):
         self.description = kwargs.get('description', '')
+        self.group = kwargs.get('group', '')
         self.required = kwargs.get('required', False)
         self.secret = kwargs.get('secret', False)
         self.mutually_exclusive = kwargs.get('mutually_exclusive', [])

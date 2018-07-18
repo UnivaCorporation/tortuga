@@ -144,8 +144,14 @@ def install(options):
         raise Exception(
             'One or more modules are missing; build is incomplete')
 
+    python_module_dir = installDir / path('python-tortuga')
+    if not python_module_dir.exists():
+        python_module_dir.makedirs()
+
     for f in srcModuleFiles:
-        f.copy(installDir)
+        f.copy(python_module_dir)
+
+    sh('dir2pi %s' % (python_module_dir))
 
     # Copy default kits
     _copyKits(distKits, installDir)

@@ -21,7 +21,7 @@ class tortuga::mcollective::package {
   if ! $tortuga::mcollective::is_installer {
     $tmpdir = "${tortuga::config::instroot}/var/tmp/mcollective-puppet-agent"
     $tarball = "${tmpdir}/${filename}"
-    $url = "http://${::primary_installer_hostname}:8008/3rdparty/mcollective-puppet-agent/${filename}"
+    $url = "http://${::primary_installer_hostname}:${tortuga::config::int_web_port}/3rdparty/mcollective-puppet-agent/${filename}"
     file { $tmpdir:
       ensure => directory,
     }

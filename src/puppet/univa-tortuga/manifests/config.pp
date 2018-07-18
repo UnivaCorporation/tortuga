@@ -14,7 +14,8 @@
 
 class tortuga::config (
   $instroot = $tortuga::params::instroot,
-  $installer_fqdn = $tortuga::params::installer_fqdn
+  $installer_fqdn = $tortuga::params::installer_fqdn,
+  Integer $int_web_port = $tortuga::params::int_web_port,
 ) inherits tortuga::params {
   $config_dir = "${instroot}/config"
 
