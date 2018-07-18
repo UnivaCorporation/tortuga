@@ -18,10 +18,10 @@ import os
 import ssl
 import threading
 
-import websockets
-
 import cherrypy
 from cherrypy.process import plugins
+import websockets
+
 from tortuga.config.configManager import ConfigManager
 from tortuga.web_service.websocket.state_manager import StateManager
 

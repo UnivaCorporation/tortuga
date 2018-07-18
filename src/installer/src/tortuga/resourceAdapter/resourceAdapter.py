@@ -677,7 +677,7 @@ class ResourceAdapter(UserDataMixin): \
         if node.instance and \
                 node.instance.resource_adapter_configuration and \
                 node.instance.resource_adapter_configuration.name != 'default':
-            for c in node.instance.resource_adapter_configuration.settings:
+            for c in node.instance.resource_adapter_configuration.configuration:
                 override_config[c.key] = c.value
 
         config.update(override_config)
