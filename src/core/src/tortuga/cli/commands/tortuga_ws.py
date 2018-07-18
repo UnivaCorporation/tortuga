@@ -1,5 +1,5 @@
 import argparse
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 import yaml
 
@@ -120,7 +120,7 @@ class TortugaWsCommand(Command):
     This is a command for interacting with WS API endpoints.
 
     """
-    commands = [
+    sub_commands = [
         ListCommand(
             'list',
             help='List all {}'

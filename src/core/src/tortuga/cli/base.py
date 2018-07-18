@@ -11,7 +11,7 @@ class Command:
     A CLI command.
 
     """
-    commands: List['Command'] = []
+    sub_commands: List['Command'] = []
     arguments: List['Argument'] = []
 
     def __init__(self, *args, help: Optional[str] = None, **kwargs):
@@ -53,7 +53,7 @@ class Command:
         #
         # Add arguments
         #
-        for arg in self.arguments:
+        for arg in self.get_arguments():
             arg.set_command(self)
             arg.build_argument(parser)
 
@@ -65,9 +65,10 @@ class Command:
         #
         # Add sub-commands
         #
-        if self.commands:
+        sub_commands = self.get_sub_commands()
+        if sub_commands:
             subparsers = parser.add_subparsers()
-            for command in self.commands:
+            for command in sub_commands:
                 command.set_parent(self)
 
                 kwargs = {}
@@ -89,6 +90,24 @@ class Command:
 
         """
         return self.help
+
+    def get_sub_commands(self) -> List['Command']:
+        """
+        Gets the list of sub-commands for this command.
+
+        :return List[Command]: the list of command instances
+
+        """
+        return self.sub_commands
+
+    def get_arguments(self) -> List['Argument']:
+        """
+        Gets the list of arguments for this command.
+
+        :return List[Argument]: the list of arguments
+
+        """
+        return self.arguments
 
     def execute(self, args: argparse.Namespace):
         """
@@ -173,9 +192,15 @@ class Cli(Command):
         Runs the tortuga CLI utility.
 
         """
-        args = self.parser.parse_args()
-        self.pre_execute(args)
-        args.command.execute(args)
+        try:
+            args = self.parser.parse_args()
+            self.pre_execute(args)
+            args.command.execute(args)
+        except Exception as ex:
+            print(ex)
+            raise SystemExit(-1)
+        except SystemExit:
+            raise
 
     def pre_execute(self, args: argparse.Namespace):
         """
