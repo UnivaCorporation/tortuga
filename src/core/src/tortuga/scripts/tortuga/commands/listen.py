@@ -5,28 +5,34 @@ import ssl
 import sys
 import websockets
 
-import yaml
+from tortuga.cli.base import RootCommand
+from tortuga.cli.utils import pretty_print
+from tortuga.config.configManager import ConfigManager
+from .tortuga_ws import get_web_service_config
 
-from ..base import Command
 
+class ListenCommand(RootCommand):
+    name = 'listen'
+    help = 'Listen on the API websocket for events'
 
-class ListenCommand(Command):
     def execute(self, args: argparse.Namespace):
         """
         Listen for events on the Tortuga websocket and print them to
         stdout.
 
         """
-        cli = self.parent
+        cm = ConfigManager()
 
         url = '{}://{}:{}'.format(
-            cli.config_manager.getWebsocketScheme(),
-            cli.config_manager.getInstaller(),
-            cli.config_manager.getWebsocketPort()
+            cm.getWebsocketScheme(),
+            cm.getInstaller(),
+            cm.getWebsocketPort()
         )
 
-        ws_client = WebsocketClient(username=cli.username,
-                                    password=cli.password,
+        _, username, password = get_web_service_config(args)
+
+        ws_client = WebsocketClient(username=username,
+                                    password=password,
                                     url=url)
 
         try:
@@ -65,8 +71,9 @@ class WebsocketClient:
     async def send_recieve(self, ws: websockets.WebSocketClientProtocol):
         while True:
             msg = await ws.recv()
+
             data = json.loads(msg)
-            print(yaml.safe_dump(data, default_flow_style=False))
+            pretty_print(data)
 
             if data['type'] == 'message':
                 if data['name'] == 'authentication-required':

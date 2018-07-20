@@ -34,7 +34,7 @@ logger = getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 
-def pip_install_requirements(kit_installer, requirements_path):
+def pip_install_requirements(requirements_path):
     """
     Installs packages specified in a requirements.txt file, using the kit
     package repo in addition to the standard python repos. This function
@@ -59,6 +59,8 @@ def pip_install_requirements(kit_installer, requirements_path):
     #
     # These directories can easily be created using the py2pi utility.
     #
+    cm = ConfigManager()
+
     if not os.path.exists(requirements_path):
         logger.debug('Requirements not found: {}'.format(requirements_path))
         return
@@ -67,23 +69,16 @@ def pip_install_requirements(kit_installer, requirements_path):
         logger.debug('Requirements empty: {}'.format(requirements_path))
         return
 
-    pip_cmd = ['{}/pip'.format(ConfigManager().getBinDir()), 'install']
+    installer = cm.getInstaller()
+    int_webroot = cm.getIntWebRootUrl(installer)
+    installer_repo = '{}/python-tortuga/simple/'.format(int_webroot)
 
-    kit_python_repo = os.path.join(
-        kit_installer.install_path,
-        'python_packages',
-        'simple'
-    )
-    if os.path.exists(kit_python_repo):
-        pip_cmd.extend([
-            '--extra-index-url',
-            'file://{}'.format(os.path.abspath(kit_python_repo))
-        ])
-
-    pip_cmd.extend([
-        '-r',
-        requirements_path
-    ])
+    pip_cmd = [
+        '{}/pip'.format(cm.getBinDir()), 'install',
+        '--extra-index-url', installer_repo,
+        '--trusted-host', installer,
+        '-r', requirements_path
+    ]
 
     logger.debug(' '.join(pip_cmd))
     subprocess.Popen(pip_cmd).wait()

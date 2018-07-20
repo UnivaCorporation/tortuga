@@ -11,10 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-# this module contains argparse Action classes for various CLIs
-
 import argparse
+
+import yaml
 
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
 from tortuga.objects.osInfo import OsInfo
@@ -54,3 +53,13 @@ class FilterTagsAction(argparse.Action):
             setattr(namespace, self.dest, tags)
         else:
             current_tags.extend(tags)
+
+
+def pretty_print(data):
+    """
+    Outputs data as nicely formatted YAML.
+
+    :param data: A Python data structure
+
+    """
+    print(yaml.safe_dump(data, default_flow_style=False))
