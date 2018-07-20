@@ -4,8 +4,6 @@ from logging import getLogger
 import os
 from typing import List, Dict
 
-import yaml
-
 from tortuga.config.configManager import ConfigManager
 from tortuga.wsapi_v2.client import TortugaWsApiClient
 from tortuga.cli.base import Argument, RootCommand, Command
@@ -72,7 +70,12 @@ class ListCommand(Command):
         return params
 
 
-class IdArgument(Argument):
+class TortugaWsArgument(Argument):
+    """
+    An argument that outputs the help text to match the name of the Tortuga
+    web service endpoint.
+
+    """
     def get_help(self):
         #
         # Since this class can be used for multiple endpoints, we want to
@@ -99,7 +102,7 @@ class ShowCommand(Command):
     help = 'Show a single {}'
 
     arguments = [
-        IdArgument(
+        TortugaWsArgument(
             'id',
             type=str,
             nargs=1,

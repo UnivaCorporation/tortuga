@@ -15,7 +15,7 @@ from tortuga.config.configManager import ConfigManager
 logger = getLogger(__name__)
 
 
-class ListExtension(Command):
+class ListCommand(Command):
     """
     List available extensions.
 
@@ -27,7 +27,7 @@ class ListExtension(Command):
         pretty_print(get_available_extensions())
 
 
-class InstallExtension(Command):
+class InstallCommand(Command):
     """
     Install an extension.
 
@@ -50,13 +50,10 @@ class InstallExtension(Command):
 
         cm = ConfigManager()
 
-        installer = cm.getInstaller()
-        repo_url = get_python_package_repo()
-
         pip_cmd = [
             'pip', 'install',
-            '--extra-index-url', repo_url,
-            '--trusted-host', installer,
+            '--extra-index-url', get_python_package_repo(),
+            '--trusted-host', cm.getInstaller(),
             args.name
         ]
 
@@ -72,8 +69,8 @@ class ExtensionsCommand(RootCommand):
     help = 'Manage Tortuga CLI extensions'
 
     sub_commands = [
-        ListExtension(),
-        InstallExtension()
+        ListCommand(),
+        InstallCommand()
     ]
 
 
@@ -86,16 +83,13 @@ def get_python_package_repo() -> str:
     """
     cm = ConfigManager()
 
-    installer = cm.getInstaller()
-    int_webroot = cm.getIntWebRootUrl(installer)
+    int_webroot = cm.getIntWebRootUrl(cm.getInstaller())
 
     return '{}/python-tortuga/simple/'.format(int_webroot)
 
 
 def get_available_extensions() -> List[str]:
-    repo_url = get_python_package_repo()
-
-    r = requests.get(repo_url)
+    r = requests.get(get_python_package_repo())
     if r.status_code != 200:
         raise Exception(
             'Repository returned status code: {}'.format(r.status_code)
