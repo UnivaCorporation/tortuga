@@ -1,6 +1,6 @@
 FROM univa/tortuga-builder
 
-ADD tortuga-*/tortuga_core-*.whl /
+ADD tortuga-*/python-tortuga/tortuga_core-*.whl /
 RUN . /opt/rh/rh-python36/enable && \
     bash -c 'pip install wheel /tortuga_core-*.whl'
 WORKDIR /kit-src
