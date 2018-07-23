@@ -167,7 +167,7 @@ setup(
             'shutdown-node=tortuga.scripts.shutdown_node:main',
             'schedule-update=tortuga.scripts.schedule_update:main',
             'startup-node=tortuga.scripts.startup_node:main',
-            'tortuga=tortuga.scripts.tortuga:main',
+            'tortuga=tortuga.scripts.tortuga.script:main',
             'transfer-node=tortuga.scripts.transfer_node:main',
             'uc-tag=tortuga.scripts.uc_tag:main',
             'ucparam=tortuga.scripts.ucparam:main',

@@ -301,11 +301,10 @@ class KitBuilder(object):
         self._copy_puppet_modules(kit_build_dir)
 
         #
-        # Build and copy python wheels, then generate package index
+        # Build and copy python wheels
         #
         self._build_python_package()
         self._copy_python_package(dist_dir, kit_build_dir)
-        self._generate_python_package_index(kit_build_dir)
 
         #
         # Generate kit tarball
@@ -418,27 +417,6 @@ class KitBuilder(object):
                 '*.tar.gz'
             )
             self._copy_file(puppet_pkg_path, puppet_pkg_dest_path)
-
-    def _generate_python_package_index(self, kit_build_dir):
-        """
-        Generates a Python package index suitable for pip to use for
-        installing packages from.
-
-        :param kit_build_dir:
-
-        """
-        if not self._python_setup_found:
-            return
-
-        logger.info('Generating python package index...')
-
-        python_whl_dest_path = os.path.join(
-            kit_build_dir,
-            'python_packages'
-        )
-
-        cmd = 'dir2pi {}'.format(python_whl_dest_path)
-        self._run_command(cmd)
 
     def _generate_tarball(self, dist_dir) -> str:
         """

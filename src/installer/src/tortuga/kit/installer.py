@@ -30,6 +30,7 @@ from tortuga.objects.component import Component
 from tortuga.objects.eula import Eula
 from tortuga.objects.kit import Kit
 from tortuga.objects.osFamilyInfo import OsFamilyInfo
+from tortuga.os_utility.tortugaSubprocess import executeCommand
 from .registry import register_kit_installer
 from .utils import pip_install_requirements
 
@@ -471,13 +472,54 @@ class KitInstallerBase(ConfigurableMixin, metaclass=KitInstallerMeta):
 
     def action_post_install(self):
         #
+        # Check for python packages to install
+        #
+        pkg_dir = os.path.join(
+            self.install_path,
+            'python_packages'
+        )
+        if os.path.exists(pkg_dir):
+            self._update_python_repo(pkg_dir)
+
+        #
         # Install required python packages from requirements.txt
         #
         requirements_path = os.path.join(
             self.kit_path,
             'requirements.txt'
         )
-        pip_install_requirements(self, requirements_path)
+        pip_install_requirements(requirements_path)
+
+    def _update_python_repo(self, pkg_dir: str):
+        """
+        Updates the Tortuga Python repo with packages from the kit.
+
+        :param pkg_dir: the source directory from which the packages will
+                        be copied
+
+        """
+        #
+        # Copy the files from the pkg_dir to the Tortuga repo
+        #
+        whl_path = os.path.join(pkg_dir, '*.whl')
+        repo_path = os.path.join(
+            self.config_manager.getTortugaIntWebRoot(),
+            'python-tortuga'
+        )
+        cmd = 'rsync -a {} {}'.format(whl_path, repo_path)
+        logger.debug(cmd)
+        executeCommand(cmd)
+
+        #
+        # Re-build the package index
+        #
+        dir2pi = os.path.join(
+            self.config_manager.getBinDir(),
+            'dir2pi'
+        )
+        cmd = '{} {}'.format(dir2pi, repo_path)
+        logger.debug(cmd)
+        executeCommand(cmd)
 
     def action_post_uninstall(self):
         pass
