@@ -83,18 +83,21 @@ class CreateHardwareProfileCli(TortugaCli):
 
             try:
                 with open(self.getArgs().jsonTemplatePath) as fp:
-                    tmpl_dict = json.load(fp)
+                    buf = json.load(fp)
+
+                tmpl_dict = buf['hardwareProfile']
             except Exception as exc:
                 raise InvalidProfileCreationTemplate(
                     'Invalid profile creation template: {}'.format(exc))
         else:
-            # build up dict from scratch
-            tmpl_dict = {
-                'name': self.getArgs().name,
-            }
+            tmpl_dict = {}
 
-            if self.getArgs().description:
-                tmpl_dict['description'] = self.getArgs().description
+        # build up dict from scratch
+        if self.getArgs().name:
+            tmpl_dict['name'] = self.getArgs().name
+
+        if self.getArgs().description:
+            tmpl_dict['description'] = self.getArgs().description
 
         if hasattr(self.getArgs(), 'osInfo'):
             tmpl_dict['os'] = {
