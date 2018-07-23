@@ -25,6 +25,10 @@ logger = logging.getLogger(__name__)
 
 
 class TortugaScript(Cli):
+    """
+    The Tortuga Cli implementation.
+
+    """
     command_package = 'tortuga.scripts.tortuga.commands'
 
     arguments = [
