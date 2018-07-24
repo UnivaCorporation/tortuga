@@ -40,6 +40,15 @@ class TestNodesDbHandler(unittest.TestCase):
 
         assert result.nics
 
+    def test_get_installer_node(self):
+        """
+        Test get_installer_node against test harness
+        """
+
+        result = NodesDbHandler().get_installer_node(self.session)
+
+        assert result and result.softwareprofile.type == 'installer'
+
     def test_getNodeList(self):
         assert isinstance(NodesDbHandler().getNodeList(self.session), list)
 
