@@ -101,7 +101,8 @@ class SessionManager:
 
     def sendRequest(self, url, method='GET',
                     contentType='application/json', data=None,
-                    acceptType='application/json'):
+                    acceptType='application/json',
+                    verify: bool = True):
         """
         Send HTTP request without cookies
 
@@ -136,6 +137,9 @@ class SessionManager:
             request.add_header('Cookie', self._sessionCookie)
 
         ctx = ssl.create_default_context()
+        if not verify:
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
         ctx.load_default_certs()
 
         ssl_handler = urllib.request.HTTPSHandler(context=ctx)

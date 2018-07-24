@@ -33,7 +33,8 @@ class TortugaWsApiClient:
     def __init__(self, endpoint: Optional[str] = None,
                  username: Optional[str] = None,
                  password: Optional[str] = None,
-                 base_url: Optional[str] = None) -> None:
+                 base_url: Optional[str] = None,
+                 verify: bool = True) -> None:
         logger.addHandler(logging.NullHandler())
 
         #
@@ -78,6 +79,8 @@ class TortugaWsApiClient:
         self._username = username
         self._password = password
 
+        self._verify = verify
+
     def _get_session_manager(self):
         if not self._sm:
             self._sm = sessionManager.createSession()
@@ -99,7 +102,8 @@ class TortugaWsApiClient:
             #
             sm.establishSession(self._svr_base_url, self._username,
                                 self._password)
-        return sm.sendRequest(url, method, content_type, data, accept_type)
+        return sm.sendRequest(url, method, content_type, data, accept_type,
+                              verify=self._verify)
 
     def send_request(self, url: str, method: str = 'GET',
                      content_type: str = 'application/json',
@@ -111,7 +115,8 @@ class TortugaWsApiClient:
         # setHost()
         #
         sm.setHost(url)
-        return sm.sendRequest(url, method, content_type, data, accept_type)
+        return sm.sendRequest(url, method, content_type, data, accept_type,
+                              verify=self._verify)
 
     def list(self, **params) -> str:
         url = self._svr_endpoint_url

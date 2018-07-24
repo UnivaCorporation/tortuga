@@ -44,7 +44,8 @@ Delete installed operating system or application kit from Tortuga.
 
         api = KitWsApi(username=self.getUsername(),
                        password=self.getPassword(),
-                       baseurl=self.getUrl())
+                       baseurl=self.getUrl(),
+                       verify=self._verify)
 
         api.deleteKit(name, version, iteration, force=self.getArgs().force)
 

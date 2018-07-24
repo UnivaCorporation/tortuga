@@ -50,6 +50,7 @@ class TortugaCli(metaclass=ABCMeta):
         self._url = None
         self._username = None
         self._password = None
+        self._verify = True
         self._optionGroupDict = {}
         self._cm = ConfigManager()
 
@@ -120,6 +121,10 @@ class TortugaCli(metaclass=ABCMeta):
         self.addOptionToGroup(common_group, '--password', dest='password',
                               help=_('Tortuga web service password'))
 
+        self.addOptionToGroup(common_group, '--no-verify', dest='verify',
+                              action='store_false', default=True,
+                              help=_("Don't verify the API SSL certificate"))
+
         if usage:
             self._parser.description = usage
 
@@ -138,7 +143,7 @@ class TortugaCli(metaclass=ABCMeta):
 
         self._setup_logging(self._args.consoleLogLevel)
 
-        self._url, self._username, self._password = \
+        self._url, self._username, self._password, self._verify = \
             self._get_web_service_options()
 
         return self._args
@@ -221,7 +226,15 @@ class TortugaCli(metaclass=ABCMeta):
         elif os.getenv('TORTUGA_WS_PASSWORD'):
             password = os.getenv('TORTUGA_WS_PASSWORD')
 
-        return url, username, password
+        #
+        # CLI arguments should override the environment variable
+        #
+        if os.getenv('TORTUGA_NO_VERIFY'):
+            verify = False
+        else:
+            verify = self._args.verify
+
+        return url, username, password, verify
 
     def usage(self, s=None):
         """

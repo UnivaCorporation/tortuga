@@ -47,7 +47,8 @@ Transfers given idle node to the given active software profile.
 
         api = nodeWsApi.NodeWsApi(username=self.getUsername(),
                                   password=self.getUsername(),
-                                  baseurl=self.getUrl())
+                                  baseurl=self.getUrl(),
+                                  verify=self._verify)
 
         try:
             result = api.activateNode(

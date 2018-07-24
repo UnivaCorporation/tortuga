@@ -30,7 +30,8 @@ Return list of idle software profiles configured on the system.
 """))
         api = SoftwareProfileWsApi(username=self.getUsername(),
                                    password=self.getPassword(),
-                                   baseurl=self.getUrl())
+                                   baseurl=self.getUrl(),
+                                   verify=self._verify)
 
         for software_profile in api.getSoftwareProfileList():
             if software_profile.getIsIdle():

@@ -148,7 +148,8 @@ class AddNodes(TortugaCli): \
         addHostWsApi = AddHostWsApi(
             username=self.getUsername(),
             password=self.getPassword(),
-            baseurl=self.getUrl()
+            baseurl=self.getUrl(),
+            verify=self._verify
         )
 
         addNodesRequest = {

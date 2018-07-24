@@ -82,7 +82,8 @@ class UctagCli(TortugaCli):
             if args.nodespec:
                 node_api = NodeWsApi(username=self.getUsername(),
                                      password=self.getPassword(),
-                                     baseurl=self.getUrl())
+                                     baseurl=self.getUrl(),
+                                     verify=self._verify)
                 nodespec = args.nodespec.replace('*', '%')
                 nodes = node_api.getNode(nodespec)
                 if not nodes:
@@ -97,7 +98,8 @@ class UctagCli(TortugaCli):
                 sw_profile_api = SoftwareProfileWsApi(
                     username=self.getUsername(),
                     password=self.getPassword(),
-                    baseurl=self.getUrl())
+                    baseurl=self.getUrl(),
+                    verify=self._verify)
                 for softwareprofile_name in args.software_profile.split(','):
                     softwareprofile = sw_profile_api.getSoftwareProfile(
                         softwareprofile_name)
@@ -107,7 +109,8 @@ class UctagCli(TortugaCli):
                 hw_profile_api = HardwareProfileWsApi(
                     username=self.getUsername(),
                     password=self.getPassword(),
-                    baseurl=self.getUrl())
+                    baseurl=self.getUrl(),
+                    verify=self._verify)
                 for hardwareprofile_name in args.hardware_profile.split(','):
                     hardwareprofile = hw_profile_api.getHardwareProfile(
                         hardwareprofile_name)
