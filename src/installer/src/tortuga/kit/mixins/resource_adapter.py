@@ -117,7 +117,7 @@ class ResourceAdapterManagementComponentInstaller(ComponentInstallerBase):
             self.component_path,
             'requirements.txt'
         )
-        pip_install_requirements(self.kit_installer, requirements_path)
+        pip_install_requirements(requirements_path)
 
     def action_post_enable(self, software_profile_name, *args, **kwargs):
         super().action_post_enable(software_profile_name, *args, **kwargs)

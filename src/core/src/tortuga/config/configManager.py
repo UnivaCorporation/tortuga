@@ -497,7 +497,7 @@ class ConfigManager(dict, Singleton): \
         with an optional path, if given.
         '''
 
-        hostname = hostname if hostname else self.getInstallerUrl()
+        hostname = hostname if hostname else self.getInstaller()
 
         url = '%s://%s:%s' % (self.getAdminScheme(),
                               hostname,

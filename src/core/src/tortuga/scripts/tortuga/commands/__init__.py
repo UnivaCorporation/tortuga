@@ -12,11 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from distutils.version import LooseVersion
-
-
-VERSION = '6.3.1-alpha+011'
-
-
-def version_is_compatible(version_string: str):
-    return LooseVersion(VERSION) >= LooseVersion(version_string)
+__import__('pkg_resources').declare_namespace(__name__)

@@ -1,3 +1,17 @@
+# Copyright 2008-2018 Univa Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import argparse
 import asyncio
 import json
@@ -5,28 +19,38 @@ import ssl
 import sys
 import websockets
 
-import yaml
+from tortuga.cli.base import RootCommand
+from tortuga.cli.utils import pretty_print
+from tortuga.config.configManager import ConfigManager
+from .tortuga_ws import get_web_service_config
 
-from ..base import Command
 
+class ListenCommand(RootCommand):
+    """
+    Listen command for listening to websocket events.
 
-class ListenCommand(Command):
+    """
+    name = 'listen'
+    help = 'Listen on the API websocket for events'
+
     def execute(self, args: argparse.Namespace):
         """
         Listen for events on the Tortuga websocket and print them to
         stdout.
 
         """
-        cli = self.parent
+        cm = ConfigManager()
 
         url = '{}://{}:{}'.format(
-            cli.config_manager.getWebsocketScheme(),
-            cli.config_manager.getInstaller(),
-            cli.config_manager.getWebsocketPort()
+            cm.getWebsocketScheme(),
+            cm.getInstaller(),
+            cm.getWebsocketPort()
         )
 
-        ws_client = WebsocketClient(username=cli.username,
-                                    password=cli.password,
+        _, username, password = get_web_service_config(args)
+
+        ws_client = WebsocketClient(username=username,
+                                    password=password,
                                     url=url)
 
         try:
@@ -63,10 +87,17 @@ class WebsocketClient:
             await self.send_recieve(ws)
 
     async def send_recieve(self, ws: websockets.WebSocketClientProtocol):
+        """
+        The main loop that sends/receives data.
+
+        :param ws: the web socket client
+
+        """
         while True:
             msg = await ws.recv()
+
             data = json.loads(msg)
-            print(yaml.safe_dump(data, default_flow_style=False))
+            pretty_print(data)
 
             if data['type'] == 'message':
                 if data['name'] == 'authentication-required':
@@ -78,6 +109,8 @@ class WebsocketClient:
     async def send_auth(self, ws: websockets.WebSocketClientProtocol):
         """
         Sends an authentication request.
+
+        :param ws: the web socket client
 
         """
         data = {
@@ -94,6 +127,8 @@ class WebsocketClient:
     async def send_subscribe(self, ws: websockets.WebSocketClientProtocol):
         """
         Sends a subscription request.
+
+        :param ws: the web socket client
 
         """
         data = {
