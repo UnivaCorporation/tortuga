@@ -37,6 +37,32 @@ class TestSoftwareProfilesDbHandler(unittest.TestCase):
 
         assert isinstance(result, list)
 
+    def test_getSoftwareProfileList_by_type(self):
+        """
+        Get software profile list by type 'installer'
+        """
+
+        result = SoftwareProfilesDbHandler().getSoftwareProfileList(
+            self.session, profile_type='installer'
+        )
+
+        assert isinstance(result, list) and result and \
+            isinstance(result[0], SoftwareProfile) and \
+            result[0].type == 'installer'
+
+    def test_getSoftwareProfileList_by_type2(self):
+        """
+        Get software profile list by type 'compute'
+        """
+
+        result = SoftwareProfilesDbHandler().getSoftwareProfileList(
+            self.session, profile_type='compute'
+        )
+
+        assert isinstance(result, list) and result and \
+            isinstance(result[0], SoftwareProfile) and \
+            result[0].type == 'compute'
+
     def test_getSoftwareProfileList_tags(self):
         # 'tag1' returns software profile 'profile1' only
         result = SoftwareProfilesDbHandler().getSoftwareProfileList(
