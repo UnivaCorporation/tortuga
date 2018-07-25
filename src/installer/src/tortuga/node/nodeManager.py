@@ -724,7 +724,7 @@ class NodeManager(TortugaObjectManager): \
     def __scheduleUpdate(self):
         self._syncApi.scheduleClusterUpdate()
 
-    def getInstallerNode(self, optionDict: OptionDict = None):
+    def getInstallerNode(self, optionDict: Optional[OptionDict] = None):
         return self._nodeDbApi.getNode(
             self._cm.getInstaller(),
             optionDict=get_default_relations(optionDict))
@@ -1648,7 +1648,7 @@ class NodeManager(TortugaObjectManager): \
             state.NODE_STATE_INSTALLED
 
 
-def get_default_relations(relations: OptionDict):
+def get_default_relations(relations: Optional[OptionDict]):
     """
     Ensure hardware and software profiles and tags are populated when
     serializing node records.

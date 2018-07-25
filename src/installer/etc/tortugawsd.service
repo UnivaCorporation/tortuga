@@ -23,8 +23,8 @@ ExecStart=/opt/tortuga/bin/tortugawsd --pidfile /var/run/tortugawsd.pid --ssl-ce
 KillMode=process
 Restart=always
 RestartSec=30
-StartLimitInterval=200
-StartLimitBurst=5
+StartLimitInterval=300
+StartLimitBurst=10
 
 [Install]
 WantedBy=multi-user.target

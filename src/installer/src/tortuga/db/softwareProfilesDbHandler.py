@@ -14,12 +14,11 @@
 
 # pylint: disable=not-callable,multiple-statements,no-member
 
-from typing import List
+from typing import Dict, List, Optional, Tuple
 
 from sqlalchemy import and_, or_
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.session import Session
-
 from tortuga.db.componentsDbHandler import ComponentsDbHandler
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
 from tortuga.exceptions.hardwareProfileNotFound import HardwareProfileNotFound
@@ -86,16 +85,24 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
 
         return dbSoftwareProfile
 
-    def getSoftwareProfileList(self, session, tags=None):
+    def getSoftwareProfileList(self, session,
+                               tags: List[Tuple[str, str]] = None,
+                               profile_type: Optional[str] = None):
         """
         Get list of softwareProfiles from the db.
         """
 
         self.getLogger().debug('Retrieving software profile list')
 
-        searchspec = []
+        q = session.query(SoftwareProfile)
+
+        if profile_type:
+            # filter by profile type
+            q = q.filter(SoftwareProfile.type == profile_type)
 
         if tags:
+            searchspec = []
+
             # Build searchspec from specified tags
             for tag in tags:
                 if len(tag) == 2:
@@ -105,8 +112,10 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
                 else:
                     searchspec.append(SoftwareProfile.tags.any(name=tag[0]))
 
-        return session.query(SoftwareProfile).filter(
-            or_(*searchspec)).order_by(SoftwareProfile.name).all()
+            # AND the tag search spec into existing filter
+            q = q.filter(or_(*searchspec))
+
+        return q.order_by(SoftwareProfile.name).all()
 
     def getIdleSoftwareProfileList(self, session):
         """
