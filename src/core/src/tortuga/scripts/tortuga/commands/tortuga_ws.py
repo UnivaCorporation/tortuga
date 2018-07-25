@@ -55,7 +55,7 @@ class ListCommand(Command):
         return super().get_help().format(endpoint)
 
     def execute(self, args: argparse.Namespace):
-        ws_client = self.parent.client
+        ws_client = get_client(args, self.parent.name)
 
         query = args.query
         if not query:
@@ -112,7 +112,7 @@ class ShowCommand(Command):
     This command shows a specific item on an API endpoint.
 
     """
-    name = 'show',
+    name = 'show'
     help = 'Show a single {}'
 
     arguments = [
@@ -151,7 +151,7 @@ class EventsCommand(RootCommand):
     This is a command for interacting with WS API endpoints.
 
     """
-    name = 'event'
+    name = 'events'
     help = 'Tortuga events API'
 
     sub_commands = [
@@ -211,7 +211,7 @@ def get_web_service_config(args: argparse.Namespace):
     #
     # CLI arguments should override the environment variable
     #
-    if os.getenv('TORTUGA_NO_VERIFY'):
+    if os.getenv('TORTUGA_WS_NO_VERIFY'):
         verify = False
     else:
         verify = args.verify

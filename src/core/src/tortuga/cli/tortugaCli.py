@@ -196,15 +196,15 @@ class TortugaCli(metaclass=ABCMeta):
 
             username = cfg.get('default', 'username') \
                 if cfg.has_section('default') and \
-                   cfg.has_option('default', 'username') else None
+                cfg.has_option('default', 'username') else None
 
             password = cfg.get('default', 'password') \
                 if cfg.has_section('default') and \
-                   cfg.has_option('default', 'password') else None
+                cfg.has_option('default', 'password') else None
 
             url = cfg.get('default', 'url') \
                 if cfg.has_section('default') and \
-                   cfg.has_option('default', 'url') else None
+                cfg.has_option('default', 'url') else None
 
         # TORTUGA_WS_URL
         if self._args.url:
@@ -229,7 +229,7 @@ class TortugaCli(metaclass=ABCMeta):
         #
         # CLI arguments should override the environment variable
         #
-        if os.getenv('TORTUGA_NO_VERIFY'):
+        if os.getenv('TORTUGA_WS_NO_VERIFY'):
             verify = False
         else:
             verify = self._args.verify

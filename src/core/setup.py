@@ -107,6 +107,7 @@ setup(
         'passlib',
         'pip2pi',
         'PyYAML',
+        'requests',
         'websockets',
     ],
     dependency_links=[

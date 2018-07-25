@@ -128,7 +128,8 @@ class TortugaWsApi:
 
             # establishSession() sets the 'wsUrl' so the explicit call
             # to setHost() is not required
-            sm.establishSession(wsUrl, self._username, self._password)
+            sm.establishSession(wsUrl, self._username, self._password,
+                                verify=self._verify)
 
         return sm.sendRequest(
             url, method, contentType, data, acceptType=acceptType,
