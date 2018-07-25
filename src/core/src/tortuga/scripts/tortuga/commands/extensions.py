@@ -24,6 +24,7 @@ import requests
 from tortuga.cli.base import RootCommand, Command, Argument
 from tortuga.cli.utils import pretty_print
 from tortuga.config.configManager import ConfigManager
+from .tortuga_ws import get_web_service_config
 
 
 logger = getLogger(__name__)
@@ -38,7 +39,7 @@ class ListCommand(Command):
     help = 'List available extensions'
 
     def execute(self, args: argparse.Namespace):
-        pretty_print(get_available_extensions())
+        pretty_print(get_available_extensions(args))
 
 
 class InstallCommand(Command):
@@ -57,17 +58,17 @@ class InstallCommand(Command):
     ]
 
     def execute(self, args: argparse.Namespace):
-        available_extensions = get_available_extensions()
+        available_extensions = get_available_extensions(args)
         if args.name not in available_extensions:
             raise Exception(
                 '{} is not a valid extension name'.format(args.name))
 
-        cm = ConfigManager()
+        installer = get_installer(args)
 
         pip_cmd = [
             'pip', 'install',
-            '--extra-index-url', get_python_package_repo(),
-            '--trusted-host', cm.getInstaller(),
+            '--extra-index-url', get_python_package_repo(installer),
+            '--trusted-host', installer,
             args.name
         ]
 
@@ -88,28 +89,55 @@ class ExtensionsCommand(RootCommand):
     ]
 
 
-def get_python_package_repo() -> str:
+def get_installer(args: argparse.Namespace) -> str:
     """
-    Gets the URL to the Tortuga Python package repository.
+    Gets the hostname of the Tortuga installer.
+
+    :param argparse.Namespace args: argparse arguments
 
     :return str: the URL
 
     """
     cm = ConfigManager()
 
-    int_webroot = cm.getIntWebRootUrl(cm.getInstaller())
+    url, username, password, verify = get_web_service_config(args)
+    if url:
+        url_parts = url.split(':')
+        host = url_parts[1].replace('//', '')
 
-    return '{}/python-tortuga/simple/'.format(int_webroot)
+    else:
+        host = cm.getInstaller()
+
+    return host
 
 
-def get_available_extensions() -> List[str]:
+def get_python_package_repo(installer: str) -> str:
+    """
+    Gets the URL to the Tortuga Python package repository.
+
+    :param str installer: the hostname of the installer
+
+    :return str: the URL
+
+    """
+    cm = ConfigManager()
+
+    url = cm.getIntWebRootUrl(installer)
+
+    return '{}/python-tortuga/simple/'.format(url)
+
+
+def get_available_extensions(args: argparse.Namespace) -> List[str]:
     """
     Get a list of all available CLI extensions.
+
+    :param argparse.Namespace args: argparse arguments
 
     :return List[str]: the list of available extensions
 
     """
-    r = requests.get(get_python_package_repo())
+    installer = get_installer(args)
+    r = requests.get(get_python_package_repo(installer))
     if r.status_code != 200:
         raise Exception(
             'Repository returned status code: {}'.format(r.status_code)
