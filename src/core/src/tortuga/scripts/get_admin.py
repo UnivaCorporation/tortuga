@@ -51,7 +51,8 @@ Returns admin user from the Tortuga system.
 
         api = AdminWsApi(username=self.getUsername(),
                          password=self.getPassword(),
-                         baseurl=self.getUrl())
+                         baseurl=self.getUrl(),
+                         verify=self._verify)
         admin = api.getAdmin(self.getArgs().admin_username)
 
         if self.getArgs().xml:

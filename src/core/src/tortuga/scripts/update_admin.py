@@ -55,7 +55,8 @@ Updates a administrative user settings in the Tortuga system.
 
         api = AdminWsApi(username=self.getUsername(),
                          password=self.getPassword(),
-                         baseurl=self.getUrl())
+                         baseurl=self.getUrl(),
+                         verify=self._verify)
 
         api.updateAdmin(admin, self.getArgs().isCrypted)
 

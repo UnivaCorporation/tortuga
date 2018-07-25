@@ -43,7 +43,8 @@ class CopySoftwareProfileCli(tortugaCli.TortugaCli):
 
         api = SoftwareProfileWsApi(username=self.getUsername(),
                                    password=self.getPassword(),
-                                   baseurl=self.getUrl())
+                                   baseurl=self.getUrl(),
+                                   verify=self._verify)
 
         api.copySoftwareProfile(
             self.getArgs().srcSoftwareProfileName,

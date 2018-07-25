@@ -36,7 +36,8 @@ class ShutdownNodeCli(TortugaCli):
             # Perform a "soft" shutdown
             NodeWsApi(username=self.getUsername(),
                       password=self.getPassword(),
-                      baseurl=self.getUrl()).shutdownNode(
+                      baseurl=self.getUrl(),
+                      verify=self._verify).shutdownNode(
                 self.getArgs().nodeName, True)
         except Exception as msg:
             raise InvalidCliRequest(

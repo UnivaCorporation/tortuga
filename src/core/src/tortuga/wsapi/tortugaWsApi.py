@@ -30,7 +30,8 @@ class TortugaWsApi:
     Base tortuga ws api class.
     """
 
-    def __init__(self, username=None, password=None, baseurl=None):
+    def __init__(self, username=None, password=None, baseurl=None,
+                 verify: bool = True):
         self._logger = logging.getLogger(
             'tortuga.wsapi.{0}'.format(self.__class__.__name__))
         self._logger.addHandler(logging.NullHandler())
@@ -63,6 +64,7 @@ class TortugaWsApi:
 
         self._username = username
         self._password = password
+        self._verify = verify
         self._sm = None
 
     def _getWsUrl(self, url):
@@ -129,7 +131,8 @@ class TortugaWsApi:
             sm.establishSession(wsUrl, self._username, self._password)
 
         return sm.sendRequest(
-            url, method, contentType, data, acceptType=acceptType)
+            url, method, contentType, data, acceptType=acceptType,
+            verify=self._verify)
 
     def sendRequest(self, url, method='GET',
                     contentType='application/json', data=None,
@@ -145,4 +148,4 @@ class TortugaWsApi:
         sm.setHost(self._getWsUrl(url))
 
         return self._getSessionManager().sendRequest(
-            url, method, contentType, data, acceptType)
+            url, method, contentType, data, acceptType, verify=self._verify)

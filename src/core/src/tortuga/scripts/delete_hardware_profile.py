@@ -37,7 +37,8 @@ class DeleteHardwareProfileCli(TortugaCli):
 
         api = HardwareProfileWsApi(username=self.getUsername(),
                                    password=self.getPassword(),
-                                   baseurl=self.getUrl())
+                                   baseurl=self.getUrl(),
+                                   verify=self._verify)
 
         api.deleteHardwareProfile(
             self.getArgs().hardwareProfileName)

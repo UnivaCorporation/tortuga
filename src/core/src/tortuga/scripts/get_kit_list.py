@@ -41,7 +41,8 @@ Returns the list of kits available in the system.
 
         api = KitWsApi(username=self.getUsername(),
                        password=self.getPassword(),
-                       baseurl=self.getUrl())
+                       baseurl=self.getUrl(),
+                       verify=self._verify)
 
         kitList = [
             str(kit) for kit in api.getKitList()

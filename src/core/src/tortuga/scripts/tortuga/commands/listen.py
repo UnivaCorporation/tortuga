@@ -47,11 +47,12 @@ class ListenCommand(RootCommand):
             cm.getWebsocketPort()
         )
 
-        _, username, password = get_web_service_config(args)
+        _, username, password, verify = get_web_service_config(args)
 
         ws_client = WebsocketClient(username=username,
                                     password=password,
-                                    url=url)
+                                    url=url,
+                                    verify=verify)
 
         try:
             asyncio.get_event_loop().run_until_complete(ws_client.start())
@@ -65,10 +66,12 @@ class WebsocketClient:
     Websocket client class.
 
     """
-    def __init__(self, username: str, password: str, url: str):
+    def __init__(self, username: str, password: str, url: str,
+                 verify: bool = True):
         self._username = username
         self._password = password
         self._url = url
+        self._verify = verify
         self._websocket = None
 
     async def start(self):
@@ -78,8 +81,12 @@ class WebsocketClient:
         """
         if self._url.startswith('wss:'):
             ssl_context = ssl.SSLContext()
-            ssl_context.load_verify_locations(
-                '/etc/pki/tls/certs/ca-bundle.crt')
+            if self._verify:
+                ssl_context.load_verify_locations(
+                    '/etc/pki/tls/certs/ca-bundle.crt')
+            else:
+                ssl_context.check_hostname = False
+                ssl_context.verify_mode = ssl.CERT_NONE
         else:
             ssl_context = None
 

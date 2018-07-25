@@ -113,7 +113,8 @@ class CreateSoftwareProfileCli(TortugaCli):
 
         api = SoftwareProfileWsApi(username=self.getUsername(),
                                    password=self.getPassword(),
-                                   baseurl=self.getUrl())
+                                   baseurl=self.getUrl(),
+                                   verify=self._verify)
 
         # Populate 'settings_dict' from command-line arguments
         settings_dict = {

@@ -52,7 +52,8 @@ class DeleteNodeCli(TortugaCli):
         node_api = NodeWsApi(
             username=self.getUsername(),
             password=self.getPassword(),
-            baseurl=self.getUrl()
+            baseurl=self.getUrl(),
+            verify=self._verify
         )
 
         if self.getArgs().nodeList[0] == '-':

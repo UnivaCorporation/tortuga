@@ -53,7 +53,8 @@ Adjust "software uses hardware" attribute on a software  profile.
 
         api = SoftwareProfileWsApi(username=self.getUsername(),
                                    password=self.getPassword(),
-                                   baseurl=self.getUrl())
+                                   baseurl=self.getUrl(),
+                                   verify=self._verify)
 
         api.deleteUsableHardwareProfileFromSoftwareProfile(
             hwprofile_name, swprofile_name)

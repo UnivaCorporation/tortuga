@@ -44,7 +44,8 @@ flag is specified.
 
         nodeApi = NodeWsApi(username=self.getUsername(),
                             password=self.getPassword(),
-                            baseurl=self.getUrl())
+                            baseurl=self.getUrl(),
+                            verify=self._verify)
 
         # If the node is being reinstalled as a result of the reboot,
         # do not use a soft shutdown.

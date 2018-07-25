@@ -30,7 +30,8 @@ class GetProvisioningNetworks(TortugaCli):
 
         api = NetworkWsApi(username=self.getUsername(),
                            password=self.getPassword(),
-                           baseurl=self.getUrl())
+                           baseurl=self.getUrl(),
+                           verify=self._verify)
 
         data = []
         for network in api.getNetworkList():

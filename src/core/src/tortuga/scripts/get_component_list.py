@@ -68,7 +68,8 @@ class GetComponentList(TortugaCli):
             node = NodeWsApi(
                 username=self.getUsername(),
                 password=self.getPassword(),
-                baseurl=self.getUrl()
+                baseurl=self.getUrl(),
+                verify=self._verify
             ).getInstallerNode(
                 optionDict={
                     'softwareprofile': True,
@@ -91,7 +92,8 @@ Display list of components available for software profiles in the system.
 
             for c in SoftwareProfileWsApi(username=self.getUsername(),
                                           password=self.getPassword(),
-                                          baseurl=self.getUrl()
+                                          baseurl=self.getUrl(),
+                                          verify=self._verify
                                           ).getEnabledComponentList(
                     softwareProfileName):
                 displayComponent(c, c.getKit())
@@ -114,7 +116,8 @@ Display list of components available for software profiles in the system.
         for kit in KitWsApi(
                 username=self.getUsername(),
                 password=self.getPassword(),
-                baseurl=self.getUrl()).getKitList():
+                baseurl=self.getUrl(),
+                verify=self._verify).getKitList():
             for c in kit.getComponentList():
                 if osinfo and osinfo not in c.getOsInfoList() and \
                         osinfo.getOsFamilyInfo() not in c.getOsFamilyInfoList():

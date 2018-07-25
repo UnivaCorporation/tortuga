@@ -144,7 +144,8 @@ class GetNodeStatus(TortugaCli): \
 
         api = NodeWsApi(username=self.getUsername(),
                         password=self.getPassword(),
-                        baseurl=self.getUrl())
+                        baseurl=self.getUrl(),
+                        verify=self._verify)
 
         nodes: List[Dict[str, Any]] = [
             dict(x)
