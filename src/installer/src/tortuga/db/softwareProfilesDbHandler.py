@@ -94,7 +94,11 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
 
         self.getLogger().debug('Retrieving software profile list')
 
-        filterspec = None
+        q = session.query(SoftwareProfile)
+
+        if profile_type:
+            # filter by profile type
+            q = q.filter(SoftwareProfile.type == profile_type)
 
         if tags:
             searchspec = []
@@ -108,19 +112,10 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
                 else:
                     searchspec.append(SoftwareProfile.tags.any(name=tag[0]))
 
-            if filterspec:
-                filterspec = and_(filterspec, or_(*searchspec))
-            else:
-                filterspec = or_(*searchspec)
+            # AND the tag search spec into existing filter
+            q = q.filter(or_(*searchspec))
 
-        if profile_type:
-            if filterspec:
-                filterspec = and_(filterspec, SoftwareProfile.type == profile_type)
-            else:
-                filterspec = SoftwareProfile.type == profile_type
-
-        return session.query(SoftwareProfile).filter(
-            filterspec).order_by(SoftwareProfile.name).all()
+        return q.order_by(SoftwareProfile.name).all()
 
     def getIdleSoftwareProfileList(self, session):
         """
