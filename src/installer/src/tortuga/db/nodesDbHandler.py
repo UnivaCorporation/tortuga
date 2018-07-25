@@ -64,6 +64,36 @@ class NodesDbHandler(TortugaDbObjectHandler):
         except NoResultFound:
             raise NodeNotFound("Node [%s] not found" % (name))
 
+    def get_installer_node(self, session: Session) -> Node:
+        """
+        Return installer node derived from searching for all software
+        profiles with type 'installer'.
+
+        Raises:
+            NodeNotFound
+        """
+
+        installer_swprofiles = \
+            SoftwareProfilesDbHandler().getSoftwareProfileList(
+                session,
+                profile_type='installer'
+            )
+
+        if not installer_swprofiles:
+            raise NodeNotFound(
+                'No installer software profiles found'
+            )
+
+        installer_nodes = installer_swprofiles[0].nodes
+        if not installer_nodes:
+            raise NodeNotFound(
+                'No installer node found in software profile {}'.format(
+                    installer_swprofiles[0].name
+                )
+            )
+
+        return installer_nodes[0]
+
     def getNodesByTags(self, session: Session,
                        tags: Optional[Tags] = None):
         """'tags' is a list of (key, value) tuples representing tags.
