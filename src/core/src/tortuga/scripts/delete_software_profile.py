@@ -39,7 +39,8 @@ Removes software profile from system.
 
         api = SoftwareProfileWsApi(username=self.getUsername(),
                                    password=self.getPassword(),
-                                   baseurl=self.getUrl())
+                                   baseurl=self.getUrl(),
+                                   verify=self._verify)
         try:
             api.deleteSoftwareProfile(
                 self.getArgs().softwareProfileName)

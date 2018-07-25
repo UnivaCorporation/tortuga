@@ -78,7 +78,8 @@ the new software profile.
 
         api = NodeWsApi(username=self.getUsername(),
                         password=self.getPassword(),
-                        baseurl=self.getUrl())
+                        baseurl=self.getUrl(),
+                        verify=self._verify)
 
         if nodeName:
             api.transferNode(

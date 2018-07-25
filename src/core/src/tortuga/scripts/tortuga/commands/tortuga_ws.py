@@ -208,13 +208,21 @@ def get_web_service_config(args: argparse.Namespace):
     elif os.getenv('TORTUGA_WS_PASSWORD'):
         password = os.getenv('TORTUGA_WS_PASSWORD')
 
+    #
+    # CLI arguments should override the environment variable
+    #
+    if os.getenv('TORTUGA_NO_VERIFY'):
+        verify = False
+    else:
+        verify = args.verify
+
     if username is None and password is None:
         logger.debug('Using built-in user credentials')
         cm = ConfigManager()
         username = cm.getCfmUser()
         password = cm.getCfmPassword()
 
-    return url, username, password
+    return url, username, password, verify
 
 
 def get_client(args: argparse.Namespace, endpoint: str) -> TortugaWsApiClient:
@@ -227,11 +235,12 @@ def get_client(args: argparse.Namespace, endpoint: str) -> TortugaWsApiClient:
     :return TortugaWsApiClient: the configured client instance
 
     """
-    url, username, password = get_web_service_config(args)
+    url, username, password, verify = get_web_service_config(args)
 
     return TortugaWsApiClient(
         endpoint=endpoint,
         username=username,
         password=password,
-        base_url=url
+        base_url=url,
+        verify=verify
     )

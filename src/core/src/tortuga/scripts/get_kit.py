@@ -64,7 +64,8 @@ Returns details of the specified kit
 
         api = KitWsApi(username=self.getUsername(),
                        password=self.getPassword(),
-                       baseurl=self.getUrl())
+                       baseurl=self.getUrl(),
+                       verify=self._verify)
 
         try:
             kit = api.getKit(name, version=version, iteration=iteration)

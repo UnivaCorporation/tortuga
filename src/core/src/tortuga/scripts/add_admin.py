@@ -49,7 +49,8 @@ class AddAdminCli(AdminCli):
 
         api = adminWsApi.AdminWsApi(username=self.getUsername(),
                                     password=self.getPassword(),
-                                    baseurl=self.getUrl())
+                                    baseurl=self.getUrl(),
+                                    verify=self._verify)
 
         api.addAdmin(
             self.getArgs().adminUsername,

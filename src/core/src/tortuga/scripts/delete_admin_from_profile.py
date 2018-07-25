@@ -68,13 +68,15 @@ software profile.
 
             api = SoftwareProfileWsApi(username=self.getUsername(),
                                        password=self.getPassword(),
-                                       baseurl=self.getUrl())
+                                       baseurl=self.getUrl(),
+                                       verify=self._verify)
         else:
             profile = hwprofile
 
             api = HardwareProfileWsApi(username=self.getUsername(),
                                        password=self.getPassword(),
-                                       baseurl=self.getUrl())
+                                       baseurl=self.getUrl(),
+                                       verify=self._verify)
 
         api.deleteAdmin(profile, admin_username)
 

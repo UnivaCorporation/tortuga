@@ -42,7 +42,8 @@ actions based on the resource adapter associated with the given node.
 
         node_api = NodeWsApi(username=self.getUsername(),
                              password=self.getPassword(),
-                             baseurl=self.getUrl())
+                             baseurl=self.getUrl(),
+                             verify=self._verify)
 
         try:
             results = node_api.idleNode(self.getArgs().nodeName)

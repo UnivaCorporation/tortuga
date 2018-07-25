@@ -55,7 +55,8 @@ for example. All profiles must be mapped in order to be used for active nodes.
 
         api = SoftwareProfileWsApi(username=self.getUsername(),
                                    password=self.getPassword(),
-                                   baseurl=self.getUrl())
+                                   baseurl=self.getUrl(),
+                                   verify=self._verify)
 
         try:
             api.addUsableHardwareProfileToSoftwareProfile(

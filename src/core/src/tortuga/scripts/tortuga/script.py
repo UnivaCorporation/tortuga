@@ -58,7 +58,14 @@ class TortugaScript(Cli):
             '--password',
             dest='password',
             help='Web service password'
-        )
+        ),
+        Argument(
+            '--no-verify',
+            dest='verify',
+            default=True,
+            action='store_false',
+            help="Don't verify the API SSL certificate"
+        ),
     ]
 
     def get_command_package(self):

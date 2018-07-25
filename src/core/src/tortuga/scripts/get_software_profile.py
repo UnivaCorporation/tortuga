@@ -94,12 +94,14 @@ class GetSoftwareProfileCli(TortugaCli):
         self.swprofileapi = SoftwareProfileWsApi(
             username=self.getUsername(),
             password=self.getPassword(),
-            baseurl=self.getUrl())
+            baseurl=self.getUrl(),
+            verify=self._verify)
 
         self.hwprofileapi = HardwareProfileWsApi(
             username=self.getUsername(),
             password=self.getPassword(),
-            baseurl=self.getUrl())
+            baseurl=self.getUrl(),
+            verify=self._verify)
 
         optionDict = {}
 

@@ -35,7 +35,8 @@ class GetSoftwareProfileListCli(TortugaCli):
 
         api = SoftwareProfileWsApi(username=self.getUsername(),
                                    password=self.getPassword(),
-                                   baseurl=self.getUrl())
+                                   baseurl=self.getUrl(),
+                                   verify=self._verify)
 
         for sp in api.getSoftwareProfileList(tags=self.getArgs().tags):
             print('%s' % (sp))

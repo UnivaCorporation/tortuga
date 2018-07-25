@@ -46,7 +46,8 @@ class UpdateNodeStatusCli(TortugaCli):
         nodeWsApi.NodeWsApi(
             username=self.getUsername(),
             password=self.getPassword(),
-            baseurl=self.getUrl()).updateNodeStatus(
+            baseurl=self.getUrl(),
+            verify=self._verify).updateNodeStatus(
                 self.getArgs().nodeName,
                 self.getArgs().status,
                 self.getArgs().bootFrom)

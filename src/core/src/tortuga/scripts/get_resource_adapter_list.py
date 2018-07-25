@@ -39,7 +39,8 @@ class GetResourceAdapterListCli(TortugaCli):
         api = ResourceAdapterWsApi(
                 username=self.getUsername(),
                 password=self.getPassword(),
-                baseurl=self.getUrl())
+                baseurl=self.getUrl(),
+                verify=self._verify)
 
         if self.getArgs().output == 'text':
             for ra in api.getResourceAdapterList():

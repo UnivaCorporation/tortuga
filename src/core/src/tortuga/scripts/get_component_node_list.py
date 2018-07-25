@@ -54,7 +54,8 @@ class GetComponentNodeListCli(TortugaCli):
 
         api = SoftwareProfileWsApi(username=self.getUsername(),
                                    password=self.getPassword(),
-                                   baseurl=self.getUrl())
+                                   baseurl=self.getUrl(),
+                                   verify=self._verify)
 
         results = {}
         for sw_profile in api.getSoftwareProfileList():

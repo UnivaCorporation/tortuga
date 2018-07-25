@@ -190,6 +190,7 @@ class AdapterMgmtCLI(TortugaCli):
             username=self.getUsername(),
             password=self.getPassword(),
             baseurl=self.getUrl(),
+            verify=self._verify
         )
 
         if not hasattr(
@@ -364,6 +365,7 @@ class AdapterMgmtCLI(TortugaCli):
             username=self.getUsername(),
             password=self.getPassword(),
             baseurl=self.getUrl(),
+            verify=self._verify
         )
 
         ra_list = ra_api.getResourceAdapterList()

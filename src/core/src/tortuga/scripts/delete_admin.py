@@ -33,7 +33,8 @@ class DeleteAdminCli(AdminCli):
 
         api = AdminWsApi(username=self.getUsername(),
                          password=self.getPassword(),
-                         baseurl=self.getUrl())
+                         baseurl=self.getUrl(),
+                         verify=self._verify)
 
         api.deleteAdmin(
             self.getArgs().adminId or self.getArgs().adminUsername)

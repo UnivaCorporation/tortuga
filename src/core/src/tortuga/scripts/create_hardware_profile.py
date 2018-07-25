@@ -126,7 +126,8 @@ class CreateHardwareProfileCli(TortugaCli):
 
         api = HardwareProfileWsApi(username=self.getUsername(),
                                    password=self.getPassword(),
-                                   baseurl=self.getUrl())
+                                   baseurl=self.getUrl(),
+                                   verify=self._verify)
 
         api.createHardwareProfile(hw_profile_spec, settings_dict)
 
