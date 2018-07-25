@@ -126,7 +126,7 @@ class AdminController(TortugaController):
         try:
             self.app.admin_api.addAdmin(
                 adminRequestObject.getUsername(),
-                adminRequestObject.get_password(),
+                adminRequestObject.getPassword(),
                 isCrypted,
                 adminRequestObject.getRealname(),
                 adminRequestObject.getDescription())

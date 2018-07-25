@@ -51,7 +51,8 @@ class SessionManager:
         return self._sessionCookie is not None
 
     def establishSession(self, url, username, password,
-                         selector='/v1/auth/login'):
+                         selector='/v1/auth/login',
+                         verify: bool = True):
         """
         Establish session
 
@@ -76,7 +77,8 @@ class SessionManager:
             response, _ = self.sendRequest(
                 url='%s%s' % (url, selector),
                 method='POST',
-                data=json.dumps(data))
+                data=json.dumps(data),
+                verify=verify)
         except urllib.error.URLError as ex:
             self._logger.exception('Establish session raised exception')
 
@@ -137,6 +139,7 @@ class SessionManager:
             request.add_header('Cookie', self._sessionCookie)
 
         ctx = ssl.create_default_context()
+
         if not verify:
             ctx.check_hostname = False
             ctx.verify_mode = ssl.CERT_NONE
@@ -156,9 +159,10 @@ class SessionManager:
                     raise HttpErrorException('Authentication error')
 
                 self.establishSession(
-                    self._host, self._username, self._password)
+                    self._host, self._username, self._password, verify=verify)
 
-                return self.sendRequest(url, method, contentType, data)
+                return self.sendRequest(url, method, contentType, data,
+                                        verify=verify)
 
             if ex.code == http.client.INTERNAL_SERVER_ERROR:
                 raise HttpErrorException('Internal server error')
