@@ -173,6 +173,7 @@ setup(
             'install-os-kit=tortuga.scripts.install_os_kit:main',
             'pre-add-host=tortuga.scripts.pre_add_host:main',
             'run-post-install=tortuga.scripts.run_post_install:main',
+            'set-installer-hostname=tortuga.scripts.set_installer_hostname:main',
             'set-private-dns-zone=tortuga.scripts.set_private_dns_zone:main',
             'tortuga-proxy-config=tortuga.scripts.tortuga_proxy_config:main',
             'tortuga-setup=tortuga.scripts.tortuga_setup:main',
