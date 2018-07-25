@@ -30,23 +30,12 @@ class TortugaWsApiClient:
     """
     API_VERSION = 'v2'
 
-    def __init__(self, endpoint: Optional[str] = None,
+    def __init__(self, endpoint: str,
                  username: Optional[str] = None,
                  password: Optional[str] = None,
                  base_url: Optional[str] = None,
                  verify: bool = True) -> None:
         logger.addHandler(logging.NullHandler())
-
-        #
-        # Validate that we have either a base URL or and endpoint, but
-        # not both
-        #
-        if not endpoint and not base_url:
-            raise Exception(
-                'Either a base_url or an endpoint must be provided')
-        if endpoint and base_url:
-            raise Exception(
-                'Either a base_url or an endpoint must be provided, not both')
 
         self._cm = ConfigManager()
         self._sm: Union[sessionManager.SessionManager, None] = None
@@ -101,7 +90,7 @@ class TortugaWsApiClient:
             # to setHost() is not required
             #
             sm.establishSession(self._svr_base_url, self._username,
-                                self._password)
+                                self._password, verify=self._verify)
         return sm.sendRequest(url, method, content_type, data, accept_type,
                               verify=self._verify)
 
