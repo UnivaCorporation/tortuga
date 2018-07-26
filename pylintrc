@@ -1,5 +1,5 @@
 [MESSAGES CONTROL]
-disable = missing-docstring,invalid-name,logging-not-lazy,logging-format-interpolation
+disable = missing-docstring,invalid-name,logging-not-lazy,logging-format-interpolation,try-except-raise
 
 [VARIABLES]
 
