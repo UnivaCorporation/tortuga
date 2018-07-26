@@ -19,7 +19,7 @@ from tortuga.exceptions.invalidDbRelation import InvalidDbRelation
 from tortuga.objects.tortugaObject import TortugaObjectList
 
 
-class TortugaDbApi(object):
+class TortugaDbApi:
     """
     Base DB API class.
     """
