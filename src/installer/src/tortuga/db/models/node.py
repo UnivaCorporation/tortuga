@@ -16,7 +16,7 @@
 
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.ext.indexable import index_property
-from sqlalchemy.orm import backref, relationship
+from sqlalchemy.orm import relationship
 
 from .base import ModelBase
 
