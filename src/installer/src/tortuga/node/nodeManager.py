@@ -971,8 +971,6 @@ class NodeManager(TortugaObjectManager): \
 
             return self.__transferNodeCommon(
                 session, dbDstSoftwareProfile, results)
-        finally:
-            DbManager().closeSession()
 
     def idleNode(self, nodespec):
         """
