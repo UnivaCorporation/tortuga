@@ -77,7 +77,7 @@ class BootHostManager(OsBootHostManagerCommon):
 
                 self.getLogger().debug(
                     "Removed [%s] for node [%s]" % (filename, dbNode.name))
-            except Exception as msg:
+            except Exception as msg:  # noqa pylint: disable=broad-except
                 self.getLogger().debug(
                     "Can't remove [%s] for node [%s]; [%s]" % (
                         filename, dbNode.name, msg))
@@ -311,8 +311,7 @@ label Reinstall
             set ip-address = {ip}
             open
             remove
-        """
-        )
+        """)
 
         cmds = cmds.format(name=dhcpName, mac=nic.mac, ip=nic.ip)
 
@@ -320,7 +319,7 @@ label Reinstall
                              stdin=subprocess.PIPE,
                              stdout=subprocess.PIPE, encoding='utf-8')
 
-        stdout, stderr = p.communicate(cmds)
+        stdout, _ = p.communicate(cmds)
 
         if p.poll() != 0:
             self.getLogger().error(
@@ -335,7 +334,8 @@ label Reinstall
 
         return '/var/lib/tftpboot'
 
-    def __get_ossupport_module(self, osFamilyName):
+    def __get_ossupport_module(self, osFamilyName): \
+            # pylint: disable=no-self-use
         """
         Raises:
             OsNotSupported

@@ -498,7 +498,7 @@ class Default(ResourceAdapter):
                         msg += ' MAC [%s]' % (nic.mac)
 
                     self.getLogger().info(msg)
-                except Exception as ex:
+                except Exception as ex:  # noqa pylint: disable=broad-except
                     self.getLogger().exception('Error setting status message')
 
                 self._pre_add_host(
@@ -513,13 +513,13 @@ class Default(ResourceAdapter):
                     nodeCount -= 1
                     if not nodeCount:
                         self.looping = False
-        except Exception as msg:
+        except Exception as msg:  # noqa pylint: disable=broad-except
             self.getLogger().exception('DHCP discovery failed')
 
         try:
             os.kill(p1.pid, signal.SIGKILL)
             os.waitpid(p1.pid, 0)
-        except Exception:
+        except Exception:  # noqa pylint: disable=broad-except
             self.getLogger().exception(
                 'Error killing network capture process')
 
@@ -545,7 +545,7 @@ class Default(ResourceAdapter):
         try:
             # have the node connect the storage
             self.sanApi.connectStorageVolume(node, volume, node.getName())
-        except Exception:
+        except Exception:  # noqa pylint: disable=broad-except
             self.getLogger().exception('Error adding volume to node')
 
             # Need to clean up mapping
@@ -560,7 +560,7 @@ class Default(ResourceAdapter):
             try:
                 self.sanApi.disconnectStorageVolume(
                     node, volume, node.getName())
-            except Exception:
+            except Exception:  # noqa pylint: disable=broad-except
                 # Failed disconnect...
                 self.getLogger().exception(
                     'Error disconnecting volume from node')

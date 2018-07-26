@@ -67,7 +67,7 @@ class KitWsApi(TortugaWsApi):
 
                 raise KitNotFound(
                     'Kit matching specification [{}] not found'.format(
-                            kit_spec_str))
+                        kit_spec_str))
 
             return Kit.getFromDict(kits[0])
         except TortugaException:
@@ -79,11 +79,9 @@ class KitWsApi(TortugaWsApi):
         """
         Get kit info by kitId.
 
-            Returns:
-                kit
-            Throws:
-                KitNotFound
-                TortugaException
+        Raises:
+            KitNotFound
+            TortugaException
         """
 
         url = 'v1/kits/%s' % (id_)
@@ -252,7 +250,8 @@ class KitWsApi(TortugaWsApi):
         except Exception as ex:
             raise TortugaException(exception=ex)
 
-    def installOsKit(self, os_media_urls: List[str], **kwargs) -> None:
+    def installOsKit(self, os_media_urls: List[str], **kwargs) -> None: \
+            # pylint: disable=unused-argument
         """
         Install kit using kit name/version/iteration.
 
