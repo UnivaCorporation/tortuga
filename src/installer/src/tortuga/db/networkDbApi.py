@@ -14,10 +14,9 @@
 
 # pylint: disable=multiple-statements,no-member,not-callable
 
-from typing import Optional, Union
+from typing import Optional
 
 from sqlalchemy.exc import IntegrityError
-
 from tortuga.db.dbManager import DbManager
 from tortuga.db.networksDbHandler import NetworksDbHandler
 from tortuga.db.tortugaDbApi import TortugaDbApi
@@ -28,6 +27,7 @@ from tortuga.exceptions.networkInUse import NetworkInUse
 from tortuga.exceptions.networkNotFound import NetworkNotFound
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.objects.network import Network
+from tortuga.objects.tortugaObject import TortugaObjectList
 
 from .models.network import Network as NetworkModel
 
@@ -42,7 +42,7 @@ class NetworkDbApi(TortugaDbApi):
 
         self._networksDbHandler = NetworksDbHandler()
 
-    def getNetworkList(self):
+    def getNetworkList(self) -> TortugaObjectList:
         """
         Get list of networks from the db.
         """

@@ -14,7 +14,7 @@
 
 # pylint: disable=no-name-in-module,no-member
 
-from typing import Any, Dict, NoReturn, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 from tortuga.config.configManager import ConfigManager
 from tortuga.db.globalParameterDbApi import GlobalParameterDbApi
@@ -251,7 +251,7 @@ class HardwareProfileManager(TortugaObjectManager, Singleton):
                 self.setProvisioningNic(
                     hwProfileSpec.getName(), provisioningNic.getId())
 
-    def deleteHardwareProfile(self, name: str) -> NoReturn:
+    def deleteHardwareProfile(self, name: str) -> None:
         """
         Delete hardwareprofile by name.
         """

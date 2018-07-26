@@ -18,7 +18,7 @@ import configparser
 import os
 import select
 import signal
-from typing import Dict, List, NoReturn, Optional
+from typing import Dict, List, Optional
 
 from tortuga.db.dbManager import DbManager
 from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
@@ -32,11 +32,11 @@ from tortuga.exceptions.nodeAlreadyExists import NodeAlreadyExists
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.exceptions.parameterNotFound import ParameterNotFound
 from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
-from tortuga.resourceAdapterConfiguration import settings as ra_settings
 from tortuga.os_utility import osUtility, tortugaSubprocess
 from tortuga.resourceAdapter.resourceAdapter import ResourceAdapter
 from tortuga.resourceAdapter.utility import (get_provisioning_nic,
                                              get_provisioning_nics)
+from tortuga.resourceAdapterConfiguration import settings as ra_settings
 
 
 def initialize_nics(installer_provisioning_nic, hardwareprofilenetworks,
@@ -179,7 +179,7 @@ class Default(ResourceAdapter):
     def abort(self):
         self.looping = False
 
-    def deleteNode(self, nodes: List[Node]) -> NoReturn:
+    def deleteNode(self, nodes: List[Node]) -> None:
         self.hookAction('delete', [node.name for node in nodes])
 
     def rebootNode(self, nodes: List[Node],

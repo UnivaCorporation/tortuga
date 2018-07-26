@@ -17,10 +17,9 @@ import os.path
 import string
 import time
 from random import choice
-from typing import Any, Dict, List, NoReturn, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from jinja2 import Template
-
 from tortuga.config.configManager import getfqdn
 from tortuga.db.globalParameterDbApi import GlobalParameterDbApi
 from tortuga.db.helper import get_installer_hostname_suffix
@@ -200,7 +199,7 @@ class OSSupport(OsSupportBase):
 
         return ' '.join(netargs)
 
-    def __validate_node(self, node: Node) -> NoReturn: \
+    def __validate_node(self, node: Node) -> None: \
             # pylint: disable=no-self-use
         """
         Raises:

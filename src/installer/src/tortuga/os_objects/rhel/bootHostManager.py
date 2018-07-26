@@ -18,7 +18,6 @@ import os
 import platform
 import subprocess
 from textwrap import dedent
-from typing import NoReturn
 
 from tortuga.db.models.hardwareProfile import HardwareProfile
 from tortuga.db.models.node import Node
@@ -262,7 +261,7 @@ label Reinstall
             # pylint: disable=unused-argument,no-self-use
         return node.name
 
-    def addDhcpLease(self, node, nic) -> NoReturn:
+    def addDhcpLease(self, node, nic) -> None:
         self.getLogger().debug(
             'Adding DHCP lease for node [%s] MAC [%s]' % (node.name, nic.mac))
 
@@ -284,14 +283,14 @@ label Reinstall
                              stdin=subprocess.PIPE,
                              stdout=subprocess.PIPE, encoding='utf-8')
 
-        stdout, stderr = p.communicate(cmds)
+        stdout, _ = p.communicate(cmds)
 
         if p.poll() != 0:
             self.getLogger().error(
                 'Error adding DHCP lease for node [%s] (retval=%d): %s' % (
                     node.name, p.returncode, stdout))
 
-    def removeDhcpLease(self, node) -> NoReturn:
+    def removeDhcpLease(self, node) -> None:
         # Find first provisioning NIC
         try:
             nic = get_provisioning_nic(node)

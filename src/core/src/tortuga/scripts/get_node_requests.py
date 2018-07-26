@@ -17,7 +17,6 @@
 
 import json
 import sys
-from typing import NoReturn
 
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.wsapi.nodeWsApi import NodeWsApi
@@ -59,7 +58,7 @@ class GetNodeRequestsCli(TortugaCli):
         else:
             print()
 
-    def _get_node_request(self, request_id) -> NoReturn:
+    def _get_node_request(self, request_id) -> None:
         node_requests = \
             self.node_wsapi.getNodeRequests(addHostSession=request_id)
 
@@ -88,8 +87,8 @@ class GetNodeRequestsCli(TortugaCli):
 
         if node_request['state'] == 'error':
             msg = ('Error attempting to add {} node(s) to hardware'
-                    ' profile [{}]'.format(
-                        request['count'], request['hardwareProfile']))
+                   ' profile [{}]'.format(
+                       request['count'], request['hardwareProfile']))
 
             print(msg)
 

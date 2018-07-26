@@ -14,9 +14,10 @@
 
 import ipaddress
 
-from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.db.networkDbApi import NetworkDbApi
 from tortuga.exceptions.invalidArgument import InvalidArgument
+from tortuga.objects.tortugaObject import TortugaObjectList
+from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.types import Singleton
 
 
@@ -41,7 +42,7 @@ class NetworkManager(TortugaObjectManager, Singleton):
     def getNetworkById(self, id_):
         return self._networkDbApi.getNetworkById(id_)
 
-    def getNetworkList(self):
+    def getNetworkList(self) -> TortugaObjectList:
         return self._networkDbApi.getNetworkList()
 
     def addNetwork(self, network):
