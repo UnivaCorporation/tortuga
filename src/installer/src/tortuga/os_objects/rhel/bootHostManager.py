@@ -15,7 +15,6 @@
 # pylint: disable=no-member
 
 import os
-import platform
 import subprocess
 from textwrap import dedent
 
@@ -331,18 +330,10 @@ label Reinstall
     def getTftproot(self): \
             # pylint: disable=no-self-use
         """
-        RHEL 5.x and 6.x have different default tftp root directories.
+        Returns tftpboot root directory
         """
-        vals = platform.dist()
 
-        if not vals[1]:
-            return os.path.join(os.getenv('TORTUGA_ROOT'), 'var/lib/tftpboot')
-
-        if not vals[1] or vals[1][0] in ('6', '7'):
-            return '/var/lib/tftpboot'
-
-        # Use RHEL 5.x default
-        return '/tftpboot'
+        return '/var/lib/tftpboot'
 
     def __get_ossupport_module(self, osFamilyName):
         """
