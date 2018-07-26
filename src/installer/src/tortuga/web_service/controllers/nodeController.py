@@ -160,7 +160,7 @@ class NodeController(TortugaController):
             response = {
                 'nodes': NodeSchema().dump(nodeList, many=True).data
             }
-        except Exception as ex:
+        except Exception as ex:  # noqa pylint: disable=broad-except
             self.getLogger().exception('node WS API getNodes() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
@@ -189,7 +189,7 @@ class NodeController(TortugaController):
             self.handleException(ex)
             code = self.getTortugaStatusCode(ex)
             response = self.notFoundErrorResponse(str(ex), code)
-        except Exception as ex:
+        except Exception as ex:  # pylint: disable=broad-except
             self.getLogger().exception('node WS API getNodeById() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
@@ -203,7 +203,7 @@ class NodeController(TortugaController):
         ip = cherrypy.request.remote.ip
 
         try:
-            if ip == '127.0.0.1' or ip == '::1':
+            if ip in ('127.0.0.1', '::1'):
                 node = self.app.node_api.getInstallerNode()
             else:
                 node = self.app.node_api.getNodeByIp(ip)
@@ -213,7 +213,7 @@ class NodeController(TortugaController):
             self.handleException(ex)
             code = self.getTortugaStatusCode(ex)
             response = self.notFoundErrorResponse(str(ex), code)
-        except Exception as ex:
+        except Exception as ex:  # noqa pylint: disable=broad-except
             self.getLogger().exception(
                 'node WS API gRequest() failed')
             self.handleException(ex)
@@ -227,7 +227,7 @@ class NodeController(TortugaController):
     def updateNodeRequest(self, name):
         postdata = cherrypy.request.json
 
-        state = postdata['state'] if 'state' in postdata else None
+        new_state = postdata['state'] if 'state' in postdata else None
 
         try:
             # If 'bootFrom' is not an int value, this will raise ValueError
@@ -235,12 +235,12 @@ class NodeController(TortugaController):
                 if 'bootFrom' in postdata and \
                 postdata['bootFrom'] is not None else None
 
-            result = self.app.node_api.updateNodeStatus(name, state, bootFrom)
+            result = self.app.node_api.updateNodeStatus(name, new_state, bootFrom)
 
             response = {
                 'changed': result,
             }
-        except Exception as ex:
+        except Exception as ex:  # noqa pylint: disable=broad-except
             self.getLogger().exception(
                 'node WS API updateNodeRequest() failed')
             self.handleException(ex)
@@ -266,7 +266,7 @@ class NodeController(TortugaController):
             self.handleException(ex)
             code = self.getTortugaStatusCode(ex)
             response = self.notFoundErrorResponse(str(ex), code)
-        except Exception as ex:
+        except Exception as ex:  # noqa pylint: disable=broad-except
             self.getLogger().exception(
                 'node WS API getNodeProvisioningInfo() failed')
             self.handleException(ex)
@@ -288,7 +288,7 @@ class NodeController(TortugaController):
             self.handleException(ex)
             code = self.getTortugaStatusCode(ex)
             response = self.notFoundErrorResponse(str(ex), code)
-        except Exception as ex:
+        except Exception as ex:  # noqa pylint: disable=broad-except
             self.getLogger().exception('node WS API idleNode() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
@@ -311,7 +311,7 @@ class NodeController(TortugaController):
         try:
             response = self.app.node_api.activateNode(nodeName, softwareProfileName)
 
-        except Exception as ex:
+        except Exception as ex:  # noqa pylint: disable=broad-except
             self.getLogger().exception('node WS API activateNode() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
@@ -334,7 +334,7 @@ class NodeController(TortugaController):
             self.handleException(ex)
             code = self.getTortugaStatusCode(ex)
             response = self.notFoundErrorResponse(str(ex), code)
-        except Exception as ex:
+        except Exception as ex:  # noqa pylint: disable=broad-except
             self.getLogger().exception('node WS API startupNode() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
@@ -353,7 +353,7 @@ class NodeController(TortugaController):
             self.handleException(ex)
             code = self.getTortugaStatusCode(ex)
             response = self.notFoundErrorResponse(str(ex), code)
-        except Exception as ex:
+        except Exception as ex:  # noqa pylint: disable=broad-except
             self.getLogger().exception('node WS API shutdownNode() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
@@ -378,7 +378,7 @@ class NodeController(TortugaController):
             self.handleException(ex)
             code = self.getTortugaStatusCode(ex)
             response = self.notFoundErrorResponse(str(ex), code)
-        except Exception as ex:
+        except Exception as ex:  # noqa pylint: disable=broad-except
             self.getLogger().exception('node WS API rebootNode() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
@@ -452,7 +452,7 @@ class NodeController(TortugaController):
 
         try:
             self.app.node_api.addStorageVolume(nodeName, volume, bDirect)
-        except Exception as ex:
+        except Exception as ex:  # noqa pylint: disable=broad-except
             self.getLogger().exception('node WS API addStorageVolume() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
@@ -468,7 +468,7 @@ class NodeController(TortugaController):
         try:
             self.app.node_api.removeStorageVolume(
                 nodeName, volume)
-        except Exception as ex:
+        except Exception as ex:  # noqa pylint: disable=broad-except
             self.getLogger().exception(
                 'node WS API removeStorageVolume() failed')
             self.handleException(ex)
@@ -484,7 +484,7 @@ class NodeController(TortugaController):
             result = self.app.node_api.getStorageVolumeList(nodeName)
 
             response = result.getCleanDict()
-        except Exception as ex:
+        except Exception as ex:  # noqa pylint: disable=broad-except
             self.getLogger().exception(
                 'node WS API getStorageVolumeList() failed')
             self.handleException(ex)
@@ -517,7 +517,7 @@ class NodeController(TortugaController):
             response = self.errorResponse(str(ex)) \
                 if isinstance(ex, OperationFailed) else \
                 self.notFoundErrorResponse(str(ex), code)
-        except Exception as ex:  # pylint: disable=broad-except
+        except Exception as ex:  # noqa pylint: disable=broad-except
             self.getLogger().exception('node WS API deleteNode() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
@@ -558,7 +558,7 @@ def enqueue_delete_hosts_request(session, nodespec: str, force: bool):
         if not node.getState().startswith(state.DELETING_PREFIX):
             nm.updateNodeStatus(
                 node.getName(),
-                state='{}{}'.format(state.DELETING_PREFIX, node.getState())
+                '{}{}'.format(state.DELETING_PREFIX, node.getState())
             )
 
     #
