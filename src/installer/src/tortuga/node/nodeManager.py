@@ -15,7 +15,7 @@
 # pylint: disable=no-self-use,no-member,no-name-in-module
 
 import time
-from typing import Any, Dict, List, NoReturn, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy.orm.session import Session
 from tortuga.addhost.addHostManager import AddHostManager
@@ -220,10 +220,10 @@ class NodeManager(TortugaObjectManager): \
         Expand non-database fields in Node objects
 
         """
-        swprofile_map = {}
+        swprofile_map: Dict[str, Any] = {}
 
         # dict keyed on resource adapter name, value is resource adapter class
-        adapter_map = {}
+        adapter_map: Dict[str, Any] = {}
 
         for node in nodes:
             adapter_name = \
@@ -327,7 +327,9 @@ class NodeManager(TortugaObjectManager): \
         finally:
             DbManager().closeSession()
 
-    def updateNodeStatus(self, nodeName, state=None, bootFrom=None):
+    def updateNodeStatus(self, nodeName: str,
+                         node_state: Optional[str] = None,
+                         bootFrom: int = None):
         """Update node status
 
         If neither 'state' nor 'bootFrom' are not None, this operation will
@@ -342,12 +344,11 @@ class NodeManager(TortugaObjectManager): \
             '1 (disk)' if int(bootFrom) == 1 else '0 (network)'
 
         self.getLogger().debug(
-            'updateNodeStatus(): node=[%s], state=[%s], bootFrom=[%s]' % (
-                nodeName, state, value))
+            'updateNodeStatus(): node=[%s], node_state=[{%s}],'
+            ' bootFrom=[{%s}]', nodeName, node_state, value
+        )
 
-        session = DbManager().openSession()
-
-        try:
+        with DbManager().session() as session:
             dbNode = self._nodesDbHandler.getNode(session, nodeName)
 
             #
@@ -361,7 +362,7 @@ class NodeManager(TortugaObjectManager): \
             # 1 = bootFrom # change)
             changed = 0
 
-            if state is not None and state != dbNode.state:
+            if node_state is not None and node_state != dbNode.state:
                 # 'state' changed
                 changed |= 1
 
@@ -374,10 +375,10 @@ class NodeManager(TortugaObjectManager): \
                 msg = 'Node [%s] state change:' % (dbNode.name)
 
                 if changed & 1:
-                    msg += ' state: [%s] -> [%s]' % (dbNode.state, state)
+                    msg += ' state: [%s] -> [%s]' % (dbNode.state, node_state)
 
-                    dbNode.state = state
-                    node_dict['state'] = state
+                    dbNode.state = node_state
+                    node_dict['state'] = node_state
 
                 if changed & 2:
                     msg += ' bootFrom: [%d] -> [%d]' % (
@@ -415,8 +416,6 @@ class NodeManager(TortugaObjectManager): \
                                       previous_state=previous_state)
 
             return result
-        finally:
-            DbManager().closeSession()
 
     def __process_nodeErrorDict(self, nodeErrorDict):
         result = {}
@@ -441,7 +440,7 @@ class NodeManager(TortugaObjectManager): \
 
         return result, nodes_deleted
 
-    def deleteNode(self, nodespec: str, force: Optional[bool] = False):
+    def deleteNode(self, nodespec: str, force: bool = False):
         """
         Delete node by nodespec
 
@@ -572,8 +571,8 @@ class NodeManager(TortugaObjectManager): \
             'SoftwareProfileHardLocked': [],
         }
 
-        nodes: List[HardwareProfileModel, List[NodeModel]] = {}
-        events_to_fire = []
+        nodes: Dict[HardwareProfileModel, List[NodeModel]] = {}
+        events_to_fire: List[dict] = []
 
         #
         # Mark node states as deleted in the database
@@ -748,11 +747,11 @@ class NodeManager(TortugaObjectManager): \
         return result
 
     def __process_transfer_requests(
-        self,
-        session: Session,
-        hwProfileMap: Dict[HardwareProfileModel, List[Dict[str, Any]]],
-        dst_swprofile: SoftwareProfileModel) \
-            -> Dict[str, Dict[str, List[NodeModel]]]:
+            self,
+            session: Session,
+            hwProfileMap: Dict[HardwareProfileModel, List[Dict[str, Any]]],
+            dst_swprofile: SoftwareProfileModel) \
+                -> Dict[str, Dict[str, List[NodeModel]]]:
         """
 
         """
@@ -763,11 +762,11 @@ class NodeManager(TortugaObjectManager): \
         # action as well as populate the nodeTransferDict. This saves
         # having to iterate twice on the same result data.
         for hwprofile, nodesDict in hwProfileMap.items():
-            node_tuples: List[Tuple[NodeModel, SoftwareProfile]] = []
+            node_tuples: List[Tuple[NodeModel, SoftwareProfileModel]] = []
 
             for node, src_swprofile in \
                     [(nodeDict['node'], nodeDict['prev_softwareprofile'])
-                    for nodeDict in nodesDict]:
+                     for nodeDict in nodesDict]:
                 if src_swprofile.name not in res:
                     res[src_swprofile.name] = {
                         'added': [],
@@ -799,7 +798,7 @@ class NodeManager(TortugaObjectManager): \
         return res
 
     def __transferNodeCommon(self, session: Session,
-                             dbDstSoftwareProfile: str,
+                             dbDstSoftwareProfile: SoftwareProfileModel,
                              results: List[Dict[str, Any]]):
         transfer_dict = self.__process_transfer_requests(
             session,
@@ -899,9 +898,7 @@ class NodeManager(TortugaObjectManager): \
             NodeTransferNotValid
         """
 
-        session = DbManager().openSession()
-
-        try:
+        with DbManager().session() as session:
             # It is not necessary to specify a source software profile. If
             # not specified, pick any eligible nodes in the hardware profile
             # mapped to the destination software profile. Don't ask me who
@@ -974,8 +971,6 @@ class NodeManager(TortugaObjectManager): \
 
             return self.__transferNodeCommon(
                 session, dbDstSoftwareProfile, results)
-        finally:
-            DbManager().closeSession()
 
     def idleNode(self, nodespec):
         """
@@ -1204,9 +1199,9 @@ class NodeManager(TortugaObjectManager): \
                 raise NodeNotFound(
                     'No nodes matching nodespec [%s]' % (nodespec))
 
-            d = {}
+            d: Dict[str, Any] = {}
 
-            activateNodeResults = {
+            activateNodeResults: Dict[str, list] = {
                 'NodeAlreadyActive': [],
                 'SoftwareProfileNotFound': [],
                 'InvalidArgument': [],
@@ -1347,7 +1342,7 @@ class NodeManager(TortugaObjectManager): \
 
     def startupNode(self, nodespec: str,
                     remainingNodeList: List[NodeModel] = None,
-                    bootMethod: str = 'n') -> NoReturn:
+                    bootMethod: str = 'n') -> None:
         """
         Raises:
             NodeNotFound
@@ -1384,7 +1379,7 @@ class NodeManager(TortugaObjectManager): \
                 raise
 
     def shutdownNode(self, nodespec: str, bSoftShutdown: bool = False) \
-            -> NoReturn:
+            -> None:
         """
         Raises:
             NodeNotFound
@@ -1417,7 +1412,7 @@ class NodeManager(TortugaObjectManager): \
                 raise
 
     def rebootNode(self, nodespec: str, bSoftReset: bool = False,
-                   bReinstall: bool = False) -> NoReturn:
+                   bReinstall: bool = False) -> None:
         """
         Raises:
             NodeNotFound
@@ -1445,7 +1440,7 @@ class NodeManager(TortugaObjectManager): \
             session.commit()
 
     def addStorageVolume(self, nodeName: str, volume: str,
-                         isDirect: Optional[str] = "DEFAULT") -> NoReturn:
+                         isDirect: Optional[str] = "DEFAULT") -> None:
         """
         Raises:
             VolumeDoesNotExist
@@ -1471,7 +1466,7 @@ class NodeManager(TortugaObjectManager): \
 
         api.addVolumeToNode(node, volume, isDirect)
 
-    def removeStorageVolume(self, nodeName: str, volume: str) -> NoReturn:
+    def removeStorageVolume(self, nodeName: str, volume: str) -> None:
         """
         Raises:
             VolumeDoesNotExist
@@ -1498,8 +1493,8 @@ class NodeManager(TortugaObjectManager): \
     def getStorageVolumes(self, nodeName: str):
         return self._san.getNodeVolumes(self.getNode(nodeName).getName())
 
-    def getNodesByNodeState(self, state: str,
-                            optionDict: OptionDict = None) \
+    def getNodesByNodeState(self, node_state: str,
+                            optionDict: Optional[OptionDict] = None) \
             -> TortugaObjectList:
         """
         Get nodes by state
@@ -1507,7 +1502,7 @@ class NodeManager(TortugaObjectManager): \
 
         return self.__populate_nodes(
             self._nodeDbApi.getNodesByNodeState(
-                state, optionDict=get_default_relations(optionDict)))
+                node_state, optionDict=get_default_relations(optionDict)))
 
     def getNodesByNameFilter(self, nodespec: str,
                              optionDict: OptionDict = None,
@@ -1537,14 +1532,14 @@ class NodeManager(TortugaObjectManager): \
                 addHostSession,
                 optionDict=get_default_relations(optionDict)))
 
-    def __processNodeList(self, dbNodes: List[Node]) \
+    def __processNodeList(self, dbNodes: List[NodeModel]) \
             -> Dict[HardwareProfileModel, Dict[str, list]]:
         """
         Returns dict indexed by hardware profile, each with a list of
         nodes in the hardware profile
         """
 
-        d = {}
+        d: Dict[HardwareProfileModel, Dict[str, list]] = {}
 
         for dbNode in dbNodes:
             if dbNode.hardwareprofile not in d:
@@ -1637,7 +1632,7 @@ class NodeManager(TortugaObjectManager): \
     def __isNodeSoftLocked(self, dbNode: Node) -> bool:
         return dbNode.lockedState == 'SoftLocked'
 
-    def __getNodeState(self, dbNode: Node) -> bool:
+    def __getNodeState(self, dbNode: Node) -> str:
         return dbNode.state
 
     def __isNodeStateDeleted(self, node: Node) -> bool:

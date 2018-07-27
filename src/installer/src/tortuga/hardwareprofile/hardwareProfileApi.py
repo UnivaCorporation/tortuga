@@ -14,12 +14,13 @@
 
 # pylint: disable=no-member
 
-from typing import NoReturn, Optional, Union
-from tortuga.objects.hardwareProfile import HardwareProfile
-from tortuga.hardwareprofile.hardwareProfileManager \
-    import HardwareProfileManager
-from tortuga.utility.tortugaApi import TortugaApi
+from typing import Optional
+
 from tortuga.exceptions.tortugaException import TortugaException
+from tortuga.hardwareprofile.hardwareProfileManager import \
+    HardwareProfileManager
+from tortuga.objects.hardwareProfile import HardwareProfile
+from tortuga.utility.tortugaApi import TortugaApi
 
 
 class HardwareProfileApi(TortugaApi):
@@ -167,7 +168,8 @@ class HardwareProfileApi(TortugaApi):
             raise TortugaException(exception=ex)
 
     def createHardwareProfile(self, hwProfileSpec: HardwareProfile,
-                              settingsDict: Optional[Union[dict, None]] = None) -> NoReturn:
+                              settingsDict: Optional[dict] = None) \
+            -> None:
         """
         Create hardware profile from template
 

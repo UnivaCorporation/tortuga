@@ -21,7 +21,7 @@ import random
 import re
 import string
 import threading
-from typing import List, NoReturn, Optional
+from typing import List, Optional
 
 from sqlalchemy.orm.session import Session
 
@@ -59,7 +59,7 @@ class AddHostServerLocal(TortugaApi):
         self._nodesDbHandler = NodesDbHandler()
 
     @staticmethod
-    def clear_session_nodes(nodes: List[Node]) -> NoReturn:
+    def clear_session_nodes(nodes: List[Node]) -> None:
         """Remove session entries for specified nodes"""
 
         with session_nodes_lock:
@@ -67,7 +67,7 @@ class AddHostServerLocal(TortugaApi):
                 AddHostServerLocal.clear_session_node(node, lock=False)
 
     @staticmethod
-    def clear_session_node(node: Node, lock: bool = True) -> NoReturn:
+    def clear_session_node(node: Node, lock: bool = True) -> None:
         if lock:
             session_nodes_lock.acquire()
 
@@ -99,11 +99,11 @@ class AddHostServerLocal(TortugaApi):
 
     def initializeNode(self, session: Session, dbNode: Node,
                        dbHardwareProfile: HardwareProfile,
-                       dbSoftwareProfile: SoftwareProfile,
+                       dbSoftwareProfile: Optional[SoftwareProfile],
                        nic_defs: List[dict],
                        bValidateIp: bool = True,
                        bGenerateIp: bool = True,
-                       dns_zone: Optional[str] = None) -> NoReturn: \
+                       dns_zone: Optional[str] = None) -> None: \
             # pylint: disable=unused-argument
         """
         Assigns hostname and IP address, and inserts new record into
@@ -226,7 +226,7 @@ class AddHostServerLocal(TortugaApi):
 
         # Check arguments.
 
-        if specifier != '#R' and specifier != '#N':
+        if specifier not in ('#R', '#N'):
             raise InvalidArgument('specifier must be one of "#R" or "#N"')
 
         if isinstance(replacement, str):
@@ -411,7 +411,7 @@ class AddHostServerLocal(TortugaApi):
 
         return mac_address
 
-    def _validate_ip_address(self, ip, network) -> NoReturn:
+    def _validate_ip_address(self, ip, network) -> None:
         """
         :raises NetworkNotFound:
 

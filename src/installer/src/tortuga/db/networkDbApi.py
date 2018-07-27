@@ -14,10 +14,9 @@
 
 # pylint: disable=multiple-statements,no-member,not-callable
 
-from typing import Optional, Union
+from typing import Optional
 
 from sqlalchemy.exc import IntegrityError
-
 from tortuga.db.dbManager import DbManager
 from tortuga.db.networksDbHandler import NetworksDbHandler
 from tortuga.db.tortugaDbApi import TortugaDbApi
@@ -28,6 +27,7 @@ from tortuga.exceptions.networkInUse import NetworkInUse
 from tortuga.exceptions.networkNotFound import NetworkNotFound
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.objects.network import Network
+from tortuga.objects.tortugaObject import TortugaObjectList
 
 from .models.network import Network as NetworkModel
 
@@ -42,7 +42,7 @@ class NetworkDbApi(TortugaDbApi):
 
         self._networksDbHandler = NetworksDbHandler()
 
-    def getNetworkList(self):
+    def getNetworkList(self) -> TortugaObjectList:
         """
         Get list of networks from the db.
         """
@@ -121,7 +121,7 @@ class NetworkDbApi(TortugaDbApi):
                 except NetworkNotFound:
                     pass
 
-                dbNetwork = self.__populateNetwork(network)
+                dbNetwork = populate_network(network)
 
                 session.add(dbNetwork)
 
@@ -163,7 +163,7 @@ class NetworkDbApi(TortugaDbApi):
                 dbNetwork = self._networksDbHandler.getNetworkById(
                     session, network.getId())
 
-                dbNetwork = self.__populateNetwork(network, dbNetwork)
+                dbNetwork = populate_network(network, dbNetwork)
 
                 newNetwork = Network.getFromDbDict(dbNetwork.__dict__)
 
@@ -238,20 +238,22 @@ class NetworkDbApi(TortugaDbApi):
 
                 raise
 
-    def __populateNetwork(self, network: Network,
-                          dbNetwork: Optional[Union[NetworkModel, None]] = None):
-        if not dbNetwork:
-            dbNetwork = NetworkModel()
 
-        dbNetwork.address = network.getAddress()
-        dbNetwork.netmask = network.getNetmask()
-        dbNetwork.suffix = network.getSuffix()
-        dbNetwork.gateway = network.getGateway()
-        dbNetwork.options = network.getOptions()
-        dbNetwork.name = network.getName()
-        dbNetwork.startIp = network.getStartIp()
-        dbNetwork.type = network.getType()
-        dbNetwork.increment = network.getIncrement()
-        dbNetwork.usingDhcp = network.getUsingDhcp()
+def populate_network(network: Network,
+                     dbNetwork: Optional[NetworkModel] = None) \
+        -> NetworkModel:
+    if not dbNetwork:
+        dbNetwork = NetworkModel()
 
-        return dbNetwork
+    dbNetwork.address = network.getAddress()
+    dbNetwork.netmask = network.getNetmask()
+    dbNetwork.suffix = network.getSuffix()
+    dbNetwork.gateway = network.getGateway()
+    dbNetwork.options = network.getOptions()
+    dbNetwork.name = network.getName()
+    dbNetwork.startIp = network.getStartIp()
+    dbNetwork.type = network.getType()
+    dbNetwork.increment = network.getIncrement()
+    dbNetwork.usingDhcp = network.getUsingDhcp()
+
+    return dbNetwork

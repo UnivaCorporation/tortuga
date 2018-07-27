@@ -17,7 +17,7 @@
 import base64
 import json
 import urllib.parse
-from typing import List, NoReturn, Optional, Union
+from typing import List, Optional
 
 from tortuga.exceptions.kitNotFound import KitNotFound
 from tortuga.exceptions.tortugaException import TortugaException
@@ -67,7 +67,7 @@ class KitWsApi(TortugaWsApi):
 
                 raise KitNotFound(
                     'Kit matching specification [{}] not found'.format(
-                            kit_spec_str))
+                        kit_spec_str))
 
             return Kit.getFromDict(kits[0])
         except TortugaException:
@@ -75,15 +75,13 @@ class KitWsApi(TortugaWsApi):
         except Exception as ex:
             raise TortugaException(exception=ex)
 
-    def getKitById(self, id_):
+    def getKitById(self, id_: int) -> Kit:
         """
         Get kit info by kitId.
 
-            Returns:
-                kit
-            Throws:
-                KitNotFound
-                TortugaException
+        Raises:
+            KitNotFound
+            TortugaException
         """
 
         url = 'v1/kits/%s' % (id_)
@@ -227,7 +225,7 @@ class KitWsApi(TortugaWsApi):
 
     def deleteKit(self, name: str, version: Optional[str] = None,
                   iteration: Optional[str] = None,
-                  force: Optional[bool] = False) -> NoReturn:
+                  force: Optional[bool] = False) -> None:
         """
         Delete kit using kit name/version/iteration.
 
@@ -252,7 +250,8 @@ class KitWsApi(TortugaWsApi):
         except Exception as ex:
             raise TortugaException(exception=ex)
 
-    def installOsKit(self, os_media_urls: List[str], **kwargs) -> None:
+    def installOsKit(self, os_media_urls: List[str], **kwargs) -> None: \
+            # pylint: disable=unused-argument
         """
         Install kit using kit name/version/iteration.
 

@@ -15,10 +15,8 @@
 # pylint: disable=no-member
 
 import os
-import platform
 import subprocess
 from textwrap import dedent
-from typing import NoReturn
 
 from tortuga.db.models.hardwareProfile import HardwareProfile
 from tortuga.db.models.node import Node
@@ -79,7 +77,7 @@ class BootHostManager(OsBootHostManagerCommon):
 
                 self.getLogger().debug(
                     "Removed [%s] for node [%s]" % (filename, dbNode.name))
-            except Exception as msg:
+            except Exception as msg:  # noqa pylint: disable=broad-except
                 self.getLogger().debug(
                     "Can't remove [%s] for node [%s]; [%s]" % (
                         filename, dbNode.name, msg))
@@ -262,7 +260,7 @@ label Reinstall
             # pylint: disable=unused-argument,no-self-use
         return node.name
 
-    def addDhcpLease(self, node, nic) -> NoReturn:
+    def addDhcpLease(self, node, nic) -> None:
         self.getLogger().debug(
             'Adding DHCP lease for node [%s] MAC [%s]' % (node.name, nic.mac))
 
@@ -284,14 +282,14 @@ label Reinstall
                              stdin=subprocess.PIPE,
                              stdout=subprocess.PIPE, encoding='utf-8')
 
-        stdout, stderr = p.communicate(cmds)
+        stdout, _ = p.communicate(cmds)
 
         if p.poll() != 0:
             self.getLogger().error(
                 'Error adding DHCP lease for node [%s] (retval=%d): %s' % (
                     node.name, p.returncode, stdout))
 
-    def removeDhcpLease(self, node) -> NoReturn:
+    def removeDhcpLease(self, node) -> None:
         # Find first provisioning NIC
         try:
             nic = get_provisioning_nic(node)
@@ -313,8 +311,7 @@ label Reinstall
             set ip-address = {ip}
             open
             remove
-        """
-        )
+        """)
 
         cmds = cmds.format(name=dhcpName, mac=nic.mac, ip=nic.ip)
 
@@ -322,7 +319,7 @@ label Reinstall
                              stdin=subprocess.PIPE,
                              stdout=subprocess.PIPE, encoding='utf-8')
 
-        stdout, stderr = p.communicate(cmds)
+        stdout, _ = p.communicate(cmds)
 
         if p.poll() != 0:
             self.getLogger().error(
@@ -332,20 +329,13 @@ label Reinstall
     def getTftproot(self): \
             # pylint: disable=no-self-use
         """
-        RHEL 5.x and 6.x have different default tftp root directories.
+        Returns tftpboot root directory
         """
-        vals = platform.dist()
 
-        if not vals[1]:
-            return os.path.join(os.getenv('TORTUGA_ROOT'), 'var/lib/tftpboot')
+        return '/var/lib/tftpboot'
 
-        if not vals[1] or vals[1][0] in ('6', '7'):
-            return '/var/lib/tftpboot'
-
-        # Use RHEL 5.x default
-        return '/tftpboot'
-
-    def __get_ossupport_module(self, osFamilyName):
+    def __get_ossupport_module(self, osFamilyName): \
+            # pylint: disable=no-self-use
         """
         Raises:
             OsNotSupported
