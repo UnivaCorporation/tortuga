@@ -154,12 +154,13 @@ class DbManagerBase(TortugaObjectManager):
             else:
                 hostspec = dbHost
 
+            engineURI = f'{engine}+pymysql' if engine == 'mysql' else engine
+            engineURI += '://'
+
             if userspec is not None:
-                engineURI = '%s://%s@%s/%s' % (
-                    engine, userspec, hostspec, self._cm.getDbSchema())
-            else:
-                engineURI = '%s://%s/%s' % (
-                    engine, hostspec, self._cm.getDbSchema())
+                engineURI += f'{userspec}@'
+
+            engineURI += f'{hostspec}' + '/{}'.format(self._cm.getDbSchema())
 
         return engineURI
 

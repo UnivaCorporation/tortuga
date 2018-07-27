@@ -702,6 +702,8 @@ unzip \
 patch \
 zeromq3 \
 activemq \
+rh-python36 \
+rh-python36-python-PyMySQL \
 "
 
     # Packages cached for all RHEL versions
@@ -710,7 +712,14 @@ puppet-agent \
 "
 fi
 
-virtualenv="python3 -m venv"
+[[ ${dist} == centos ]] && {
+    echo "Installing SCL repository... "
+    installpkg centos-release-scl
+    [[ $? -eq 0 ]] || {
+        echo "Error installing \"centos-release-scl\". Unable to proceed." >&2
+        exit 1
+    }
+}
 
 if [ $enable_package_caching -eq 1 ]; then
     cachepkgs $cachedpkgs
@@ -756,27 +765,11 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-[[ ${dist} == centos ]] && {
-    echo "Installing SCL repository... "
-    installpkg centos-release-scl
-    [[ $? -eq 0 ]] || {
-        echo "Error installing \"centos-release-scl\". Unable to proceed." >&2
-        exit 1
-    }
-}
-
-echo "Installing Python 3.6..."
-
-installpkg rh-python36
-[[ $? -eq 0 ]] || {
-    echo "Error installing \"rh-python36-python\". Unable to proceed." >&2
-    exit 1
-}
-
 # source SCL Python 3.6 environment
 . /opt/rh/rh-python36/enable
 
 # Setup virtualenv (creates $TORTUGA_ROOT)
+readonly virtualenv="python3 -m venv --system-site-packages"
 
 echo -n "Setting up ${TORTUGA_ROOT} virtualenv... " | tee -a /tmp/install-tortuga.log
 $virtualenv $TORTUGA_ROOT >>/tmp/install-tortuga.log 2>&1
