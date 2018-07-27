@@ -708,6 +708,8 @@ class TortugaDeployer(object): \
             self.puppetApply()
 
             self.out('\nTortuga installation completed successfully!\n\n')
+
+            print('Run \"exec -l $SHELL\" to initialize Tortuga environment\n')
         except Exception:  # pylint: disable=broad-except
             self._logger.exception('Fatal error occurred during setup')
 
