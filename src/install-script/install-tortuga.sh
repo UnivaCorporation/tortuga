@@ -318,7 +318,8 @@ function install_puppetlabs_repo {
     fi
 
     for ((i=0; i < 5; i++)); do
-        rpm --install --quiet $puppetlabs_release_url | tee -a /tmp/install-tortuga.log
+        rpm --install --quiet $puppetlabs_release_url 2>/dev/null | \
+            tee -a /tmp/install-tortuga.log
 
         if [ $? -ne 0 ]; then continue; fi
 
