@@ -14,22 +14,15 @@
 
 class tortuga::installer (
   $puppet_server = $::puppet_server,
-  $activemq_enable = true,
 ) {
   contain tortuga::installer::puppetmaster
   contain tortuga::envscript
   contain tortuga::installer::ssh
   contain tortuga::installer::redis
+  contain tortuga::installer::activemq
 
-  if $activemq_enable {
-    class { 'tortuga::installer::activemq':
-      enable => $activemq_enable,
-    }
-    contain tortuga::installer::activemq
-
-    class { 'tortuga::installer::mcollective':
-      puppet_server => $puppet_server,
-    }
-    contain tortuga::installer::mcollective
+  class { 'tortuga::installer::mcollective':
+    puppet_server => $puppet_server,
   }
+  contain tortuga::installer::mcollective
 }

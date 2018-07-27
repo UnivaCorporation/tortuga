@@ -174,15 +174,6 @@ class TortugaDeployer(object): \
 
         self._cm.setIntWebServicePort(settings['intWebServicePort'])
 
-        activemq_enabled = cfg.getboolean('activemq', 'enable') \
-            if cfg.has_section('activemq') and \
-            cfg.has_option('activemq', 'enable') else True
-
-        # ActiveMQ enabled
-        settings['activemq'] = {
-            'enable': activemq_enabled,
-        }
-
         return settings
 
     def _get_setting(self, name, section=None):
@@ -751,16 +742,6 @@ class TortugaDeployer(object): \
 
         os.chown(dbPasswordFile, 0, gid)
 
-    def __append_hieradata(self, configDict):
-        """Reflect Tortuga options to Hiera"""
-
-        # ActiveMQ is enabled by default, only write setting if disabled
-        if 'activemq' in self._settings and \
-                'enable' in self._settings['activemq'] and \
-                not self._settings['activemq']['enable']:
-            configDict['tortuga::installer::activemq::enable'] = \
-                self._settings['activemq']['enable']
-
     def preConfig(self):
         # Create default hieradata directory
         hieraDataDir = '/etc/puppetlabs/code/environments/production/data'
@@ -776,8 +757,6 @@ class TortugaDeployer(object): \
             'puppet_server': fqdn,
             'depot': self._settings['depotpath'],
         }
-
-        self.__append_hieradata(configDict)
 
         with open(os.path.join(hieraDataDir, 'tortuga-common.yaml'),
                   'wb') as fp:
@@ -826,11 +805,9 @@ class TortugaDeployer(object): \
                ' --detailed-exitcodes'
                ' --execute "class { \'bootstrap\':'
                ' database_engine => \'%s\','
-               ' activemq_enable => %s,'
                ' puppet_server => \'%s\','
                ' }"' % (localPuppetRoot, localPuppetRoot,
                         self._settings['database']['engine'],
-                        str(self._settings['activemq']['enable']).lower(),
                         puppet_server))
 
         retval = self._runCommandWithSpinner(
