@@ -708,6 +708,8 @@ class TortugaDeployer(object): \
             self.puppetApply()
 
             self.out('\nTortuga installation completed successfully!\n\n')
+
+            print('Run \"exec -l $SHELL\" to initialize Tortuga environment\n')
         except Exception:  # pylint: disable=broad-except
             self._logger.exception('Fatal error occurred during setup')
 
@@ -788,22 +790,25 @@ class TortugaDeployer(object): \
 
     def pre_init_db(self):
         # If using 'mysql' as the database backend, we need to install the
-        # puppetlabs-mysql Puppet module prior to bootstrapping. This used to
-        # be done in 'install-tortuga.sh'
+        # puppetlabs-mysql Puppet module prior to bootstrapping. This used
+        # to be done in 'install-tortuga.sh'
 
         if self._settings['database']['engine'] == 'mysql':
-            logmsg = 'Installing \'puppetlabs-mysql\' module'
+            print('\nUsing MySQL as backing database.')
+
+            puppet_module = 'puppetlabs-mysql'
+
+            logmsg = f'Installing \'{puppet_module}\' module'
 
             self._logger.debug(logmsg)
 
-            sys.stdout.write('\n' + logmsg + '... ')
-            sys.stdout.flush()
+            print(f'\n{logmsg}...', end='')
 
             cmd = ('/opt/puppetlabs/bin/puppet module install'
-                   ' --color false puppetlabs-mysql')
+                   f' --color false {puppet_module}')
             tortugaSubprocess.executeCommand(cmd)
 
-            sys.stdout.write('done.\n')
+            print('done.')
 
     def puppetBootstrap(self):
         localPuppetRoot = os.path.join(self._cm.getEtcDir(), 'puppet')

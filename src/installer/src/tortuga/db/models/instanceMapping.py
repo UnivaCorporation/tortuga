@@ -24,7 +24,7 @@ class InstanceMapping(ModelBase):
 
     id = Column(Integer, primary_key=True)
     resourceadapter_id = Column(Integer, ForeignKey('resourceadapters.id'))
-    instance = Column(String)
+    instance = Column(String(255))
     node_id = Column(Integer, ForeignKey('nodes.id'))
     node = relationship('Node', back_populates='instance')
 
