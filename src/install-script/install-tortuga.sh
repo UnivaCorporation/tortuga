@@ -28,13 +28,12 @@ FORCE=0
 DEBUG=0
 enable_package_caching=1
 download_only=0
-enable_activemq=1
 force_hostname=0
 readonly tortuga_version="6.3.1"
 
 TEMP=$( getopt -o v,f --long force,verbose,debug,help,\
 disable-package-caching,\
-download-only,force-hostname,disable-activemq -n $(basename $0) -- "$@" )
+download-only,force-hostname -n $(basename $0) -- "$@" )
 
 if [ $? != 0 ]; then echo "Terminating..." >&2; exit 1; fi
 
@@ -95,9 +94,6 @@ while true; do
             force_hostname=1
             shift;
             ;;
-        --disable-activemq)
-            enable_activemq=0
-            shift;;
         --)
             shift
             break
@@ -705,19 +701,13 @@ rsync \
 unzip \
 patch \
 zeromq3 \
+activemq \
 "
 
     # Packages cached for all RHEL versions
     cachedpkgs="\
 puppet-agent \
 "
-
-    if [[ $enable_activemq -eq 1 ]]; then
-        # Only cache mcollective and dependencies if ActiveMQ is enabled
-
-        # Only install ActiveMQ package if it's enabled...
-        pkgs+=" activemq"
-    fi
 fi
 
 virtualenv="python3 -m venv"
