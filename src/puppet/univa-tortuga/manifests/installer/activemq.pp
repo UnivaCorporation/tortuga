@@ -130,17 +130,13 @@ class tortuga::installer::activemq::service {
   }
 }
 
-class tortuga::installer::activemq (
-  $enable = true,
-) {
+class tortuga::installer::activemq {
   require tortuga::installer::puppetmaster
 
-  if $enable {
-    contain tortuga::installer::activemq::package
-    contain tortuga::installer::activemq::config
-    contain tortuga::installer::activemq::service
+  contain tortuga::installer::activemq::package
+  contain tortuga::installer::activemq::config
+  contain tortuga::installer::activemq::service
 
-    Class['tortuga::installer::activemq::config'] ~>
-      Class['tortuga::installer::activemq::service']
-  }
+  Class['tortuga::installer::activemq::config'] ~>
+    Class['tortuga::installer::activemq::service']
 }

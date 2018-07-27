@@ -17,7 +17,6 @@ class bootstrap::installer {
   require bootstrap::pre_conf
 
   class { 'tortuga::installer':
-    activemq_enable => $bootstrap::activemq_enable,
     puppet_server   => $bootstrap::puppet_server,
   }
   contain tortuga::installer

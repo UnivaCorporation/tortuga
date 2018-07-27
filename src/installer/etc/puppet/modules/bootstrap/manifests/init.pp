@@ -16,7 +16,6 @@
 class bootstrap (
   $database_engine,
   $puppet_server,
-  $activemq_enable = true,
 ) {
   contain bootstrap::packages
   contain bootstrap::pre_conf
