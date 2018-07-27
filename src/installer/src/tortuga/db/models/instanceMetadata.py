@@ -27,8 +27,8 @@ class InstanceMetadata(ModelBase):
     )
 
     id = Column(Integer, primary_key=True)
-    key = Column(String, nullable=False)
-    value = Column(String)
+    key = Column(String(255), nullable=False)
+    value = Column(String(255))
     instance_id = Column(Integer, ForeignKey('instance_mappings.id'))
 
     instance = relationship('InstanceMapping',

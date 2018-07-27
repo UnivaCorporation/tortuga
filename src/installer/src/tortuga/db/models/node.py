@@ -25,9 +25,9 @@ class Node(ModelBase):
     __tablename__ = 'nodes'
 
     id = Column(Integer, primary_key=True)
-    name = Column(String, unique=True, nullable=False)
-    public_hostname = Column(String, unique=True, nullable=True)
-    state = Column(String, default='Discovered')
+    name = Column(String(255), unique=True, nullable=False)
+    public_hostname = Column(String(255), unique=True, nullable=True)
+    state = Column(String(255), default='Discovered')
     bootFrom = Column(Integer, default=0)
     lastUpdate = Column(String(20))
     rack = Column(Integer, default=0)
