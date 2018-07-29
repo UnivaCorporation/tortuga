@@ -13,6 +13,8 @@
 # limitations under the License.
 
 import argparse
+import json
+from typing import Any, Optional
 
 import yaml
 
@@ -56,11 +58,18 @@ class FilterTagsAction(argparse.Action):
             current_tags.extend(tags)
 
 
-def pretty_print(data):
+def pretty_print(data: Any, format: Optional[str] = None) -> None:
     """
-    Outputs data as nicely formatted YAML.
+    Outputs data in specified format (default is nicely formatted YAML).
+    'json' is currently the only non-default supported format.
 
     :param data: A Python data structure
 
     """
+    if format and format == 'json':
+        print(json.dumps(data, indent=2))
+
+        return
+
+    # fallback to default
     print(yaml.safe_dump(data, default_flow_style=False))
