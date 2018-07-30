@@ -38,14 +38,15 @@ class NetworkWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/networks/?address=%s&netmask=%s' % (address, netmask)
+        url = 'networks/?address=%s&netmask=%s' % (address, netmask)
 
         try:
-            _, responseDict = self.sendSessionRequest(url)
-
+            responseDict = self.get(url)
             return Network.getListFromDict(responseDict)[0]
+        
         except TortugaException:
             raise
+        
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -61,14 +62,15 @@ class NetworkWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/networks/%s' % (id_)
+        url = 'networks/%s' % (id_)
 
         try:
-            _, responseDict = self.sendSessionRequest(url)
-
+            responseDict = self.get(url)
             return Network.getFromDict(responseDict.get(Network.ROOT_TAG))
+        
         except TortugaException:
             raise
+        
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -83,14 +85,15 @@ class NetworkWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/networks/'
+        url = 'networks/'
 
         try:
-            _, responseDict = self.sendSessionRequest(url)
-
+            responseDict = self.get(url)
             return Network.getListFromDict(responseDict)
+        
         except TortugaException:
             raise
+        
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -106,15 +109,15 @@ class NetworkWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/networks/%s/%s' % (
+        url = 'networks/%s/%s' % (
             network.getAddress(), network.getNetmask())
 
-        postdata = json.dumps(network.getCleanDict())
-
         try:
-            self.sendSessionRequest(url, method='POST', data=postdata)
+            self.post(url, network.getCleanDict())
+            
         except TortugaException:
             raise
+        
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -130,12 +133,14 @@ class NetworkWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/networks/%s' % (network_id)
+        url = 'networks/%s' % (network_id)
 
         try:
-            self.sendSessionRequest(url, method='DELETE')
+            self.delete(url)
+            
         except TortugaException:
             raise
+        
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -151,13 +156,15 @@ class NetworkWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/networks/%s' % (network.getId())
+        url = 'networks/%s' % (network.getId())
 
-        postdata = json.dumps({'network': network.getCleanDict()})
+        postdata = {'network': network.getCleanDict()}
 
         try:
-            self.sendSessionRequest(url, method='PUT', data=postdata)
+            self.put(url, postdata)
+            
         except TortugaException:
             raise
+        
         except Exception as ex:
             raise TortugaException(exception=ex)

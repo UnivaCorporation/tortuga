@@ -40,10 +40,10 @@ class AdminWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/admins/%s' % (urllib.parse.quote_plus(adminName))
+        url = 'admins/%s' % (urllib.parse.quote_plus(adminName))
 
         try:
-            _, responseDict = self.sendSessionRequest(url)
+            responseDict = self.get(url)
 
             return Admin.getFromDict(responseDict.get(Admin.ROOT_TAG))
         except TortugaException:
@@ -62,10 +62,10 @@ class AdminWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/admins/%s' % (admin_id)
+        url = 'admins/%s' % (admin_id)
 
         try:
-            _, responseDict = self.sendSessionRequest(url)
+            responseDict = self.get(url)
 
             return Admin.getFromDict(responseDict.get(Admin.ROOT_TAG))
         except TortugaException:
@@ -83,10 +83,10 @@ class AdminWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/admins/'
+        url = 'admins/'
 
         try:
-            _, responseDict = self.sendSessionRequest(url)
+            responseDict = self.get(url)
 
             return Admin.getListFromDict(responseDict)
         except TortugaException:
@@ -108,7 +108,7 @@ class AdminWsApi(TortugaWsApi):
             TortugaException
         """
 
-        url = 'v1/admins/'
+        url = 'admins/'
 
         postdata = {
             'isCrypted': isCrypted,
@@ -125,10 +125,11 @@ class AdminWsApi(TortugaWsApi):
             postdata['admin']['description'] = description
 
         try:
-            self.sendSessionRequest(
-                url, method='POST', data=json.dumps(postdata))
+            self.post(url, postdata)
+
         except TortugaException:
             raise
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -143,10 +144,10 @@ class AdminWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/admins/%s' % (urllib.parse.quote_plus(admin))
+        url = 'admins/%s' % (urllib.parse.quote_plus(admin))
 
         try:
-            self.sendSessionRequest(url, method='DELETE')
+            self.delete(url)
         except TortugaException:
             raise
         except Exception as ex:
@@ -164,27 +165,27 @@ class AdminWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/admins/%s' % (adminObject.getId())
+        url = 'admins/%s' % (adminObject.getId())
 
-        d = {
+        postdata = {
             'admin': adminObject.getCleanDict(),
             'isCrypted': isCrypted,
         }
 
         realname = adminObject.getRealname()
         if realname is not None:
-            d['realname'] = realname
+            postdata['realname'] = realname
 
         description = adminObject.getDescription()
         if description is not None:
-            d['description'] = description
-
-        postdata = json.dumps(d)
+            postdata['description'] = description
 
         try:
-            self.sendSessionRequest(url, method='PUT', data=postdata)
+            self.put(url, postdata)
+
         except TortugaException:
             raise
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -199,15 +200,12 @@ class AdminWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/authenticate/%s' % (urllib.parse.quote_plus(adminUsername))
+        url = 'authenticate/%s' % (urllib.parse.quote_plus(adminUsername))
 
-        postdata = json.dumps({
-            'password': adminPassword,
-        })
+        postdata = {'password': adminPassword}
 
         try:
-            _, responseDict = self.sendSessionRequest(
-                url, method='POST', data=postdata)
+            responseDict = self.post(url, postdata)
 
             return str2bool(responseDict.get('authenticate'))
         except TortugaException:

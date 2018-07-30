@@ -41,7 +41,7 @@ class KitWsApi(TortugaWsApi):
             KitNotFound
         """
 
-        url = 'v1/kits/?name={}'.format(urllib.parse.quote_plus(name))
+        url = 'kits/?name={}'.format(urllib.parse.quote_plus(name))
 
         if version is not None:
             url += '&version={}'.format(
@@ -52,7 +52,7 @@ class KitWsApi(TortugaWsApi):
                 urllib.parse.quote_plus(iteration))
 
         try:
-            _, responseDict = self.sendSessionRequest(url)
+            responseDict = self.get(url)
 
             # response is a list, so reference first item in list
             kits = responseDict.get('kits')
@@ -86,14 +86,15 @@ class KitWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/kits/%s' % (id_)
+        url = 'kits/%s' % (id_)
 
         try:
-            _, responseDict = self.sendSessionRequest(url)
-
+            responseDict = self.get(url)
             return Kit.getFromDict(responseDict.get('kit'))
+
         except TortugaException:
             raise
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -107,14 +108,15 @@ class KitWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/kits/'
+        url = 'kits/'
 
         try:
-            _, responseDict = self.sendSessionRequest(url)
-
+            responseDict = self.get(url)
             return Kit.getListFromDict(responseDict)
+
         except TortugaException:
             raise
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -136,14 +138,15 @@ class KitWsApi(TortugaWsApi):
         if not iteration:
             dbVersion = '%s' % (version)
 
-        url = 'v1/kits/%s/%s/%s' % (name, dbVersion, key)
+        url = 'kits/%s/%s/%s' % (name, dbVersion, key)
 
         try:
-            _, responseDict = self.sendSessionRequest(url, method='POST')
-
+            responseDict = self.post(url)
             return responseDict.get('kitId')
+
         except TortugaException:
             raise
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -160,15 +163,16 @@ class KitWsApi(TortugaWsApi):
                 TortugaAlreadyExists
         """
 
-        url = 'v1/kit_packages/%s/%s' % (
+        url = 'kit_packages/%s/%s' % (
             base64.b64encode(packageUrl.encode()), key)
 
         try:
-            _, responseDict = self.sendSessionRequest(url, method='POST')
-
+            responseDict = self.post(url)
             return responseDict.get('kitId')
+
         except TortugaException:
             raise
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -190,14 +194,15 @@ class KitWsApi(TortugaWsApi):
         if not iteration:
             dbVersion = '%s' % (version)
 
-        url = 'v1/kits/%s/%s/eula' % (name, dbVersion)
+        url = 'kits/%s/%s/eula' % (name, dbVersion)
 
         try:
-            _, responseDict = self.sendSessionRequest(url)
-
+            responseDict = self.get(url)
             return Eula.getFromDict(responseDict.get('eula'))
+
         except TortugaException:
             raise
+        
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -214,14 +219,15 @@ class KitWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/kit_packages/%s/eula' % (base64.b64encode(packageUrl))
+        url = 'kit_packages/%s/eula' % (base64.b64encode(packageUrl))
 
         try:
-            _, responseDict = self.sendSessionRequest(url)
-
+            responseDict = self.get(url)
             return Eula.getFromDict(responseDict.get('eula'))
+        
         except TortugaException:
             raise
+        
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -235,7 +241,7 @@ class KitWsApi(TortugaWsApi):
             KitNotFound
 
         """
-        url = 'v1/kits/?name={}'.format(urllib.parse.quote_plus(name))
+        url = 'kits/?name={}'.format(urllib.parse.quote_plus(name))
 
         if version:
             url += '&version={}'.format(urllib.parse.quote_plus(version))
@@ -246,9 +252,11 @@ class KitWsApi(TortugaWsApi):
         url += '&force={}'.format(1 if force else 0)
 
         try:
-            self.sendSessionRequest(url, method='DELETE')
+            self.delete(url)
+            
         except TortugaException:
             raise
+        
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -265,15 +273,15 @@ class KitWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/kit_os'
+        url = 'kit_os'
 
-        data = json.dumps({
-            'mediaUrl': os_media_urls,
-        })
+        data = {'mediaUrl': os_media_urls}
 
         try:
-            self.sendSessionRequest(url, method='POST', data=data)
+            self.post(url)
+            
         except TortugaException:
             raise
+        
         except Exception as ex:
             raise TortugaException(exception=ex)

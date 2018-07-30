@@ -42,14 +42,16 @@ class SoftwareProfileWsApi(TortugaWsApi):
                 SoftwareProfileNotFound
                 TortugaException
         """
-        url = 'v1/softwareprofiles/?name=%s' % (softwareProfileName)
+        url = 'softwareprofiles/?name=%s' % (softwareProfileName)
 
         try:
-            _, responseDict = self.sendSessionRequest(url)
+            responseDict = self.get(url)
 
             return SoftwareProfile.getListFromDict(responseDict)[0]
+        
         except TortugaException:
             raise
+        
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -63,19 +65,22 @@ class SoftwareProfileWsApi(TortugaWsApi):
                 SoftwareProfileNotFound
                 TortugaException
         """
-        url = 'v1/softwareprofiles/%d' % (swProfileId)
+        url = 'softwareprofiles/%d' % (swProfileId)
 
         try:
-            _, responseDict = self.sendSessionRequest(url)
+            responseDict = self.get(url)
 
             return SoftwareProfile.getFromDict(
                 responseDict.get('softwareprofile'))
+
         except urllib.error.HTTPError as exc:
             if exc.code == 404:
                 raise SoftwareProfileNotFound(
                     'Software profile ID [%s] not found' % (swProfileId))
+
         except TortugaException:
             raise
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -84,14 +89,16 @@ class SoftwareProfileWsApi(TortugaWsApi):
         Returns a list of all software profiles in the system.
         """
 
-        url = 'v1/softwareprofiles/'
+        url = 'softwareprofiles/'
 
         try:
-            _, responseDict = self.sendSessionRequest(url)
+            responseDict = self.get(url)
 
             return SoftwareProfile.getListFromDict(responseDict)
+
         except TortugaException as ex:
             raise
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -105,15 +112,17 @@ class SoftwareProfileWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/softwareprofiles/%s/components' % (
+        url = 'softwareprofiles/%s/components' % (
             urllib.parse.quote_plus(name))
 
         try:
-            _, responseDict = self.sendSessionRequest(url)
+            responseDict = self.get(url)
 
             return Component.getListFromDict(responseDict)
+
         except TortugaException as ex:
             raise
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -122,15 +131,17 @@ class SoftwareProfileWsApi(TortugaWsApi):
         Return list of nodes contained within specified software profile
         """
 
-        url = 'v1/softwareprofiles/%s/nodes' % (
+        url = 'softwareprofiles/%s/nodes' % (
             urllib.parse.quote_plus(softwareProfileName))
 
         try:
-            _, responseDict = self.sendSessionRequest(url)
+            responseDict = self.get(url)
 
             return Node.getListFromDict(responseDict)
+
         except TortugaException as ex:
             raise
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -147,16 +158,18 @@ class SoftwareProfileWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/softwareprofiles/%s/mappings/%s' % (
+        url = 'softwareprofiles/%s/mappings/%s' % (
             urllib.parse.quote_plus(softwareProfileName),
             urllib.parse.quote_plus(hardwareProfileName))
 
         try:
-            response, _ = self.sendSessionRequest(url, method='POST')
+            responseDict = self.post(url)
 
-            return response
+            return responseDict
+
         except TortugaException as ex:
             raise
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -165,12 +178,13 @@ class SoftwareProfileWsApi(TortugaWsApi):
         Update the given Software Profile by calling WS API
         """
 
-        url = 'v1/softwareprofiles/%s' % (softwareProfileObject.getId())
+        url = 'softwareprofiles/%s' % (softwareProfileObject.getId())
 
-        postdata = json.dumps(softwareProfileObject.getCleanDict())
+        postdata = softwareProfileObject.getCleanDict()
 
         try:
-            self.sendSessionRequest(url, method='PUT', data=postdata)
+            self.put(url, postdata)
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -186,17 +200,18 @@ class SoftwareProfileWsApi(TortugaWsApi):
                 SoftwareProfileNotFound
         """
 
-        url = 'v1/softwareprofiles/%s/admin/%s' % (
+        url = 'softwareprofiles/%s/admin/%s' % (
             urllib.parse.quote_plus(softwareProfileName),
             urllib.parse.quote_plus(adminUsername))
 
         try:
-            response, _ = self.sendSessionRequest(
-                url, method='POST')
+            responseDict = self.post(url)
 
-            return response
+            return responseDict
+        
         except TortugaException as ex:
             raise
+        
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -212,17 +227,18 @@ class SoftwareProfileWsApi(TortugaWsApi):
                 SoftwareProfileNotFound
         """
 
-        url = 'v1/softwareprofiles/%s/admin/%s' % (
+        url = 'softwareprofiles/%s/admin/%s' % (
             urllib.parse.quote_plus(softwareProfileName),
             urllib.parse.quote_plus(adminUsername))
 
         try:
-            response, _ = self.sendSessionRequest(
-                url, method='DELETE')
+            responseDict = self.delete(url)
 
-            return response
+            return responseDict
+        
         except TortugaException as ex:
             raise
+        
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -242,7 +258,7 @@ class SoftwareProfileWsApi(TortugaWsApi):
                 ComponentAlreadyEnabled
         """
 
-        url = 'v1/softwareprofiles/%s/enable_components' % (
+        url = 'softwareprofiles/%s/enable_components' % (
             urllib.parse.quote_plus(softwareProfileName))
 
         postdata = {
@@ -259,10 +275,11 @@ class SoftwareProfileWsApi(TortugaWsApi):
         }
 
         try:
-            self.sendSessionRequest(
-                url, method='PUT', data=json.dumps(postdata))
+            self.put(url, postdata)
+            
         except TortugaException:
             raise
+        
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -281,7 +298,7 @@ class SoftwareProfileWsApi(TortugaWsApi):
                 ComponentNotFound
         """
 
-        url = 'v1/softwareprofiles/%s/disable_components' % (
+        url = 'softwareprofiles/%s/disable_components' % (
             urllib.parse.quote_plus(softwareProfileName))
 
         postdata = {
@@ -298,10 +315,11 @@ class SoftwareProfileWsApi(TortugaWsApi):
         }
 
         try:
-            self.sendSessionRequest(
-                url, method='PUT', data=json.dumps(postdata))
+            self.put(url, postdata)
+            
         except TortugaException:
             raise
+        
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -315,20 +333,21 @@ class SoftwareProfileWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/softwareprofiles/'
+        url = 'softwareprofiles/'
 
-        postdata = json.dumps({
+        postdata = {
             'softwareProfile': swProfile.getCleanDict(),
             'settingsDict': settingsDict or {},
-        })
+        }
 
         try:
-            response, _ = self.sendSessionRequest(
-                url, method='POST', data=postdata)
+            responseDict = self.post(url, data=postdata)
 
-            return response
+            return responseDict
+        
         except TortugaException as ex:
             raise
+        
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -345,17 +364,18 @@ class SoftwareProfileWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/softwareprofiles/%s/mappings/%s' % (
+        url = 'softwareprofiles/%s/mappings/%s' % (
             urllib.parse.quote_plus(softwareProfileName),
             urllib.parse.quote_plus(hardwareProfileName))
 
         try:
-            response, _ = self.sendSessionRequest(
-                url, method='DELETE')
+            responseDict = self.delete(url)
 
-            return response
+            return responseDict
+        
         except TortugaException as ex:
             raise
+        
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -369,16 +389,17 @@ class SoftwareProfileWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/softwareprofiles/%s' % (
+        url = 'softwareprofiles/%s' % (
             urllib.parse.quote_plus(softwareProfileName))
 
         try:
-            response, _ = self.sendSessionRequest(
-                url, method='DELETE')
+            responseDict = self.delete(url)
 
-            return response
+            return responseDict
+        
         except TortugaException as ex:
             raise
+        
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -393,33 +414,36 @@ class SoftwareProfileWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/softwareprofiles/{}/copy/{}'.format(
+        url = 'softwareprofiles/{}/copy/{}'.format(
             urllib.parse.quote_plus(srcSoftwareProfileName),
             urllib.parse.quote_plus(dstSoftwareProfileName))
 
-        postdata = json.dumps({
-            'dstSoftwareProfileName': dstSoftwareProfileName,
-        })
+        postdata = {
+            'dstSoftwareProfileName': dstSoftwareProfileName
+        }
 
         try:
-            response, _ = self.sendSessionRequest(
-                url, method='POST', data=postdata)
+            responseDict = self.post(url, postdata)
 
-            return response
+            return responseDict
+        
         except TortugaException as ex:
             raise
+        
         except Exception as ex:
             raise TortugaException(exception=ex)
 
     def getUsableNodes(self, softwareProfileName):
-        url = 'v1/softwareprofiles/%s/usable' % (
+        url = 'softwareprofiles/%s/usable' % (
             urllib.parse.quote_plus(softwareProfileName))
 
         try:
-            _, responseDict = self.sendSessionRequest(url)
+            responseDict = self.get(url)
 
             return Node.getListFromDict(responseDict)
+        
         except TortugaException as ex:
             raise
+        
         except Exception as ex:
             raise TortugaException(exception=ex)

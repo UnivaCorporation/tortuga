@@ -34,41 +34,47 @@ class SanWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/san/volumes'
+        url = 'san/volumes'
 
         try:
-            _, responseDict = self.sendSessionRequest(url)
+            responseDict = self.get(url)
 
             return Volume.getListFromDict(responseDict)
+
         except TortugaException:
             raise
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
     def updateVolume(self, volume, shared):
         """Add a volume to the system"""
 
-        url = 'v1/san/volumes/%s/%s' % (volume, shared)
+        url = 'san/volumes/%s/%s' % (volume, shared)
 
         try:
-            self.sendSessionRequest(url, method='PUT')
+            self.put(url)
+
         except TortugaException:
             raise
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
     def addVolume(self, storageAdapter, size, nameFormat='*', shared=False):
         """Add a volume to the system"""
 
-        url = 'v1/san/volumes/%s/%s/%s/%s' % (
+        url = 'san/volumes/%s/%s/%s/%s' % (
             storageAdapter, size, nameFormat, shared)
 
         try:
-            _, responseDict = self.sendSessionRequest(url, method='POST')
+            responseDict = self.post(url)
 
             return Volume.getFromDict(responseDict.get(Volume.ROOT_TAG))
+
         except TortugaException:
             raise
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -76,11 +82,13 @@ class SanWsApi(TortugaWsApi):
             # pylint: disable=unused-argument
         """Delete a volume from the system"""
 
-        url = 'v1/san/volumes/%s' % (volume)
+        url = 'san/volumes/%s' % (volume)
 
         try:
-            self.sendSessionRequest(url, method='DELETE')
+            self.delete(url)
+
         except TortugaException:
             raise
+
         except Exception as ex:
             raise TortugaException(exception=ex)

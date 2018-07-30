@@ -33,7 +33,7 @@ class HardwareProfileWsApi(TortugaWsApi):
         """
         Get hardware profile by name
         """
-        url = 'v1/hardwareprofiles/?name=%s' % (hardwareProfileName)
+        url = 'hardwareprofiles/?name=%s' % (hardwareProfileName)
 
         for key, value in optionDict.items():
             if not value:
@@ -41,11 +41,12 @@ class HardwareProfileWsApi(TortugaWsApi):
             url += '&include={}'.format(key)
 
         try:
-            _, responseDict = self.sendSessionRequest(url)
-
+            responseDict = self.get(url)
             return HardwareProfile.getListFromDict(responseDict)[0]
+
         except TortugaException as ex:
             raise
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -54,33 +55,32 @@ class HardwareProfileWsApi(TortugaWsApi):
         """
         Get hardware profile by name
         """
-        url = 'v1/hardwareprofiles/%d' % (id_)
+        url = 'hardwareprofiles/%d' % (id_)
 
         try:
-            _, responseDict = self.sendSessionRequest(url)
-
+            responseDict = self.get(url)
             return HardwareProfile.getFromDict(
                 responseDict.get('hardwareprofile'))
+
         except TortugaException as ex:
             raise
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
     def updateSoftwareOverrideAllowed(self, hardwareProfileName, flag):
-        url = 'v1/hardwareprofiles/%s/softwareOverrideAllowed' % (
+        url = 'hardwareprofiles/%s/softwareOverrideAllowed' % (
             hardwareProfileName)
 
-        postdata = json.dumps({
-            'flag': flag,
-        })
+        postdata = {'flag': flag}
 
         try:
-            (response, responseDict) = self.sendSessionRequest(
-                url, method='POST', data=postdata)
+            responseDict = self.post(url, postdata)
+            return responseDict
 
-            return response
         except TortugaException as ex:
             raise
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -92,13 +92,13 @@ class HardwareProfileWsApi(TortugaWsApi):
         Get list of hardware profiles by calling WS API
         """
 
-        url = 'v1/hardwareprofiles/'
+        url = 'hardwareprofiles/'
 
         # TODO: add support for building query string with 'tags'
         try:
-            _, responseDict = self.sendSessionRequest(url)
-
+            responseDict = self.get(url)
             return HardwareProfile.getListFromDict(responseDict)
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -107,12 +107,11 @@ class HardwareProfileWsApi(TortugaWsApi):
         Update the given Hardware Profile by calling WS API
         """
 
-        url = 'v1/hardwareprofiles/%s' % (hardwareProfileObject.getId())
+        url = 'hardwareprofiles/%s' % (hardwareProfileObject.getId())
 
         try:
-            (response, responseDict) = self.sendSessionRequest(
-                url, method='PUT',
-                data=json.dumps(hardwareProfileObject.getCleanDict()))
+            self.put(url, hardwareProfileObject.getCleanDict())
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -128,16 +127,16 @@ class HardwareProfileWsApi(TortugaWsApi):
                 HardwareProfileNotFound
         """
 
-        url = 'v1/hardwareprofiles/%s/admin/%s' % (
+        url = 'hardwareprofiles/%s/admin/%s' % (
             hardwareProfileName, adminUsername)
 
         try:
-            (response, responseDict) = self.sendSessionRequest(
-                url, method='POST')
+            responseDict = self.post(url)
+            return responseDict
 
-            return response
         except TortugaException as ex:
             raise
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -153,31 +152,17 @@ class HardwareProfileWsApi(TortugaWsApi):
                 HardwareProfileNotFound
         """
 
-        url = 'v1/hardwareprofiles/%s/admin/%s' % (
+        url = 'hardwareprofiles/%s/admin/%s' % (
             hardwareProfileName, adminUsername)
 
         try:
-            (response, responseDict) = self.sendSessionRequest(
-                url, method='DELETE')
+            responseDict = self.delete(url)
+            return responseDict
 
-            return response
         except TortugaException as ex:
             raise
         except Exception as ex:
             raise TortugaException(exception=ex)
-
-    # def setProvisioningNic(self, hardwareProfileName, nicId):
-    #     url = 'hardwareProfiles/%s/provisioningNicId/%s' % (
-    #         hardwareProfileName, nicId)
-    #
-    #     try:
-    #         (response, responseDict) = self.sendSessionRequest(
-    #             url, method='POST')
-    #
-    #     except TortugaException:
-    #         raise
-    #     except Exception as ex:
-    #         raise TortugaException(exception=ex)
 
     def deleteHardwareProfile(self, hardwareProfileName):
         """
@@ -189,15 +174,15 @@ class HardwareProfileWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/hardwareprofiles/%s' % (hardwareProfileName)
+        url = 'hardwareprofiles/%s' % (hardwareProfileName)
 
         try:
-            (response, responseDict) = self.sendSessionRequest(
-                url, method='DELETE')
+            responseDict = self.delete(url)
+            return responseDict
 
-            return response
         except TortugaException as ex:
             raise
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -212,7 +197,7 @@ class HardwareProfileWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/hardwareprofiles/'
+        url = 'hardwareprofiles/'
 
         postdata = {
             'hardwareProfile': hwProfile.getCleanDict(),
@@ -220,12 +205,12 @@ class HardwareProfileWsApi(TortugaWsApi):
         }
 
         try:
-            response, _ = self.sendSessionRequest(
-                url, method='POST', data=json.dumps(postdata))
+            responseDict = self.post(url, postdata)
+            return responseDict
 
-            return response
         except TortugaException as ex:
             raise
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -240,14 +225,15 @@ class HardwareProfileWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/hardwareprofiles/{}/copy/{}'.format(
+        url = 'hardwareprofiles/{}/copy/{}'.format(
             srcHardwareProfileName, dstHardwareProfileName)
 
         try:
-            response, _ = self.sendSessionRequest(url, method='POST')
+            responseDict = self.post(url)
+            return responseDict
 
-            return response
         except TortugaException:
             raise
+
         except Exception as ex:
             raise TortugaException(exception=ex)
