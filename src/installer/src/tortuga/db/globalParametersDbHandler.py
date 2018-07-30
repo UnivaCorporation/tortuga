@@ -14,10 +14,9 @@
 
 # pylint: disable=not-callable,multiple-statements,no-member
 
-from typing import List, NoReturn
+from typing import List
 
 from sqlalchemy.orm.exc import NoResultFound
-
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
 from tortuga.exceptions.parameterAlreadyExists import ParameterAlreadyExists
 from tortuga.exceptions.parameterNotFound import ParameterNotFound

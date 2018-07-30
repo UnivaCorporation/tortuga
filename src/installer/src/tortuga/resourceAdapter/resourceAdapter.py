@@ -21,11 +21,10 @@ import socket
 import subprocess
 import sys
 import traceback
-from typing import Any, Dict, List, NoReturn, Optional, Union
+from typing import Any, Dict, List, Optional
 
 import gevent
 from sqlalchemy.orm.session import Session
-
 from tortuga.addhost.addHostManager import AddHostManager
 from tortuga.config.configManager import ConfigManager
 from tortuga.db.dbManager import DbManager
@@ -46,8 +45,8 @@ from tortuga.objects.node import Node as TortugaNode
 from tortuga.os_utility.osUtility import getOsObjectFactory
 from tortuga.parameter.parameterApi import ParameterApi
 from tortuga.resourceAdapterConfiguration.settings import BaseSetting
-from tortuga.resourceAdapterConfiguration.validator import \
-    ConfigurationValidator, ValidationError
+from tortuga.resourceAdapterConfiguration.validator import (ConfigurationValidator,
+                                                            ValidationError)
 from tortuga.schema import ResourceAdapterConfigSchema
 
 from .userDataMixin import UserDataMixin
@@ -184,7 +183,7 @@ class ResourceAdapter(UserDataMixin): \
 
         self.__trace(node, softwareProfileName, softwareProfileChanged)
 
-    def deleteNode(self, nodes: List[Node]) -> NoReturn:
+    def deleteNode(self, nodes: List[Node]) -> None:
         """
         Remove the given node (active or idle) from the system
         """
@@ -251,7 +250,7 @@ class ResourceAdapter(UserDataMixin): \
         raise UnsupportedOperation(
             'Node does not support dynamic disk deletion' % (node))
 
-    def __trace(self, *pargs, **kargs) -> NoReturn:
+    def __trace(self, *pargs, **kargs) -> None:
         stack = traceback.extract_stack()
         funcname = stack[-2][2]
 
@@ -430,7 +429,7 @@ class ResourceAdapter(UserDataMixin): \
     osObject = property(__getOsObject, None, None, None)
     sanApi = property(__getSanApi, None, None, None)
 
-    def statusMessage(self, msg: str) -> NoReturn:
+    def statusMessage(self, msg: str) -> None:
         if self._addHostSession:
             AddHostManager().updateStatus(
                 self._addHostSession, msg)
@@ -510,14 +509,14 @@ class ResourceAdapter(UserDataMixin): \
         # Add a DHCP lease
         bhm.addDhcpLease(node, nic)
 
-    def removeLocalBootConfiguration(self, node: Node) -> NoReturn:
+    def removeLocalBootConfiguration(self, node: Node) -> None:
         bhm = self.osObject.getOsBootHostManager()
 
         bhm.rmPXEFile(node)
         bhm.removeDhcpLease(node)
 
     def _pre_add_host(self, name: str, hwprofilename: str, swprofilename: str,
-                      ip: str) -> NoReturn: \
+                      ip: str) -> None: \
             # pylint: disable=unused-argument
         # Perform "pre-add-host" operation
         command = ('sudo %s/pre-add-host'

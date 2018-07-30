@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=no-member,too-many-public-methods
+# pylint: disable=no-member,too-many-public-methods,try-except-raise
 
-from typing import List, NoReturn, Optional, Union
+from typing import List, Optional, Union, Dict, Tuple
 
 from sqlalchemy.orm.session import Session
 
@@ -28,6 +28,10 @@ from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.utility.tortugaApi import TortugaApi
 
 
+Tags = List[Union[Tuple[str, str], Tuple[str]]]
+OptionDict = Dict[str, bool]
+
+
 class NodeApi(TortugaApi):
     """
     High-level API for performing node operations
@@ -39,7 +43,7 @@ class NodeApi(TortugaApi):
 
     def createNewNode(self, session: Session, addNodeRequest: dict,
                       dbHardwareProfile: HardwareProfile,
-                      dbSoftwareProfile: Optional[Union[SoftwareProfile, None]] = None,
+                      dbSoftwareProfile: Optional[SoftwareProfile] = None,
                       validateIp: bool = True, bGenerateIp: bool = True,
                       dns_zone: Optional[str] = None) -> NodeModel:
         try:
@@ -55,7 +59,7 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def getNodeList(self, tags: Optional[Union[dict, None]] = None) -> List[Node]:
+    def getNodeList(self, tags: Optional[Tags] = None) -> TortugaObjectList:
         """
         Get node list..
 
@@ -73,7 +77,7 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def getNode(self, name: str, optionDict: Optional[Union[dict, None]] = None):
+    def getNode(self, name: str, optionDict: Optional[OptionDict] = None):
         """Get node id by name"""
         try:
             return self._nodeManager.getNode(name, optionDict=optionDict)
@@ -99,8 +103,12 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def getInstallerNode(self, optionDict: Optional[Union[dict, None]] = None) -> Node:
-        """Get installer node"""
+    def getInstallerNode(self, optionDict: Optional[OptionDict] = None) \
+            -> Node:
+        """
+        Get installer node
+        """
+
         try:
             return self._nodeManager.getInstallerNode(
                 optionDict=optionDict)
@@ -113,7 +121,7 @@ class NodeApi(TortugaApi):
             raise TortugaException(exception=ex)
 
     def getNodeById(self, nodeId: int,
-                    optionDict: Optional[Union[dict, None]] = None) -> Node:
+                    optionDict: Optional[OptionDict] = None) -> Node:
         """
         Get a node by id
         """
@@ -129,7 +137,10 @@ class NodeApi(TortugaApi):
             raise TortugaException(exception=ex)
 
     def getNodeByIp(self, ip: str) -> Node:
-        """Get a node by ip"""
+        """
+        Get a node by ip
+        """
+
         try:
             return self._nodeManager.getNodeByIp(ip)
         except TortugaException:
@@ -241,8 +252,8 @@ class NodeApi(TortugaApi):
             raise TortugaException(exception=ex)
 
     def startupNode(self, nodespec: str,
-                    remainingNodeList: Optional[Union[list, None]] = None,
-                    bootMethod: Optional[str] = 'n') -> NoReturn:
+                    remainingNodeList: Optional[list] = None,
+                    bootMethod: Optional[str] = 'n') -> None:
         try:
             self._nodeManager.startupNode(
                 nodespec, remainingNodeList=remainingNodeList or [],
@@ -257,7 +268,7 @@ class NodeApi(TortugaApi):
             raise TortugaException(exception=ex)
 
     def shutdownNode(self, nodespec: str,
-                     bSoftShutdown: Optional[bool] = False) -> NoReturn:
+                     bSoftShutdown: Optional[bool] = False) -> None:
         try:
             self._nodeManager.shutdownNode(nodespec, bSoftShutdown)
         except TortugaException:
@@ -270,7 +281,7 @@ class NodeApi(TortugaApi):
             raise TortugaException(exception=ex)
 
     def rebootNode(self, nodespec: str, bSoftReset: Optional[bool] = True,
-                   bReinstall: Optional[bool] = False) -> NoReturn:
+                   bReinstall: Optional[bool] = False) -> None:
         try:
             self._nodeManager.rebootNode(
                 nodespec, bSoftReset=bSoftReset, bReinstall=bReinstall)
@@ -321,7 +332,7 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def getNodesByNodeState(self, state: str) -> List[Node]:
+    def getNodesByNodeState(self, state: str) -> TortugaObjectList:
         """
         Get list of nodes in specified state
 
@@ -342,7 +353,8 @@ class NodeApi(TortugaApi):
             raise TortugaException(exception=ex)
 
     def getNodesByNameFilter(self, nodespec: str,
-                             optionDict: Optional[Union[dict, None]] = None) -> TortugaObjectList:
+                             optionDict: Optional[OptionDict] = None) \
+            -> TortugaObjectList:
         try:
             return self._nodeManager.getNodesByNameFilter(
                 nodespec, optionDict=optionDict)
@@ -355,7 +367,9 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def getNodesByAddHostSession(self, addHostSession: str, optionDict: Optional[Union[dict, None]] = None):
+    def getNodesByAddHostSession(self, addHostSession: str,
+                                 optionDict: Optional[OptionDict] = None) \
+            -> TortugaObjectList:
         try:
             return self._nodeManager.getNodesByAddHostSession(
                 addHostSession, optionDict=optionDict)

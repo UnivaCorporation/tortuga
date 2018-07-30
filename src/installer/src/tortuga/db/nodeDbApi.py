@@ -12,15 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=no-member
+# pylint: disable=no-member,E0705
 
 from typing import Dict, List, Optional
 
-from sqlalchemy.orm.session import Session
-
 from tortuga.config.configManager import getfqdn
-from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.exceptions.tortugaException import TortugaException
+from tortuga.node import state
 from tortuga.objects.node import Node
 from tortuga.objects.parameter import Parameter
 from tortuga.objects.provisioningInfo import ProvisioningInfo
@@ -31,7 +29,7 @@ from .globalParameterDbApi import GlobalParameterDbApi
 from .models.node import Node as NodeModel
 from .nodesDbHandler import NodesDbHandler
 from .tortugaDbApi import TortugaDbApi
-from tortuga.node import state
+
 
 OptionsDict = Dict[str, bool]
 
@@ -268,7 +266,7 @@ class NodeDbApi(TortugaDbApi):
                 self.getLogger().exception('%s' % ex)
                 raise
 
-    def getNodesByNodeState(self, state: str,
+    def getNodesByNodeState(self, node_state: str,
                             optionDict: OptionsDict = None) \
             -> TortugaObjectList:
         """
@@ -278,8 +276,8 @@ class NodeDbApi(TortugaDbApi):
         with DbManager().session() as session:
             try:
                 return self.__convert_nodes_to_TortugaObjectList(
-                    self._nodesDbHandler.getNodesByNodeState(session, state),
-                    optionDict=optionDict)
+                    self._nodesDbHandler.getNodesByNodeState(
+                        session, node_state), optionDict=optionDict)
             except TortugaException:
                 raise
             except Exception as ex:

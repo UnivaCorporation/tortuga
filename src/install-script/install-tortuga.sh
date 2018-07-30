@@ -28,13 +28,12 @@ FORCE=0
 DEBUG=0
 enable_package_caching=1
 download_only=0
-enable_activemq=1
 force_hostname=0
 readonly tortuga_version="6.3.1"
 
 TEMP=$( getopt -o v,f --long force,verbose,debug,help,\
 disable-package-caching,\
-download-only,force-hostname,disable-activemq -n $(basename $0) -- "$@" )
+download-only,force-hostname -n $(basename $0) -- "$@" )
 
 if [ $? != 0 ]; then echo "Terminating..." >&2; exit 1; fi
 
@@ -95,9 +94,6 @@ while true; do
             force_hostname=1
             shift;
             ;;
-        --disable-activemq)
-            enable_activemq=0
-            shift;;
         --)
             shift
             break
@@ -322,7 +318,8 @@ function install_puppetlabs_repo {
     fi
 
     for ((i=0; i < 5; i++)); do
-        rpm --install --quiet $puppetlabs_release_url | tee -a /tmp/install-tortuga.log
+        rpm --install --quiet $puppetlabs_release_url 2>/dev/null | \
+            tee -a /tmp/install-tortuga.log
 
         if [ $? -ne 0 ]; then continue; fi
 
@@ -705,22 +702,25 @@ rsync \
 unzip \
 patch \
 zeromq3 \
+activemq \
+rh-python36 \
+rh-python36-python-PyMySQL \
 "
 
     # Packages cached for all RHEL versions
     cachedpkgs="\
 puppet-agent \
 "
-
-    if [[ $enable_activemq -eq 1 ]]; then
-        # Only cache mcollective and dependencies if ActiveMQ is enabled
-
-        # Only install ActiveMQ package if it's enabled...
-        pkgs+=" activemq"
-    fi
 fi
 
-virtualenv="python3 -m venv"
+[[ ${dist} == centos ]] && {
+    echo "Installing SCL repository... "
+    installpkg centos-release-scl
+    [[ $? -eq 0 ]] || {
+        echo "Error installing \"centos-release-scl\". Unable to proceed." >&2
+        exit 1
+    }
+}
 
 if [ $enable_package_caching -eq 1 ]; then
     cachepkgs $cachedpkgs
@@ -766,27 +766,11 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-[[ ${dist} == centos ]] && {
-    echo "Installing SCL repository... "
-    installpkg centos-release-scl
-    [[ $? -eq 0 ]] || {
-        echo "Error installing \"centos-release-scl\". Unable to proceed." >&2
-        exit 1
-    }
-}
-
-echo "Installing Python 3.6..."
-
-installpkg rh-python36
-[[ $? -eq 0 ]] || {
-    echo "Error installing \"rh-python36-python\". Unable to proceed." >&2
-    exit 1
-}
-
 # source SCL Python 3.6 environment
 . /opt/rh/rh-python36/enable
 
 # Setup virtualenv (creates $TORTUGA_ROOT)
+readonly virtualenv="python3 -m venv --system-site-packages"
 
 echo -n "Setting up ${TORTUGA_ROOT} virtualenv... " | tee -a /tmp/install-tortuga.log
 $virtualenv $TORTUGA_ROOT >>/tmp/install-tortuga.log 2>&1

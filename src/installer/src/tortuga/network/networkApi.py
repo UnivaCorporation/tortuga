@@ -14,9 +14,10 @@
 
 # pylint: disable=no-member
 
-from tortuga.network.networkManager import NetworkManager
-from tortuga.utility.tortugaApi import TortugaApi
 from tortuga.exceptions.tortugaException import TortugaException
+from tortuga.network.networkManager import NetworkManager
+from tortuga.objects.tortugaObject import TortugaObjectList
+from tortuga.utility.tortugaApi import TortugaApi
 
 
 class NetworkApi(TortugaApi):
@@ -63,7 +64,7 @@ class NetworkApi(TortugaApi):
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
 
-    def getNetworkList(self):
+    def getNetworkList(self) -> TortugaObjectList:
         """
         Get network list.
 

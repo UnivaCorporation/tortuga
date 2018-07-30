@@ -29,7 +29,7 @@ from .models.node import Node
 from .models.softwareProfile import SoftwareProfile
 
 
-Tags = List[Tuple[str, str]]
+Tags = List[Union[Tuple[str, str], Tuple[str]]]
 
 
 class NodesDbHandler(TortugaDbObjectHandler):
@@ -104,14 +104,15 @@ class NodesDbHandler(TortugaDbObjectHandler):
 
         # iterate over list of tag tuples making SQLAlchemy search
         # specification
-        for tag in tags:
-            if len(tag) == 2:
-                # Match tag 'name' and 'value'
-                searchspec.append(and_(Node.tags.any(name=tag[0]),
-                                       Node.tags.any(value=tag[1])))
-            else:
-                # Match tag 'name' only
-                searchspec.append(Node.tags.any(name=tag[0]))
+        if tags:
+            for tag in tags:
+                if len(tag) == 2:
+                    # Match tag 'name' and 'value'
+                    searchspec.append(and_(Node.tags.any(name=tag[0]),
+                                           Node.tags.any(value=tag[1])))
+                else:
+                    # Match tag 'name' only
+                    searchspec.append(Node.tags.any(name=tag[0]))
 
         return session.query(Node).filter(or_(*searchspec)).all()
 
@@ -206,7 +207,7 @@ class NodesDbHandler(TortugaDbObjectHandler):
 
     def getNodeList(self, session: Session,
                     softwareProfile: Optional[str] = None,
-                    tags: Tags = None) -> List[Node]:
+                    tags: Optional[Tags] = None) -> List[Node]:
         """
         Get sorted list of nodes from the db.
 

@@ -13,13 +13,13 @@
 # limitations under the License.
 
 import logging
-from typing import Dict, NoReturn
+from typing import Dict
 
 from tortuga.exceptions.invalidDbRelation import InvalidDbRelation
 from tortuga.objects.tortugaObject import TortugaObjectList
 
 
-class TortugaDbApi(object):
+class TortugaDbApi:
     """
     Base DB API class.
     """
@@ -48,7 +48,7 @@ class TortugaDbApi(object):
         return o
 
     def loadRelations(self, dbObject, optionDict: Dict[str, bool] = None) \
-            -> NoReturn:
+            -> None:
         if optionDict:
             for k in list(optionDict.keys()):
                 # The optionDict contains key-value pairs of relation name

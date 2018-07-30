@@ -167,7 +167,7 @@ class Node(TortugaObject): \
     @staticmethod
     def getKeys():
         return [
-            'id', 'name', 'state', 'bootFrom', 'lastUpdate',
+            'id', 'name', 'public_hostname', 'state', 'bootFrom', 'lastUpdate',
             'rack', 'rank', 'hardwareProfileId', 'softwareProfileId',
             'lockedState', 'isIdle', 'destSPId', 'addHostSession',
             'resource_adapter', 'vcpus',

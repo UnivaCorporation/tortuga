@@ -174,15 +174,6 @@ class TortugaDeployer(object): \
 
         self._cm.setIntWebServicePort(settings['intWebServicePort'])
 
-        activemq_enabled = cfg.getboolean('activemq', 'enable') \
-            if cfg.has_section('activemq') and \
-            cfg.has_option('activemq', 'enable') else True
-
-        # ActiveMQ enabled
-        settings['activemq'] = {
-            'enable': activemq_enabled,
-        }
-
         return settings
 
     def _get_setting(self, name, section=None):
@@ -708,6 +699,8 @@ class TortugaDeployer(object): \
             self.puppetApply()
 
             self.out('\nTortuga installation completed successfully!\n\n')
+
+            print('Run \"exec -l $SHELL\" to initialize Tortuga environment\n')
         except Exception:  # pylint: disable=broad-except
             self._logger.exception('Fatal error occurred during setup')
 
@@ -749,16 +742,6 @@ class TortugaDeployer(object): \
 
         os.chown(dbPasswordFile, 0, gid)
 
-    def __append_hieradata(self, configDict):
-        """Reflect Tortuga options to Hiera"""
-
-        # ActiveMQ is enabled by default, only write setting if disabled
-        if 'activemq' in self._settings and \
-                'enable' in self._settings['activemq'] and \
-                not self._settings['activemq']['enable']:
-            configDict['tortuga::installer::activemq::enable'] = \
-                self._settings['activemq']['enable']
-
     def preConfig(self):
         # Create default hieradata directory
         hieraDataDir = '/etc/puppetlabs/code/environments/production/data'
@@ -775,8 +758,6 @@ class TortugaDeployer(object): \
             'depot': self._settings['depotpath'],
         }
 
-        self.__append_hieradata(configDict)
-
         with open(os.path.join(hieraDataDir, 'tortuga-common.yaml'),
                   'wb') as fp:
             fp.write(
@@ -788,22 +769,25 @@ class TortugaDeployer(object): \
 
     def pre_init_db(self):
         # If using 'mysql' as the database backend, we need to install the
-        # puppetlabs-mysql Puppet module prior to bootstrapping. This used to
-        # be done in 'install-tortuga.sh'
+        # puppetlabs-mysql Puppet module prior to bootstrapping. This used
+        # to be done in 'install-tortuga.sh'
 
         if self._settings['database']['engine'] == 'mysql':
-            logmsg = 'Installing \'puppetlabs-mysql\' module'
+            print('\nUsing MySQL as backing database.')
+
+            puppet_module = 'puppetlabs-mysql'
+
+            logmsg = f'Installing \'{puppet_module}\' module'
 
             self._logger.debug(logmsg)
 
-            sys.stdout.write('\n' + logmsg + '... ')
-            sys.stdout.flush()
+            print(f'\n{logmsg}...', end='')
 
             cmd = ('/opt/puppetlabs/bin/puppet module install'
-                   ' --color false puppetlabs-mysql')
+                   f' --color false {puppet_module}')
             tortugaSubprocess.executeCommand(cmd)
 
-            sys.stdout.write('done.\n')
+            print('done.')
 
     def puppetBootstrap(self):
         localPuppetRoot = os.path.join(self._cm.getEtcDir(), 'puppet')
@@ -821,11 +805,9 @@ class TortugaDeployer(object): \
                ' --detailed-exitcodes'
                ' --execute "class { \'bootstrap\':'
                ' database_engine => \'%s\','
-               ' activemq_enable => %s,'
                ' puppet_server => \'%s\','
                ' }"' % (localPuppetRoot, localPuppetRoot,
                         self._settings['database']['engine'],
-                        str(self._settings['activemq']['enable']).lower(),
                         puppet_server))
 
         retval = self._runCommandWithSpinner(
