@@ -28,16 +28,19 @@ class DeleteNodeCli(TortugaCli):
     """
 
     def parseArgs(self, usage=None):
-        excl_group = \
-            self.getParser().add_mutually_exclusive_group(required=True)
-
-        excl_group.add_argument(
+        self.getParser().add_argument(
             '--node', dest='nodeList',
             help=argparse.SUPPRESS)
 
-        excl_group.add_argument(
-            '--name', dest='nodeList',
-            help=_('Name or list of node(s) to delete'))
+        self.getParser().add_argument(
+            '--name', dest='nodeList', metavar='NODESPEC',
+            help=_('Node(s) to be deleted'))
+
+        self.getParser().add_argument(
+            'nodes', metavar='NAME',
+            help='Node(s) to be deleted',
+            nargs='*',
+        )
 
         self.addOption('--force', action='store_true',
                        default=False,
@@ -56,25 +59,32 @@ class DeleteNodeCli(TortugaCli):
             verify=self._verify
         )
 
-        if self.getArgs().nodeList[0] == '-':
+        if (self.getArgs().nodeList and self.getArgs().nodeList[0] == '-') or \
+                (self.getArgs().nodes and self.getArgs().nodes[0] == '-'):
             # Perform bulk deletes, 100 nodes at a time
 
             nodes = []
-            for count, line in zip(
-                    itertools.count(1), sys.stdin.readlines()):
+            for count, line in zip(itertools.count(1), sys.stdin.readlines()):
                 nodes.append(line.rstrip())
 
                 if count % 100 == 0:
-                    node_api.deleteNode(','.join(nodes))
+                    node_api.deleteNode(','.join(nodes), force=self.getArgs().force)
 
                     nodes = []
 
-            node_api.deleteNode(
-                ','.join(nodes), force=self.getArgs().force)
+            if nodes:
+                node_api.deleteNode(
+                    ','.join(nodes), force=self.getArgs().force)
         else:
-            node_api.deleteNode(
-                self.getArgs().nodeList, force=self.getArgs().force)
+            nodes = []
 
+            for nodespec in self.getArgs().nodes:
+                nodes.extend(nodespec.split(','))
+
+            if self.getArgs().nodeList:
+                nodes.append(self.getArgs().nodeList)
+
+            node_api.deleteNode(','.join(nodes), force=self.getArgs().force)
 
 def main():
     DeleteNodeCli().run()
