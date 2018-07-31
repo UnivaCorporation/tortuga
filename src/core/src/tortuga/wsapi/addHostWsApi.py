@@ -38,7 +38,7 @@ class AddHostWsApi(TortugaWsApi):
         """
 
         try:
-            responseDict = self.post('nodes', {'node': addNodesRequest})
+            responseDict = self.post('nodes/', {'node': addNodesRequest})
             return responseDict.get('addHostSession')
 
         except TortugaException:
@@ -60,7 +60,7 @@ class AddHostWsApi(TortugaWsApi):
             TortugaException
         """
 
-        url = 'addhost/%s/status' % (session)
+        url = 'addhost/{}/status'.format(session)
 
         # Add query parameters
         url += '?startMessage={0}&getNodes={1}'.format(
@@ -69,8 +69,11 @@ class AddHostWsApi(TortugaWsApi):
         try:
             responseDict = self.get(url)
 
-            return AddHostStatus.getFromDict(responseDict.get("addhoststatus"))
+            return AddHostStatus.getFromDict(
+                responseDict.get("addhoststatus"))
+
         except TortugaException:
             raise
+
         except Exception as ex:
             raise TortugaException(exception=ex)

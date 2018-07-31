@@ -14,10 +14,14 @@
 
 from logging import getLogger
 from typing import Optional, Union
+import os
 import requests
 
 
 logger = getLogger(__name__)
+
+
+CA_BUNDLE_PATH = '/etc/pki/tls/certs/ca-bundle.crt'
 
 
 class RestApiClient:
@@ -38,8 +42,35 @@ class RestApiClient:
         self.password = password
         self.verify = verify
 
+        self._requests_kwargs = None
+
         if not verify:
             logger.warning('SSL verification turned off')
+
+    def get_requests_kwargs(self) -> dict:
+        #
+        # Cache the base kwargs
+        #
+        if self._requests_kwargs is None:
+            #
+            # Authentication
+            #
+            self._requests_kwargs = {
+                'auth': (self.username, self.password)
+            }
+            #
+            # SSL cert verification
+            #
+            if self.verify:
+                if os.path.exists(CA_BUNDLE_PATH):
+                    self._requests_kwargs['verify'] = CA_BUNDLE_PATH
+                    logger.debug('Using CA bundle: {}'.format(CA_BUNDLE_PATH))
+                else:
+                    logger.debug('Using built-in CA bundle')
+            else:
+                self._requests_kwargs['verify'] = False
+
+        return self._requests_kwargs
 
     def build_url(self, path: str) -> str:
         """
@@ -70,8 +101,7 @@ class RestApiClient:
 
         result = requests.get(
             url,
-            auth=(self.username, self.password),
-            verify=self.verify
+            **self.get_requests_kwargs()
         )
         result.raise_for_status()
 
@@ -93,9 +123,8 @@ class RestApiClient:
 
         result = requests.post(
             url,
-            auth=(self.username, self.password),
             json=data,
-            verify=self.verify
+            **self.get_requests_kwargs()
         )
         result.raise_for_status()
 
@@ -120,9 +149,8 @@ class RestApiClient:
 
         result = requests.put(
             url,
-            auth=(self.username, self.password),
             json=data,
-            verify=self.verify
+            **self.get_requests_kwargs()
         )
         result.raise_for_status()
 
@@ -145,8 +173,7 @@ class RestApiClient:
 
         result = requests.delete(
             url,
-            auth=(self.username, self.password),
-            verify=self.verify
+            **self.get_requests_kwargs()
         )
         result.raise_for_status()
 
@@ -171,9 +198,8 @@ class RestApiClient:
 
         result = requests.patch(
             url,
-            auth=(self.username, self.password),
             json=data,
-            verify=self.verify
+            **self.get_requests_kwargs()
         )
         result.raise_for_status()
 

@@ -58,15 +58,16 @@ class FilterTagsAction(argparse.Action):
             current_tags.extend(tags)
 
 
-def pretty_print(data: Any, format: Optional[str] = None) -> None:
+def pretty_print(data: Any, fmt: Optional[str] = None) -> None:
     """
     Outputs data in specified format (default is nicely formatted YAML).
     'json' is currently the only non-default supported format.
 
-    :param data: A Python data structure
+    :param Any data:          a Python data structure
+    :param Optional[str] fmt: the output format
 
     """
-    if format and format == 'json':
+    if fmt and fmt == 'json':
         print(json.dumps(data, indent=2))
 
         return

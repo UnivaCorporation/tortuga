@@ -14,13 +14,17 @@
 
 # pylint: disable=no-member
 
-import json
 from tortuga.exceptions.tortugaException import TortugaException
 from .tortugaWsApi import TortugaWsApi
 
 
-class ResourceAdapterConfigurationWsApi(TortugaWsApi):
-    """Resource adapter configuration client web service API"""
+class ResourceAdapterConfigurationWsApi:
+    """
+    Resource adapter configuration client web service API
+
+    """
+    def __init__(self, *args, **kwargs):
+        self._client = TortugaWsApi(*args, **kwargs)
 
     def create(self, resadapter_name, name, configuration):
         url = 'resourceadapters/{0}/profile/{1}'.format(
@@ -29,7 +33,7 @@ class ResourceAdapterConfigurationWsApi(TortugaWsApi):
         postdata = dict(configuration=configuration)
 
         try:
-            responseDict = self.post(url, postdata)
+            responseDict = self._client.post(url, postdata)
 
             return responseDict
 
@@ -46,7 +50,7 @@ class ResourceAdapterConfigurationWsApi(TortugaWsApi):
             resadapter_name, name)
 
         try:
-            responseDict = self.get(url)
+            responseDict = self._client.get(url)
 
             return responseDict
 
@@ -69,7 +73,7 @@ class ResourceAdapterConfigurationWsApi(TortugaWsApi):
             resadapter_name, name)
 
         try:
-            responseDict = self.get(url)
+            responseDict = self._client.get(url)
 
             return responseDict
 
@@ -83,7 +87,7 @@ class ResourceAdapterConfigurationWsApi(TortugaWsApi):
         url = 'resourceadapters/{0}/profile/'.format(resadapter_name)
 
         try:
-            responseDict = self.get(url)
+            responseDict = self._client.get(url)
 
             return responseDict
 
@@ -98,7 +102,7 @@ class ResourceAdapterConfigurationWsApi(TortugaWsApi):
             resadapter_name, name)
 
         try:
-            responseDict = self.delete(url)
+            responseDict = self._client.delete(url)
 
             return responseDict
 
@@ -113,10 +117,12 @@ class ResourceAdapterConfigurationWsApi(TortugaWsApi):
             resadapter_name, name)
 
         try:
-            responseDict = self.put(url, configuration)
+            responseDict = self._client.put(url, configuration)
 
             return responseDict
+
         except TortugaException:
             raise
+
         except Exception as ex:
             raise TortugaException(exception=ex)
