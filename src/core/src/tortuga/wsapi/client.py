@@ -17,7 +17,6 @@ from typing import Optional, Union
 import os
 import requests
 
-
 logger = getLogger(__name__)
 
 
@@ -86,6 +85,16 @@ class RestApiClient:
 
         return '{}{}'.format(self.baseurl, path)
 
+    def process_response(self, response: requests.Response
+                         ) -> Optional[Union[list, dict]]:
+        try:
+            return response.json()
+
+        except ValueError:
+            response.raise_for_status()
+
+            return None
+
     def get(self, path: str) -> Union[list, dict]:
         """
         Performs a GET request on the specified path. It is assumed the
@@ -103,9 +112,8 @@ class RestApiClient:
             url,
             **self.get_requests_kwargs()
         )
-        result.raise_for_status()
 
-        return result.json()
+        return self.process_response(result)
 
     def post(self, path: str, data: Optional[dict] = None) -> Optional[dict]:
         """
@@ -126,11 +134,12 @@ class RestApiClient:
             json=data,
             **self.get_requests_kwargs()
         )
-        result.raise_for_status()
 
         try:
             return result.json()
+
         except ValueError:
+            result.raise_for_status()
             return None
 
     def put(self, path: str, data: Optional[dict] = None) -> Optional[dict]:
@@ -152,11 +161,12 @@ class RestApiClient:
             json=data,
             **self.get_requests_kwargs()
         )
-        result.raise_for_status()
 
         try:
             return result.json()
+
         except ValueError:
+            result.raise_for_status()
             return None
 
     def delete(self, path: str) -> Optional[dict]:
@@ -175,11 +185,12 @@ class RestApiClient:
             url,
             **self.get_requests_kwargs()
         )
-        result.raise_for_status()
 
         try:
             return result.json()
+
         except ValueError:
+            result.raise_for_status()
             return None
 
     def patch(self, path: str, data: Optional[dict] = None) -> Optional[dict]:
@@ -201,9 +212,10 @@ class RestApiClient:
             json=data,
             **self.get_requests_kwargs()
         )
-        result.raise_for_status()
 
         try:
             return result.json()
+
         except ValueError:
+            result.raise_for_status()
             return None
