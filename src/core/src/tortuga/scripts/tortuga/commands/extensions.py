@@ -39,7 +39,7 @@ class ListCommand(Command):
     help = 'List available extensions'
 
     def execute(self, args: argparse.Namespace):
-        pretty_print(get_available_extensions(args))
+        pretty_print(get_available_extensions(args), args.fmt)
 
 
 class InstallCommand(Command):
