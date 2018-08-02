@@ -210,15 +210,18 @@ class ResourceAdapterConfigurationManager:
                     'Malformed resource adapter configuration data')
 
             setting = setting_exists(existing_settings, entry['key'])
-            if setting is None:
-                # create new setting
-                new_settings.append((entry['key'], entry['value']))
+
+            if entry['value'] is None:
+                if setting:
+                    # setting is marked for deletion
+                    delete_settings.append(setting)
 
                 continue
 
-            if entry['value'] is None:
-                # setting is marked for deletion
-                delete_settings.append(setting)
+            if setting is None:
+                if entry['value'] is not None:
+                    # create new setting
+                    new_settings.append((entry['key'], entry['value']))
 
                 continue
 
