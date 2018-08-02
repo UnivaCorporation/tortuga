@@ -15,12 +15,11 @@
 from logging import getLogger
 from typing import Optional, Union
 import os
+import ssl
+
 import requests
 
 logger = getLogger(__name__)
-
-
-CA_BUNDLE_PATH = '/etc/pki/tls/certs/ca-bundle.crt'
 
 
 class RestApiClient:
@@ -61,9 +60,10 @@ class RestApiClient:
             # SSL cert verification
             #
             if self.verify:
-                if os.path.exists(CA_BUNDLE_PATH):
-                    self._requests_kwargs['verify'] = CA_BUNDLE_PATH
-                    logger.debug('Using CA bundle: {}'.format(CA_BUNDLE_PATH))
+                ca_path = ssl.get_default_verify_paths().capath
+                if os.path.exists(ca_path):
+                    self._requests_kwargs['verify'] = ca_path
+                    logger.debug('Using CA path: {}'.format(ca_path))
                 else:
                     logger.debug('Using built-in CA bundle')
             else:
