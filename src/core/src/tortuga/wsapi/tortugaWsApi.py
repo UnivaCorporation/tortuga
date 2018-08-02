@@ -15,7 +15,11 @@
 from logging import getLogger
 from typing import Optional
 
+import requests
+
 from tortuga.config.configManager import ConfigManager
+from tortuga.exceptions.tortugaException import TortugaException
+from tortuga.utility import tortugaStatus
 from .client import RestApiClient
 
 
@@ -28,8 +32,8 @@ WS_API_VERSION = 'v1'
 class TortugaWsApi(RestApiClient):
     """
     Base tortuga ws api class.
-    """
 
+    """
     def __init__(self, username: Optional[str] = None,
                  password: Optional[str] = None,
                  baseurl: Optional[str] = None,
@@ -52,3 +56,41 @@ class TortugaWsApi(RestApiClient):
         super().__init__(username, password, baseurl, verify)
 
         self.baseurl = '{}/{}'.format(self.baseurl, WS_API_VERSION)
+
+    def process_response(self, response: requests.Response):
+        check_status(response.headers)
+
+        return super().process_response(response)
+
+
+def check_status(http_headers: dict):
+    """
+    Map tortuga status code into appropriate exception.
+
+    :param http_headers:
+
+    """
+    code = http_headers.get('Tortuga-Status-Code', None)
+    msg = http_headers.get('Tortuga-Status-Message', 'Internal Error')
+
+    if code is None or code == str(tortugaStatus.TORTUGA_OK):
+        return
+
+    if int(code) in tortugaStatus.exceptionMap:
+        #
+        # Exception string is value of the form 'x.y.z'
+        # where 'x.y' is tortuga module, and 'z' class in that module
+        #
+        ex_str = tortugaStatus.exceptionMap.get(int(code))
+        ex_class = ex_str.split('.')[-1]              # 'z' in 'x.y.z'
+        ex_module = '.'.join(ex_str.split('.')[:-1])  # 'x.y' in 'x.y.z'
+
+        module_ = __import__(
+            'tortuga.{0}'.format(ex_module), globals(), locals(),
+            [ex_class], 0)
+
+        Exception_ = getattr(module_, ex_class)
+
+        raise Exception_(msg)
+
+    raise TortugaException(msg)

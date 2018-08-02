@@ -135,12 +135,7 @@ class RestApiClient:
             **self.get_requests_kwargs()
         )
 
-        try:
-            return result.json()
-
-        except ValueError:
-            result.raise_for_status()
-            return None
+        return self.process_response(result)
 
     def put(self, path: str, data: Optional[dict] = None) -> Optional[dict]:
         """
@@ -162,12 +157,7 @@ class RestApiClient:
             **self.get_requests_kwargs()
         )
 
-        try:
-            return result.json()
-
-        except ValueError:
-            result.raise_for_status()
-            return None
+        return self.process_response(result)
 
     def delete(self, path: str) -> Optional[dict]:
         """
@@ -186,12 +176,7 @@ class RestApiClient:
             **self.get_requests_kwargs()
         )
 
-        try:
-            return result.json()
-
-        except ValueError:
-            result.raise_for_status()
-            return None
+        return self.process_response(result)
 
     def patch(self, path: str, data: Optional[dict] = None) -> Optional[dict]:
         """
@@ -213,9 +198,4 @@ class RestApiClient:
             **self.get_requests_kwargs()
         )
 
-        try:
-            return result.json()
-
-        except ValueError:
-            result.raise_for_status()
-            return None
+        return self.process_response(result)
