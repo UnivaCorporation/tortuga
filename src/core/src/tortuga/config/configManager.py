@@ -24,6 +24,7 @@ from tortuga.types import Singleton
 
 # Defaults.
 DEFAULT_TORTUGA_ROOT = '/opt/tortuga'
+DEFAULT_TORTUGA_CA_BUNDLE = '/etc/pki/tls/certs/ca-bundle.crt'
 DEFAULT_TORTUGA_ETC = os.path.join(DEFAULT_TORTUGA_ROOT, 'etc')
 DEFAULT_TORTUGA_BIN = os.path.join(DEFAULT_TORTUGA_ROOT, 'bin')
 DEFAULT_TORTUGA_CONFIG_BASE = os.path.join(DEFAULT_TORTUGA_ROOT, 'config')
@@ -144,6 +145,7 @@ class ConfigManager(dict, Singleton): \
 
     def __init_defaults(self):
         self['defaultRoot'] = DEFAULT_TORTUGA_ROOT
+        self['defaultCaBundle'] = DEFAULT_TORTUGA_CA_BUNDLE
         self['defaultRepoConfigFile'] = DEFAULT_TORTUGA_REPO_CONFIG_FILE
         self['defaultDnsZone'] = DEFAULT_TORTUGA_DNS_ZONE
         self['defaultTimeZone'] = DEFAULT_TORTUGA_TIME_ZONE
@@ -375,6 +377,20 @@ class ConfigManager(dict, Singleton): \
         not specified, internal (predefined) default will be returned.
         """
         return self.__getKeyValue('root', default)
+
+    def setCaBundle(self, path: str):
+        """
+        Set the path to the SSL CA bundle.
+
+        """
+        self['caBundle'] = path
+
+    def getCaBundle(self, default: str = '__internal__') -> str:
+        """
+        Get the path to the SSL CA bundle.
+
+        """
+        return self.__getKeyValue('caBundle', default)
 
     def getBinDir(self, default='__internal__'):
         return self.__getKeyValue('binDir', default)

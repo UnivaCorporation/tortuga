@@ -14,10 +14,11 @@
 
 from logging import getLogger
 from typing import Optional, Union
-import os
-import ssl
 
 import requests
+
+from tortuga.config.configManager import ConfigManager
+
 
 logger = getLogger(__name__)
 
@@ -45,6 +46,8 @@ class RestApiClient:
         if not verify:
             logger.warning('SSL verification turned off')
 
+        self._cm = ConfigManager()
+
     def get_requests_kwargs(self) -> dict:
         #
         # Cache the base kwargs
@@ -60,9 +63,9 @@ class RestApiClient:
             # SSL cert verification
             #
             if self.verify:
-                capath = ssl.get_default_verify_paths().capath
-                self._requests_kwargs['verify'] = capath
-                logger.debug('Using CA path: {}'.format(capath))
+                self._requests_kwargs['verify'] = self._cm.getCaBundle()
+                logger.debug('Using CA path: {}'.format(
+                    self._cm.getCaBundle()))
 
             else:
                 self._requests_kwargs['verify'] = False
