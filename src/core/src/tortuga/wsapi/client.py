@@ -60,12 +60,10 @@ class RestApiClient:
             # SSL cert verification
             #
             if self.verify:
-                ca_path = ssl.get_default_verify_paths().capath
-                if os.path.exists(ca_path):
-                    self._requests_kwargs['verify'] = ca_path
-                    logger.debug('Using CA path: {}'.format(ca_path))
-                else:
-                    logger.debug('Using built-in CA bundle')
+                capath = ssl.get_default_verify_paths().capath
+                self._requests_kwargs['verify'] = capath
+                logger.debug('Using CA path: {}'.format(capath))
+
             else:
                 self._requests_kwargs['verify'] = False
 

@@ -102,7 +102,7 @@ class WebsocketClient:
             ssl_context = ssl.SSLContext()
             if self._verify:
                 ssl_context.load_verify_locations(
-                    '/etc/pki/tls/certs/ca-bundle.crt')
+                    capath=ssl.get_default_verify_paths().capath)
             else:
                 ssl_context.check_hostname = False
                 ssl_context.verify_mode = ssl.CERT_NONE
