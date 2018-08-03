@@ -206,4 +206,5 @@ def clean(options):
     # remove puppet artifacts
     dirs = ['src/puppet', 'src/kits/kit-base/tortuga_kits/base*/puppet_modules']
     for puppet_dir_name in dirs:
-        sh(f'find {puppet_dir_name} -type d -name pkg -print0 | xargs -0 rm -r')
+        sh('find {} -type d -name pkg -exec rm -r {{}} +'.format(
+            puppet_dir_name))
