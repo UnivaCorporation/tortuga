@@ -4,4 +4,4 @@ ADD tortuga-*/python-tortuga/tortuga_core-*.whl /
 RUN . /opt/rh/rh-python36/enable && \
     bash -c 'pip install wheel awscli /tortuga_core-*.whl'
 WORKDIR /kit-src
-CMD [ "build-kit" ]
+CMD [ "build-kit clean && build-kit" ]
