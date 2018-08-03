@@ -71,8 +71,10 @@ class BaseSettingSchema(Schema):
 
     """
     type: fields.Field = fields.String(dump_only=True)
+    display_name: fields.Field = fields.String()
     description: fields.Field = fields.String()
     group: fields.Field = fields.String()
+    group_order: fields.Field = fields.Integer(default=0)
     required: fields.Field = fields.Boolean()
     secret: fields.Field = fields.Boolean()
     mutually_exclusive: fields.Field = fields.List(fields.String())
@@ -96,8 +98,10 @@ class BaseSetting(metaclass=SettingMeta):
     validation_regex = None
 
     def __init__(self, **kwargs):
+        self.display_name = kwargs.get('display_name', '')
         self.description = kwargs.get('description', '')
         self.group = kwargs.get('group', '')
+        self.group_order = kwargs.get('group_order', 0)
         self.required = kwargs.get('required', False)
         self.secret = kwargs.get('secret', False)
         self.mutually_exclusive = kwargs.get('mutually_exclusive', [])

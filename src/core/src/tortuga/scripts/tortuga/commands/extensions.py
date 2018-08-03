@@ -39,7 +39,7 @@ class ListCommand(Command):
     help = 'List available extensions'
 
     def execute(self, args: argparse.Namespace):
-        pretty_print(get_available_extensions(args))
+        pretty_print(get_available_extensions(args), args.fmt)
 
 
 class InstallCommand(Command):
@@ -54,6 +54,12 @@ class InstallCommand(Command):
         Argument(
             'name',
             help='The name of the extension'
+        ),
+        Argument(
+            '--upgrade',
+            action='store_true',
+            default=False,
+            help='Upgrade the extension to the latest version'
         )
     ]
 
@@ -68,9 +74,13 @@ class InstallCommand(Command):
         pip_cmd = [
             'pip', 'install',
             '--extra-index-url', get_python_package_repo(installer),
-            '--trusted-host', installer,
-            args.name
+            '--trusted-host', installer
         ]
+
+        if args.upgrade:
+            pip_cmd.append('--upgrade')
+
+        pip_cmd.append(args.name)
 
         subprocess.Popen(pip_cmd).wait()
 
@@ -86,6 +96,14 @@ class ExtensionsCommand(RootCommand):
     sub_commands = [
         ListCommand(),
         InstallCommand()
+    ]
+
+    arguments = [
+        Argument(
+            '--all',
+            action='store_true',
+            default=False
+        )
     ]
 
 
@@ -149,7 +167,7 @@ def get_available_extensions(args: argparse.Namespace) -> List[str]:
     extensions = []
     for e in root.findall('body/a'):
         name = e.text
-        if 'cli' in name:
+        if args.all or 'cli' in name:
             extensions.append(name)
 
     return extensions

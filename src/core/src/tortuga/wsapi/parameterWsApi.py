@@ -33,15 +33,17 @@ class ParameterWsApi(TortugaWsApi):
         :raises ParameterNotFound:
 
         """
-        url = 'v1/parameters/%s' % (name)
+        url = 'parameters/%s' % (name)
 
         try:
-            _, response_dict = self.sendSessionRequest(url)
+            response_dict = self.get(url)
 
             return tortuga.objects.parameter.Parameter.getFromDict(
                 response_dict.get('globalparameter'))
+        
         except TortugaException:
             raise
+        
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -52,15 +54,17 @@ class ParameterWsApi(TortugaWsApi):
         :return: a list of parameters
 
         """
-        url = 'v1/parameters/'
+        url = 'parameters/'
 
         try:
-            _, response_dict = self.sendSessionRequest(url)
+            response_dict = self.get(url)
 
             return tortuga.objects.parameter.Parameter.getListFromDict(
                 response_dict)
+
         except TortugaException:
             raise
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -71,12 +75,12 @@ class ParameterWsApi(TortugaWsApi):
         :param parameter: the parameter to create
 
         """
-        url = 'v1/parameters/'
+        url = 'parameters/'
         data = parameter.getJsonRep()
 
         try:
-            _, response_dict = self.sendSessionRequest(url, data=data,
-                                                       method='POST')
+            response_dict = self.post(url, data)
+
             return response_dict
         
         except TortugaException:
@@ -92,10 +96,11 @@ class ParameterWsApi(TortugaWsApi):
         :param parameter: the parameter to update
 
         """
-        url = 'v1/parameters/{}'.format(parameter.getName())
+        url = 'parameters/{}'.format(parameter.getName())
 
         try:
-            _, response_dict = self.sendSessionRequest(url, method='PUT')
+            response_dict = self.put(url)
+
             return response_dict
 
         except TortugaException:
@@ -111,10 +116,11 @@ class ParameterWsApi(TortugaWsApi):
         :param name: the name of the parameter to delete
 
         """
-        url = 'v1/parameters/{}'.format(name)
+        url = 'parameters/{}'.format(name)
 
         try:
-            _, response_dict = self.sendSessionRequest(url, method='DELETE')
+            response_dict = self.delete(url)
+
             return response_dict
 
         except TortugaException:

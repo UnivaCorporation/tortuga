@@ -13,14 +13,16 @@
 # limitations under the License.
 
 import logging
-from typing import Optional, Union
+from typing import Optional
 
 from tortuga.config.configManager import ConfigManager
-from tortuga.exceptions.userNotAuthorized import UserNotAuthorized
-from tortuga.web_client import sessionManager
+from tortuga.wsapi.client import RestApiClient
 
 
 logger = logging.getLogger(__name__)
+
+
+WS_API_VERSION = 'v2'
 
 
 class TortugaWsApiClient:
@@ -28,103 +30,49 @@ class TortugaWsApiClient:
     Tortuga ws api client class.
 
     """
-    API_VERSION = 'v2'
-
     def __init__(self, endpoint: str,
                  username: Optional[str] = None,
                  password: Optional[str] = None,
                  base_url: Optional[str] = None,
                  verify: bool = True) -> None:
-        logger.addHandler(logging.NullHandler())
 
         self._cm = ConfigManager()
-        self._sm: Union[sessionManager.SessionManager, None] = None
 
-        #
-        # Initialize the base URL
-        #
-        if base_url:
-            self._svr_base_url = base_url
-        else:
-            self._svr_hostname = self._cm.getInstaller()
-            self._svr_port = self._cm.getAdminPort()
-            self._svr_scheme = self._cm.getAdminScheme()
-            self._svr_base_url = '{}://{}:{}'.format(
-                self._svr_scheme,
-                self._svr_hostname,
-                self._svr_port
+        if not base_url:
+            base_url = '{}://{}:{}'.format(
+                self._cm.getAdminScheme(),
+                self._cm.getInstaller(),
+                self._cm.getAdminPort()
             )
 
-        self._svr_endpoint_url = '{}/{}/{}/'.format(self._svr_base_url,
-                                                    self.API_VERSION,
-                                                    endpoint)
-        #
-        # Initialize the username and password
-        #
         if username is None and password is None:
             logger.debug('Using built-in user credentials')
             username = self._cm.getCfmUser()
             password = self._cm.getCfmPassword()
-        self._username = username
-        self._password = password
 
-        self._verify = verify
+        self._client = RestApiClient(
+            username=username,
+            password=password,
+            baseurl=base_url,
+            verify=verify
+        )
 
-    def _get_session_manager(self):
-        if not self._sm:
-            self._sm = sessionManager.createSession()
-        return self._sm
+        self._client.baseurl = '{}/{}/{}/'.format(base_url, WS_API_VERSION,
+                                                  endpoint)
 
-    def send_session_request(self, url: str, method: str = 'GET',
-                             content_type: str = 'application/json',
-                             accept_type='application/json',
-                             data=None) -> str:
-        sm = self._get_session_manager()
-        if not sm.hasSession():
-            if self._username is None:
-                raise UserNotAuthorized('Username not supplied')
-            if self._password is None:
-                raise UserNotAuthorized('Password not supplied')
-            #
-            # establishSession() sets the 'wsUrl' so the explicit call
-            # to setHost() is not required
-            #
-            sm.establishSession(self._svr_base_url, self._username,
-                                self._password, verify=self._verify)
-        return sm.sendRequest(url, method, content_type, data, accept_type,
-                              verify=self._verify)
-
-    def send_request(self, url: str, method: str = 'GET',
-                     content_type: str = 'application/json',
-                     accept_type: str = 'application/json',
-                     data: dict = None) -> str:
-        sm = self._get_session_manager()
-        #
-        # Because there's no call to establishSession(), explicitly call
-        # setHost()
-        #
-        sm.setHost(url)
-        return sm.sendRequest(url, method, content_type, data, accept_type,
-                              verify=self._verify)
-
-    def list(self, **params) -> str:
-        url = self._svr_endpoint_url
-        query_string = self._build_query_string(params)
-        if query_string:
-            url += '?{}'.format(query_string)
-        _, response = self.send_session_request(url)
-
-        return response
-
-    def _build_query_string(self, params: dict) \
-            -> str:  # pylint: disable=no-self-use
+    def _build_query_string(self, params: dict) -> str: \
+            # pylint: disable=no-self-use
         return '&'.join([f'{k}={v}' for k, v in params.items()])
 
-    def get(self, id_: str) -> str:
-        #
-        # Build URL
-        #
-        url = '{}/{}'.format(self._svr_endpoint_url, id_)
-        _, response = self.send_session_request(url)
+    def list(self, **params) -> list:
+        path = '/'
+        query_string = self._build_query_string(params)
+        if query_string:
+            path += '?{}'.format(query_string)
 
-        return response
+        return self._client.get(path)
+
+    def get(self, id_: str) -> dict:
+        path = '/{}'.format(id_)
+
+        return self._client.get(path)

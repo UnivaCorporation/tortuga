@@ -35,7 +35,7 @@ class SyncWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/updates/cluster'
+        url = 'updates/cluster'
 
         postdata = {}
 
@@ -43,10 +43,11 @@ class SyncWsApi(TortugaWsApi):
             postdata['reason'] = updateReason
 
         try:
-            self.sendSessionRequest(
-                url, method='POST', data=json.dumps(postdata))
+            self.post(url, postdata)
+
         except TortugaException:
             raise
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -59,13 +60,15 @@ class SyncWsApi(TortugaWsApi):
                 TortugaException
         """
 
-        url = 'v1/updates/cluster'
+        url = 'updates/cluster'
 
         try:
-            _, responseDict = self.sendSessionRequest(url)
+            responseDict = self.get(url)
 
             return str2bool(responseDict.get('running'))
+
         except TortugaException:
             raise
+
         except Exception as ex:
             raise TortugaException(exception=ex)

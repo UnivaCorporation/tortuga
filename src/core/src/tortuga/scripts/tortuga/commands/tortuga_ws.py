@@ -63,7 +63,7 @@ class ListCommand(Command):
 
         params = self._parse_params(query)
 
-        pretty_print(ws_client.list(**params))
+        pretty_print(ws_client.list(**params), args.fmt)
 
     def _parse_params(self, query: List[str]) -> Dict[str, str]:
         """
@@ -143,7 +143,7 @@ class ShowCommand(Command):
     def execute(self, args: argparse.Namespace):
         ws_client: TortugaWsApiClient = get_client(args, self.parent.name)
 
-        pretty_print(ws_client.get(args.id))
+        pretty_print(ws_client.get(args.id), args.fmt)
 
 
 class EventsCommand(RootCommand):

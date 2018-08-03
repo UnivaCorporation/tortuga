@@ -21,13 +21,15 @@ from .tortugaWsApi import TortugaWsApi
 
 class ResourceAdapterWsApi(TortugaWsApi):
     def getResourceAdapterList(self):
-        url = 'v1/resourceadapters/'
+        url = 'resourceadapters/'
 
         try:
-            _, responseDict = self.sendSessionRequest(url)
+            responseDict = self.get(url)
 
             return responseDict
+
         except TortugaException:
             raise
+
         except Exception as ex:
             raise TortugaException(exception=ex)

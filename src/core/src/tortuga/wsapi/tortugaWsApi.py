@@ -12,141 +12,85 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=logging-not-lazy
+from logging import getLogger
+from typing import Optional
 
-import logging
-from urllib.parse import urlparse
+import requests
 
 from tortuga.config.configManager import ConfigManager
-from tortuga.exceptions.userNotAuthorized import UserNotAuthorized
-from tortuga.web_client import sessionManager
+from tortuga.exceptions.tortugaException import TortugaException
+from tortuga.utility import tortugaStatus
+from .client import RestApiClient
+
+
+logger = getLogger(__name__)
 
 
 WS_API_VERSION = 'v1'
 
 
-class TortugaWsApi:
+class TortugaWsApi(RestApiClient):
     """
     Base tortuga ws api class.
-    """
 
-    def __init__(self, username=None, password=None, baseurl=None,
+    """
+    def __init__(self, username: Optional[str] = None,
+                 password: Optional[str] = None,
+                 baseurl: Optional[str] = None,
                  verify: bool = True):
-        self._logger = logging.getLogger(
-            'tortuga.wsapi.{0}'.format(self.__class__.__name__))
-        self._logger.addHandler(logging.NullHandler())
 
         self._cm = ConfigManager()
 
-        if baseurl:
-            result = urlparse(baseurl)
-            self.serverHostname = result.hostname
-            self.serverPort = result.port
-            self.serverScheme = result.scheme
-            self._baseurl = baseurl
-        else:
-            self.serverHostname = self._cm.getInstaller()
-            self.serverPort = self._cm.getAdminPort()
-            self.serverScheme = self._cm.getAdminScheme()
-            self._baseurl = '%s://%s:%s/%s' % (
-                self.serverScheme,
-                self.serverHostname,
-                self.serverPort,
-                WS_API_VERSION
+        if not baseurl:
+            baseurl = '{}://{}:{}'.format(
+                self._cm.getAdminScheme(),
+                self._cm.getInstaller(),
+                self._cm.getAdminPort()
             )
 
         if username is None and password is None:
-            self._logger.debug('[%s] Using built-in user credentials' % (
-                self.__module__))
-
+            logger.debug('Using built-in user credentials')
             username = self._cm.getCfmUser()
             password = self._cm.getCfmPassword()
 
-        self._username = username
-        self._password = password
-        self._verify = verify
-        self._sm = None
+        super().__init__(username, password, baseurl, verify)
 
-    def _getWsUrl(self, url):
-        """Extract scheme and net location from provided url. Use defaults
-        if none exist."""
+        self.baseurl = '{}/{}'.format(self.baseurl, WS_API_VERSION)
 
-        # if url is not fully-qualified, return base URL
-        result = urlparse(url)
-        if not result.netloc:
-            # because the API version is hardcoded into the "internal" URLs,
-            # we massage the default base URL to not include the API version
-            # prefix if the specified path includes it
-            if result.path and result.path.startswith(WS_API_VERSION + '/'):
-                parsed_baseurl = urlparse(self._baseurl)
+    def process_response(self, response: requests.Response):
+        check_status(response.headers)
 
-                baseurl = '%s://%s' % (parsed_baseurl.scheme,
-                                       parsed_baseurl.hostname)
+        return super().process_response(response)
 
-                if parsed_baseurl.port:
-                    baseurl += ':%s' % parsed_baseurl.port
 
-                return baseurl
+def check_status(http_headers: dict):
+    """
+    Map tortuga status code into appropriate exception.
 
-            return self._baseurl
+    :param http_headers:
 
-        return url
+    """
+    code = http_headers.get('Tortuga-Status-Code', None)
+    msg = http_headers.get('Tortuga-Status-Message', 'Internal Error')
 
-    def _getSessionManager(self):
-        if not self._sm:
-            self._sm = sessionManager.createSession()
-        return self._sm
+    if code is None or code == str(tortugaStatus.TORTUGA_OK):
+        return
 
-    def getLogger(self):
-        """ Get logger for this class. """
-        return self._logger
+    if int(code) in tortugaStatus.exceptionMap:
+        #
+        # Exception string is value of the form 'x.y.z'
+        # where 'x.y' is tortuga module, and 'z' class in that module
+        #
+        ex_str = tortugaStatus.exceptionMap.get(int(code))
+        ex_class = ex_str.split('.')[-1]              # 'z' in 'x.y.z'
+        ex_module = '.'.join(ex_str.split('.')[:-1])  # 'x.y' in 'x.y.z'
 
-    def getConfigManager(self):
-        """ Return configmanager reference """
-        return self._cm
+        module_ = __import__(
+            'tortuga.{0}'.format(ex_module), globals(), locals(),
+            [ex_class], 0)
 
-    def sendSessionRequest(self, url, method='GET',
-                           contentType='application/json', data=None,
-                           acceptType='application/json'):
-        """
-        Send authorized session request
+        Exception_ = getattr(module_, ex_class)
 
-        Raises:
-            UserNotAuthorized
-        """
+        raise Exception_(msg)
 
-        sm = self._getSessionManager()
-
-        if not sm.hasSession():
-            if self._username is None:
-                raise UserNotAuthorized('Username not supplied')
-
-            if self._password is None:
-                raise UserNotAuthorized('Password not supplied')
-
-            wsUrl = self._getWsUrl(url)
-
-            # establishSession() sets the 'wsUrl' so the explicit call
-            # to setHost() is not required
-            sm.establishSession(wsUrl, self._username, self._password,
-                                verify=self._verify)
-
-        return sm.sendRequest(
-            url, method, contentType, data, acceptType=acceptType,
-            verify=self._verify)
-
-    def sendRequest(self, url, method='GET',
-                    contentType='application/json', data=None,
-                    acceptType='application/json'):
-        """
-        Send unauthorized request
-        """
-
-        sm = self._getSessionManager()
-
-        # Because there's no call to establishSession(), explicitly call
-        # setHost()
-        sm.setHost(self._getWsUrl(url))
-
-        return self._getSessionManager().sendRequest(
-            url, method, contentType, data, acceptType, verify=self._verify)
+    raise TortugaException(msg)

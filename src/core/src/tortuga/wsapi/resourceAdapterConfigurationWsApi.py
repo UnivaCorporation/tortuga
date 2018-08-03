@@ -14,42 +14,49 @@
 
 # pylint: disable=no-member
 
-import json
 from tortuga.exceptions.tortugaException import TortugaException
 from .tortugaWsApi import TortugaWsApi
 
 
-class ResourceAdapterConfigurationWsApi(TortugaWsApi):
-    """Resource adapter configuration client web service API"""
+class ResourceAdapterConfigurationWsApi:
+    """
+    Resource adapter configuration client web service API
+
+    """
+    def __init__(self, *args, **kwargs):
+        self._client = TortugaWsApi(*args, **kwargs)
 
     def create(self, resadapter_name, name, configuration):
-        url = 'v1/resourceadapters/{0}/profile/{1}'.format(
+        url = 'resourceadapters/{0}/profile/{1}'.format(
             resadapter_name, name)
 
-        postdata = json.dumps(dict(configuration=configuration))
+        postdata = dict(configuration=configuration)
 
         try:
-            _, responseDict = self.sendSessionRequest(
-                url, method='POST', data=postdata)
+            responseDict = self._client.post(url, postdata)
 
             return responseDict
+
         except TortugaException:
             raise
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
     def get(self, resadapter_name, name):
         """Get resource adapter configuration"""
 
-        url = 'v1/resourceadapters/{0}/profile/{1}'.format(
+        url = 'resourceadapters/{0}/profile/{1}'.format(
             resadapter_name, name)
 
         try:
-            _, responseDict = self.sendSessionRequest(url)
+            responseDict = self._client.get(url)
 
             return responseDict
+
         except TortugaException:
             raise
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -62,11 +69,11 @@ class ResourceAdapterConfigurationWsApi(TortugaWsApi):
 
         """
 
-        url = 'v1/resourceadapters/{}/profile/{}/validate'.format(
+        url = 'resourceadapters/{}/profile/{}/validate'.format(
             resadapter_name, name)
 
         try:
-            _, responseDict = self.sendSessionRequest(url)
+            responseDict = self._client.get(url)
 
             return responseDict
 
@@ -77,41 +84,45 @@ class ResourceAdapterConfigurationWsApi(TortugaWsApi):
             raise TortugaException(exception=ex)
 
     def get_profile_names(self, resadapter_name):
-        url = 'v1/resourceadapters/{0}/profile/'.format(resadapter_name)
+        url = 'resourceadapters/{0}/profile/'.format(resadapter_name)
 
         try:
-            _, responseDict = self.sendSessionRequest(url, method='GET')
+            responseDict = self._client.get(url)
+
             return responseDict
+
         except TortugaException:
             raise
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
     def delete(self, resadapter_name, name):
-        url = 'v1/resourceadapters/{0}/profile/{1}'.format(
+        url = 'resourceadapters/{0}/profile/{1}'.format(
             resadapter_name, name)
 
         try:
-            _, responseDict = self.sendSessionRequest(url, method='DELETE')
+            responseDict = self._client.delete(url)
 
             return responseDict
+
         except TortugaException:
             raise
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
     def update(self, resadapter_name, name, configuration):
-        url = 'v1/resourceadapters/{0}/profile/{1}'.format(
+        url = 'resourceadapters/{0}/profile/{1}'.format(
             resadapter_name, name)
 
-        postdata = json.dumps(configuration)
-
         try:
-            _, responseDict = self.sendSessionRequest(
-                url, method='PUT', data=postdata)
+            responseDict = self._client.put(url, configuration)
 
             return responseDict
+
         except TortugaException:
             raise
+
         except Exception as ex:
             raise TortugaException(exception=ex)

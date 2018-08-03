@@ -66,6 +66,14 @@ class TortugaScript(Cli):
             action='store_false',
             help="Don't verify the API SSL certificate"
         ),
+        Argument(
+            '--json',
+            dest='fmt',
+            default='yaml',
+            action='store_const',
+            const='json',
+            help='Output as JSON',
+        )
     ]
 
     def get_command_package(self):

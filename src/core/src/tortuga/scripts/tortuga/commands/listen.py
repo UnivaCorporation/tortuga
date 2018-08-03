@@ -92,6 +92,7 @@ class WebsocketClient:
         self._url = url
         self._verify = verify
         self._websocket = None
+        self._cm = ConfigManager()
 
     async def start(self):
         """
@@ -101,8 +102,7 @@ class WebsocketClient:
         if self._url.startswith('wss:'):
             ssl_context = ssl.SSLContext()
             if self._verify:
-                ssl_context.load_verify_locations(
-                    '/etc/pki/tls/certs/ca-bundle.crt')
+                ssl_context.load_verify_locations(self._cm.getCaBundle())
             else:
                 ssl_context.check_hostname = False
                 ssl_context.verify_mode = ssl.CERT_NONE
