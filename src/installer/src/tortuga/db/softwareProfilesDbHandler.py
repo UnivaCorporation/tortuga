@@ -350,7 +350,8 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
         dbSoftwareProfile.partitions.remove(dbPartition)
 
     def get_software_profiles_with_component(
-            self, session: Session, kit_name: str, component_name: str) \
+            self, session: Session, kit_name: str, component_name: str, *,
+            kit_version: Optional[str] = None) \
         -> List[SoftwareProfile]:
         """
         Return list of software profiles with component enabled.
@@ -360,12 +361,18 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
         """
 
         try:
-            component = session.query(Component).join(Kit).filter(
-                and_(Kit.name == kit_name, Component.name == component_name)).one()
+            q = session.query(Component).join(Kit)
+
+            if kit_version:
+                q = q.filter(and_(Kit.name == kit_name,
+                                  Kit.version == kit_version))
+            else:
+                q = q.filter(Kit.name == kit_name)
+
+            return q.filter(
+                Component.name == component_name).one().softwareprofiles
         except NoResultFound:
             raise ResourceNotFound(
                 f'Component [{component_name}] (from kit [{kit_name}]) not'
                 ' found'
             )
-
-        return component.softwareprofiles
