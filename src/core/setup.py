@@ -170,7 +170,6 @@ setup(
             'startup-node=tortuga.scripts.startup_node:main',
             'tortuga=tortuga.scripts.tortuga.script:main',
             'transfer-node=tortuga.scripts.transfer_node:main',
-            'uc-tag=tortuga.scripts.uc_tag:main',
             'ucparam=tortuga.scripts.ucparam:main',
             'update-hardware-profile=tortuga.scripts.update_hardware_profile:main',
             'update-network=tortuga.scripts.update_network:main',
