@@ -1,0 +1,5 @@
+#!/bin/bash
+umask 0022
+. /etc/profile
+. /opt/rh/rh-python36/enable
+exec "$@"
