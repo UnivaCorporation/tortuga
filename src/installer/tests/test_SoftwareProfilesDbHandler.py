@@ -114,10 +114,42 @@ class TestSoftwareProfilesDbHandler(unittest.TestCase):
             self.session, 'base', 'pdsh'
         )
 
+        assert not result
+
+    def test_get_software_profiles_with_component_variation(self):
+        """
+        Test with and without 'kit_version' argument expecting
+        the same results.
+        """
+
+        result1 = SoftwareProfilesDbHandler().get_software_profiles_with_component(
+            self.session, 'base', 'core'
+        )
+
+        assert result1
+
+        result2 = SoftwareProfilesDbHandler().get_software_profiles_with_component(
+            self.session, 'base', 'core', kit_version='6.3.1'
+        )
+
+        assert result2
+
+        swprofile_names1 = [swprofile1.name for swprofile1 in result1]
+        swprofile_names2 = [swprofile2.name for swprofile2 in result2]
+
+        assert swprofile_names1 == swprofile_names2
+
+
     def test_get_software_profiles_with_component_failed(self):
         with pytest.raises(ResourceNotFound):
             SoftwareProfilesDbHandler().get_software_profiles_with_component(
                 self.session, 'base', 'installerEXAMPLE'
+            )
+
+    def test_get_software_profiles_with_component_failed2(self):
+        with pytest.raises(ResourceNotFound):
+            SoftwareProfilesDbHandler().get_software_profiles_with_component(
+                self.session, 'base', 'installerEXAMPLE', kit_version='1.2.3',
             )
 
     def test_get_software_profiles_with_component_failed2(self):
