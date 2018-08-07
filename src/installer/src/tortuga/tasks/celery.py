@@ -46,7 +46,9 @@ if 'TORTUGA_TEST' in os.environ:
 else:
     load_kits()
     kits_task_modules: List[str] = []
-    for kit_installer in get_all_kit_installers():
+    for kit_installer_class in get_all_kit_installers():
+        kit_installer = kit_installer_class()
+        kit_installer.register_event_listeners()
         kits_task_modules += kit_installer.task_modules
 
     app = Celery(
