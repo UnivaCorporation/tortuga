@@ -66,19 +66,7 @@ class DbManagerBase(TortugaObjectManager):
 
                 os.close(fd)
 
-            if self._dbConfig['engine'] == 'mysql':
-                # Set default SQLAlchemy engine arguments for MySQL
-                kwargs = {
-                    'pool_size': 10,
-                    'max_overflow': 2,
-                    'pool_recycle': 600,
-                    'echo': False,
-                    'pool_timeout': 60,
-                }
-            else:
-                kwargs = {}
-
-            self._engine = sqlalchemy.create_engine(engineURI, **kwargs)
+            self._engine = sqlalchemy.create_engine(engineURI)
         else:
             self._engine = engine
 
