@@ -51,8 +51,6 @@ class DbManagerBase(TortugaObjectManager):
     def __init__(self, engine=None):
         super(DbManagerBase, self).__init__()
 
-        self.Session = None
-
         if not engine:
             self._cm = ConfigManager()
 
@@ -83,6 +81,9 @@ class DbManagerBase(TortugaObjectManager):
             self._engine = sqlalchemy.create_engine(engineURI, **kwargs)
         else:
             self._engine = engine
+
+        self.Session = sqlalchemy.orm.scoped_session(
+            sqlalchemy.orm.sessionmaker(bind=self.engine))
 
     def _map_db_tables(self):
         #
@@ -256,8 +257,6 @@ class DbManagerBase(TortugaObjectManager):
 
     def openSession(self):
         """ Open db session. """
-        session_factory = sqlalchemy.orm.sessionmaker(bind=self.engine)
-        self.Session = sqlalchemy.orm.scoped_session(session_factory)
 
         return self.Session()
 
