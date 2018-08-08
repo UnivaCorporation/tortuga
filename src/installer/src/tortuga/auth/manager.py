@@ -17,12 +17,11 @@ from passlib.hash import pbkdf2_sha256
 from sqlalchemy.orm.session import Session
 from tortuga.config.configManager import ConfigManager
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
-from tortuga.types import Singleton
 
 from .principal import AuthPrincipal
 
 
-class AuthManager(TortugaObjectManager, Singleton):
+class AuthManager(TortugaObjectManager):
     def __init__(self, *, session: Session):
         super(AuthManager, self).__init__()
 

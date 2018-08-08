@@ -30,12 +30,11 @@ from tortuga.objects.hardwareProfile import HardwareProfile
 from tortuga.objects.networkDevice import NetworkDevice
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.os_utility import osUtility
-from tortuga.types import Singleton
 from tortuga.utility import validation
 from tortuga.utility.network import fixNetworkDeviceName
 
 
-class HardwareProfileManager(TortugaObjectManager, Singleton):
+class HardwareProfileManager(TortugaObjectManager):
     def __init__(self):
         super(HardwareProfileManager, self).__init__()
 

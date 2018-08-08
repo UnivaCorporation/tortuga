@@ -19,7 +19,6 @@ import subprocess
 from typing import Union
 
 from tortuga.objects.provisioningInfo import ProvisioningInfo
-from tortuga.types import Singleton
 
 
 # Defaults.
@@ -116,10 +115,10 @@ def getfqdn():
     return fqdn
 
 
-class ConfigManager(dict, Singleton): \
+class ConfigManager(dict): \
         # pylint: disable=too-many-public-methods
     """
-    Singleton class used for keeping system configuration data. The class
+    Class used for keeping system configuration data. The class
     initializes its data using predefined defaults, or from the following
     environment variables:
         TORTUGA_ROOT

@@ -16,10 +16,9 @@
 
 from tortuga.kit.registry import get_all_kit_installers
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
-from tortuga.types import Singleton
 
 
-class KitActionsManager(TortugaObjectManager, Singleton):
+class KitActionsManager(TortugaObjectManager):
     def get_cloud_config(self, node, hardware_profile, software_profile,
                          user_data, *args, **kwargs):
         self.getLogger().debug(

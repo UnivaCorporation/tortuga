@@ -16,12 +16,11 @@ import base64
 import time
 import uuid
 
-from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.config.configManager import ConfigManager
-from tortuga.types import Singleton
+from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 
 
-class ActionManager(TortugaObjectManager, Singleton):
+class ActionManager(TortugaObjectManager):
     def __init__(self):
         super(ActionManager, self).__init__()
 

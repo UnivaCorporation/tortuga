@@ -48,7 +48,6 @@ from tortuga.os_utility import osUtility
 from tortuga.os_utility.osUtility import getOsObjectFactory, mapOsName
 from tortuga.repo import repoManager
 from tortuga.softwareprofile import softwareProfileFactory
-from tortuga.types import Singleton
 from tortuga.utility.actionManager import ActionManager
 
 from .eula import BaseEulaValidator
@@ -56,7 +55,7 @@ from .loader import load_kits
 from .registry import get_kit_installer
 
 
-class KitManager(TortugaObjectManager, Singleton):
+class KitManager(TortugaObjectManager):
     def __init__(self, eula_validator=None):
         super(KitManager, self).__init__()
 

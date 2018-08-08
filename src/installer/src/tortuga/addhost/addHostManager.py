@@ -31,11 +31,10 @@ from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.objectstore.manager import ObjectStoreManager
 from tortuga.resourceAdapter import resourceAdapterFactory
-from tortuga.types import Singleton
 from tortuga.wsapi.syncWsApi import SyncWsApi
 
 
-class AddHostManager(TortugaObjectManager, Singleton):
+class AddHostManager(TortugaObjectManager):
     def __init__(self):
         super(AddHostManager, self).__init__()
 

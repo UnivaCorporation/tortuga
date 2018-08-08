@@ -16,6 +16,7 @@ import os
 import shutil
 from typing import Dict, Optional
 
+from sqlalchemy.orm.session import Session
 from tortuga.config.configManager import ConfigManager
 from tortuga.db.componentDbApi import ComponentDbApi
 from tortuga.db.globalParameterDbApi import GlobalParameterDbApi
@@ -31,12 +32,10 @@ from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.os_utility import osUtility
 from tortuga.puppet import Puppet
-from tortuga.types import Singleton
 from tortuga.utility import validation
-from sqlalchemy.orm.session import Session
 
 
-class SoftwareProfileManager(TortugaObjectManager, Singleton): \
+class SoftwareProfileManager(TortugaObjectManager): \
         # pylint: disable=too-many-public-methods
 
     BASE_KIT_NAME = 'base'

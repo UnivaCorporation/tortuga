@@ -18,12 +18,11 @@ from tortuga.db.networkDbApi import NetworkDbApi
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
-from tortuga.types import Singleton
 
 
-class NetworkManager(TortugaObjectManager, Singleton):
+class NetworkManager(TortugaObjectManager):
     """
-    Singleton class for network management.
+    Class for network management.
 
     Usage:
         # Getting db instance.

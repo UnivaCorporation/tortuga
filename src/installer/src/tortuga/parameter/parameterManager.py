@@ -14,13 +14,12 @@
 
 # pylint: disable=no-member
 
-from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.db.globalParameterDbApi import GlobalParameterDbApi
 from tortuga.exceptions.parameterNotFound import ParameterNotFound
-from tortuga.types import Singleton
+from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 
 
-class ParameterManager(TortugaObjectManager, Singleton):
+class ParameterManager(TortugaObjectManager):
     def __init__(self):
         super(ParameterManager, self).__init__()
 
