@@ -20,10 +20,14 @@ from celery import Celery
 from celery.contrib.testing.app import TestApp
 from tortuga.kit.loader import load_kits
 from tortuga.kit.registry import get_all_kit_installers
+from tortuga.db.dbManager import DbManager
 
 
 logging.getLogger('tortuga').setLevel(logging.DEBUG)
 logging.getLogger('tortuga_kits').setLevel(logging.DEBUG)
+
+
+dbm = DbManager()
 
 
 #

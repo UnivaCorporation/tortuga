@@ -14,10 +14,11 @@
 
 # pylint: disable=no-member
 
-from tortuga.softwareprofile.softwareProfileManager \
-    import SoftwareProfileManager
-from tortuga.utility.tortugaApi import TortugaApi
+from sqlalchemy.orm.session import Session
 from tortuga.exceptions.tortugaException import TortugaException
+from tortuga.softwareprofile.softwareProfileManager import \
+    SoftwareProfileManager
+from tortuga.utility.tortugaApi import TortugaApi
 
 
 class SoftwareProfileApi(TortugaApi): \
@@ -31,7 +32,8 @@ class SoftwareProfileApi(TortugaApi): \
 
         self._softwareProfileManager = SoftwareProfileManager()
 
-    def getSoftwareProfile(self, softwareProfileName, optionDict=None):
+    def getSoftwareProfile(self, session: Session, softwareProfileName,
+                           optionDict=None):
         """
         Get software profile information
 
@@ -42,15 +44,16 @@ class SoftwareProfileApi(TortugaApi): \
                 TortugaException
         """
         try:
-            return self._softwareProfileManager.\
-                getSoftwareProfile(softwareProfileName, optionDict)
+            return self._softwareProfileManager.getSoftwareProfile(
+                session, softwareProfileName, optionDict)
         except TortugaException as ex:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
 
-    def getSoftwareProfileById(self, softwareProfileId, optionDict=None):
+    def getSoftwareProfileById(self, session: Session, softwareProfileId,
+                               optionDict=None):
         """
         Get software profile information
 
@@ -61,15 +64,15 @@ class SoftwareProfileApi(TortugaApi): \
                 TortugaException
         """
         try:
-            return self._softwareProfileManager.\
-                getSoftwareProfileById(softwareProfileId, optionDict)
+            return self._softwareProfileManager.getSoftwareProfileById(
+                session, softwareProfileId, optionDict)
         except TortugaException as ex:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
 
-    def deleteSoftwareProfile(self, softwareProfileName):
+    def deleteSoftwareProfile(self, session: Session, softwareProfileName):
         """
         Delete the specified software profile
 
@@ -80,28 +83,28 @@ class SoftwareProfileApi(TortugaApi): \
                 TortugaException
         """
         try:
-            self._softwareProfileManager.\
-                deleteSoftwareProfile(softwareProfileName)
+            self._softwareProfileManager.deleteSoftwareProfile(
+                session, softwareProfileName)
         except TortugaException as ex:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
 
-    def getSoftwareProfileList(self, tags=None):
+    def getSoftwareProfileList(self, session: Session, tags=None):
         """
         Returns a list of all software profiles.
         """
         try:
-            return self._softwareProfileManager.\
-                getSoftwareProfileList(tags=tags)
+            return self._softwareProfileManager.getSoftwareProfileList(
+                session, tags=tags)
         except TortugaException as ex:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
 
-    def getIdleSoftwareProfileList(self):
+    def getIdleSoftwareProfileList(self, session: Session):
         """
         Get software profile information
 
@@ -111,15 +114,14 @@ class SoftwareProfileApi(TortugaApi): \
                 TortugaException
         """
         try:
-            return self._softwareProfileManager.\
-                getIdleSoftwareProfileList()
+            return self._softwareProfileManager.getIdleSoftwareProfileList(session)
         except TortugaException as ex:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
 
-    def setIdleState(self, softwareProfileName, state):
+    def setIdleState(self, session: Session, softwareProfileName, state):
         """
         Get idle state information
 
@@ -129,15 +131,15 @@ class SoftwareProfileApi(TortugaApi): \
                 TortugaException
         """
         try:
-            self._softwareProfileManager.\
-                setIdleState(softwareProfileName, state)
+            self._softwareProfileManager.setIdleState(
+                session, softwareProfileName, state)
         except TortugaException as ex:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
 
-    def getEnabledComponentList(self, name):
+    def getEnabledComponentList(self, session: Session, name):
         """
         Get enabled component list..
 
@@ -148,15 +150,15 @@ class SoftwareProfileApi(TortugaApi): \
                 TortugaException
         """
         try:
-            return self._softwareProfileManager.\
-                getEnabledComponentList(name)
+            return self._softwareProfileManager.getEnabledComponentList(
+                session, name)
         except TortugaException as ex:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
 
-    def getPartitionList(self, softwareProfileName):
+    def getPartitionList(self, session: Session, softwareProfileName):
         """
         Get partition list for a given softwareprofile
 
@@ -167,15 +169,15 @@ class SoftwareProfileApi(TortugaApi): \
                 TortugaException
         """
         try:
-            return self._softwareProfileManager.\
-                getPartitionList(softwareProfileName)
+            return self._softwareProfileManager.getPartitionList(
+                session, softwareProfileName)
         except TortugaException as ex:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
 
-    def addUsableHardwareProfileToSoftwareProfile(self,
+    def addUsableHardwareProfileToSoftwareProfile(self, session: Session,
                                                   hardwareProfileName,
                                                   softwareProfileName):
         """
@@ -189,9 +191,8 @@ class SoftwareProfileApi(TortugaApi): \
                 TortugaException
         """
         try:
-            return self._softwareProfileManager.\
-                addUsableHardwareProfileToSoftwareProfile(
-                    hardwareProfileName, softwareProfileName)
+            return self._softwareProfileManager.addUsableHardwareProfileToSoftwareProfile(
+                session, hardwareProfileName, softwareProfileName)
         except TortugaException as ex:
             raise
         except Exception as ex:
@@ -199,6 +200,7 @@ class SoftwareProfileApi(TortugaApi): \
             raise TortugaException(exception=ex)
 
     def deleteUsableHardwareProfileFromSoftwareProfile(self,
+                                                       session: Session,
                                                        hardwareProfileName,
                                                        softwareProfileName):
         """
@@ -212,16 +214,15 @@ class SoftwareProfileApi(TortugaApi): \
                 TortugaException
         """
         try:
-            self._softwareProfileManager.\
-                deleteUsableHardwareProfileFromSoftwareProfile(
-                    hardwareProfileName, softwareProfileName)
+            self._softwareProfileManager.deleteUsableHardwareProfileFromSoftwareProfile(
+                session, hardwareProfileName, softwareProfileName)
         except TortugaException as ex:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
 
-    def addAdmin(self, softwareProfileName, adminUsername):
+    def addAdmin(self, session: Session, softwareProfileName, adminUsername):
         """
         Add an admin as an authorized user.
 
@@ -233,15 +234,14 @@ class SoftwareProfileApi(TortugaApi): \
                 SoftwareProfileNotFound
         """
         try:
-            self._softwareProfileManager.\
-                addAdmin(softwareProfileName, adminUsername)
+            self._softwareProfileManager.addAdmin(session, softwareProfileName, adminUsername)
         except TortugaException as ex:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
 
-    def deleteAdmin(self, softwareProfileName, adminUsername):
+    def deleteAdmin(self, session: Session, softwareProfileName, adminUsername):
         """
         Remove an admin as an authorized user.
 
@@ -253,15 +253,15 @@ class SoftwareProfileApi(TortugaApi): \
                 SoftwareProfileNotFound
         """
         try:
-            self._softwareProfileManager.\
-                deleteAdmin(softwareProfileName, adminUsername)
+            self._softwareProfileManager.deleteAdmin(
+                session, softwareProfileName, adminUsername)
         except TortugaException as ex:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
 
-    def updateSoftwareProfile(self, softwareProfileObject):
+    def updateSoftwareProfile(self, session: Session, softwareProfileObject):
         """
         Update a software profile in the database that matches the passed
         in software profile object.  The ID is used as the primary matching
@@ -273,27 +273,29 @@ class SoftwareProfileApi(TortugaApi): \
                 TortugaException
         """
         try:
-            self._softwareProfileManager.\
-                updateSoftwareProfile(softwareProfileObject)
+            self._softwareProfileManager.updateSoftwareProfile(
+                session, softwareProfileObject)
         except TortugaException as ex:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
 
-    def createSoftwareProfile(self, swProfileSpec, settingsDict=None):
+    def createSoftwareProfile(self, session: Session, swProfileSpec,
+                              settingsDict=None):
         try:
             self._softwareProfileManager.createSoftwareProfile(
-                swProfileSpec, settingsDict)
+                session, swProfileSpec, settingsDict)
         except TortugaException as ex:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
 
-    def getNodeList(self, softwareProfileName):
+    def getNodeList(self, session: Session, softwareProfileName):
         try:
             return self._softwareProfileManager.getNodeList(
+                session,
                 softwareProfileName)
         except TortugaException as ex:
             raise
@@ -301,10 +303,12 @@ class SoftwareProfileApi(TortugaApi): \
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
 
-    def enableComponent(self, softwareProfileName, kitName, kitVersion,
+    def enableComponent(self, session: Session, softwareProfileName, kitName,
+                        kitVersion,
                         kitIteration, compName, compVersion=None, sync=True):
         try:
             return self._softwareProfileManager.enableComponent(
+                session,
                 softwareProfileName,
                 kitName,
                 kitVersion,
@@ -323,10 +327,12 @@ class SoftwareProfileApi(TortugaApi): \
 
             raise
 
-    def disableComponent(self, softwareProfileName, kitName, kitVersion,
-                         kitIteration, compName, compVersion=None, sync=True):
+    def disableComponent(self, session: Session, softwareProfileName, kitName,
+                         kitVersion, kitIteration, compName, compVersion=None,
+                         sync=True):
         try:
             return self._softwareProfileManager.disableComponent(
+                session,
                 softwareProfileName,
                 kitName,
                 kitVersion,
@@ -340,22 +346,21 @@ class SoftwareProfileApi(TortugaApi): \
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
 
-    def copySoftwareProfile(self, srcSoftwareProfileName,
+    def copySoftwareProfile(self, session: Session, srcSoftwareProfileName,
                             dstSoftwareProfileName):
         try:
-            return self._softwareProfileManager.\
-                copySoftwareProfile(
-                    srcSoftwareProfileName, dstSoftwareProfileName)
+            return self._softwareProfileManager.copySoftwareProfile(
+                session, srcSoftwareProfileName, dstSoftwareProfileName)
         except TortugaException as ex:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
 
-    def getUsableNodes(self, softwareProfileName):
+    def getUsableNodes(self, session: Session, softwareProfileName):
         try:
             return self._softwareProfileManager.getUsableNodes(
-                softwareProfileName)
+                session, softwareProfileName)
         except TortugaException as ex:
             raise
         except Exception as ex:

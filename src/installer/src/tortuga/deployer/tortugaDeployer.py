@@ -30,6 +30,7 @@ import time
 import yaml
 from six import print_
 
+from sqlalchemy.orm.session import Session
 from tortuga.admin.api import AdminApi
 from tortuga.config.configManager import ConfigManager, getfqdn
 from tortuga.deployer import dbUtility
@@ -684,19 +685,24 @@ class TortugaDeployer(object): \
 
             self.puppetBootstrap()
 
-            self.initDatabase()
+            dbm, session = self.initDatabase()
 
-            self.createAdminUser(
-                self._settings['adminUsername'],
-                self._settings['adminPassword'])
+            try:
 
-            self.installKits()
+                self.createAdminUser(
+                    session,
+                    self._settings['adminUsername'],
+                    self._settings['adminPassword'])
 
-            self.enableComponents()
+                self.installKits(dbm)
 
-            self.prepSudo()
+                self.enableComponents(session)
+            finally:
+                dbm.closeSession()
 
-            self.puppetApply()
+                self.prepSudo()
+
+                self.puppetApply()
 
             self.out('\nTortuga installation completed successfully!\n\n')
 
@@ -830,7 +836,7 @@ class TortugaDeployer(object): \
 
         self._logger.debug('Puppet pre-configuration completed')
 
-    def initDatabase(self):
+    def initDatabase(self) -> Session:
         msg = _('Initializing database')
 
         self._logger.info(msg)
@@ -846,27 +852,30 @@ class TortugaDeployer(object): \
         # create database
         dbm.init_database()
 
+        session = dbm.openSession()
+
         # Prime the database previously created as part of the bootstrap
-        with dbm.session() as session:
-            try:
-                dbUtility.primeDb(session, self._settings)
+        try:
+            dbUtility.primeDb(session, self._settings)
 
-                dbUtility.init_global_parameters(session, self._settings)
+            dbUtility.init_global_parameters(session, self._settings)
 
-                print_(_('done'))
+            print_(_('done'))
 
-                session.commit()
-            except Exception as exc:  # pylint: disable=broad-except
-                session.rollback()
+            session.commit()
+        except Exception as exc:  # pylint: disable=broad-except
+            session.rollback()
 
-                print_(_('failed.'))
+            print_(_('failed.'))
 
-                print_(_('Exception raised initializing database:') +
-                       ' {0}'.format(exc), file=sys.stderr)
+            print_(_('Exception raised initializing database:') +
+                    ' {0}'.format(exc), file=sys.stderr)
 
         self._logger.debug('Done initializing database')
 
-    def installKits(self):
+        return dbm, session
+
+    def installKits(self, dbm):
         self._logger.info('Installing kits')
 
         self.out('\n' + _('Installing kits') + '...\n')
@@ -908,7 +917,7 @@ class TortugaDeployer(object): \
                 continue
 
             try:
-                kitApi.installKitPackage(kitPackage)
+                kitApi.installKitPackage(dbm, kitPackage)
             except EulaAcceptanceRequired:
                 msg = 'Kit [%s] requires EULA acceptance. Skipping.' % (
                     kitPackage)
@@ -927,7 +936,7 @@ class TortugaDeployer(object): \
 
         load_kits()
 
-    def enableComponents(self):
+    def enableComponents(self, session: Session):
         """
         Raises:
             ConfigurationError
@@ -935,7 +944,7 @@ class TortugaDeployer(object): \
 
         self._logger.info('Enabling \'installer\' component')
 
-        base_kit = KitApi().getKit('base')
+        base_kit = KitApi().getKit(session, 'base')
 
         enabledComponents = ['installer']
 
@@ -943,10 +952,11 @@ class TortugaDeployer(object): \
         components = [c for c in base_kit.getComponentList()
                       if c.getName() in enabledComponents]
 
-        installerNode = NodeApi().getInstallerNode()
+        installerNode = NodeApi().getInstallerNode(session)
 
         for component in components:
             SoftwareProfileApi().enableComponent(
+                session,
                 installerNode.getSoftwareProfile().getName(),
                 base_kit.getName(),
                 base_kit.getVersion(),
@@ -1001,7 +1011,7 @@ class TortugaDeployer(object): \
 
         return username, password
 
-    def createAdminUser(self, username, password):
+    def createAdminUser(self, session: Session, username, password):
         msg = _('Adding administrative user')
 
         self._logger.info(msg)
@@ -1009,6 +1019,7 @@ class TortugaDeployer(object): \
         self.out('\n' + msg + '... ')
 
         AdminApi().addAdmin(
+            session,
             username, password, False,
             description='Added by tortuga-setup')
 

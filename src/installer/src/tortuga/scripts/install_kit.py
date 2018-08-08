@@ -17,6 +17,7 @@ import subprocess
 import sys
 
 from tortuga.cli.tortugaCli import TortugaCli
+from tortuga.db.dbManager import DbManager
 from tortuga.kit.kitApiFactory import getKitApi
 
 
@@ -93,16 +94,14 @@ class InstallKitCli(TortugaCli):
             sys.exit(1)
 
     def installKitHelper(self, api, key=None, accept_eula=False):
+        dbm = DbManager()
+
         args = self.getArgs()
 
         if args.package_uri:
-            return api.installKitPackage(self.getArgs().package_uri, key)
+            return api.installKitPackage(dbm, self.getArgs().package_uri, key)
 
-        name = args.name
-        version = args.version
-        iteration = args.iteration
-
-        return api.installKit(name, version, iteration, key)
+        return api.installKit(dbm, args.name, args.version, args.iteration, key)
 
 
 def main():

@@ -24,9 +24,9 @@ from pathlib import Path
 
 import cherrypy
 from cherrypy.process import plugins
-
 from tortuga.kit.loader import load_kits
 from tortuga.types.application import Application
+
 from . import controllers, controllers_v2, rootRouteMapper
 from .auth import methods as auth_methods
 from .auth.authenticator import CherryPyAuthenticator
@@ -37,6 +37,7 @@ from .tools.database import DatabaseTool
 
 
 _app = Application()
+
 
 # read logging configuration
 log_conf_file = Path(_app.cm.getEtcDir()) / 'tortugawsd.log.conf'

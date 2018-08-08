@@ -21,7 +21,6 @@ from sqlalchemy.orm.session import Session
 from tortuga.addhost.addHostManager import AddHostManager
 from tortuga.addhost.addHostServerLocal import AddHostServerLocal
 from tortuga.config.configManager import ConfigManager
-from tortuga.db.dbManager import DbManager
 from tortuga.db.hardwareProfileDbApi import HardwareProfileDbApi
 from tortuga.db.models.hardwareProfile import \
     HardwareProfile as HardwareProfileModel
@@ -76,8 +75,6 @@ class NodeManager(TortugaObjectManager): \
         self._nodesDbHandler = NodesDbHandler()
 
         load_kits()
-
-        self._kitmgr = KitActionsManager()
 
     def __validateHostName(self, hostname: str, name_format: str) -> None:
         """
@@ -159,7 +156,7 @@ class NodeManager(TortugaObjectManager): \
         # Return the new node
         return node
 
-    def getNode(self, name, optionDict: OptionDict = None) \
+    def getNode(self, session: Session, name, optionDict: OptionDict = None) \
             -> Node:
         """
         Get node by name
@@ -169,10 +166,12 @@ class NodeManager(TortugaObjectManager): \
         """
 
         return self.__populate_nodes(
+            session,
             [self._nodeDbApi.getNode(
-                name, optionDict=get_default_relations(optionDict))])[0]
+                session, name,
+                optionDict=get_default_relations(optionDict))])[0]
 
-    def getNodeById(self, nodeId: int,
+    def getNodeById(self, session: Session, nodeId: int,
                     optionDict: OptionDict = None) -> Node:
         """
         Get node by node id
@@ -182,11 +181,13 @@ class NodeManager(TortugaObjectManager): \
         """
 
         return self.__populate_nodes(
+            session,
             [self._nodeDbApi.getNodeById(
+                session,
                 int(nodeId),
                 optionDict=get_default_relations(optionDict))])[0]
 
-    def getNodeByIp(self, ip: str,
+    def getNodeByIp(self, session: Session, ip: str,
                     optionDict: Dict[str, bool] = None) -> Node:
         """
         Get node by IP address
@@ -196,10 +197,13 @@ class NodeManager(TortugaObjectManager): \
         """
 
         return self.__populate_nodes(
+            session,
             [self._nodeDbApi.getNodeByIp(
-                ip, optionDict=get_default_relations(optionDict))])[0]
+                session,
+                ip,
+                optionDict=get_default_relations(optionDict))])[0]
 
-    def getNodeList(self, tags=None,
+    def getNodeList(self, session, tags=None,
                     optionDict: OptionDict = None,
                     deleting: bool = False) \
             -> List[Node]:
@@ -208,14 +212,16 @@ class NodeManager(TortugaObjectManager): \
 
         """
         return self.__populate_nodes(
+            session,
             self._nodeDbApi.getNodeList(
+                session,
                 tags=tags,
                 optionDict=get_default_relations(optionDict),
                 deleting=deleting
             )
         )
 
-    def __populate_nodes(self, nodes: List[Node]) -> List[Node]:
+    def __populate_nodes(self, session: Session, nodes: List[Node]) -> List[Node]:
         """
         Expand non-database fields in Node objects
 
@@ -240,9 +246,11 @@ class NodeManager(TortugaObjectManager): \
 
                 adapter_map[adapter_name] = ResourceAdapterClass
 
+            adapter = ResourceAdapterClass()
+            adapter.session = session
+
             # Update Node object
-            node.setVcpus(
-                ResourceAdapterClass().get_node_vcpus(node.getName()))
+            node.setVcpus(adapter.get_node_vcpus(node.getName()))
 
             if not node.getSoftwareProfile():
                 continue
@@ -253,7 +261,7 @@ class NodeManager(TortugaObjectManager): \
             if metadata is None:
                 metadata = \
                     SoftwareProfileManager().get_software_profile_metadata(
-                        node.getSoftwareProfile().getName())
+                        session, node.getSoftwareProfile().getName())
 
                 swprofile_map[swprofile_name] = metadata
 
@@ -261,14 +269,12 @@ class NodeManager(TortugaObjectManager): \
 
         return nodes
 
-    def updateNode(self, nodeName, updateNodeRequest):
+    def updateNode(self, session, nodeName, updateNodeRequest):
         """
         Calls updateNode() method of resource adapter
         """
 
         self.getLogger().debug('updateNode(): name=[{0}]'.format(nodeName))
-
-        session = DbManager().openSession()
 
         try:
             node = self._nodesDbHandler.getNode(session, nodeName)
@@ -324,10 +330,8 @@ class NodeManager(TortugaObjectManager): \
             session.rollback()
 
             raise
-        finally:
-            DbManager().closeSession()
 
-    def updateNodeStatus(self, nodeName: str,
+    def updateNodeStatus(self, session: Session, nodeName: str,
                          node_state: Optional[str] = None,
                          bootFrom: int = None):
         """Update node status
@@ -348,74 +352,73 @@ class NodeManager(TortugaObjectManager): \
             ' bootFrom=[{%s}]', nodeName, node_state, value
         )
 
-        with DbManager().session() as session:
-            dbNode = self._nodesDbHandler.getNode(session, nodeName)
+        dbNode = self._nodesDbHandler.getNode(session, nodeName)
 
-            #
-            # Capture previous state and node data in dict form for the
-            # event later on
-            #
-            previous_state = dbNode.state
-            node_dict = Node.getFromDbDict(dbNode.__dict__).getCleanDict()
+        #
+        # Capture previous state and node data in dict form for the
+        # event later on
+        #
+        previous_state = dbNode.state
+        node_dict = Node.getFromDbDict(dbNode.__dict__).getCleanDict()
 
-            # Bitfield representing node changes (0 = state change,
-            # 1 = bootFrom # change)
-            changed = 0
+        # Bitfield representing node changes (0 = state change,
+        # 1 = bootFrom # change)
+        changed = 0
 
-            if node_state is not None and node_state != dbNode.state:
-                # 'state' changed
-                changed |= 1
+        if node_state is not None and node_state != dbNode.state:
+            # 'state' changed
+            changed |= 1
 
-            if bootFrom is not None and bootFrom != dbNode.bootFrom:
-                # 'bootFrom' changed
-                changed |= 2
+        if bootFrom is not None and bootFrom != dbNode.bootFrom:
+            # 'bootFrom' changed
+            changed |= 2
 
-            if changed:
-                # Create custom log message
-                msg = 'Node [%s] state change:' % (dbNode.name)
+        if changed:
+            # Create custom log message
+            msg = 'Node [%s] state change:' % (dbNode.name)
 
-                if changed & 1:
-                    msg += ' state: [%s] -> [%s]' % (dbNode.state, node_state)
+            if changed & 1:
+                msg += ' state: [%s] -> [%s]' % (dbNode.state, node_state)
 
-                    dbNode.state = node_state
-                    node_dict['state'] = node_state
+                dbNode.state = node_state
+                node_dict['state'] = node_state
 
-                if changed & 2:
-                    msg += ' bootFrom: [%d] -> [%d]' % (
-                        dbNode.bootFrom, bootFrom)
+            if changed & 2:
+                msg += ' bootFrom: [%d] -> [%d]' % (
+                    dbNode.bootFrom, bootFrom)
 
-                    dbNode.bootFrom = bootFrom
+                dbNode.bootFrom = bootFrom
 
-                self.getLogger().info(msg)
-            else:
-                self.getLogger().info(
-                    'Updated timestamp for node [%s]' % (dbNode.name))
+            self.getLogger().info(msg)
+        else:
+            self.getLogger().info(
+                'Updated timestamp for node [%s]' % (dbNode.name))
 
-            dbNode.lastUpdate = time.strftime(
-                '%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+        dbNode.lastUpdate = time.strftime(
+            '%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
 
-            result = bool(changed)
+        result = bool(changed)
 
-            # Only change local boot configuration if the hardware profile is
-            # not marked as 'remote' and we're not acting on the installer
-            # node.
-            if dbNode.softwareprofile and \
-                    dbNode.softwareprofile.type != 'installer' and \
-                    dbNode.hardwareprofile.location != 'remote':
-                # update local boot configuration for on-premise nodes
-                self._bhm.writePXEFile(dbNode, localboot=bootFrom)
+        # Only change local boot configuration if the hardware profile is
+        # not marked as 'remote' and we're not acting on the installer
+        # node.
+        if dbNode.softwareprofile and \
+                dbNode.softwareprofile.type != 'installer' and \
+                dbNode.hardwareprofile.location != 'remote':
+            # update local boot configuration for on-premise nodes
+            self._bhm.writePXEFile(dbNode, localboot=bootFrom)
 
-            session.commit()
+        session.commit()
 
-            #
-            # If the node state has changed, fire the node state changed
-            # event
-            #
-            if state and (previous_state != state):
-                NodeStateChanged.fire(node=node_dict,
-                                      previous_state=previous_state)
+        #
+        # If the node state has changed, fire the node state changed
+        # event
+        #
+        if state and (previous_state != state):
+            NodeStateChanged.fire(node=node_dict,
+                                  previous_state=previous_state)
 
-            return result
+        return result
 
     def __process_nodeErrorDict(self, nodeErrorDict):
         result = {}
@@ -440,7 +443,7 @@ class NodeManager(TortugaObjectManager): \
 
         return result, nodes_deleted
 
-    def deleteNode(self, nodespec: str, force: bool = False):
+    def deleteNode(self, session, nodespec: str, force: bool = False):
         """
         Delete node by nodespec
 
@@ -448,58 +451,60 @@ class NodeManager(TortugaObjectManager): \
             NodeNotFound
         """
 
-        with DbManager().session() as session:
-            try:
-                nodes = self._nodesDbHandler.expand_nodespec(
-                    session, nodespec, include_installer=False)
-                if not nodes:
-                    raise NodeNotFound(
-                        'No nodes matching nodespec [%s]' % (nodespec))
+        kitmgr = KitActionsManager()
+        kitmgr.session = session
 
-                self.__validate_delete_nodes_request(nodes, force)
+        try:
+            nodes = self._nodesDbHandler.expand_nodespec(
+                session, nodespec, include_installer=False)
+            if not nodes:
+                raise NodeNotFound(
+                    'No nodes matching nodespec [%s]' % (nodespec))
 
-                self.__preDeleteHost(nodes)
+            self.__validate_delete_nodes_request(nodes, force)
 
-                nodeErrorDict = self.__delete_node(session, nodes)
+            self.__preDeleteHost(kitmgr, nodes)
 
-                # REALLY!?!? Convert a list of Nodes objects into a list of
-                # node names so we can report the list back to the end-user.
-                # This needs to be FIXED!
+            nodeErrorDict = self.__delete_node(session, nodes)
 
-                result, nodes_deleted = self.__process_nodeErrorDict(nodeErrorDict)
+            # REALLY!?!? Convert a list of Nodes objects into a list of
+            # node names so we can report the list back to the end-user.
+            # This needs to be FIXED!
 
-                session.commit()
+            result, nodes_deleted = self.__process_nodeErrorDict(nodeErrorDict)
 
-                # ============================================================
-                # Perform actions *after* node deletion(s) have been committed
-                # to database.
-                # ============================================================
+            session.commit()
 
-                self.__postDeleteHost(nodes_deleted)
+            # ============================================================
+            # Perform actions *after* node deletion(s) have been committed
+            # to database.
+            # ============================================================
 
-                addHostSessions = set(
-                    [tmpnode['addHostSession'] for tmpnode in nodes_deleted]
-                )
+            self.__postDeleteHost(kitmgr, nodes_deleted)
 
-                if addHostSessions:
-                    AddHostManager().delete_sessions(addHostSessions)
+            addHostSessions = set(
+                [tmpnode['addHostSession'] for tmpnode in nodes_deleted]
+            )
 
-                for nodeName in result['NodesDeleted']:
-                    # Remove the Puppet cert
-                    self._bhm.deletePuppetNodeCert(nodeName)
+            if addHostSessions:
+                AddHostManager().delete_sessions(addHostSessions)
 
-                    self._bhm.nodeCleanup(nodeName)
+            for nodeName in result['NodesDeleted']:
+                # Remove the Puppet cert
+                self._bhm.deletePuppetNodeCert(nodeName)
 
-                    self.getLogger().info('Node [%s] deleted' % (nodeName))
+                self._bhm.nodeCleanup(nodeName)
 
-                # Schedule a cluster update
-                self.__scheduleUpdate()
+                self.getLogger().info('Node [%s] deleted' % (nodeName))
 
-                return result
-            except Exception:
-                session.rollback()
+            # Schedule a cluster update
+            self.__scheduleUpdate()
 
-                raise
+            return result
+        except Exception:
+            session.rollback()
+
+            raise
 
     def __validate_delete_nodes_request(self, nodes: List[NodeModel],
                                         force: bool):
@@ -611,6 +616,7 @@ class NodeManager(TortugaObjectManager): \
         for hwprofile, hwprofile_nodes in nodes.items():
             # Get the ResourceAdapter
             adapter = self.__get_resource_adapter(hwprofile)
+            adapter.session = session
 
             # Call the resource adapter
             adapter.deleteNode(hwprofile_nodes)
@@ -682,18 +688,18 @@ class NodeManager(TortugaObjectManager): \
 
         return result, nodes_deleted
 
-    def __preDeleteHost(self, nodes):
+    def __preDeleteHost(self, kitmgr: KitActionsManager, nodes):
         self.getLogger().debug(
             '__preDeleteHost(): nodes=[%s]' % (
                 ' '.join([node.name for node in nodes])))
 
         for node in nodes:
-            self._kitmgr.pre_delete_host(
+            kitmgr.pre_delete_host(
                 node.hardwareprofile.name,
                 node.softwareprofile.name if node.softwareprofile else None,
                 nodes=[node.name])
 
-    def __postDeleteHost(self, nodes_deleted):
+    def __postDeleteHost(self, kitmgr, nodes_deleted):
         # 'nodes_deleted' is a list of dicts of the following format:
         #
         # {
@@ -714,7 +720,7 @@ class NodeManager(TortugaObjectManager): \
             return
 
         for node_dict in nodes_deleted:
-            self._kitmgr.post_delete_host(
+            kitmgr.post_delete_host(
                 node_dict['hardwareprofile'],
                 node_dict['softwareprofile']
                 if 'softwareprofile' in node_dict else None,
@@ -723,13 +729,15 @@ class NodeManager(TortugaObjectManager): \
     def __scheduleUpdate(self):
         self._syncApi.scheduleClusterUpdate()
 
-    def getInstallerNode(self, optionDict: Optional[OptionDict] = None):
+    def getInstallerNode(self, session,
+                         optionDict: Optional[OptionDict] = None):
         return self._nodeDbApi.getNode(
+            session,
             self._cm.getInstaller(),
             optionDict=get_default_relations(optionDict))
 
-    def getProvisioningInfo(self, nodeName):
-        return self._nodeDbApi.getProvisioningInfo(nodeName)
+    def getProvisioningInfo(self, session: Session, nodeName):
+        return self._nodeDbApi.getProvisioningInfo(session, nodeName)
 
     def __group_by_hwprofile(self, results: List[Dict[str, Any]]) \
             -> Dict[HardwareProfileModel, List[Dict[str, Any]]]:
@@ -807,12 +815,15 @@ class NodeManager(TortugaObjectManager): \
         )
 
         # Now call the 'refresh' action to all participatory components
-        self._kitmgr.refresh(transfer_dict)
+        kitmgr = KitActionsManager()
+        kitmgr.session = session
+
+        kitmgr.refresh(transfer_dict)
 
         return results
 
-    def transferNode(self, nodespec: str, dstSoftwareProfileName: str,
-                     bForce: bool = False):
+    def transferNode(self, session, nodespec: str,
+                     dstSoftwareProfileName: str, bForce: bool = False):
         """
         Transfer nodes defined by 'nodespec' to 'dstSoftwareProfile'
 
@@ -822,70 +833,69 @@ class NodeManager(TortugaObjectManager): \
             NodeTransferNotValid
         """
 
-        with DbManager().session() as session:
-            nodes: List[NodeModel] = self._nodesDbHandler.expand_nodespec(
-                session, nodespec)
+        nodes: List[NodeModel] = self._nodesDbHandler.expand_nodespec(
+            session, nodespec)
 
-            if not nodes:
-                raise NodeNotFound(
-                    'No nodes matching nodespec [%s]' % (nodespec))
+        if not nodes:
+            raise NodeNotFound(
+                'No nodes matching nodespec [%s]' % (nodespec))
 
-            dbDstSoftwareProfile = \
-                SoftwareProfilesDbHandler().getSoftwareProfile(
-                    session, dstSoftwareProfileName)
+        dbDstSoftwareProfile = \
+            SoftwareProfilesDbHandler().getSoftwareProfile(
+                session, dstSoftwareProfileName)
 
-            results: List[Dict[str, Any]] = []
+        results: List[Dict[str, Any]] = []
 
-            for node in nodes:
-                if node.hardwareprofile not in\
-                        dbDstSoftwareProfile.hardwareprofiles:
-                    raise ProfileMappingNotAllowed(
-                        'Node [%s] belongs to hardware profile [%s] which is'
-                        ' not allowed to use software profile [%s]' % (
-                            node.name, node.hardwareprofile.name,
-                            dbDstSoftwareProfile.name))
+        for node in nodes:
+            if node.hardwareprofile not in\
+                    dbDstSoftwareProfile.hardwareprofiles:
+                raise ProfileMappingNotAllowed(
+                    'Node [%s] belongs to hardware profile [%s] which is'
+                    ' not allowed to use software profile [%s]' % (
+                        node.name, node.hardwareprofile.name,
+                        dbDstSoftwareProfile.name))
 
-                # Check to see if the node is already using the requested
-                # software profile
-                if not bForce and not self.__isNodeStateInstalled(node):
-                    raise NodeTransferNotValid(
-                        'Node [{}] in state [{}] cannot be'
-                        ' transferred'.format(node.name, node.state))
+            # Check to see if the node is already using the requested
+            # software profile
+            if not bForce and not self.__isNodeStateInstalled(node):
+                raise NodeTransferNotValid(
+                    'Node [{}] in state [{}] cannot be'
+                    ' transferred'.format(node.name, node.state))
 
-                # Check to see if the node is already using the requested
-                # software profile
-                if node.softwareprofile == dbDstSoftwareProfile:
-                    msg = 'Node [%s] is already in software profile [%s]' % (
-                        node.name, dbDstSoftwareProfile.name)
+            # Check to see if the node is already using the requested
+            # software profile
+            if node.softwareprofile == dbDstSoftwareProfile:
+                msg = 'Node [%s] is already in software profile [%s]' % (
+                    node.name, dbDstSoftwareProfile.name)
 
-                    self.getLogger().info(msg)
+                self.getLogger().info(msg)
 
-                    raise NodeTransferNotValid(msg)
+                raise NodeTransferNotValid(msg)
 
-                self.getLogger().debug(
-                    'transferNode: Transferring node [%s] to'
-                    ' software profile [%s]' % (
-                        node.name, dbDstSoftwareProfile.name))
+            self.getLogger().debug(
+                'transferNode: Transferring node [%s] to'
+                ' software profile [%s]' % (
+                    node.name, dbDstSoftwareProfile.name))
 
-                # Check to see if the node is locked
-                if self.__isNodeLocked(node):
-                    raise NodeSoftwareProfileLocked(
-                        "Node [%s] can't be transferred while locked" % (
-                            node.name))
+            # Check to see if the node is locked
+            if self.__isNodeLocked(node):
+                raise NodeSoftwareProfileLocked(
+                    "Node [%s] can't be transferred while locked" % (
+                        node.name))
 
-                result: Dict[str, Any] = {
-                    'prev_softwareprofile': node.softwareprofile,
-                    'node': node,
-                }
+            result: Dict[str, Any] = {
+                'prev_softwareprofile': node.softwareprofile,
+                'node': node,
+            }
 
-                node.softwareprofile = dbDstSoftwareProfile
+            node.softwareprofile = dbDstSoftwareProfile
 
-                results.append(result)
+            results.append(result)
 
-            return self.__transferNodeCommon(
-                session, dbDstSoftwareProfile, results)
+        return self.__transferNodeCommon(
+            session, dbDstSoftwareProfile, results)
 
-    def transferNodes(self, srcSoftwareProfileName: str,
+    def transferNodes(self, session, srcSoftwareProfileName: str,
                       dstSoftwareProfileName: str,
                       count: int, bForce: bool = False): \
             # pylint: disable=unused-argument
@@ -898,89 +908,86 @@ class NodeManager(TortugaObjectManager): \
             NodeTransferNotValid
         """
 
-        with DbManager().session() as session:
-            # It is not necessary to specify a source software profile. If
-            # not specified, pick any eligible nodes in the hardware profile
-            # mapped to the destination software profile. Don't ask me who
-            # uses this capability, but it's here if you need it...
+        # It is not necessary to specify a source software profile. If
+        # not specified, pick any eligible nodes in the hardware profile
+        # mapped to the destination software profile. Don't ask me who
+        # uses this capability, but it's here if you need it...
 
-            dbSrcSoftwareProfile = SoftwareProfilesDbHandler().\
-                getSoftwareProfile(
-                    session, srcSoftwareProfileName) \
-                if srcSoftwareProfileName else None
+        dbSrcSoftwareProfile = SoftwareProfilesDbHandler().\
+            getSoftwareProfile(
+                session, srcSoftwareProfileName) \
+            if srcSoftwareProfileName else None
 
-            dbDstSoftwareProfile = SoftwareProfilesDbHandler().\
-                getSoftwareProfile(session, dstSoftwareProfileName)
+        dbDstSoftwareProfile = SoftwareProfilesDbHandler().\
+            getSoftwareProfile(session, dstSoftwareProfileName)
 
-            # First sanity check... ensure there is actually something to do.
-            if dbSrcSoftwareProfile == dbDstSoftwareProfile:
-                raise NodeTransferNotValid(
-                    'Source and destination software profiles are the same')
+        # First sanity check... ensure there is actually something to do.
+        if dbSrcSoftwareProfile == dbDstSoftwareProfile:
+            raise NodeTransferNotValid(
+                'Source and destination software profiles are the same')
 
-            # Get list of Unlocked nodes
-            dbUnlockedNodeList = self.__getTransferrableNodes(
+        # Get list of Unlocked nodes
+        dbUnlockedNodeList = self.__getTransferrableNodes(
+            dbSrcSoftwareProfile, dbDstSoftwareProfile)
+
+        # If the source software profile is specified, only use nodes from
+        # it, otherwise get list of nodes for compatible hardware profile.
+
+        nUnlockedNodes = len(dbUnlockedNodeList)
+
+        if nUnlockedNodes < count:
+            # Not enough nodes available, include SoftLocked nodes as well.
+
+            dbSoftLockedNodes = self.__getSoftLockedNodes(
                 dbSrcSoftwareProfile, dbDstSoftwareProfile)
 
-            # If the source software profile is specified, only use nodes from
-            # it, otherwise get list of nodes for compatible hardware profile.
+            nSoftLockedNodes = len(dbSoftLockedNodes)
 
-            nUnlockedNodes = len(dbUnlockedNodeList)
+            if nSoftLockedNodes == 0:
+                self.getLogger().debug(
+                    '[%s] No softlocked nodes available' % (
+                        self.__module__))
 
-            if nUnlockedNodes < count:
-                # Not enough nodes available, include SoftLocked nodes as well.
+            nNodesAvailable = nUnlockedNodes + nSoftLockedNodes
 
-                dbSoftLockedNodes = self.__getSoftLockedNodes(
-                    dbSrcSoftwareProfile, dbDstSoftwareProfile)
+            if nNodesAvailable == 0:
+                # Use a different error message to be friendly...
+                msg = 'No nodes available to transfer'
 
-                nSoftLockedNodes = len(dbSoftLockedNodes)
+                self.getLogger().error(msg)
 
-                if nSoftLockedNodes == 0:
-                    self.getLogger().debug(
-                        '[%s] No softlocked nodes available' % (
-                            self.__module__))
+                raise NodeTransferNotValid(msg)
 
-                nNodesAvailable = nUnlockedNodes + nSoftLockedNodes
+            if nNodesAvailable < count:
+                # We still do not have enough nodes to transfer.
+                msg = ('Insufficient nodes available to transfer;'
+                        ' %d available, %d requested' % (
+                            nNodesAvailable, count))
 
-                if nNodesAvailable == 0:
-                    # Use a different error message to be friendly...
-                    msg = 'No nodes available to transfer'
+                self.getLogger().info(msg)
 
-                    self.getLogger().error(msg)
+                raise NodeTransferNotValid(msg)
 
-                    raise NodeTransferNotValid(msg)
+            nRequiredNodes = count - nUnlockedNodes
 
-                if nNodesAvailable < count:
-                    # We still do not have enough nodes to transfer.
-                    msg = ('Insufficient nodes available to transfer;'
-                           ' %d available, %d requested' % (
-                               nNodesAvailable, count))
+            dbNodeList = dbUnlockedNodeList + \
+                dbSoftLockedNodes[:nRequiredNodes]
+        else:
+            dbNodeList = dbUnlockedNodeList[:count]
 
-                    self.getLogger().info(msg)
+        results = self.transferNode(
+            session, dbNodeList, dbDstSoftwareProfile)
 
-                    raise NodeTransferNotValid(msg)
+        return self.__transferNodeCommon(
+            session, dbDstSoftwareProfile, results)
 
-                nRequiredNodes = count - nUnlockedNodes
-
-                dbNodeList = dbUnlockedNodeList + \
-                    dbSoftLockedNodes[:nRequiredNodes]
-            else:
-                dbNodeList = dbUnlockedNodeList[:count]
-
-            results = self.transferNode(
-                session, dbNodeList, dbDstSoftwareProfile)
-
-            return self.__transferNodeCommon(
-                session, dbDstSoftwareProfile, results)
-
-    def idleNode(self, nodespec):
+    def idleNode(self, session, nodespec):
         """
         Raises:
             NodeNotFound
             NodeAlreadyIdle
             NodeSoftwareProfileLocked
         """
-
-        session = DbManager().openSession()
 
         try:
             nodes = self._nodesDbHandler.expand_nodespec(session, nodespec)
@@ -1142,8 +1149,6 @@ class NodeManager(TortugaObjectManager): \
             session.rollback()
 
             raise
-        finally:
-            DbManager().closeSession()
 
     def __process_activateNode_results(self, tmp_results, dstswprofilename):
         results = {}
@@ -1177,15 +1182,13 @@ class NodeManager(TortugaObjectManager): \
 
         return results
 
-    def activateNode(self, nodespec: str, softwareProfileName: str):
+    def activateNode(self, session, nodespec: str, softwareProfileName: str):
         """
         Raises:
             SoftwareProfileNotFound
             NodeNotFound
             TortugaException
         """
-
-        session = DbManager().openSession()
 
         try:
             dbDstSoftwareProfile = \
@@ -1337,10 +1340,8 @@ class NodeManager(TortugaObjectManager): \
             session.rollback()
 
             raise
-        finally:
-            DbManager().closeSession()
 
-    def startupNode(self, nodespec: str,
+    def startupNode(self, session, nodespec: str,
                     remainingNodeList: List[NodeModel] = None,
                     bootMethod: str = 'n') -> None:
         """
@@ -1348,96 +1349,93 @@ class NodeManager(TortugaObjectManager): \
             NodeNotFound
         """
 
-        with DbManager().session() as session:
-            try:
-                nodes = self._nodesDbHandler.expand_nodespec(session, nodespec)
+        try:
+            nodes = self._nodesDbHandler.expand_nodespec(session, nodespec)
 
-                if not nodes:
-                    raise NodeNotFound(
-                        'No matching nodes for nodespec [%s]' % (nodespec))
+            if not nodes:
+                raise NodeNotFound(
+                    'No matching nodes for nodespec [%s]' % (nodespec))
 
-                # Break list of nodes into dict keyed on hardware profile
-                nodes_dict = self.__processNodeList(nodes)
+            # Break list of nodes into dict keyed on hardware profile
+            nodes_dict = self.__processNodeList(nodes)
 
-                for dbHardwareProfile, detailsDict in nodes_dict.items():
-                    # Get the ResourceAdapter
-                    adapter = self.__getResourceAdapter(dbHardwareProfile)
+            for dbHardwareProfile, detailsDict in nodes_dict.items():
+                # Get the ResourceAdapter
+                adapter = self.__getResourceAdapter(dbHardwareProfile)
 
-                    # Call startup action extension
-                    adapter.startupNode(
-                        detailsDict['nodes'],
-                        remainingNodeList=remainingNodeList or [],
-                        tmpBootMethod=bootMethod)
+                # Call startup action extension
+                adapter.startupNode(
+                    detailsDict['nodes'],
+                    remainingNodeList=remainingNodeList or [],
+                    tmpBootMethod=bootMethod)
 
-                session.commit()
-            except TortugaException:
-                session.rollback()
-                raise
-            except Exception as ex:
-                session.rollback()
-                self.getLogger().exception('%s' % ex)
-                raise
+            session.commit()
+        except TortugaException:
+            session.rollback()
+            raise
+        except Exception as ex:
+            session.rollback()
+            self.getLogger().exception('%s' % ex)
+            raise
 
-    def shutdownNode(self, nodespec: str, bSoftShutdown: bool = False) \
+    def shutdownNode(self, session, nodespec: str, bSoftShutdown: bool = False) \
             -> None:
         """
         Raises:
             NodeNotFound
         """
 
-        with DbManager().session() as session:
-            try:
-                nodes = self._nodesDbHandler.expand_nodespec(session, nodespec)
+        try:
+            nodes = self._nodesDbHandler.expand_nodespec(session, nodespec)
 
-                if not nodes:
-                    raise NodeNotFound(
-                        'No matching nodes for nodespec [%s]' % (nodespec))
+            if not nodes:
+                raise NodeNotFound(
+                    'No matching nodes for nodespec [%s]' % (nodespec))
 
-                d = self.__processNodeList(nodes)
+            d = self.__processNodeList(nodes)
 
-                for dbHardwareProfile, detailsDict in d.items():
-                    # Get the ResourceAdapter
-                    adapter = self.__getResourceAdapter(dbHardwareProfile)
+            for dbHardwareProfile, detailsDict in d.items():
+                # Get the ResourceAdapter
+                adapter = self.__getResourceAdapter(dbHardwareProfile)
 
-                    # Call shutdown action extension
-                    adapter.shutdownNode(detailsDict['nodes'], bSoftShutdown)
+                # Call shutdown action extension
+                adapter.shutdownNode(detailsDict['nodes'], bSoftShutdown)
 
-                session.commit()
-            except TortugaException:
-                session.rollback()
-                raise
-            except Exception as ex:
-                session.rollback()
-                self.getLogger().exception('%s' % ex)
-                raise
+            session.commit()
+        except TortugaException:
+            session.rollback()
+            raise
+        except Exception as ex:
+            session.rollback()
+            self.getLogger().exception('%s' % ex)
+            raise
 
-    def rebootNode(self, nodespec: str, bSoftReset: bool = False,
+    def rebootNode(self, session, nodespec: str, bSoftReset: bool = False,
                    bReinstall: bool = False) -> None:
         """
         Raises:
             NodeNotFound
         """
 
-        with DbManager().session() as session:
-            nodes = self._nodesDbHandler.expand_nodespec(session, nodespec)
-            if not nodes:
-                raise NodeNotFound(
-                    'No nodes matching nodespec [%s]' % (nodespec))
+        nodes = self._nodesDbHandler.expand_nodespec(session, nodespec)
+        if not nodes:
+            raise NodeNotFound(
+                'No nodes matching nodespec [%s]' % (nodespec))
 
-            if bReinstall:
-                for dbNode in nodes:
-                    self._bhm.setNodeForNetworkBoot(dbNode)
+        if bReinstall:
+            for dbNode in nodes:
+                self._bhm.setNodeForNetworkBoot(dbNode)
 
-            for dbHardwareProfile, detailsDict in \
-                    self.__processNodeList(nodes).items():
-                # iterate over hardware profile/nodes dict to reboot each
-                # node
-                adapter = self.__getResourceAdapter(dbHardwareProfile)
+        for dbHardwareProfile, detailsDict in \
+                self.__processNodeList(nodes).items():
+            # iterate over hardware profile/nodes dict to reboot each
+            # node
+            adapter = self.__getResourceAdapter(dbHardwareProfile)
 
-                # Call reboot action extension
-                adapter.rebootNode(detailsDict['nodes'], bSoftReset)
+            # Call reboot action extension
+            adapter.rebootNode(detailsDict['nodes'], bSoftReset)
 
-            session.commit()
+        session.commit()
 
     def addStorageVolume(self, nodeName: str, volume: str,
                          isDirect: Optional[str] = "DEFAULT") -> None:
@@ -1490,10 +1488,11 @@ class NodeManager(TortugaObjectManager): \
 
         api.removeVolumeFromNode(node, volume)
 
-    def getStorageVolumes(self, nodeName: str):
-        return self._san.getNodeVolumes(self.getNode(nodeName).getName())
+    def getStorageVolumes(self, session: Session, nodeName: str):
+        return self._san.getNodeVolumes(
+            self.getNode(session, nodeName).getName())
 
-    def getNodesByNodeState(self, node_state: str,
+    def getNodesByNodeState(self, session, node_state: str,
                             optionDict: Optional[OptionDict] = None) \
             -> TortugaObjectList:
         """
@@ -1501,10 +1500,12 @@ class NodeManager(TortugaObjectManager): \
         """
 
         return self.__populate_nodes(
+            session,
             self._nodeDbApi.getNodesByNodeState(
-                node_state, optionDict=get_default_relations(optionDict)))
+                session, node_state,
+                optionDict=get_default_relations(optionDict)))
 
-    def getNodesByNameFilter(self, nodespec: str,
+    def getNodesByNameFilter(self, session, nodespec: str,
                              optionDict: OptionDict = None,
                              include_installer: Optional[bool] = True) \
             -> TortugaObjectList:
@@ -1513,14 +1514,16 @@ class NodeManager(TortugaObjectManager): \
         """
 
         return self.__populate_nodes(
+            session,
             self._nodeDbApi.getNodesByNameFilter(
+                session,
                 nodespec,
                 optionDict=get_default_relations(optionDict),
                 include_installer=include_installer
             )
         )
 
-    def getNodesByAddHostSession(self, addHostSession: str,
+    def getNodesByAddHostSession(self, session, addHostSession: str,
                                  optionDict: OptionDict = None) \
             -> TortugaObjectList:
         """
@@ -1528,7 +1531,9 @@ class NodeManager(TortugaObjectManager): \
         """
 
         return self.__populate_nodes(
+            session,
             self._nodeDbApi.getNodesByAddHostSession(
+                session,
                 addHostSession,
                 optionDict=get_default_relations(optionDict)))
 

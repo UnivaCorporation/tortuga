@@ -73,9 +73,12 @@ class NetworkController(TortugaController):
             if 'address' in kwargs and 'netmask' in kwargs:
                 networkList = TortugaObjectList(
                     [self.app.network_api.getNetwork(
+                        cherrypy.request.db,
                         kwargs['address'], kwargs['netmask'])])
             else:
-                networkList = self.app.network_api.getNetworkList()
+                networkList = self.app.network_api.getNetworkList(
+                    cherrypy.request.db
+                )
 
             response = {'networks': networkList.getCleanDict()}
         except Exception as ex:
@@ -96,7 +99,7 @@ class NetworkController(TortugaController):
 
         try:
             network = self.app.network_api.getNetwork(
-                address, netmask)
+                cherrypy.request.db, address, netmask)
 
             response = {'network': network.getCleanDict()}
         except NetworkNotFound as ex:
@@ -119,7 +122,8 @@ class NetworkController(TortugaController):
         self.getLogger().debug('Retrieving network id [%s]' % (network_id))
 
         try:
-            network = self.app.network_api.getNetworkById(network_id)
+            network = self.app.network_api.getNetworkById(
+                cherrypy.request.db, network_id)
 
             response = {'network': network.getCleanDict()}
         except Exception as ex:
@@ -148,7 +152,7 @@ class NetworkController(TortugaController):
             network.setAddress(address)
             network.setNetmask(netmask)
 
-            self.app.network_api.addNetwork(network)
+            self.app.network_api.addNetwork(cherrypy.request.db, network)
         except Exception as ex:
             self.getLogger().error('%s' % ex)
             self.handleException(ex)
@@ -167,7 +171,7 @@ class NetworkController(TortugaController):
         response = None
 
         try:
-            self.app.network_api.deleteNetwork(network_id)
+            self.app.network_api.deleteNetwork(cherrypy.request.db, network_id)
         except Exception as ex:
             self.getLogger().error('%s' % ex)
             self.handleException(ex)
@@ -246,13 +250,15 @@ class NetworkController(TortugaController):
                 # Malformed request
                 raise Exception('Malformed request: missing \'network\' key')
 
-            network = self.app.network_api.getNetworkById(network_id)
+            network = self.app.network_api.getNetworkById(
+                cherrypy.request.db, network_id)
 
             if self.__update_network(
                     network, cherrypy.request.json['network']):
                 network.setId(network_id)
 
-                self.app.network_api.updateNetwork(network)
+                self.app.network_api.updateNetwork(
+                    cherrypy.request.db, network)
         except NetworkNotFound as ex:
             self.handleException(ex)
             code = self.getTortugaStatusCode(ex)

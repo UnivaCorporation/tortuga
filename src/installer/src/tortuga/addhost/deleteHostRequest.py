@@ -17,8 +17,8 @@
 import datetime
 import logging
 
+from sqlalchemy.orm.session import Session
 from tortuga.addhost.addHostManager import AddHostManager
-from tortuga.db.dbManager import DbManager
 from tortuga.db.nodeRequestsDbHandler import NodeRequestsDbHandler
 from tortuga.events.types import DeleteNodeRequestComplete
 from tortuga.exceptions.nodeNotFound import NodeNotFound
@@ -33,54 +33,53 @@ logger.addHandler(logging.NullHandler())
 ahm = AddHostManager()
 
 
-def process_delete_host_request(transaction_id: str, nodespec: str,
-                                force: bool = False):
-    with DbManager().session() as session:
+def process_delete_host_request(session: Session, transaction_id: str,
+                                nodespec: str, force: bool = False):
+    try:
+        req = NodeRequestsDbHandler().get_by_addHostSession(
+            session, transaction_id)
+        if req is None:
+            # Session was deleted prior to being process. Nothing to do...
+            return
+
+        #
+        # Save this data so that we have it for firing the event below
+        #
+        evt_req_id = req.id
+        evt_req_request = {
+            'name': nodespec
+        }
+
+        ahm.update_session(transaction_id, running=True)
+
+        logger.debug(
+            'process_delete_host_request(): transaction_id=[{0}],'
+            ' nodespec=[{1}]'.format(transaction_id, nodespec))
+
         try:
-            req = NodeRequestsDbHandler().get_by_addHostSession(
-                session, transaction_id)
-            if req is None:
-                # Session was deleted prior to being process. Nothing to do...
-                return
+            NodeApi().deleteNode(session, nodespec, force=force)
 
-            #
-            # Save this data so that we have it for firing the event below
-            #
-            evt_req_id = req.id
-            evt_req_request = {
-                'name': nodespec
-            }
+            ahm.delete_session(transaction_id)
 
-            ahm.update_session(transaction_id, running=True)
+            session.delete(req)
 
-            logger.debug(
-                'process_delete_host_request(): transaction_id=[{0}],'
-                ' nodespec=[{1}]'.format(transaction_id, nodespec))
+            DeleteNodeRequestComplete.fire(request_id=evt_req_id,
+                                           request=evt_req_request)
+        except (OperationFailed, NodeNotFound):
+            ahm.delete_session(transaction_id)
 
-            try:
-                NodeApi().deleteNode(nodespec, force=force)
+            session.delete(req)
 
-                ahm.delete_session(transaction_id)
+            raise
+        except TortugaException as exc:
+            logger.exception('Exception while deleting nodes')
 
-                session.delete(req)
+            req.message = str(exc)
 
-                DeleteNodeRequestComplete.fire(request_id=evt_req_id,
-                                               request=evt_req_request)
-            except (OperationFailed, NodeNotFound):
-                ahm.delete_session(transaction_id)
+            req.state = 'error'
 
-                session.delete(req)
-
-                raise
-            except TortugaException as exc:
-                logger.exception('Exception while deleting nodes')
-
-                req.message = str(exc)
-
-                req.state = 'error'
-
-                req.last_update = datetime.datetime.utcnow()
-            finally:
-                ahm.update_session(transaction_id, running=False)
+            req.last_update = datetime.datetime.utcnow()
         finally:
-            session.commit()
+            ahm.update_session(transaction_id, running=False)
+    finally:
+        session.commit()

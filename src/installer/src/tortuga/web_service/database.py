@@ -12,14 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tortuga.kit.installer import KitInstallerBase
-
-from .actions.post_install import PostInstallAction
+from tortuga.db.dbManager import DbManager
 
 
-class BaseKitInstaller(KitInstallerBase):
-    puppet_modules = ['univa-tortuga_kit_base']
-
-    def action_post_install(self):
-        super().action_post_install()
-        return PostInstallAction(self)()
+# "global" instance for DbManager used by tortugawsd
+dbm = DbManager()

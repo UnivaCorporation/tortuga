@@ -27,7 +27,6 @@ import gevent
 from sqlalchemy.orm.session import Session
 from tortuga.addhost.addHostManager import AddHostManager
 from tortuga.config.configManager import ConfigManager
-from tortuga.db.dbManager import DbManager
 from tortuga.db.models.hardwareProfile import HardwareProfile
 from tortuga.db.models.network import Network
 from tortuga.db.models.nic import Nic
@@ -87,6 +86,8 @@ class ResourceAdapter(UserDataMixin): \
         self._cm = ConfigManager()
 
         self._addHostSession = addHostSession
+
+        self.session = None
 
     @property
     def addHostSession(self):
@@ -365,15 +366,16 @@ class ResourceAdapter(UserDataMixin): \
 
         db_handler = ResourceAdapterConfigDbHandler()
 
-        with DbManager().session() as session:
-            try:
-                db_config = db_handler.get(session, self.__adaptername__,
-                                           profile)
-                cfg_list = ResourceAdapterConfigSchema().dump(db_config).data
-                for s in cfg_list['configuration']:
-                    config[s['key']] = s['value']
-            except ResourceNotFound:
-                pass
+        try:
+            db_config = db_handler.get(
+                self.session, self.__adaptername__, profile)
+
+            cfg_list = ResourceAdapterConfigSchema().dump(db_config).data
+
+            for s in cfg_list['configuration']:
+                config[s['key']] = s['value']
+        except ResourceNotFound:
+            pass
 
         return config
 

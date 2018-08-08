@@ -74,7 +74,8 @@ class AdminController(TortugaController):
         """ Get an admin by name """
 
         try:
-            admin = self.app.admin_api.getAdminById(admin_id)
+            admin = self.app.admin_api.getAdminById(
+                cherrypy.request.db, admin_id)
 
             response = {
                 'admin': admin.getCleanDict(),
@@ -92,7 +93,7 @@ class AdminController(TortugaController):
         """ Return list of admin users """
 
         try:
-            adminList = self.app.admin_api.getAdminList()
+            adminList = self.app.admin_api.getAdminList(cherrypy.request.db)
 
             response = {
                 'admins': adminList.getCleanDict(),
@@ -125,6 +126,7 @@ class AdminController(TortugaController):
 
         try:
             self.app.admin_api.addAdmin(
+                cherrypy.request.db,
                 adminRequestObject.getUsername(),
                 adminRequestObject.getPassword(),
                 isCrypted,
@@ -145,7 +147,7 @@ class AdminController(TortugaController):
         response = None
 
         try:
-            self.app.admin_api.deleteAdmin(admin_id)
+            self.app.admin_api.deleteAdmin(cherrypy.request.db, admin_id)
         except Exception as ex:
             self.getLogger().error('%s' % ex)
             self.handleException(ex)
@@ -171,7 +173,8 @@ class AdminController(TortugaController):
             if 'isCrypted' in postdata and postdata['isCrypted'] else False
 
         try:
-            self.app.admin_api.updateAdmin(admin, isCrypted)
+            self.app.admin_api.updateAdmin(
+                cherrypy.request.db, admin, isCrypted)
 
             response = None
         except Exception as ex:
@@ -190,9 +193,11 @@ class AdminController(TortugaController):
         """
 
         password_auth = UsernamePasswordAuthenticationMethod()
+        password_auth.session = cherrypy.request.db
         try:
             password_auth.authenticate(username=username, password=password)
-            valid_user = AdminApi.getAdmin(username)
+            valid_user = self.app.admin_api.getAdmin(
+                cherrypy.request.db, username)
             response = {
                 'authenticate': valid_user,
             }

@@ -15,6 +15,7 @@
 from tortuga.admin.manager import AdminManager
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.utility.tortugaApi import TortugaApi
+from sqlalchemy.orm.session import Session
 
 
 class AdminApi(TortugaApi):
@@ -25,11 +26,11 @@ class AdminApi(TortugaApi):
 
         self._adminManager = AdminManager()
 
-    def getAdmin(self, adminName):
+    def getAdmin(self, session: Session, adminName):
         """Get an admin by name"""
 
         try:
-            return self._adminManager.getAdmin(adminName)
+            return self._adminManager.getAdmin(session, adminName)
         except TortugaException:
             raise
         except Exception as ex:
@@ -38,11 +39,11 @@ class AdminApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def getAdminById(self, admin_id):
+    def getAdminById(self, session: Session, admin_id):
         """Get an admin by name"""
 
         try:
-            return self._adminManager.getAdminById(admin_id)
+            return self._adminManager.getAdminById(session, admin_id)
         except TortugaException:
             raise
         except Exception as ex:
@@ -51,11 +52,11 @@ class AdminApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def getAdminList(self):
+    def getAdminList(self, session: Session):
         """Return list of admin users"""
 
         try:
-            return self._adminManager.getAdminList()
+            return self._adminManager.getAdminList(session)
         except TortugaException:
             raise
         except Exception as ex:
@@ -63,8 +64,8 @@ class AdminApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def addAdmin(self, name, password=None, isCrypted=False, realname=None,
-                 description=None):
+    def addAdmin(self, session: Session, name, password=None,
+                 isCrypted=False, realname=None, description=None):
         """
         Adds an admin user.
 
@@ -79,7 +80,7 @@ class AdminApi(TortugaApi):
         """
         try:
             self._adminManager.addAdmin(
-                name, password, isCrypted, realname, description)
+                session, name, password, isCrypted, realname, description)
 
         except TortugaException:
             raise
@@ -88,22 +89,22 @@ class AdminApi(TortugaApi):
             self.getLogger().exception('addAdmin failed')
             raise TortugaException(exception=ex)
 
-    def deleteAdmin(self, admin):
+    def deleteAdmin(self, session: Session, admin):
         """Delete an existing admin from the system"""
 
         try:
-            return self._adminManager.deleteAdmin(admin)
+            return self._adminManager.deleteAdmin(session, admin)
         except TortugaException as ex:
             raise
         except Exception as ex:
             self.getLogger().exception('deleteAdmin failed')
             raise TortugaException(exception=ex)
 
-    def updateAdmin(self, adminObject, isCrypted=True):
+    def updateAdmin(self, session: Session, adminObject, isCrypted=True):
         """Update an existing admin in the system"""
 
         try:
-            self._adminManager.updateAdmin(adminObject, isCrypted)
+            self._adminManager.updateAdmin(session, adminObject, isCrypted)
         except TortugaException as ex:
             raise
         except Exception as ex:

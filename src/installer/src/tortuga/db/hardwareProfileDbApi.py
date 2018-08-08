@@ -19,7 +19,6 @@ import tortuga.objects.nic
 from sqlalchemy.orm.session import Session
 from tortuga.config.configManager import ConfigManager
 from tortuga.db.adminsDbHandler import AdminsDbHandler
-from tortuga.db.dbManager import DbManager
 from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
 from tortuga.db.hardwareProfilesDbHandler import HardwareProfilesDbHandler
 from tortuga.db.networkDevicesDbHandler import NetworkDevicesDbHandler
@@ -67,7 +66,7 @@ class HardwareProfileDbApi(TortugaDbApi):
         self._networkDevicesDbHandler = NetworkDevicesDbHandler()
         self._networksDbHandler = NetworksDbHandler()
 
-    def getHardwareProfile(self, name: str,
+    def getHardwareProfile(self, session: Session, name: str,
                            optionDict: Optional[OptionDict] = None) \
             -> HardwareProfile:
         """
@@ -80,24 +79,24 @@ class HardwareProfileDbApi(TortugaDbApi):
                 DbError
         """
 
-        with DbManager().session() as session:
-            try:
-                dbHardwareProfile = \
-                    self._hardwareProfilesDbHandler.getHardwareProfile(
-                        session, name)
+        try:
+            dbHardwareProfile = \
+                self._hardwareProfilesDbHandler.getHardwareProfile(
+                    session, name)
 
-                self.loadRelations(
-                    dbHardwareProfile, get_default_relations(optionDict))
+            self.loadRelations(
+                dbHardwareProfile, get_default_relations(optionDict))
 
-                return HardwareProfile.getFromDbDict(
-                    dbHardwareProfile.__dict__)
-            except TortugaException:
-                raise
-            except Exception as ex:
-                self.getLogger().exception('%s' % ex)
-                raise
+            return HardwareProfile.getFromDbDict(
+                dbHardwareProfile.__dict__)
+        except TortugaException:
+            raise
+        except Exception as ex:
+            self.getLogger().exception('%s' % ex)
+            raise
 
-    def getHardwareProfileById(self, hardwareProfileId: int,
+    def getHardwareProfileById(self, session: Session,
+                               hardwareProfileId: int,
                                optionDict: Optional[OptionDict] = None):
         """
         Get hardwareProfile from the db.
@@ -108,8 +107,6 @@ class HardwareProfileDbApi(TortugaDbApi):
                 HardwareProfileNotFound
                 DbError
         """
-
-        session = DbManager().openSession()
 
         try:
             dbHardwareProfile = \
@@ -125,11 +122,9 @@ class HardwareProfileDbApi(TortugaDbApi):
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise
-        finally:
-            DbManager().closeSession()
 
     def getHardwareProfileList(
-            self, optionDict: Optional[OptionDict] = None,
+            self, session: Session, optionDict: Optional[OptionDict] = None,
             tags: Optional[Tags] = None):
         """
         Get list of all available hardwareProfiles from the db.
@@ -139,8 +134,6 @@ class HardwareProfileDbApi(TortugaDbApi):
             Throws:
                 DbError
         """
-
-        session = DbManager().openSession()
 
         try:
             dbHardwareProfileList = \
@@ -166,10 +159,9 @@ class HardwareProfileDbApi(TortugaDbApi):
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise
-        finally:
-            DbManager().closeSession()
 
-    def setIdleSoftwareProfile(self, hardwareProfileName: str,
+    def setIdleSoftwareProfile(self, session: Session,
+                               hardwareProfileName: str,
                                softwareProfileName: Optional[str] = None) \
             -> None:
         """
@@ -182,8 +174,6 @@ class HardwareProfileDbApi(TortugaDbApi):
             SoftwareProfileNotFound
             SoftwareProfileNotIdle
         """
-
-        session = DbManager().openSession()
 
         try:
             dbSoftwareProfile = SoftwareProfilesDbHandler().\
@@ -202,11 +192,9 @@ class HardwareProfileDbApi(TortugaDbApi):
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise
-        finally:
-            DbManager().closeSession()
 
-    def addHardwareProfile(self, hardwareProfile: HardwareProfile,
-                           session: Optional[Session] = None):
+    def addHardwareProfile(self, session: Session,
+                           hardwareProfile: HardwareProfile):
         """
         Insert hardwareProfile into the db.
 
@@ -217,20 +205,10 @@ class HardwareProfileDbApi(TortugaDbApi):
                 DbError
         """
 
-        # Keep local 'session' instance.  If 'session' is None,
-        # ensure transaction is committed before returning to the
-        # caller, otherwise the caller is responsible.  On exceptions,
-        # the rollback is performed regardless.
-
-        _session = session
-
-        if _session is None:
-            _session = DbManager().openSession()
-
         try:
             try:
                 self._hardwareProfilesDbHandler.getHardwareProfile(
-                    _session, hardwareProfile.getName())
+                    session, hardwareProfile.getName())
 
                 raise HardwareProfileAlreadyExists(
                     'Hardware profile [%s] already exists' % (
@@ -239,27 +217,23 @@ class HardwareProfileDbApi(TortugaDbApi):
                 pass
 
             dbHardwareProfile = self.__populateHardwareProfile(
-                _session, hardwareProfile)
+                session, hardwareProfile)
 
-            _session.add(dbHardwareProfile)
+            session.add(dbHardwareProfile)
 
-            if session is None:
-                _session.commit()
+            session.commit()
 
             self.getLogger().info(
                 'Added hardware profile [%s]' % (dbHardwareProfile.name))
         except TortugaException:
-            _session.rollback()
+            session.rollback()
             raise
         except Exception as ex:
-            _session.rollback()
+            session.rollback()
             self.getLogger().exception('%s' % ex)
             raise
-        finally:
-            if session is None:
-                DbManager().closeSession()
 
-    def deleteHardwareProfile(self, name: str) -> None:
+    def deleteHardwareProfile(self, session: Session, name: str) -> None:
         """
         Delete hardwareProfile from the db.
 
@@ -270,8 +244,6 @@ class HardwareProfileDbApi(TortugaDbApi):
                 DbError
                 TortugaException
         """
-
-        session = DbManager().openSession()
 
         try:
             hwProfile = self._hardwareProfilesDbHandler.getHardwareProfile(
@@ -298,55 +270,47 @@ class HardwareProfileDbApi(TortugaDbApi):
             session.rollback()
             self.getLogger().exception('%s' % ex)
             raise
-        finally:
-            DbManager().closeSession()
 
-    def copyHardwareProfile(self, srcHardwareProfileName: str,
+    def copyHardwareProfile(self, session: Session,
+                            srcHardwareProfileName: str,
                             dstHardwareProfileName: str):
-        session = DbManager().openSession()
+        srcHardwareProfile = self.getHardwareProfile(
+            srcHardwareProfileName, {
+                'admins': True,
+                'hardwareprofilenetworks': True,
+                'nics': True,
+                'resourceadapter': True,
+            })
 
-        try:
-            srcHardwareProfile = self.getHardwareProfile(
-                srcHardwareProfileName, {
-                    'admins': True,
-                    'hardwareprofilenetworks': True,
-                    'nics': True,
-                    'resourceadapter': True,
-                })
+        dstHardwareProfile = \
+            self.getHardwareProfile(srcHardwareProfileName)
 
-            dstHardwareProfile = \
-                self.getHardwareProfile(srcHardwareProfileName)
+        dstHardwareProfile.setName(dstHardwareProfileName)
 
-            dstHardwareProfile.setName(dstHardwareProfileName)
+        newDescription = 'Copy of %s' % (
+            dstHardwareProfile.getDescription())
 
-            newDescription = 'Copy of %s' % (
-                dstHardwareProfile.getDescription())
+        dstHardwareProfile.setDescription(newDescription)
 
-            dstHardwareProfile.setDescription(newDescription)
+        dstHardwareProfile.setNetworks(srcHardwareProfile.getNetworks())
 
-            dstHardwareProfile.setNetworks(srcHardwareProfile.getNetworks())
+        dstHardwareProfile.setProvisioningNics(
+            srcHardwareProfile.getProvisioningNics())
 
-            dstHardwareProfile.setProvisioningNics(
-                srcHardwareProfile.getProvisioningNics())
+        dstHardwareProfile.setResourceAdapter(
+            srcHardwareProfile.getResourceAdapter())
 
-            dstHardwareProfile.setResourceAdapter(
-                srcHardwareProfile.getResourceAdapter())
+        self.addHardwareProfile(dstHardwareProfile, session)
 
-            self.addHardwareProfile(dstHardwareProfile, session)
+        session.commit()
 
-            session.commit()
-        finally:
-            DbManager().closeSession()
-
-    def addAdmin(self, hardwareProfileName, adminUsername):
+    def addAdmin(self, session: Session, hardwareProfileName, adminUsername):
         """
         Add an admin to this hardware profile
 
         Raises:
             AdminAlreadyExists
         """
-
-        session = DbManager().openSession()
 
         try:
             dbAdmin = self._adminsDbHandler.getAdmin(
@@ -370,18 +334,14 @@ class HardwareProfileDbApi(TortugaDbApi):
             session.rollback()
             self.getLogger().exception('%s' % ex)
             raise
-        finally:
-            DbManager().closeSession()
 
-    def deleteAdmin(self, hardwareProfileName, adminUsername):
+    def deleteAdmin(self, session: Session, hardwareProfileName, adminUsername):
         """
         Delete an admin from a hardware profile
 
         Raises:
             AdminNotFound
         """
-
-        session = DbManager().openSession()
 
         try:
             dbAdmin = self._adminsDbHandler.getAdmin(session, adminUsername)
@@ -404,31 +364,28 @@ class HardwareProfileDbApi(TortugaDbApi):
             session.rollback()
             self.getLogger().exception('%s' % ex)
             raise
-        finally:
-            DbManager().closeSession()
 
-    def updateHardwareProfile(self, hardwareProfileObject):
+    def updateHardwareProfile(self, session: Session, hardwareProfileObject):
         """
         Update Hardware Profile Object
         """
 
-        with DbManager().session() as session:
-            try:
-                dbHardwareProfile = \
-                    self._hardwareProfilesDbHandler.getHardwareProfileById(
-                        session, hardwareProfileObject.getId())
+        try:
+            dbHardwareProfile = \
+                self._hardwareProfilesDbHandler.getHardwareProfileById(
+                    session, hardwareProfileObject.getId())
 
-                self.__populateHardwareProfile(
-                    session, hardwareProfileObject, dbHardwareProfile)
+            self.__populateHardwareProfile(
+                session, hardwareProfileObject, dbHardwareProfile)
 
-                session.commit()
-            except TortugaException:
-                session.rollback()
-                raise
-            except Exception as ex:
-                session.rollback()
-                self.getLogger().exception('%s' % ex)
-                raise
+            session.commit()
+        except TortugaException:
+            session.rollback()
+            raise
+        except Exception as ex:
+            session.rollback()
+            self.getLogger().exception('%s' % ex)
+            raise
 
     def __getInstallerNode(self, session):
         return self._nodesDbHandler.getNode(
@@ -614,9 +571,7 @@ class HardwareProfileDbApi(TortugaDbApi):
 
         return dbHardwareProfile
 
-    def setProvisioningNic(self, hardwareProfileName, nicId):
-        session = DbManager().openSession()
-
+    def setProvisioningNic(self, session: Session, hardwareProfileName, nicId):
         try:
             dbNic = self._nicsDbHandler.getNicById(session, nicId)
 
@@ -636,16 +591,12 @@ class HardwareProfileDbApi(TortugaDbApi):
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise
-        finally:
-            DbManager().closeSession()
 
-    def getProvisioningNicForNetwork(self, network, netmask):
+    def getProvisioningNicForNetwork(self, session: Session, network, netmask):
         """
         Raises:
             NicNotFound
         """
-
-        session = DbManager().openSession()
 
         try:
             installer_node = self.__getInstallerNode(session)
@@ -664,8 +615,6 @@ class HardwareProfileDbApi(TortugaDbApi):
         except TortugaException as exc:
             self.getLogger().exception('%s' % exc)
             raise
-        finally:
-            DbManager().closeSession()
 
 
 def get_default_relations(relations: OptionDict):

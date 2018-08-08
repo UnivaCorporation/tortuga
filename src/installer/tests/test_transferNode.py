@@ -43,32 +43,33 @@ class TestTransferNode:
 
         name = 'compute-01'
 
-        # xfer node 'compute-01' to 'compute2' software profile
-        result = NodeApi().transferNode(name, 'compute2')
+        with dbm.session() as session:
+            # xfer node 'compute-01' to 'compute2' software profile
+            result = NodeApi().transferNode(session, name, 'compute2')
 
-        # get node after xfer
-        node = NodeApi().getNode(name)
+            # get node after xfer
+            node = NodeApi().getNode(session, name)
 
-        # validate new software profile
-        assert node.getSoftwareProfile().getName() == 'compute2'
+            # validate new software profile
+            assert node.getSoftwareProfile().getName() == 'compute2'
 
-        # validate state (which is fudged above)
-        assert node.getState() != 'Installed'
+            # validate state (which is fudged above)
+            assert node.getState() != 'Installed'
 
-        # update status from 'Expired' to 'Installed' to allow xfer
-        NodeApi().updateNodeStatus(name, state='Installed')
+            # update status from 'Expired' to 'Installed' to allow xfer
+            NodeApi().updateNodeStatus(session, name, state='Installed')
 
-        # ensure event fired to indicate node state change
-        node_state_change_object.assert_called()
+            # ensure event fired to indicate node state change
+            node_state_change_object.assert_called()
 
-        # xfer node back to 'compute' software profile
-        NodeApi().transferNode(name, 'compute')
+            # xfer node back to 'compute' software profile
+            NodeApi().transferNode(session, name, 'compute')
 
-        NodeApi().updateNodeStatus(name, state='Installed')
+            NodeApi().updateNodeStatus(session, name, state='Installed')
 
-        node = NodeApi().getNode(name)
+            node = NodeApi().getNode(session, name)
 
-        assert node.getSoftwareProfile().getName() == 'compute'
+            assert node.getSoftwareProfile().getName() == 'compute'
 
     def test_invalid_transfer(self, node_state_change_object,
                               get_kit_installer_function, MockClass1,
@@ -77,5 +78,7 @@ class TestTransferNode:
         Attempt to transfer node to current software profile
         """
 
-        with pytest.raises(NodeTransferNotValid):
-            NodeApi().transferNode('compute-02.private', 'compute')
+        with dbm.session() as session:
+            with pytest.raises(NodeTransferNotValid):
+                NodeApi().transferNode(
+                    session, 'compute-02.private', 'compute')

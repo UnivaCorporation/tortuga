@@ -16,9 +16,9 @@ import base64
 from logging import getLogger
 
 import cherrypy
-
-from tortuga.auth.methods import AuthenticationMethod, \
-    JwtAuthenticationMethod, UsernamePasswordAuthenticationMethod
+from tortuga.auth.methods import (AuthenticationMethod,
+                                  JwtAuthenticationMethod,
+                                  UsernamePasswordAuthenticationMethod)
 from tortuga.exceptions.authenticationFailed import AuthenticationFailed
 
 

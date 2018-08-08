@@ -16,6 +16,7 @@
 
 import sys
 
+from tortuga.db.dbManager import DbManager
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.kit.actions.manager import KitActionsManager
 from tortuga.kit.loader import load_kits
@@ -32,19 +33,21 @@ class GenconfigAppClass(TortugaCli):
 
         load_kits()
 
-        kitmgr = KitActionsManager()
+        with DbManager().session() as session:
+            kitmgr = KitActionsManager()
+            kitmgr.session = session
 
-        component = kitmgr.load_component(self.getArgs().cname)
+            component = kitmgr.load_component(self.getArgs().cname)
 
-        nodegroup = 'installer'
+            nodegroup = 'installer'
 
-        if '_configure' not in dir(component):
-            print(_('This component does not have configuration'),
-                  file=sys.stderr)
+            if '_configure' not in dir(component):
+                print(_('This component does not have configuration'),
+                      file=sys.stderr)
 
-            sys.exit(0)
+                sys.exit(0)
 
-        component._configure(nodegroup, sys.stdout)
+            component._configure(nodegroup, sys.stdout)
 
 
 def main():

@@ -34,21 +34,22 @@ class ResourceAdapterMixin:
     config_files = []
     resource_adapter_name = None
 
-    def _get_kit_id(self):
-        for kit in KitDbApi().getKitList():
+    def _get_kit_id(self, session):
+        for kit in KitDbApi().getKitList(session):
             if kit.getName() == self.name:
                 break
         else:
             raise InvalidActionRequest(
                 'Unable to find kit: {}'.format(self.name))
+
         return kit.getId()
 
-    def register_resource_adapter(self):
+    def register_resource_adapter(self, session):
         resource_adapter_api = ResourceAdapterDbApi()
-        kit_id = self._get_kit_id()
+        kit_id = self._get_kit_id(session)
         try:
             resource_adapter_api.addResourceAdapter(
-                self.resource_adapter_name,
+                session, self.resource_adapter_name,
                 kit_id
             )
         except ResourceAdapterAlreadyExists:
@@ -57,11 +58,11 @@ class ResourceAdapterMixin:
             # name is valid...
             #
             logger.info('Resource adapter already registered, skipping')
-            pass
 
-    def unregister_resource_adapter(self):
+    def unregister_resource_adapter(self, session):
         resource_adapter_api = ResourceAdapterDbApi()
-        resource_adapter_api.deleteResourceAdapter(self.resource_adapter_name)
+        resource_adapter_api.deleteResourceAdapter(
+            session, self.resource_adapter_name)
 
     def action_post_install(self, *args, **kwargs):
         super().action_post_install(*args, **kwargs)
@@ -121,19 +122,20 @@ class ResourceAdapterManagementComponentInstaller(ComponentInstallerBase):
 
     def action_post_enable(self, software_profile_name, *args, **kwargs):
         super().action_post_enable(software_profile_name, *args, **kwargs)
-        self.kit_installer.register_resource_adapter()
+        self.kit_installer.register_resource_adapter(
+            self.kit_installer.session)
 
     def action_pre_disable(self, software_profile_name, *args, **kwargs):
         super().action_pre_disable(software_profile_name, *args, **kwargs)
-        self._unregister_resource_adapter()
+        self._unregister_resource_adapter(self.kit_installer.session)
 
-    def _unregister_resource_adapter(self):
+    def _unregister_resource_adapter(self, session):
         hardware_profile_api = getHardwareProfileApi()
 
         adapter_hwp_list = []
 
         for hardware_profile in hardware_profile_api.getHardwareProfileList(
-                {'resourceadapter': True}):
+                session, {'resourceadapter': True}):
             if hardware_profile.getResourceAdapter() and \
                     hardware_profile.getResourceAdapter().getName() == \
                     self.kit_installer.resource_adapter_name:
@@ -146,7 +148,7 @@ class ResourceAdapterManagementComponentInstaller(ComponentInstallerBase):
 
         for hardware_profile in adapter_hwp_list:
             nodes = hardware_profile_api.getHardwareProfile(
-                hardware_profile.getName(), {'nodes': True}).getNodes()
+                session, hardware_profile.getName(), {'nodes': True}).getNodes()
             if nodes and hardware_profile not in adapter_hwp_in_use:
                 adapter_hwp_in_use.append(hardware_profile)
 
@@ -170,4 +172,4 @@ class ResourceAdapterManagementComponentInstaller(ComponentInstallerBase):
         #
         logger.info('Un-registering resource adapter: {}'.format(
             self.kit_installer.resource_adapter_name))
-        self.kit_installer.unregister_resource_adapter()
+        self.kit_installer.unregister_resource_adapter(session)

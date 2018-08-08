@@ -26,7 +26,6 @@ from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.dbError import DbError
 from tortuga.kit.registry import get_all_kit_installers
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
-from tortuga.types import Singleton
 # from .tables import get_all_table_mappers
 from .sessionContextManager import SessionContextManager
 from .models.base import ModelBase
@@ -37,7 +36,7 @@ from . import models  # noqa pylint: disable=unused-import
 logger = getLogger(__name__)
 
 
-class DbManagerBase(TortugaObjectManager):
+class DbManager(TortugaObjectManager):
     """
     Class for db management.
 
@@ -49,7 +48,7 @@ class DbManagerBase(TortugaObjectManager):
 
     """
     def __init__(self, engine=None):
-        super(DbManagerBase, self).__init__()
+        super(DbManager, self).__init__()
 
         if not engine:
             self._cm = ConfigManager()
@@ -252,7 +251,3 @@ class DbManagerBase(TortugaObjectManager):
         """Close scoped_session."""
 
         self.Session.remove()
-
-
-class DbManager(DbManagerBase, Singleton):
-    pass

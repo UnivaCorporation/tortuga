@@ -68,7 +68,8 @@ class ParameterController(TortugaController):
 
         """
         try:
-            parameter = self.app.parameter_api.getParameter(name)
+            parameter = self.app.parameter_api.getParameter(
+                cherrypy.request.db, name)
 
             response = {
                 'globalparameter': parameter.getCleanDict(),
@@ -91,7 +92,9 @@ class ParameterController(TortugaController):
         self.getLogger().debug('Retrieving parameter list')
 
         try:
-            parameterList = self.app.parameter_api.getParameterList()
+            parameterList = self.app.parameter_api.getParameterList(
+                cherrypy.request.db
+            )
 
             response = {
                 'globalparameters': parameterList.getCleanDict(),
@@ -117,7 +120,8 @@ class ParameterController(TortugaController):
         parameter = Parameter.getFromDict(postdata)
 
         try:
-            self.app.parameter_api.getParameter(parameter.get_name())
+            self.app.parameter_api.getParameter(
+                cherrypy.request.db, parameter.getName())
             parameter_exists = True
 
         except ParameterNotFound:
@@ -127,7 +131,8 @@ class ParameterController(TortugaController):
             if parameter_exists:
                 raise ParameterAlreadyExists()
 
-            self.app.parameter_api.upsertParameter(parameter)
+            self.app.parameter_api.upsertParameter(
+                cherrypy.request.db, parameter)
 
             response = None
 
@@ -152,10 +157,11 @@ class ParameterController(TortugaController):
         parameter = Parameter.getFromDict(postdata)
 
         try:
-            if name != parameter.get_name():
+            if name != parameter.getName():
                 raise Exception('Parameter name mismatch')
 
-            self.app.parameter_api.upsertParameter(parameter)
+            self.app.parameter_api.upsertParameter(
+                cherrypy.request.db, parameter)
             response = None
 
         except Exception as ex:
@@ -177,7 +183,8 @@ class ParameterController(TortugaController):
         self.getLogger().debug('Deleting parameter: {}'.format(name))
 
         try:
-            self.app.parameter_api.deleteParameter(name)
+            self.app.parameter_api.deleteParameter(
+                cherrypy.request.db, name)
             response = None
 
         except Exception as ex:

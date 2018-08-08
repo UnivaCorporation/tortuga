@@ -13,11 +13,12 @@
 # limitations under the License.
 
 import cherrypy
-
 from tortuga.auth.manager import AuthManager
 from tortuga.auth.methods import MultiAuthentionMethod
 from tortuga.auth.principal import AuthPrincipal
 from tortuga.exceptions.authenticationFailed import AuthenticationFailed
+from tortuga.web_service.database import dbm
+
 from .exceptions import TortugaHTTPAuthError
 
 
@@ -40,8 +41,11 @@ class CherryPyAuthenticator(MultiAuthentionMethod):
     def on_authentication_succeeded(self, username: str):
         super().on_authentication_succeeded(username)
 
-        principal: AuthPrincipal = AuthManager().get_principal(username)
-        principal_attributes: dict = principal.get_attributes()
+        with dbm.session() as session:
+            principal: AuthPrincipal = \
+                AuthManager(session=session).get_principal(username)
+
+            principal_attributes: dict = principal.get_attributes()
 
         cherrypy.request.login = username
         cherrypy.session['admin_id']: int = \

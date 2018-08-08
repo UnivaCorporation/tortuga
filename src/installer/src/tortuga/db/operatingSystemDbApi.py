@@ -15,7 +15,7 @@
 # pylint: disable=W0703
 
 from tortuga.db.tortugaDbApi import TortugaDbApi
-from tortuga.db.dbManager import DbManager
+from sqlalchemy.orm.session import Session
 from tortuga.db.operatingSystemsDbHandler import OperatingSystemsDbHandler
 from tortuga.exceptions.tortugaException import TortugaException
 
@@ -31,17 +31,13 @@ class OperatingSystemDbApi(TortugaDbApi):
 
         self._osDbHandler = OperatingSystemsDbHandler()
 
-    def addOsIfNotFound(self, osInfo):
+    def addOsIfNotFound(self, session: Session, osInfo):
         dbOs = None
-
-        session = DbManager().openSession()
 
         try:
             dbOs = self._osDbHandler.addOsIfNotFound(session, osInfo)
             session.commit()
         except (Exception, TortugaException) as ex:
             self.getLogger().exception('%s' % (ex))
-        finally:
-            DbManager().closeSession()
 
         return dbOs

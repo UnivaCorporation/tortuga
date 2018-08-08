@@ -12,15 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tortuga.db.tortugaDbApi import TortugaDbApi
-from tortuga.db.softwareUsesHardwareDbHandler \
-    import SoftwareUsesHardwareDbHandler
+from sqlalchemy.orm.session import Session
 from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
-
+from tortuga.db.softwareUsesHardwareDbHandler import \
+    SoftwareUsesHardwareDbHandler
+from tortuga.db.tortugaDbApi import TortugaDbApi
 from tortuga.exceptions.tortugaException import TortugaException
-
 from tortuga.objects.tortugaObject import TortugaObjectList
-from tortuga.db.dbManager import DbManager
 
 
 class SoftwareUsesHardwareDbApi(TortugaDbApi):
@@ -35,7 +33,7 @@ class SoftwareUsesHardwareDbApi(TortugaDbApi):
         self._softwareUsesHardwareDbHandler = \
             SoftwareUsesHardwareDbHandler()
 
-    def getSoftwareUsesHardwareList(self):
+    def getSoftwareUsesHardwareList(self, session: Session):
         """
         Get list of all mappings
 
@@ -44,8 +42,6 @@ class SoftwareUsesHardwareDbApi(TortugaDbApi):
             Throws:
                 DbError
         """
-
-        session = DbManager().openSession()
 
         try:
             dbMappings = self._softwareUsesHardwareDbHandler.\
@@ -63,11 +59,9 @@ class SoftwareUsesHardwareDbApi(TortugaDbApi):
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise
-        finally:
-            DbManager().closeSession()
 
     def getAllowedHardwareProfilesBySoftwareProfileName(
-            self, softwareProfileName):
+            self, session: Session, softwareProfileName):
         """
         Get list of hardware profiles for the given software profile
 
@@ -76,8 +70,6 @@ class SoftwareUsesHardwareDbApi(TortugaDbApi):
             Throws:
                 DbError
         """
-
-        session = DbManager().openSession()
 
         try:
             dbMappings = self._softwareUsesHardwareDbHandler.\
@@ -95,5 +87,3 @@ class SoftwareUsesHardwareDbApi(TortugaDbApi):
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise
-        finally:
-            DbManager().closeSession()

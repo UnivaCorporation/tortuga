@@ -16,8 +16,8 @@
 
 from typing import Any, Dict
 
+from sqlalchemy.orm.session import Session
 from tortuga.config.configManager import ConfigManager
-from tortuga.db.dbManager import DbManager
 from tortuga.db.hardwareProfilesDbHandler import HardwareProfilesDbHandler
 from tortuga.db.models.hardwareProfile import HardwareProfile
 from tortuga.db.models.node import Node
@@ -31,7 +31,7 @@ from tortuga.exceptions.profileMappingNotAllowed import \
 from tortuga.resourceAdapter import resourceAdapterFactory
 
 
-def validate_addnodes_request(addNodesRequest: Dict[str, Any]):
+def validate_addnodes_request(session: Session, addNodesRequest: Dict[str, Any]):
     """
     Raises:
         HardwareProfileNotFound
@@ -57,139 +57,140 @@ def validate_addnodes_request(addNodesRequest: Dict[str, Any]):
     nodeCount = int(addNodesRequest.get('count', 0))
     rackNumber = addNodesRequest.get('rack')
 
-    with DbManager().session() as session:
-        # Look up hardware profile
-        hp = hpapi.getHardwareProfile(session, hardwareProfileName) \
-            if hardwareProfileName else None
+    # Look up hardware profile
+    hp = hpapi.getHardwareProfile(session, hardwareProfileName) \
+        if hardwareProfileName else None
 
-        # Look up software profile
-        sp = spapi.getSoftwareProfile(
-            session, softwareProfileName) if softwareProfileName else None
+    # Look up software profile
+    sp = spapi.getSoftwareProfile(
+        session, softwareProfileName) if softwareProfileName else None
 
-        if sp and not sp.isIdle and 'isIdle' in addNodesRequest and \
-                addNodesRequest['isIdle']:
+    if sp and not sp.isIdle and 'isIdle' in addNodesRequest and \
+            addNodesRequest['isIdle']:
+        raise InvalidArgument(
+            'Software profile [%s] is not idle software profile' % (
+                softwareProfileName))
+
+    # Make sure that if a software profile is given that it is allowed
+    # to be used with the given hardware profile
+    if sp is not None and hp is not None:
+        checkProfilesMapped(sp, hp)
+    elif sp is not None and hp is None:
+        if not sp.hardwareprofiles:
             raise InvalidArgument(
-                'Software profile [%s] is not idle software profile' % (
+                'Software profile [{0}] is not mapped to any hardware'
+                ' profiles'.format(softwareProfileName))
+
+        if len(sp.hardwareprofiles) > 1:
+            raise InvalidArgument(
+                'Ambiguous request: multiple hardware profiles are'
+                ' mapped to software profile [{0}]'.format(
                     softwareProfileName))
 
-        # Make sure that if a software profile is given that it is allowed
-        # to be used with the given hardware profile
-        if sp is not None and hp is not None:
-            checkProfilesMapped(sp, hp)
-        elif sp is not None and hp is None:
-            if not sp.hardwareprofiles:
-                raise InvalidArgument(
-                    'Software profile [{0}] is not mapped to any hardware'
-                    ' profiles'.format(softwareProfileName))
-
-            if len(sp.hardwareprofiles) > 1:
-                raise InvalidArgument(
-                    'Ambiguous request: multiple hardware profiles are'
-                    ' mapped to software profile [{0}]'.format(
-                        softwareProfileName))
-
-            hp = sp.hardwareprofiles[0]
-        elif hp is not None and sp is None and not addNodesRequest['isIdle']:
-            if not hp.mappedsoftwareprofiles:
-                raise InvalidArgument(
-                    'Hardware profile [{0}] is not mapped to any software'
-                    ' profiles'.format(hardwareProfileName))
-
-            if len(hp.mappedsoftwareprofiles) > 1:
-                raise InvalidArgument(
-                    'Ambiguous request: multiple software profiles are'
-                    ' mapped to hardware profile [{0}]'.format(
-                        hardwareProfileName))
-
-            sp = hp.mappedsoftwareprofiles[0]
-
-        # Ensure user does not make a request for DHCP discovery mode.
-        # Currently, this is determined by the presence of the item
-        # 'nodeDetails' in addNodesRequest. Ultimately, this should be
-        # shared code between here and the default resource adapter.
-        if hp.resourceadapter and \
-                hp.resourceadapter.name == 'default' and not nodeDetails:
+        hp = sp.hardwareprofiles[0]
+    elif hp is not None and sp is None and not addNodesRequest['isIdle']:
+        if not hp.mappedsoftwareprofiles:
             raise InvalidArgument(
-                'DHCP discovery is not available through WS API.')
+                'Hardware profile [{0}] is not mapped to any software'
+                ' profiles'.format(hardwareProfileName))
 
-        if sp and 'softwareProfile' not in addNodesRequest:
-            addNodesRequest['softwareProfile'] = sp.name
+        if len(hp.mappedsoftwareprofiles) > 1:
+            raise InvalidArgument(
+                'Ambiguous request: multiple software profiles are'
+                ' mapped to hardware profile [{0}]'.format(
+                    hardwareProfileName))
 
-        if 'hardwareProfile' not in addNodesRequest:
-            addNodesRequest['hardwareProfile'] = hp.name
+        sp = hp.mappedsoftwareprofiles[0]
 
-        swprofile_node_count = len(sp.nodes)
+    # Ensure user does not make a request for DHCP discovery mode.
+    # Currently, this is determined by the presence of the item
+    # 'nodeDetails' in addNodesRequest. Ultimately, this should be
+    # shared code between here and the default resource adapter.
+    if hp.resourceadapter and \
+            hp.resourceadapter.name == 'default' and not nodeDetails:
+        raise InvalidArgument(
+            'DHCP discovery is not available through WS API.')
 
-        # Validate 'nodeDetails'
+    if sp and 'softwareProfile' not in addNodesRequest:
+        addNodesRequest['softwareProfile'] = sp.name
 
-        if nodeDetails:
-            # Reconcile nodeDetails that contain hostnames with hwp name
-            # format
-            bWildcardNameFormat = hp.nameFormat == '*'
-            hostname = nodeDetails[0]['name'] \
-                if 'name' in nodeDetails[0] else None
-            if hostname and not bWildcardNameFormat:
-                # Host name specified, but hardware profile does not
-                # allow setting the host name
-                raise InvalidArgument(
-                    'Hardware profile does not allow setting'
-                    ' host names of imported nodes')
-            elif not hostname and bWildcardNameFormat:
-                # Host name not specified but hardware profile expects it
-                raise InvalidArgument(
-                    'Hardware profile requires imported node'
-                    ' name to be set')
+    if 'hardwareProfile' not in addNodesRequest:
+        addNodesRequest['hardwareProfile'] = hp.name
 
-            if nodeCount > 0 and nodeCount != len(nodeDetails):
-                raise InvalidArgument(
-                    'Node count must be equal to number'
-                    ' of MAC/IP/node names provided')
+    swprofile_node_count = len(sp.nodes)
 
-            if hostname:
-                # Ensure host does not already exist
-                existing_node = session.query(Node).filter(
-                    Node.name == hostname).first()
-                if existing_node:
-                    raise NodeAlreadyExists(
-                        'Node [%s] already exists' % (hostname))
+    # Validate 'nodeDetails'
 
-        # check if software profile is locked
-        if sp.lockedState:
-            if sp.lockedState == 'HardLocked':
-                raise OperationFailed(
-                    'Nodes cannot be added to hard locked software'
-                    ' profile [{}]'.format(sp.name))
-            elif sp.lockedState == 'SoftLocked':
-                if 'force' not in addNodesRequest or \
-                        not addNodesRequest['force']:
-                    raise OperationFailed(
-                        'Use --force argument to add nodes to soft locked'
-                        f' software profile [{sp.name}]'
-                    )
+    if nodeDetails:
+        # Reconcile nodeDetails that contain hostnames with hwp name
+        # format
+        bWildcardNameFormat = hp.nameFormat == '*'
+        hostname = nodeDetails[0]['name'] \
+            if 'name' in nodeDetails[0] else None
+        if hostname and not bWildcardNameFormat:
+            # Host name specified, but hardware profile does not
+            # allow setting the host name
+            raise InvalidArgument(
+                'Hardware profile does not allow setting'
+                ' host names of imported nodes')
+        elif not hostname and bWildcardNameFormat:
+            # Host name not specified but hardware profile expects it
+            raise InvalidArgument(
+                'Hardware profile requires imported node'
+                ' name to be set')
 
-        # ensure adding nodes does not exceed imposed limits
-        if sp.maxNodes > 0 and \
-                (swprofile_node_count + nodeCount) > sp.maxNodes:
+        if nodeCount > 0 and nodeCount != len(nodeDetails):
+            raise InvalidArgument(
+                'Node count must be equal to number'
+                ' of MAC/IP/node names provided')
+
+        if hostname:
+            # Ensure host does not already exist
+            existing_node = session.query(Node).filter(
+                Node.name == hostname).first()
+            if existing_node:
+                raise NodeAlreadyExists(
+                    'Node [%s] already exists' % (hostname))
+
+    # check if software profile is locked
+    if sp.lockedState:
+        if sp.lockedState == 'HardLocked':
             raise OperationFailed(
-                'Request to add {} node(s) exceeds software profile'
-                ' limit of {} nodes'.format(nodeCount, sp.maxNodes)
-            )
+                'Nodes cannot be added to hard locked software'
+                ' profile [{}]'.format(sp.name))
+        elif sp.lockedState == 'SoftLocked':
+            if 'force' not in addNodesRequest or \
+                    not addNodesRequest['force']:
+                raise OperationFailed(
+                    'Use --force argument to add nodes to soft locked'
+                    f' software profile [{sp.name}]'
+                )
 
-        # Prohibit running add-host against installer
-        validate_hwprofile(hp)
+    # ensure adding nodes does not exceed imposed limits
+    if sp.maxNodes > 0 and \
+            (swprofile_node_count + nodeCount) > sp.maxNodes:
+        raise OperationFailed(
+            'Request to add {} node(s) exceeds software profile'
+            ' limit of {} nodes'.format(nodeCount, sp.maxNodes)
+        )
 
-        # If the given hardwareProfile's nameFormat contains "#R',
-        # then the rackNumber is required.
-        nameFormat = hp.nameFormat
+    # Prohibit running add-host against installer
+    validate_hwprofile(hp)
 
-        if nameFormat.find('#R') != -1 and rackNumber is None:
-            raise InvalidArgument(
-                'Missing "rackNumber" for name format [%s] of'
-                ' hardware profile [%s]' % (nameFormat, hp))
-        adapter = resourceAdapterFactory.get_api(hp.resourceadapter.name)
+    # If the given hardwareProfile's nameFormat contains "#R',
+    # then the rackNumber is required.
+    nameFormat = hp.nameFormat
 
-        adapter.validate_start_arguments(
-            addNodesRequest, hp, dbSoftwareProfile=sp)
+    if nameFormat.find('#R') != -1 and rackNumber is None:
+        raise InvalidArgument(
+            'Missing "rackNumber" for name format [%s] of'
+            ' hardware profile [%s]' % (nameFormat, hp))
+
+    adapter = resourceAdapterFactory.get_api(hp.resourceadapter.name)
+    adapter.session = session
+
+    adapter.validate_start_arguments(
+        addNodesRequest, hp, dbSoftwareProfile=sp)
 
 
 def checkProfilesMapped(swProfile: SoftwareProfile, hwProfile: HardwareProfile):

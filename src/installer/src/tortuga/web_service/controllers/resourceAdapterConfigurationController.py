@@ -93,7 +93,9 @@ class ResourceAdapterConfigurationController(TortugaController):
             response = [
                 adapter.getCleanDict()
                 for adapter in
-                ResourceAdapterDbApi().getResourceAdapterList()
+                ResourceAdapterDbApi().getResourceAdapterList(
+                    cherrypy.request.db
+                )
             ]
         except Exception:  # noqa pylint: disable=broad-except
             # Unhandled server exception
