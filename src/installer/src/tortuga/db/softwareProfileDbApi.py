@@ -17,7 +17,6 @@
 from typing import Dict, Optional
 
 from sqlalchemy import func
-
 from tortuga.db.adminsDbHandler import AdminsDbHandler
 from tortuga.db.componentsDbHandler import ComponentsDbHandler
 from tortuga.db.dbManager import DbManager
@@ -807,41 +806,59 @@ class SoftwareProfileDbApi(TortugaDbApi):
 
         return dbSoftwareProfile
 
-    def copySoftwareProfile(self, srcSoftwareProfileName,
-                            dstSoftwareProfileName):
-        session = DbManager().openSession()
+    def copySoftwareProfile(self, srcSoftwareProfileName: str,
+                            dstSoftwareProfileName: str) -> None:
+        with DbManager().session() as session:
+            src_swprofile = self._softwareProfilesDbHandler.getSoftwareProfile(
+                session, srcSoftwareProfileName)
 
-        srcSoftwareProfile = self.getSoftwareProfile(
-            srcSoftwareProfileName, {
-                'partitions': True,
-                'components': True,
-            })
+            dst_swprofile = SoftwareProfileModel(
+                name=dstSoftwareProfileName,
+                description='Copy of %s' % (src_swprofile.description),
+                kernel=src_swprofile.kernel,
+                kernelParams=src_swprofile.kernelParams,
+                initrd=src_swprofile.initrd,
+                type=src_swprofile.type,
+                minNodes=src_swprofile.minNodes,
+                maxNodes=src_swprofile.maxNodes,
+                lockedState=src_swprofile.lockedState,
+                isIdle=src_swprofile.isIdle
+            )
 
-        dstSoftwareProfile = self.getSoftwareProfile(
-            srcSoftwareProfileName)
-        dstSoftwareProfile.setName(dstSoftwareProfileName)
-        newDescription = 'Copy of %s' % (
-            dstSoftwareProfile.getDescription())
-        dstSoftwareProfile.setDescription(newDescription)
+            # os
+            dst_swprofile.os = src_swprofile.os
 
-        # partitions
-        dstSoftwareProfile.setPartitions(
-            srcSoftwareProfile.getPartitions())
+            # admins
+            for admin in src_swprofile.admins:
+                dst_swprofile.admins.append(admin)
 
-        # Finally add the software profile
-        dstSoftwareProfile = self.addSoftwareProfile(
-            dstSoftwareProfile, session)
+            # partitions
+            for partition in src_swprofile.partitions:
+                dst_swprofile.partitions.append(partition)
 
-        # Enable components separately
-        srcCompList = self.getEnabledComponentList(srcSoftwareProfileName)
+            # components
+            for component in src_swprofile.components:
+                dst_swprofile.components.append(component)
 
-        for srcComp in srcCompList:
-            if srcComp.getKit().getIsOs() or srcComp.getName() == 'core':
-                self._softwareProfilesDbHandler.\
-                    addComponentToSoftwareProfileEx(
-                        session, srcComp.getId(), dstSoftwareProfile)
+            # tags
+            for tag in src_swprofile.tags:
+                dst_swprofile.tags.append(tag)
 
-        session.commit()
+            # kitsources
+            for kitsource in src_swprofile.kitsources:
+                dst_swprofile.kitsources.append(kitsource)
+
+            # hardwareprofiles
+            for hwprofile in src_swprofile.hardwareprofiles:
+                dst_swprofile.hardwareprofiles.append(hwprofile)
+
+            # idle hardware profiles
+            for hwprofileswithidle in src_swprofile.hwprofileswithidle:
+                dst_swprofile.hwprofileswithidle.append(hwprofileswithidle)
+
+            session.add(dst_swprofile)
+
+            session.commit()
 
     def getUsableNodes(self, name):
         """
