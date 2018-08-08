@@ -431,31 +431,29 @@ class KitInstallerBase(ConfigurableMixin, metaclass=KitInstallerMeta):
                 ws_pkg_name)
         )
         try:
-           importlib.import_module(ws_pkg_name)
+            importlib.import_module(ws_pkg_name)
         except ModuleNotFoundError:
             logger.debug(
                 'No web service controllers found for kit: {}'.format(
                     self.spec)
             )
 
-    def register_web_service_worker_actions(self):
+    def register_event_listeners(self):
         """
-        Register web service worker actions for this kit.
+        Register event listeners for this kit.
 
         """
         kit_pkg_name = inspect.getmodule(self).__package__
-        ws_pkg_name = '{}.web_service.worker'.format(kit_pkg_name)
+        listener_pkg_name = '{}.events.listeners'.format(kit_pkg_name)
         logger.debug(
-            'Searching for web service worker actions in package: {}'.format(
-                ws_pkg_name)
+            'Searching for event listeners in package: {}'.format(
+                listener_pkg_name)
         )
         try:
-           importlib.import_module(ws_pkg_name)
+            importlib.import_module(listener_pkg_name)
         except ModuleNotFoundError:
             logger.debug(
-                'No web service worker actions found for kit: {}'.format(
-                    self.spec)
-            )
+                'No event listeners found for kit: {}'.format(self.spec))
 
     def action_install_puppet_modules(self, *args, **kwargs):
         #

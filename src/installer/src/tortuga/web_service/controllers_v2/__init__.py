@@ -36,6 +36,7 @@ def setup_routes():
     for kit_installer_class in get_all_kit_installers():
         kit_installer = kit_installer_class()
         kit_installer.register_web_service_controllers()
+        kit_installer.register_event_listeners()
 
     dispatcher = cherrypy.dispatch.RoutesDispatcher()
     dispatcher.mapper.explicit = False
