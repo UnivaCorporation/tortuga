@@ -83,7 +83,7 @@ class ResourceAdapter(UserDataMixin): \
         self.__osObject = None
         self.__sanApi = None
 
-        self._cm = ConfigManager()
+        self._cm: ConfigManager = ConfigManager()
 
         self._addHostSession = addHostSession
 
