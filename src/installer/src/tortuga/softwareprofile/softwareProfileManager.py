@@ -844,13 +844,11 @@ class SoftwareProfileManager(TortugaObjectManager): \
                 continue
 
             installer_ = get_kit_installer(
-                (kit.getName(), kit.getVersion(), kit.getIteration()))
-
-            installer_obj = installer_()
-            installer_obj.session = session
+                (kit.getName(), kit.getVersion(), kit.getIteration()))()
+            installer_.session = session
 
             # we are only interested in software profile metadata
-            item = installer_obj.action_get_metadata(software_profile_name=name)
+            item = installer_.action_get_metadata(software_profile_name=name)
             if item:
                 metadata.update(item)
 
