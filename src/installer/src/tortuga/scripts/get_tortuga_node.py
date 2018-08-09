@@ -124,6 +124,7 @@ def get_puppet_node_yaml(session, nodeName):
                     dbComponent.kit.iteration
                 )
                 kit_installer = get_kit_installer(kit_spec)()
+                kit_installer.session = session
                 _component = kit_installer.get_component_installer(
                     dbComponent.name)
 
