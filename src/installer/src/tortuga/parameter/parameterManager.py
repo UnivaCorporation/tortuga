@@ -14,8 +14,13 @@
 
 # pylint: disable=no-member
 
+from typing import Optional
+
+from sqlalchemy.orm.session import Session
 from tortuga.db.globalParameterDbApi import GlobalParameterDbApi
 from tortuga.exceptions.parameterNotFound import ParameterNotFound
+from tortuga.objects.parameter import Parameter
+from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 
 
@@ -25,15 +30,16 @@ class ParameterManager(TortugaObjectManager):
 
         self._globalParameterDbApi = GlobalParameterDbApi()
 
-    def getParameter(self, name):
+    def getParameter(self, session: Session, name: str) -> Parameter:
         """
         Raises:
             ParameterNotFound
         """
 
-        return self._globalParameterDbApi.getParameter(name)
+        return self._globalParameterDbApi.getParameter(session, name)
 
-    def getBoolParameter(self, name, default=None):
+    def getBoolParameter(self, session: Session, name: str,
+                         default: Optional[bool] = None) -> bool:
         """
         Raises:
             ParameterNotFound
@@ -41,7 +47,7 @@ class ParameterManager(TortugaObjectManager):
         """
 
         try:
-            param = self.getParameter(name)
+            param = self.getParameter(session, name)
         except ParameterNotFound:
             if default is not None:
                 return default
@@ -51,7 +57,8 @@ class ParameterManager(TortugaObjectManager):
         return param.getValue() and \
             param.getValue()[0].lower() in ('1', 'y', 't')
 
-    def getIntParameter(self, name, default=None):
+    def getIntParameter(self, session: Session, name: str,
+                        default: Optional[int] = None) -> int:
         """
         Raises:
             ParameterNotFound
@@ -68,11 +75,11 @@ class ParameterManager(TortugaObjectManager):
 
         return int(param.getValue())
 
-    def getParameterList(self):
-        return self._globalParameterDbApi.getParameterList()
+    def getParameterList(self, session: Session) -> TortugaObjectList:
+        return self._globalParameterDbApi.getParameterList(session)
 
-    def upsertParameter(self, parameter):
-        return self._globalParameterDbApi.upsertParameter(parameter)
+    def upsertParameter(self, session: Session, parameter: Parameter) -> None:
+        self._globalParameterDbApi.upsertParameter(session, parameter)
 
-    def deleteParameter(self, name):
-        return self._globalParameterDbApi.deleteParameter(name)
+    def deleteParameter(self, session: Session, name: str) -> None:
+        self._globalParameterDbApi.deleteParameter(session, name)

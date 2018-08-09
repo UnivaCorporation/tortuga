@@ -17,6 +17,7 @@ from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
 from tortuga.db.tortugaDbApi import TortugaDbApi
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.objects.parameter import Parameter
+from tortuga.objects.tortugaObject import TortugaObjectList
 
 
 class GlobalParameterDbApi(TortugaDbApi):
@@ -29,7 +30,7 @@ class GlobalParameterDbApi(TortugaDbApi):
 
         self._globalParametersDbHandler = GlobalParametersDbHandler()
 
-    def getParameter(self, session: Session, name):
+    def getParameter(self, session: Session, name: str) -> Parameter:
         """
         Returns the named parameter
         """
@@ -45,7 +46,7 @@ class GlobalParameterDbApi(TortugaDbApi):
             self.getLogger().exception('%s' % ex)
             raise
 
-    def getParameterList(self, session: Session):
+    def getParameterList(self, session: Session) -> TortugaObjectList:
         """
         Get list of all available parameters from the db.
 
@@ -66,7 +67,7 @@ class GlobalParameterDbApi(TortugaDbApi):
             self.getLogger().exception('%s' % ex)
             raise
 
-    def addParameter(self, session: Session, parameter):
+    def addParameter(self, session: Session, parameter: Parameter) -> None:
         """
         Insert parameter into the db.
 
@@ -90,7 +91,7 @@ class GlobalParameterDbApi(TortugaDbApi):
             self.getLogger().exception('%s' % ex)
             raise
 
-    def upsertParameter(self, session: Session, parameter):
+    def upsertParameter(self, session: Session, parameter: Parameter) -> None:
         try:
             self._globalParametersDbHandler.upsertParameter(
                 session, parameter.getName(), parameter.getValue(),
@@ -105,7 +106,7 @@ class GlobalParameterDbApi(TortugaDbApi):
             self.getLogger().exception('upsertParameter failed')
             raise
 
-    def deleteParameter(self, session: Session, name):
+    def deleteParameter(self, session: Session, name: str) -> None:
         """
         Delete parameter from the db.
 

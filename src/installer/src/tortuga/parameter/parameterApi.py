@@ -14,9 +14,14 @@
 
 # pylint: disable=no-member
 
+from typing import Optional
+
+from sqlalchemy.orm.session import Session
+from tortuga.exceptions.tortugaException import TortugaException
+from tortuga.objects.parameter import Parameter
+from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.parameter.parameterManager import ParameterManager
 from tortuga.utility.tortugaApi import TortugaApi
-from tortuga.exceptions.tortugaException import TortugaException
 
 
 class ParameterApi(TortugaApi):
@@ -24,7 +29,7 @@ class ParameterApi(TortugaApi):
     Parameter API class.
     """
 
-    def getParameter(self, name):
+    def getParameter(self, session: Session, name: str) -> Parameter:
         """
         Get parameter.
 
@@ -36,7 +41,7 @@ class ParameterApi(TortugaApi):
         """
 
         try:
-            return ParameterManager().getParameter(name)
+            return ParameterManager().getParameter(session, name)
         except TortugaException:
             raise
         except Exception as ex:
@@ -44,7 +49,8 @@ class ParameterApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def getBoolParameter(self, name, default=None):
+    def getBoolParameter(self, session: Session, name: str,
+                         default: Optional[bool] = None) -> bool:
         """
         Get bool parameter.
 
@@ -55,7 +61,7 @@ class ParameterApi(TortugaApi):
 
         try:
             return ParameterManager().getBoolParameter(
-                name, default)
+                session, name, default)
         except TortugaException:
             raise
         except Exception as ex:
@@ -63,7 +69,8 @@ class ParameterApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def getIntParameter(self, name, default=None):
+    def getIntParameter(self, session: Session, name: str,
+                        default: Optional[int] = None) -> int:
         """
         Get int parameter.
 
@@ -74,7 +81,7 @@ class ParameterApi(TortugaApi):
 
         try:
             return ParameterManager().getIntParameter(
-                name, default)
+                session, name, default)
         except TortugaException:
             raise
         except Exception as ex:
@@ -82,7 +89,7 @@ class ParameterApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def getParameterList(self):
+    def getParameterList(self, session: Session) -> TortugaObjectList:
         """
         Get all known parameters.
 
@@ -93,16 +100,17 @@ class ParameterApi(TortugaApi):
         """
 
         try:
-            return ParameterManager().getParameterList()
+            return ParameterManager().getParameterList(session)
         except TortugaException:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % (ex))
             raise TortugaException(exception=ex)
 
-    def upsertParameter(self, parameter):
+    def upsertParameter(self, session: Session, parameter: Parameter) \
+            -> None:
         try:
-            return ParameterManager().upsertParameter(parameter)
+            return ParameterManager().upsertParameter(session, parameter)
         except TortugaException:
             raise
         except Exception as ex:
@@ -111,13 +119,13 @@ class ParameterApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def deleteParameter(self, name):
+    def deleteParameter(self, session: Session, name: str) -> None:
         """
         Delete parameter by name
         """
 
         try:
-            return ParameterManager().deleteParameter(name)
+            ParameterManager().deleteParameter(session, name)
         except TortugaException:
             raise
         except Exception as ex:
