@@ -850,7 +850,7 @@ class SoftwareProfileManager(TortugaObjectManager): \
             installer_obj.session = session
 
             # we are only interested in software profile metadata
-            item = installer_().action_get_metadata(software_profile_name=name)
+            item = installer_obj.action_get_metadata(software_profile_name=name)
             if item:
                 metadata.update(item)
 
