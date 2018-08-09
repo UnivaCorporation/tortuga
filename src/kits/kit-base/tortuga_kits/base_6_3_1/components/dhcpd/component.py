@@ -19,7 +19,6 @@ import shutil
 from logging import getLogger
 
 from tortuga.config.configManager import ConfigManager
-from tortuga.db.dbManager import DbManager
 from tortuga.db.globalParameterDbApi import GlobalParameterDbApi
 from tortuga.db.networksDbHandler import NetworksDbHandler
 from tortuga.exceptions.nicNotFound import NicNotFound
@@ -154,7 +153,6 @@ class ComponentInstaller(ComponentInstallerBase):
         self._provider = DhcpdDhcpProvider(self)
         self._manager = self._get_os_dhcpd_manager('dhcpd')
         self._config = ConfigManager()
-        self._installer_node = NodeApi().getInstallerNode()
 
     def _get_os_dhcpd_manager(self, name):
         """
@@ -169,19 +167,19 @@ class ComponentInstaller(ComponentInstallerBase):
             getOsObjectFactory().getOsKitApplicationManager(name, dir_name)
         return dhcpd_manager
 
-    @staticmethod
-    def _get_global_parameter(key, default=None):
-        """
-        Get parameter from the DB.
+    # @staticmethod
+    # def _get_global_parameter(key, default=None):
+    #     """
+    #     Get parameter from the DB.
 
-        :param key: String
-        :param default: String
-        :returns: DbObject
-        """
-        try:
-            return GlobalParameterDbApi().getParameter(key).getValue()
-        except ParameterNotFound:
-            return default
+    #     :param key: String
+    #     :param default: String
+    #     :returns: DbObject
+    #     """
+    #     try:
+    #         return GlobalParameterDbApi().getParameter(key).getValue()
+    #     except ParameterNotFound:
+    #         return default
 
     @staticmethod
     def _get_provisioning_networks():
@@ -190,10 +188,9 @@ class ComponentInstaller(ComponentInstallerBase):
 
         :returns: Generator provisioning networks
         """
-        with DbManager().session() as session:
-            for network in NetworksDbHandler().getNetworkList(session):
-                if network.type == 'provision':
-                    yield network
+        for network in NetworksDbHandler().getNetworkList(self.session):
+            if network.type == 'provision':
+                yield network
 
     @staticmethod
     def _get_provisioning_nics(node):
@@ -235,7 +232,10 @@ class ComponentInstaller(ComponentInstallerBase):
         :raises NicNotFound:
 
         """
-        prov_nics = self._get_provisioning_nics(self._installer_node)
+
+        installer_node = NodeApi().getInstallerNode(self.session)
+
+        prov_nics = self._get_provisioning_nics(installer_node)
         for prov_nic in prov_nics:
             if prov_nic.getNetwork().getId() == network_id:
                 return ipaddress.IPv4Address(prov_nic.getIp())
@@ -339,12 +339,34 @@ class ComponentInstaller(ComponentInstallerBase):
         :returns: None
         """
 
+        try:
+            result = GlobalParameterDbApi().getParameter(
+                self.session,
+                'DHCPLeaseTime'
+            )
+
+            dhcp_lease_time = int(result.getValue())
+        except ParameterNotFound:
+            dhcp_lease_time = 2400
+
+        try:
+            result = GlobalParameterDbApi().getParameter(
+                self.session,
+                'DNSZone',
+
+                dns_zone = result.getValue()
+            )
+        except ParameterNotFound:
+            dns_zone = ''
+
+        installer_node = NodeApi().getInstallerNode(self.session)
+
         self._manager.configure(
-            self.kit_installer.get_db_parameter_value('DHCPLeaseTime', 2400),
-            self.kit_installer.get_db_parameter_value('DNSZone'),
-            self._get_provisioning_nics_ip(self._installer_node),
+            dhcp_lease_time,
+            dns_zone,
+            self._get_provisioning_nics_ip(installer_node),
             self._dhcp_subnets,
-            installerNode=self._installer_node,
+            installerNode=installer_node,
             bUpdateSysconfig=kwargs.get('bUpdateSysconfig', True),
             kit_settings=self._get_kit_settings_dictionary
         )

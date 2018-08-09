@@ -18,6 +18,7 @@ import errno
 import signal
 
 from tortuga.cli.tortugaCli import TortugaCli
+from tortuga.db.dbManager import DbManager
 from tortuga.kit.actions.manager import KitActionsManager
 from tortuga.kit.loader import load_kits
 from tortuga.softwareprofile.softwareProfileApi import SoftwareProfileApi
@@ -49,39 +50,43 @@ class PreAddHostCli(TortugaCli):
 
         load_kits()
 
-        if self.getArgs().softwareProfile:
-            # Check for valid software profile - will throw exception and exit
-            # if it doesn't exist
+        with DbManager().session() as session:
+            if self.getArgs().softwareProfile:
+                # Check for valid software profile - will throw exception and exit
+                # if it doesn't exist
 
-            SoftwareProfileApi().getSoftwareProfile(
-                self.getArgs().softwareProfile)
+                SoftwareProfileApi().getSoftwareProfile(
+                    session, self.getArgs().softwareProfile)
 
-        # Restore default signal masks/handlers so subprocesses don't inherit
-        # unexpected signal masks
-        # IMPORTANT NOTE:
-        # Python does not appear to allow you to clear the ignore mask for
-        # SIGPIPE. All subprocesses
-        # created through this method will still ignore SIGPIPE unless they
-        # explicitly do otherwise themselves after startup. This could
-        # potentially cause issues with some system daemons in the future if
-        # one of them uses SIGPIPE.
+            # Restore default signal masks/handlers so subprocesses don't inherit
+            # unexpected signal masks
+            # IMPORTANT NOTE:
+            # Python does not appear to allow you to clear the ignore mask for
+            # SIGPIPE. All subprocesses
+            # created through this method will still ignore SIGPIPE unless they
+            # explicitly do otherwise themselves after startup. This could
+            # potentially cause issues with some system daemons in the future if
+            # one of them uses SIGPIPE.
 
-        for signum in range(1, signal.NSIG):
-            try:
-                signal.signal(signum, signal.SIG_DFL)
-            except OSError as exc:
-                # Signal numbers are not necessarily contiguous;
-                # ignore non-existent signals
-                if exc.errno == errno.EINVAL:
-                    continue
+            for signum in range(1, signal.NSIG):
+                try:
+                    signal.signal(signum, signal.SIG_DFL)
+                except OSError as exc:
+                    # Signal numbers are not necessarily contiguous;
+                    # ignore non-existent signals
+                    if exc.errno == errno.EINVAL:
+                        continue
 
-                raise
+                    raise
 
-        KitActionsManager().pre_add_host(
-            self.getArgs().hardwareProfile,
-            self.getArgs().softwareProfile,
-            self.getArgs().hostname,
-            self.getArgs().ip)
+            kitmgr = KitActionsManager()
+            kitmgr.session = session
+
+            kitmgr.pre_add_host(
+                self.getArgs().hardwareProfile,
+                self.getArgs().softwareProfile,
+                self.getArgs().hostname,
+                self.getArgs().ip)
 
 
 def main():

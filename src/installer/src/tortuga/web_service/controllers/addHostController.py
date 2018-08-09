@@ -114,7 +114,7 @@ class AddHostController(TortugaController):
 
         try:
             status = AddHostManager().getStatus(
-                session, int(startMessage), getNodes)
+                cherrypy.request.db, session, int(startMessage), getNodes)
 
             response = {'addhoststatus': status.getCleanDict()}
         except NotFound as ex:

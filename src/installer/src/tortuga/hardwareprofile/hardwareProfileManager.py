@@ -16,6 +16,7 @@
 
 from typing import Any, Dict, Optional, Union
 
+from sqlalchemy.orm.session import Session
 from tortuga.config.configManager import ConfigManager
 from tortuga.db.globalParameterDbApi import GlobalParameterDbApi
 from tortuga.db.hardwareProfileDbApi import HardwareProfileDbApi
@@ -29,12 +30,11 @@ from tortuga.objects.hardwareProfile import HardwareProfile
 from tortuga.objects.networkDevice import NetworkDevice
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.os_utility import osUtility
-from tortuga.types import Singleton
 from tortuga.utility import validation
 from tortuga.utility.network import fixNetworkDeviceName
 
 
-class HardwareProfileManager(TortugaObjectManager, Singleton):
+class HardwareProfileManager(TortugaObjectManager):
     def __init__(self):
         super(HardwareProfileManager, self).__init__()
 
@@ -45,6 +45,7 @@ class HardwareProfileManager(TortugaObjectManager, Singleton):
         self._nodeDbApi = NodeDbApi()
 
     def getHardwareProfileList(self,
+                               session: Session,
                                optionDict: Optional[Union[Dict[str, str], None]] = None,
                                tags: Optional[Union[Dict[str, str], None]] = None):
         """
@@ -52,26 +53,28 @@ class HardwareProfileManager(TortugaObjectManager, Singleton):
         in this hardwareprofile
         """
 
-        return self._hpDbApi.getHardwareProfileList(optionDict=optionDict,
-                                                    tags=tags)
+        return self._hpDbApi.getHardwareProfileList(
+            session, optionDict=optionDict, tags=tags)
 
-    def setIdleSoftwareProfile(self, hardwareProfileName: str,
+    def setIdleSoftwareProfile(self, session: Session,
+                               hardwareProfileName: str,
                                softwareProfileName: Optional[Union[str, None]] = None):
         """
         Set idle software profile
         """
 
         return self._hpDbApi.setIdleSoftwareProfile(
-            hardwareProfileName, softwareProfileName)
+            session, hardwareProfileName, softwareProfileName)
 
-    def getHardwareProfile(self, name: str,
+    def getHardwareProfile(self, session: Session, name: str,
                            optionDict: Optional[Union[dict, None]] = None):
-        return self._hpDbApi.getHardwareProfile(name, optionDict)
+        return self._hpDbApi.getHardwareProfile(session, name, optionDict)
 
-    def getHardwareProfileById(self, id_, optionDict=None):
-        return self._hpDbApi.getHardwareProfileById(id_, optionDict)
+    def getHardwareProfileById(self, session: Session, id_, optionDict=None):
+        return self._hpDbApi.getHardwareProfileById(session, id_, optionDict)
 
-    def addAdmin(self, hardwareProfileName: str, adminUsername: str):
+    def addAdmin(self, session: Session, hardwareProfileName: str,
+                 adminUsername: str):
         """
         Add an admin as an authorized user.
 
@@ -83,9 +86,11 @@ class HardwareProfileManager(TortugaObjectManager, Singleton):
                 HardwareProfileNotFound
         """
 
-        return self._hpDbApi.addAdmin(hardwareProfileName, adminUsername)
+        return self._hpDbApi.addAdmin(
+            session, hardwareProfileName, adminUsername)
 
-    def deleteAdmin(self, hardwareProfileName: str, adminUsername: str):
+    def deleteAdmin(self, session: Session, hardwareProfileName: str,
+                    adminUsername: str):
         """
         Remove an admin as an authorized user.
 
@@ -97,9 +102,11 @@ class HardwareProfileManager(TortugaObjectManager, Singleton):
                 HardwareProfileNotFound
         """
 
-        return self._hpDbApi.deleteAdmin(hardwareProfileName, adminUsername)
+        return self._hpDbApi.deleteAdmin(
+            session, hardwareProfileName, adminUsername)
 
-    def updateHardwareProfile(self, hardwareProfileObject: Any):
+    def updateHardwareProfile(self, session: Session,
+                              hardwareProfileObject: Any):
         """
         Update a hardware profile in the database that matches the passed
         in hardware profile object.  The ID is used as the primary matching
@@ -119,8 +126,8 @@ class HardwareProfileManager(TortugaObjectManager, Singleton):
                 hardwareProfileObject.getName()))
 
         # First get the object from the db we are updating...
-        existingProfile = self.\
-            getHardwareProfileById(hardwareProfileObject.getId())
+        existingProfile = self.getHardwareProfileById(
+            session, hardwareProfileObject.getId())
 
         if hardwareProfileObject.getInstallType() and \
             hardwareProfileObject.getInstallType() != \
@@ -129,9 +136,10 @@ class HardwareProfileManager(TortugaObjectManager, Singleton):
                 'Hardware profile installation type cannot be'
                 ' changed' % (hardwareProfileObject.getName()))
 
-        self._hpDbApi.updateHardwareProfile(hardwareProfileObject)
+        self._hpDbApi.updateHardwareProfile(session, hardwareProfileObject)
 
-    def createHardwareProfile(self, hwProfileSpec: HardwareProfile,
+    def createHardwareProfile(self, session: Session,
+                              hwProfileSpec: HardwareProfile,
                               settingsDict: Optional[Union[dict, None]] = None):
         bUseDefaults = settingsDict['defaults'] \
             if settingsDict and 'defaults' in settingsDict else False
@@ -147,6 +155,7 @@ class HardwareProfileManager(TortugaObjectManager, Singleton):
                 '%s Nodes' % (hwProfileSpec.getName()))
 
         installerNode = self._nodeDbApi.getNode(
+            session,
             ConfigManager().getInstaller(),
             {'softwareprofile': True})
 
@@ -213,7 +222,7 @@ class HardwareProfileManager(TortugaObjectManager, Singleton):
             # overrides the
             # <idleSoftwareProfileId>...</idleSoftwareProfileId> element
             idleSoftwareProfile = self._spDbApi.getSoftwareProfile(
-                hwProfileSpec.getIdleSoftwareProfile().getName())
+                session, hwProfileSpec.getIdleSoftwareProfile().getName())
 
             hwProfileSpec.setIdleSoftwareProfileId(
                 idleSoftwareProfile.getId())
@@ -231,7 +240,7 @@ class HardwareProfileManager(TortugaObjectManager, Singleton):
             hwProfileSpec.setInitrd(
                 osObjFactory.getOsSysManager().getInitrd(osInfo))
 
-        self._hpDbApi.addHardwareProfile(hwProfileSpec)
+        self._hpDbApi.addHardwareProfile(session, hwProfileSpec)
 
         # Iterate over all networks in the newly defined hardware profile
         # and build assocations to provisioning NICs
@@ -242,36 +251,41 @@ class HardwareProfileManager(TortugaObjectManager, Singleton):
                 # Get provisioning nic for network
                 try:
                     provisioningNic = self.getProvisioningNicForNetwork(
-                        network.getAddress(), network.getNetmask())
+                        session, network.getAddress(), network.getNetmask())
                 except NicNotFound:
                     # There is currently no provisioning NIC defined for
                     # this network.  This is not a fatal error.
                     continue
 
                 self.setProvisioningNic(
-                    hwProfileSpec.getName(), provisioningNic.getId())
+                    session, hwProfileSpec.getName(), provisioningNic.getId())
 
-    def deleteHardwareProfile(self, name: str) -> None:
+    def deleteHardwareProfile(self, session: Session, name: str) -> None:
         """
         Delete hardwareprofile by name.
         """
 
-        self._hpDbApi.deleteHardwareProfile(name)
+        self._hpDbApi.deleteHardwareProfile(session, name)
 
         self.getLogger().info('Deleted hardware profile [%s]' % (name))
 
-    def updateSoftwareOverrideAllowed(self, hardwareProfileName: str,
+    def updateSoftwareOverrideAllowed(self, session: Session,
+                                      hardwareProfileName: str,
                                       flag: bool) -> None:
         self._hpDbApi.updateSoftwareOverrideAllowed(
-            hardwareProfileName, flag)
+            session, hardwareProfileName, flag)
 
-    def setProvisioningNic(self, hardwareProfileName: str, nicId: int):
-        return self._hpDbApi.setProvisioningNic(hardwareProfileName, nicId)
+    def setProvisioningNic(self, session: Session, hardwareProfileName: str,
+                           nicId: int):
+        return self._hpDbApi.setProvisioningNic(
+            session, hardwareProfileName, nicId)
 
-    def getProvisioningNicForNetwork(self, network: str, netmask: str):
-        return self._hpDbApi.getProvisioningNicForNetwork(network, netmask)
+    def getProvisioningNicForNetwork(self, session: Session, network: str,
+                                     netmask: str):
+        return self._hpDbApi.getProvisioningNicForNetwork(
+            session, network, netmask)
 
-    def copyHardwareProfile(self, srcHardwareProfileName: str,
+    def copyHardwareProfile(self, session: Session, srcHardwareProfileName: str,
                             dstHardwareProfileName: str):
         validation.validateProfileName(dstHardwareProfileName)
 
@@ -279,8 +293,8 @@ class HardwareProfileManager(TortugaObjectManager, Singleton):
             'Copying hardware profile [%s] to [%s]' % (
                 srcHardwareProfileName, dstHardwareProfileName))
 
-        return self._hpDbApi.copyHardwareProfile(srcHardwareProfileName,
-                                                 dstHardwareProfileName)
+        return self._hpDbApi.copyHardwareProfile(
+            session, srcHardwareProfileName, dstHardwareProfileName)
 
-    def getNodeList(self, hardwareProfileName: str):
-        return self._hpDbApi.getNodeList(hardwareProfileName)
+    def getNodeList(self, session: Session, hardwareProfileName: str):
+        return self._hpDbApi.getNodeList(session, hardwareProfileName)

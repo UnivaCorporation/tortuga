@@ -17,14 +17,14 @@
 import datetime
 
 import cherrypy
-
+from sqlalchemy.orm.session import Session
 from tortuga.addhost.addHostManager import AddHostManager
 from tortuga.db.models.nodeRequest import NodeRequest
 from tortuga.events.types import DeleteNodeRequestQueued
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.exceptions.operationFailed import OperationFailed
-from tortuga.node.nodeManager import NodeManager
 from tortuga.node import state
+from tortuga.node.nodeManager import NodeManager
 from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.resourceAdapter.tasks import delete_nodes
 from tortuga.schema import NodeSchema
@@ -143,19 +143,21 @@ class NodeController(TortugaController):
 
             if 'addHostSession' in kwargs and kwargs['addHostSession']:
                 nodeList = self.app.node_api.getNodesByAddHostSession(
-                    kwargs['addHostSession'], options)
+                    cherrypy.request.db, kwargs['addHostSession'], options)
             elif 'name' in kwargs and kwargs['name']:
                 nodeList = self.app.node_api.getNodesByNameFilter(
-                    kwargs['name'], optionDict=options)
+                    cherrypy.request.db, kwargs['name'], optionDict=options)
             elif 'installer' in kwargs and str2bool(kwargs['installer']):
                 nodeList = TortugaObjectList(
-                    [self.app.node_api.getInstallerNode()]
+                    [self.app.node_api.getInstallerNode(cherrypy.request.db)]
                 )
             elif 'ip' in kwargs:
                 nodeList = TortugaObjectList(
-                    [self.app.node_api.getNodeByIp(kwargs['ip'])])
+                    [self.app.node_api.getNodeByIp(
+                        cherrypy.request.db, kwargs['ip'])])
             else:
-                nodeList = self.app.node_api.getNodeList(tags=tagspec)
+                nodeList = self.app.node_api.getNodeList(
+                    cherrypy.request.db, tags=tagspec)
 
             response = {
                 'nodes': NodeSchema().dump(nodeList, many=True).data
@@ -180,7 +182,8 @@ class NodeController(TortugaController):
                 if 'include' in kwargs else None,
                 ['softwareprofile', 'hardwareprofile'])
 
-            node = self.app.node_api.getNodeById(node_id, optionDict=options)
+            node = self.app.node_api.getNodeById(
+                cherrypy.request.db, node_id, optionDict=options)
 
             response = {
                 'node': node.getCleanDict(),
@@ -204,9 +207,9 @@ class NodeController(TortugaController):
 
         try:
             if ip in ('127.0.0.1', '::1'):
-                node = self.app.node_api.getInstallerNode()
+                node = self.app.node_api.getInstallerNode(cherrypy.request.db)
             else:
-                node = self.app.node_api.getNodeByIp(ip)
+                node = self.app.node_api.getNodeByIp(cherrypy.request.db, ip)
 
             response = {'node': node.getCleanDict()}
         except NodeNotFound as ex:
@@ -235,7 +238,8 @@ class NodeController(TortugaController):
                 if 'bootFrom' in postdata and \
                 postdata['bootFrom'] is not None else None
 
-            result = self.app.node_api.updateNodeStatus(name, new_state, bootFrom)
+            result = self.app.node_api.updateNodeStatus(
+                cherrypy.request.db, name, new_state, bootFrom)
 
             response = {
                 'changed': result,
@@ -257,7 +261,8 @@ class NodeController(TortugaController):
         """
 
         try:
-            info = self.app.node_api.getProvisioningInfo(nodeName)
+            info = self.app.node_api.getProvisioningInfo(
+                cherrypy.request.db, nodeName)
 
             response = {
                 'provisioninginfo': info.getCleanDict(),
@@ -283,7 +288,8 @@ class NodeController(TortugaController):
         """
 
         try:
-            response = self.app.node_api.idleNode(nodeName)
+            response = self.app.node_api.idleNode(
+                cherrypy.request.db, nodeName)
         except NodeNotFound as ex:
             self.handleException(ex)
             code = self.getTortugaStatusCode(ex)
@@ -309,7 +315,8 @@ class NodeController(TortugaController):
             if 'softwareProfileName' in postdata else None
 
         try:
-            response = self.app.node_api.activateNode(nodeName, softwareProfileName)
+            response = self.app.node_api.activateNode(
+                cherrypy.request.db, nodeName, softwareProfileName)
 
         except Exception as ex:  # noqa pylint: disable=broad-except
             self.getLogger().exception('node WS API activateNode() failed')
@@ -329,7 +336,8 @@ class NodeController(TortugaController):
             nodeList = [node for node in nodeString.split('+')] \
                 if nodeString != '+' else []
 
-            self.app.node_api.startupNode(nodeName, nodeList, bootMethod)
+            self.app.node_api.startupNode(
+                cherrypy.request.db, nodeName, nodeList, bootMethod)
         except NodeNotFound as ex:
             self.handleException(ex)
             code = self.getTortugaStatusCode(ex)
@@ -348,7 +356,7 @@ class NodeController(TortugaController):
         response = None
 
         try:
-            self.app.node_api.shutdownNode(nodeName)
+            self.app.node_api.shutdownNode(cherrypy.request.db, nodeName)
         except NodeNotFound as ex:
             self.handleException(ex)
             code = self.getTortugaStatusCode(ex)
@@ -373,7 +381,8 @@ class NodeController(TortugaController):
 
         try:
             self.app.node_api.rebootNode(
-                nodeName, bSoftReset=soft_reset, bReinstall=reinstall)
+                cherrypy.request.db, nodeName, bSoftReset=soft_reset,
+                bReinstall=reinstall)
         except NodeNotFound as ex:
             self.handleException(ex)
             code = self.getTortugaStatusCode(ex)
@@ -395,6 +404,7 @@ class NodeController(TortugaController):
             # TODO: add request validation here
 
             nodeList = self.app.node_api.transferNode(
+                cherrypy.request.db,
                 nodespec, postdata['softwareProfileName'],
                 bForce=str2bool(postdata['bForce'])
                 if 'bForce' in postdata else False,
@@ -422,6 +432,7 @@ class NodeController(TortugaController):
             # TODO: add request validation here
 
             nodeList = self.app.node_api.transferNodes(
+                cherrypy.request.db,
                 postdata['srcSoftwareProfile'],
                 postdata['dstSoftwareProfile'],
                 count=postdata['count'],
@@ -451,7 +462,8 @@ class NodeController(TortugaController):
         bDirect = postdata['isDirect'] if 'isDirect' in postdata else None
 
         try:
-            self.app.node_api.addStorageVolume(nodeName, volume, bDirect)
+            self.app.node_api.addStorageVolume(
+                nodeName, volume, bDirect)
         except Exception as ex:  # noqa pylint: disable=broad-except
             self.getLogger().exception('node WS API addStorageVolume() failed')
             self.handleException(ex)
@@ -481,7 +493,8 @@ class NodeController(TortugaController):
     @authentication_required()
     def getStorageVolumeList(self, nodeName):
         try:
-            result = self.app.node_api.getStorageVolumeList(nodeName)
+            result = self.app.node_api.getStorageVolumeList(
+                cherrypy.request.db, nodeName)
 
             response = result.getCleanDict()
         except Exception as ex:  # noqa pylint: disable=broad-except
@@ -525,7 +538,8 @@ class NodeController(TortugaController):
         return self.formatResponse(response)
 
 
-def enqueue_delete_hosts_request(session, nodespec: str, force: bool):
+def enqueue_delete_hosts_request(session: Session, nodespec: str,
+                                 force: bool):
     """
     Raises:
         NodeNotFound
@@ -550,13 +564,16 @@ def enqueue_delete_hosts_request(session, nodespec: str, force: bool):
     # first, as we don't want multiple prepends...
     #
     nm = NodeManager()
-    nodes = nm.getNodesByNameFilter(nodespec, include_installer=False)
+
+    nodes = nm.getNodesByNameFilter(
+        session, nodespec, include_installer=False)
     if not nodes:
         raise NodeNotFound('No nodes matching nodespec [{}]'.format(nodespec))
 
     for node in nodes:
         if not node.getState().startswith(state.DELETING_PREFIX):
             nm.updateNodeStatus(
+                session,
                 node.getName(),
                 '{}{}'.format(state.DELETING_PREFIX, node.getState())
             )

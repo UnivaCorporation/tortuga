@@ -52,7 +52,8 @@ class PostInstallAction(KitActionBase):
 
         """
         adapters_to_install = ['default']
-        installed_adapters = ResourceAdapterDbApi().getResourceAdapterList()
+        installed_adapters = ResourceAdapterDbApi().getResourceAdapterList(
+            self.kit_installer.session)
         for adapter in installed_adapters:
             adapter_name = adapter.getName()
             if adapter_name in installed_adapters:
@@ -64,7 +65,8 @@ class PostInstallAction(KitActionBase):
         base_kit_id = self._get_base_kit().getId()
         for resource_adapter_name in adapters_to_install:
             ResourceAdapterDbApi().addResourceAdapter(
-                name=resource_adapter_name, kitId=base_kit_id)
+                self.kit_installer.session, name=resource_adapter_name,
+                kitId=base_kit_id)
 
     def _get_base_kit(self):
         """
@@ -74,7 +76,7 @@ class PostInstallAction(KitActionBase):
 
         """
         kit = None
-        for k in KitDbApi().getKitList():
+        for k in KitDbApi().getKitList(self.kit_installer.session):
             if k.getName() == 'base':
                 kit = k
         return kit

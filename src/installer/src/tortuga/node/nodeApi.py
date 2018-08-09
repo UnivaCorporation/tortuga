@@ -59,7 +59,8 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def getNodeList(self, tags: Optional[Tags] = None) -> TortugaObjectList:
+    def getNodeList(self, session, tags: Optional[Tags] = None) \
+            -> TortugaObjectList:
         """
         Get node list..
 
@@ -69,7 +70,7 @@ class NodeApi(TortugaApi):
                 TortugaException
         """
         try:
-            return self._nodeManager.getNodeList(tags=tags)
+            return self._nodeManager.getNodeList(session, tags=tags)
         except TortugaException:
             raise
         except Exception as ex:
@@ -77,10 +78,12 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def getNode(self, name: str, optionDict: Optional[OptionDict] = None):
+    def getNode(self, session: Session, name: str,
+                optionDict: Optional[OptionDict] = None):
         """Get node id by name"""
         try:
-            return self._nodeManager.getNode(name, optionDict=optionDict)
+            return self._nodeManager.getNode(
+                session, name, optionDict=optionDict)
         except TortugaException:
             raise
         except Exception as ex:
@@ -103,7 +106,8 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def getInstallerNode(self, optionDict: Optional[OptionDict] = None) \
+    def getInstallerNode(self, session,
+                         optionDict: Optional[OptionDict] = None) \
             -> Node:
         """
         Get installer node
@@ -111,7 +115,7 @@ class NodeApi(TortugaApi):
 
         try:
             return self._nodeManager.getInstallerNode(
-                optionDict=optionDict)
+                session, optionDict=optionDict)
         except TortugaException:
             raise
         except Exception as ex:
@@ -120,14 +124,15 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def getNodeById(self, nodeId: int,
+    def getNodeById(self, session: Session, nodeId: int,
                     optionDict: Optional[OptionDict] = None) -> Node:
         """
         Get a node by id
         """
 
         try:
-            return self._nodeManager.getNodeById(nodeId, optionDict=optionDict)
+            return self._nodeManager.getNodeById(
+                session, nodeId, optionDict=optionDict)
         except TortugaException:
             raise
         except Exception as ex:
@@ -136,13 +141,13 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def getNodeByIp(self, ip: str) -> Node:
+    def getNodeByIp(self, session: Session, ip: str) -> Node:
         """
         Get a node by ip
         """
 
         try:
-            return self._nodeManager.getNodeByIp(ip)
+            return self._nodeManager.getNodeByIp(session, ip)
         except TortugaException:
             raise
         except Exception as ex:
@@ -151,9 +156,10 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def deleteNode(self, nodespec: str, force: bool = False):
+    def deleteNode(self, session: Session, nodespec: str, force: bool = False):
         try:
-            return self._nodeManager.deleteNode(nodespec, force=force)
+            return self._nodeManager.deleteNode(
+                session, nodespec, force=force)
         except TortugaException:
             raise
         except Exception as ex:
@@ -162,10 +168,10 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def getProvisioningInfo(self, nodeName: str):
+    def getProvisioningInfo(self, session: Session, nodeName: str):
         """ Get provisioning information for a node """
         try:
-            return self._nodeManager.getProvisioningInfo(nodeName)
+            return self._nodeManager.getProvisioningInfo(session, nodeName)
         except TortugaException:
             raise
         except Exception as ex:
@@ -187,11 +193,12 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def updateNodeStatus(self, name: str, state: Optional[str] = None,
+    def updateNodeStatus(self, session: Session, name: str,
+                         state: Optional[str] = None,
                          bootFrom: Optional[int] = None):
         try:
             return self._nodeManager.updateNodeStatus(
-                name, state, bootFrom)
+                session, name, state, bootFrom)
         except TortugaException:
             raise
         except Exception as ex:
@@ -200,11 +207,11 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def transferNode(self, nodespec: str, softwareProfileName: str,
-                     bForce: Optional[bool] = False):
+    def transferNode(self, session: Session, nodespec: str,
+                     softwareProfileName: str, bForce: Optional[bool] = False):
         try:
             return self._nodeManager.transferNode(
-                nodespec, softwareProfileName, bForce=bForce)
+                session, nodespec, softwareProfileName, bForce=bForce)
         except TortugaException:
             raise
         except Exception as ex:
@@ -214,11 +221,12 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def transferNodes(self, srcSoftwareProfile: str, dstSoftwareProfile: str,
-                      count: int, bForce: Optional[bool] = False):
+    def transferNodes(self, session: Session, srcSoftwareProfile: str,
+                      dstSoftwareProfile: str, count: int,
+                      bForce: Optional[bool] = False):
         try:
             return self._nodeManager.transferNodes(
-                srcSoftwareProfile, dstSoftwareProfile, count,
+                session, srcSoftwareProfile, dstSoftwareProfile, count,
                 bForce=bForce)
         except TortugaException:
             raise
@@ -227,9 +235,9 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def idleNode(self, nodespec: str):
+    def idleNode(self, session: Session, nodespec: str):
         try:
-            return self._nodeManager.idleNode(nodespec)
+            return self._nodeManager.idleNode(session, nodespec)
         except TortugaException:
             raise
         except Exception as ex:
@@ -239,10 +247,11 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def activateNode(self, nodeName: str, softwareProfileName: str):
+    def activateNode(self, session: Session, nodeName: str,
+                     softwareProfileName: str):
         try:
             return self._nodeManager.activateNode(
-                nodeName, softwareProfileName)
+                session, nodeName, softwareProfileName)
         except TortugaException:
             raise
         except Exception as ex:
@@ -251,12 +260,13 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def startupNode(self, nodespec: str,
+    def startupNode(self, session: Session, nodespec: str,
                     remainingNodeList: Optional[list] = None,
                     bootMethod: Optional[str] = 'n') -> None:
         try:
             self._nodeManager.startupNode(
-                nodespec, remainingNodeList=remainingNodeList or [],
+                session, nodespec,
+                remainingNodeList=remainingNodeList or [],
                 bootMethod=bootMethod)
         except TortugaException:
             raise
@@ -267,10 +277,11 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def shutdownNode(self, nodespec: str,
+    def shutdownNode(self, session: Session, nodespec: str,
                      bSoftShutdown: Optional[bool] = False) -> None:
         try:
-            self._nodeManager.shutdownNode(nodespec, bSoftShutdown)
+            self._nodeManager.shutdownNode(
+                session, nodespec, bSoftShutdown)
         except TortugaException:
             raise
         except Exception as ex:
@@ -280,11 +291,13 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def rebootNode(self, nodespec: str, bSoftReset: Optional[bool] = True,
+    def rebootNode(self, session: Session, nodespec: str,
+                   bSoftReset: Optional[bool] = True,
                    bReinstall: Optional[bool] = False) -> None:
         try:
             self._nodeManager.rebootNode(
-                nodespec, bSoftReset=bSoftReset, bReinstall=bReinstall)
+                session, nodespec, bSoftReset=bSoftReset,
+                bReinstall=bReinstall)
         except TortugaException:
             raise
         except Exception as ex:
@@ -320,9 +333,9 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def getStorageVolumeList(self, nodeName: str):
+    def getStorageVolumeList(self, session: Session, nodeName: str):
         try:
-            return self._nodeManager.getStorageVolumes(nodeName)
+            return self._nodeManager.getStorageVolumes(session, nodeName)
         except TortugaException:
             raise
         except Exception as ex:
@@ -332,7 +345,8 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def getNodesByNodeState(self, state: str) -> TortugaObjectList:
+    def getNodesByNodeState(self, session: Session, state: str) \
+            -> TortugaObjectList:
         """
         Get list of nodes in specified state
 
@@ -343,7 +357,7 @@ class NodeApi(TortugaApi):
                 TortugaException
         """
         try:
-            return self._nodeManager.getNodesByNodeState(state)
+            return self._nodeManager.getNodesByNodeState(session, state)
         except TortugaException:
             raise
         except Exception as ex:
@@ -352,12 +366,12 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def getNodesByNameFilter(self, nodespec: str,
+    def getNodesByNameFilter(self, session: Session, nodespec: str,
                              optionDict: Optional[OptionDict] = None) \
             -> TortugaObjectList:
         try:
             return self._nodeManager.getNodesByNameFilter(
-                nodespec, optionDict=optionDict)
+                session, nodespec, optionDict=optionDict)
         except TortugaException:
             raise
         except Exception as ex:
@@ -367,12 +381,13 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def getNodesByAddHostSession(self, addHostSession: str,
+    def getNodesByAddHostSession(self, session: Session,
+                                 addHostSession: str,
                                  optionDict: Optional[OptionDict] = None) \
             -> TortugaObjectList:
         try:
             return self._nodeManager.getNodesByAddHostSession(
-                addHostSession, optionDict=optionDict)
+                session, addHostSession, optionDict=optionDict)
         except TortugaException:
             raise
         except Exception as ex:

@@ -26,7 +26,7 @@ from .addHostManager import AddHostManager
 
 
 def enqueue_addnodes_request(session: Session, addNodesRequest: dict):
-    validate_addnodes_request(addNodesRequest['addNodesRequest'])
+    validate_addnodes_request(session, addNodesRequest['addNodesRequest'])
     request = _init_node_add_request(addNodesRequest)
     session.add(request)
     session.commit()

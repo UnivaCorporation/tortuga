@@ -12,15 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-class SingletonType(type):
-    _instances = {}
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super(SingletonType, cls).__call__(*args,
-                                                                     **kwargs)
-        return cls._instances[cls]
+from tortuga.db.dbManager import DbManager
 
 
-class Singleton(metaclass=SingletonType):
-    pass
+# "global" instance for DbManager used by tortugawsd
+dbm = DbManager()

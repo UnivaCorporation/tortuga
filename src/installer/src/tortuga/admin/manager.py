@@ -14,12 +14,13 @@
 
 # pylint: disable=no-member
 
-from random import choice
 import string
+from random import choice
 
-from tortuga.objects.tortugaObjectManager import TortugaObjectManager
+from sqlalchemy.orm.session import Session
 from tortuga.auth.manager import AuthManager
 from tortuga.db.adminDbApi import AdminDbApi
+from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 
 
 class AdminManager(TortugaObjectManager):
@@ -34,17 +35,17 @@ class AdminManager(TortugaObjectManager):
 
         self._adminDbApi = AdminDbApi()
 
-    def getAdmin(self, adminName):
-        return self._adminDbApi.getAdmin(adminName)
+    def getAdmin(self, session: Session, adminName):
+        return self._adminDbApi.getAdmin(session, adminName)
 
-    def getAdminById(self, admin_id):
-        return self._adminDbApi.getAdminById(admin_id)
+    def getAdminById(self, session: Session, admin_id):
+        return self._adminDbApi.getAdminById(session, admin_id)
 
-    def getAdminList(self):
-        return self._adminDbApi.getAdminList()
+    def getAdminList(self, session: Session):
+        return self._adminDbApi.getAdminList(session)
 
-    def addAdmin(self, name, password, isCrypted, realname=None,
-                 description=None):
+    def addAdmin(self, session: Session, name, password, isCrypted,
+                 realname=None, description=None):
         """
         Adds an admin user.
 
@@ -62,11 +63,12 @@ class AdminManager(TortugaObjectManager):
             isCrypted = False
 
         if not isCrypted:
-            password = AuthManager().cryptPassword(password)
+            password = AuthManager(session=session).cryptPassword(password)
 
-        self._adminDbApi.addAdmin(name, password, realname, description)
+        self._adminDbApi.addAdmin(
+            session, name, password, realname, description)
 
-        AuthManager().reloadPrincipals()
+        AuthManager(session=session).reloadPrincipals()
 
     def _generate_random_password(self) -> str:
         """
@@ -81,19 +83,19 @@ class AdminManager(TortugaObjectManager):
              range(AdminManager.RANDOM_PASSWORD_LENGTH)]
         )
 
-    def deleteAdmin(self, admin):
-        self._adminDbApi.deleteAdmin(admin)
+    def deleteAdmin(self, session: Session, admin):
+        self._adminDbApi.deleteAdmin(session, admin)
 
-        AuthManager().reloadPrincipals()
+        AuthManager(session=session).reloadPrincipals()
 
-    def updateAdmin(self, adminObject, isCrypted):
+    def updateAdmin(self, session: Session, adminObject, isCrypted):
         if adminObject.getPassword() is not None:
             # Only consider updating the password if the field is defined
             if not isCrypted:
                 adminObject.setPassword(
-                    AuthManager().cryptPassword(
+                    AuthManager(session=session).cryptPassword(
                         adminObject.get_password()))
 
-        self._adminDbApi.updateAdmin(adminObject)
+        self._adminDbApi.updateAdmin(session, adminObject)
 
-        AuthManager().reloadPrincipals()
+        AuthManager(session=session).reloadPrincipals()

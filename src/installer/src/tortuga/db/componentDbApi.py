@@ -14,8 +14,8 @@
 
 from typing import Optional, Union
 
+from sqlalchemy.orm.session import Session
 from tortuga.db.componentsDbHandler import ComponentsDbHandler
-from tortuga.db.dbManager import DbManager
 from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
 from tortuga.db.tortugaDbApi import TortugaDbApi
 from tortuga.exceptions.tortugaException import TortugaException
@@ -34,8 +34,10 @@ class ComponentDbApi(TortugaDbApi):
         self._softwareProfilesDbHandler = SoftwareProfilesDbHandler()
         self._componentsDbHandler = ComponentsDbHandler()
 
-    def getComponent(self, name: str, version: str, osInfo: OsInfo,
-                     optionDict: Optional[Union[dict, None]] = None) -> Component:
+    def getComponent(self, session: Session, name: str, version: str,
+                     osInfo: OsInfo,
+                     optionDict: Optional[Union[dict, None]] = None) \
+            -> Component:
         """
         Get component from the db.
 
@@ -45,21 +47,21 @@ class ComponentDbApi(TortugaDbApi):
                 ComponentNotFound
                 DbError
         """
-        with DbManager().session() as session:
-            try:
-                dbComponent = self._componentsDbHandler.getComponentByOsInfo(
-                    session, name, version, osInfo)
+        try:
+            dbComponent = self._componentsDbHandler.getComponentByOsInfo(
+                session, name, version, osInfo)
 
-                self.loadRelations(dbComponent, optionDict)
+            self.loadRelations(dbComponent, optionDict)
 
-                return Component.getFromDbDict(dbComponent.__dict__)
-            except TortugaException:
-                raise
-            except Exception as ex:
-                self.getLogger().exception('%s' % ex)
-                raise
+            return Component.getFromDbDict(dbComponent.__dict__)
+        except TortugaException:
+            raise
+        except Exception as ex:
+            self.getLogger().exception('%s' % ex)
+            raise
 
-    def getBestMatchComponent(self, name, version, osInfo, kitId):
+    def getBestMatchComponent(self, session: Session, name, version, osInfo,
+                              kitId):
         """
         Get component from the db.
 
@@ -69,8 +71,6 @@ class ComponentDbApi(TortugaDbApi):
                 ComponentNotFound
                 DbError
         """
-
-        session = DbManager().openSession()
 
         try:
             dbComponent = self._componentsDbHandler.getBestMatchComponent(
@@ -90,10 +90,9 @@ class ComponentDbApi(TortugaDbApi):
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise
-        finally:
-            DbManager().closeSession()
 
-    def addComponentToSoftwareProfile(self, componentId, softwareProfileId):
+    def addComponentToSoftwareProfile(self, session: Session, componentId,
+                                      softwareProfileId):
         """
         Add component to softwareProfile.
 
@@ -105,8 +104,6 @@ class ComponentDbApi(TortugaDbApi):
                 SoftwareProfileComponentAlreadyExists
                 DbError
         """
-
-        session = DbManager().openSession()
 
         try:
             self._softwareProfilesDbHandler.addComponentToSoftwareProfile(
@@ -120,10 +117,9 @@ class ComponentDbApi(TortugaDbApi):
             session.rollback()
             self.getLogger().exception('%s' % ex)
             raise
-        finally:
-            DbManager().closeSession()
 
-    def deleteComponentFromSoftwareProfile(self, componentId,
+    def deleteComponentFromSoftwareProfile(self, session: Session,
+                                           componentId,
                                            softwareProfileId):
         """
         Delete component to software profile.
@@ -136,8 +132,6 @@ class ComponentDbApi(TortugaDbApi):
                 SoftwareProfileComponentNotFound
                 DbError
         """
-
-        session = DbManager().openSession()
 
         try:
             self._softwareProfilesDbHandler.\
@@ -152,12 +146,8 @@ class ComponentDbApi(TortugaDbApi):
             session.rollback()
             self.getLogger().exception('%s' % ex)
             raise
-        finally:
-            DbManager().closeSession()
 
-    def getComponentList(self, softwareProfile=None):
-        session = DbManager().openSession()
-
+    def getComponentList(self, session: Session, softwareProfile=None):
         try:
             if softwareProfile:
                 return self._softwareProfilesDbHandler.getSoftwareProfile(
@@ -172,5 +162,3 @@ class ComponentDbApi(TortugaDbApi):
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise
-        finally:
-            DbManager().closeSession()

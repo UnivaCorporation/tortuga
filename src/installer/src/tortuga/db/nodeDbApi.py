@@ -16,6 +16,7 @@
 
 from typing import Dict, List, Optional
 
+from sqlalchemy.orm.session import Session
 from tortuga.config.configManager import getfqdn
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.node import state
@@ -24,7 +25,6 @@ from tortuga.objects.parameter import Parameter
 from tortuga.objects.provisioningInfo import ProvisioningInfo
 from tortuga.objects.tortugaObject import TortugaObjectList
 
-from .dbManager import DbManager
 from .globalParameterDbApi import GlobalParameterDbApi
 from .models.node import Node as NodeModel
 from .nodesDbHandler import NodesDbHandler
@@ -45,7 +45,8 @@ class NodeDbApi(TortugaDbApi):
         self._nodesDbHandler = NodesDbHandler()
         self._globalParameterDbApi = GlobalParameterDbApi()
 
-    def getNode(self, name: str, optionDict: OptionsDict = None) -> Node:
+    def getNode(self, session, name: str,
+                optionDict: OptionsDict = None) -> Node:
         """
         Get node from the db.
 
@@ -56,36 +57,34 @@ class NodeDbApi(TortugaDbApi):
                 DbError
         """
 
-        with DbManager().session() as session:
-            try:
-                return self.__convert_nodes_to_TortugaObjectList(
-                    [self._nodesDbHandler.getNode(session, name)],
-                    optionDict=optionDict)[0]
-            except TortugaException:
-                raise
-            except Exception as ex:
-                self.getLogger().exception('%s' % ex)
-                raise
+        try:
+            return self.__convert_nodes_to_TortugaObjectList(
+                [self._nodesDbHandler.getNode(session, name)],
+                optionDict=optionDict)[0]
+        except TortugaException:
+            raise
+        except Exception as ex:
+            self.getLogger().exception('%s' % ex)
+            raise
 
-    def getNodesByAddHostSession(self, ahSession: str,
+    def getNodesByAddHostSession(self, session, ahSession: str,
                                  optionDict: OptionsDict = None) \
             -> TortugaObjectList:
         """
         Get node(s) from db based their addhost session
         """
 
-        with DbManager().session() as session:
-            try:
-                return self.__convert_nodes_to_TortugaObjectList(
-                    self._nodesDbHandler.getNodesByAddHostSession(
-                        session, ahSession), optionDict=optionDict)
-            except TortugaException:
-                raise
-            except Exception as ex:
-                self.getLogger().exception('%s' % ex)
-                raise
+        try:
+            return self.__convert_nodes_to_TortugaObjectList(
+                self._nodesDbHandler.getNodesByAddHostSession(
+                    session, ahSession), optionDict=optionDict)
+        except TortugaException:
+            raise
+        except Exception as ex:
+            self.getLogger().exception('%s' % ex)
+            raise
 
-    def getNodesByNameFilter(self, nodespec: str,
+    def getNodesByNameFilter(self, session, nodespec: str,
                              optionDict: OptionsDict = None,
                              include_installer: Optional[bool] = True) \
             -> TortugaObjectList:
@@ -94,52 +93,51 @@ class NodeDbApi(TortugaDbApi):
         to False to exclude installer node from results.
         """
 
-        with DbManager().session() as session:
-            try:
-                return self.__convert_nodes_to_TortugaObjectList(
-                    self._nodesDbHandler.expand_nodespec(
-                        session,
-                        nodespec,
-                        include_installer=include_installer),
-                    optionDict=optionDict)
-            except Exception as ex:
-                if not isinstance(ex, TortugaException):
-                    self.getLogger().exception('%s' % ex)
+        try:
+            return self.__convert_nodes_to_TortugaObjectList(
+                self._nodesDbHandler.expand_nodespec(
+                    session,
+                    nodespec,
+                    include_installer=include_installer),
+                optionDict=optionDict)
+        except Exception as ex:
+            if not isinstance(ex, TortugaException):
+                self.getLogger().exception('%s' % ex)
 
-                raise
+            raise
 
-    def getNodeById(self, nodeId: int, optionDict: OptionsDict = None) \
+    def getNodeById(self, session, nodeId: int,
+                    optionDict: OptionsDict = None) \
             -> Node:
         """
         Get node by id
         """
 
-        with DbManager().session() as session:
-            try:
-                return self.__convert_nodes_to_TortugaObjectList(
-                    [self._nodesDbHandler.getNodeById(
-                        session, nodeId)], optionDict=optionDict)[0]
-            except TortugaException:
-                raise
-            except Exception as ex:
-                self.getLogger().exception('%s' % ex)
-                raise
+        try:
+            return self.__convert_nodes_to_TortugaObjectList(
+                [self._nodesDbHandler.getNodeById(
+                    session, nodeId)], optionDict=optionDict)[0]
+        except TortugaException:
+            raise
+        except Exception as ex:
+            self.getLogger().exception('%s' % ex)
+            raise
 
-    def getNodeByIp(self, ip: str, optionDict: OptionsDict = None) -> Node:
+    def getNodeByIp(self, session, ip: str,
+                    optionDict: OptionsDict = None) -> Node:
         """
         Get node by ip
         """
 
-        with DbManager().session() as session:
-            try:
-                return self.__convert_nodes_to_TortugaObjectList(
-                    [self._nodesDbHandler.getNodeByIp(
-                        session, ip)], optionDict=optionDict)[0]
-            except TortugaException:
-                raise
-            except Exception as ex:
-                self.getLogger().exception('%s' % ex)
-                raise
+        try:
+            return self.__convert_nodes_to_TortugaObjectList(
+                [self._nodesDbHandler.getNodeByIp(
+                    session, ip)], optionDict=optionDict)[0]
+        except TortugaException:
+            raise
+        except Exception as ex:
+            self.getLogger().exception('%s' % ex)
+            raise
 
     def __convert_nodes_to_TortugaObjectList(self, nodes: List[NodeModel],
                                              optionDict: OptionsDict = None,
@@ -176,7 +174,7 @@ class NodeDbApi(TortugaDbApi):
 
         return nodeList
 
-    def getNodeList(self, tags: Optional[dict] = None,
+    def getNodeList(self, session, tags: Optional[dict] = None,
                     optionDict: OptionsDict = None,
                     deleting: bool = False) \
             -> TortugaObjectList:
@@ -189,20 +187,20 @@ class NodeDbApi(TortugaDbApi):
                 DbError
         """
 
-        with DbManager().session() as session:
-            try:
-                return self.__convert_nodes_to_TortugaObjectList(
-                    self._nodesDbHandler.getNodeList(session, tags=tags),
-                    optionDict=optionDict,
-                    deleting=deleting
-                )
-            except TortugaException:
-                raise
-            except Exception as ex:
-                self.getLogger().exception('%s' % ex)
-                raise
+        try:
+            return self.__convert_nodes_to_TortugaObjectList(
+                self._nodesDbHandler.getNodeList(session, tags=tags),
+                optionDict=optionDict,
+                deleting=deleting
+            )
+        except TortugaException:
+            raise
+        except Exception as ex:
+            self.getLogger().exception('%s' % ex)
+            raise
 
-    def getProvisioningInfo(self, nodeName: str) -> ProvisioningInfo:
+    def getProvisioningInfo(self, session: Session, nodeName: str) \
+            -> ProvisioningInfo:
         """
         Get the provisioing information for a given provisioned address
 
@@ -213,73 +211,71 @@ class NodeDbApi(TortugaDbApi):
                 DbError
         """
 
-        with DbManager().session() as session:
-            try:
-                provisioningInfo = ProvisioningInfo()
+        try:
+            provisioningInfo = ProvisioningInfo()
 
-                dbNode = self._nodesDbHandler.getNode(session, nodeName)
+            dbNode = self._nodesDbHandler.getNode(session, nodeName)
 
-                if dbNode.softwareprofile:
-                    self.loadRelations(dbNode.softwareprofile, {
-                        'partitions': True,
+            if dbNode.softwareprofile:
+                self.loadRelations(dbNode.softwareprofile, {
+                    'partitions': True,
+                })
+
+                for component in dbNode.softwareprofile.components:
+                    self.loadRelations(component, {
+                        'kit': True,
+                        'os': True,
+                        'family': True,
+                        'os_components': True,
+                        'osfamily_components': True,
                     })
 
-                    for component in dbNode.softwareprofile.components:
-                        self.loadRelations(component, {
-                            'kit': True,
-                            'os': True,
-                            'family': True,
-                            'os_components': True,
-                            'osfamily_components': True,
-                        })
+            self.loadRelation(dbNode, 'hardwareprofile')
 
-                self.loadRelation(dbNode, 'hardwareprofile')
+            provisioningInfo.setNode(
+                Node.getFromDbDict(dbNode.__dict__))
 
-                provisioningInfo.setNode(
-                    Node.getFromDbDict(dbNode.__dict__))
+            globalParameters = \
+                self._globalParameterDbApi.getParameterList(session)
 
-                globalParameters = \
-                    self._globalParameterDbApi.getParameterList()
+            # manually inject value for 'installer'
+            p = Parameter(name='Installer')
 
-                # manually inject value for 'installer'
-                p = Parameter(name='Installer')
+            hostName = getfqdn().split('.', 1)[0]
 
-                hostName = getfqdn().split('.', 1)[0]
+            if '.' in dbNode.name:
+                nodeDomain = dbNode.name.split('.', 1)[1]
 
-                if '.' in dbNode.name:
-                    nodeDomain = dbNode.name.split('.', 1)[1]
+                priInstaller = hostName + '.%s' % (nodeDomain)
+            else:
+                priInstaller = hostName
 
-                    priInstaller = hostName + '.%s' % (nodeDomain)
-                else:
-                    priInstaller = hostName
+            p.setValue(priInstaller)
 
-                p.setValue(priInstaller)
+            globalParameters.append(p)
 
-                globalParameters.append(p)
+            provisioningInfo.setGlobalParameters(globalParameters)
 
-                provisioningInfo.setGlobalParameters(globalParameters)
+            return provisioningInfo
+        except TortugaException:
+            raise
+        except Exception as ex:
+            self.getLogger().exception('%s' % ex)
+            raise
 
-                return provisioningInfo
-            except TortugaException:
-                raise
-            except Exception as ex:
-                self.getLogger().exception('%s' % ex)
-                raise
-
-    def getNodesByNodeState(self, node_state: str,
+    def getNodesByNodeState(self, session, node_state: str,
                             optionDict: OptionsDict = None) \
             -> TortugaObjectList:
         """
         Get nodes by node state
         """
 
-        with DbManager().session() as session:
-            try:
-                return self.__convert_nodes_to_TortugaObjectList(
-                    self._nodesDbHandler.getNodesByNodeState(
-                        session, node_state), optionDict=optionDict)
-            except TortugaException:
-                raise
-            except Exception as ex:
-                self.getLogger().exception('%s' % (ex))
-                raise
+        try:
+            return self.__convert_nodes_to_TortugaObjectList(
+                self._nodesDbHandler.getNodesByNodeState(
+                    session, node_state), optionDict=optionDict)
+        except TortugaException:
+            raise
+        except Exception as ex:
+            self.getLogger().exception('%s' % (ex))
+            raise

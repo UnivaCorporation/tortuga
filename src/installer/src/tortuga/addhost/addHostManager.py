@@ -17,6 +17,7 @@
 import threading
 import uuid
 
+from sqlalchemy.orm.session import Session
 from tortuga.db.hardwareProfilesDbHandler import HardwareProfilesDbHandler
 from tortuga.db.models.tag import Tag
 from tortuga.db.nodeDbApi import NodeDbApi
@@ -30,11 +31,10 @@ from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.objectstore.manager import ObjectStoreManager
 from tortuga.resourceAdapter import resourceAdapterFactory
-from tortuga.types import Singleton
 from tortuga.wsapi.syncWsApi import SyncWsApi
 
 
-class AddHostManager(TortugaObjectManager, Singleton):
+class AddHostManager(TortugaObjectManager):
     def __init__(self):
         super(AddHostManager, self).__init__()
 
@@ -82,6 +82,8 @@ class AddHostManager(TortugaObjectManager, Singleton):
         resourceAdapter = ResourceAdapterClass(
             addHostSession=addHostRequest['addHostSession'])
 
+        resourceAdapter.session = session
+
         # Call the start() method of the resource adapter
         newNodes = resourceAdapter.start(
             addHostRequest, session, dbHardwareProfile,
@@ -111,15 +113,15 @@ class AddHostManager(TortugaObjectManager, Singleton):
                 resourceAdapter.hookAction('add', newNodeNames)
 
                 self.postAddHost(
-                    dbHardwareProfile.name, softwareProfileName,
+                    session, dbHardwareProfile.name, softwareProfileName,
                     addHostRequest['addHostSession'])
 
                 resourceAdapter.hookAction('start', newNodeNames)
 
         self.getLogger().debug('Add host workflow complete')
 
-    def postAddHost(self, hardwareProfileName, softwareProfileName,
-                    addHostSession):
+    def postAddHost(self, session: Session, hardwareProfileName: str,
+                    softwareProfileName: str, addHostSession):
         """Perform post add host operations"""
 
         self.getLogger().debug(
@@ -128,6 +130,7 @@ class AddHostManager(TortugaObjectManager, Singleton):
                 hardwareProfileName, softwareProfileName, addHostSession))
 
         mgr = KitActionsManager()
+        mgr.session = session
 
         mgr.post_add_host(
             hardwareProfileName, softwareProfileName, addHostSession)
@@ -153,15 +156,15 @@ class AddHostManager(TortugaObjectManager, Singleton):
         finally:
             self._addHostLock.release()
 
-    def getStatus(self, session: str, startMessage: int,
-                  getNodes: bool) -> AddHostStatus:
+    def getStatus(self, db_session: Session, session: str,
+                  startMessage: int, getNodes: bool) -> AddHostStatus:
         """
         Raises:
             NotFound
         """
         with self._addHostLock:
-            nodeList = self._nodeDbApi.getNodesByAddHostSession(session) \
-                if getNodes else TortugaObjectList()
+            nodeList = self._nodeDbApi.getNodesByAddHostSession(
+                db_session, session) if getNodes else TortugaObjectList()
 
             # Lock and copy for data consistency
             if not self._sessions.exists(session):

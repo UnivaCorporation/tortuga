@@ -18,21 +18,18 @@ import os.path
 import threading
 import time
 
-from tortuga.objects.tortugaObjectManager import TortugaObjectManager
-from tortuga.exceptions.commandFailed import CommandFailed
-from tortuga.utility.runManager import RunManager
-from tortuga.os_utility import osUtility
-
 from tortuga.config.configManager import ConfigManager
-from tortuga.utility import tortugaStatus
+from tortuga.exceptions.commandFailed import CommandFailed
+from tortuga.objects.tortugaObjectManager import TortugaObjectManager
+from tortuga.os_utility import osUtility
 from tortuga.os_utility.tortugaSubprocess import TortugaSubprocess
-from tortuga.types import Singleton
+from tortuga.utility import tortugaStatus
+from tortuga.utility.runManager import RunManager
 
 
-class SyncManager(TortugaObjectManager, Singleton):
-    """Singleton class for cluster sync management"""
+class SyncManager(TortugaObjectManager):
+    """Class for cluster sync management"""
 
-    # Singleton.
     __instanceLock = threading.RLock()
 
     # update delay increase (seconds)

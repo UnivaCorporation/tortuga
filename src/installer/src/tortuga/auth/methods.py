@@ -13,21 +13,23 @@
 # limitations under the License.
 
 import json
-from logging import getLogger
 import os
+from logging import getLogger
 from typing import List
 
-from oic.oic import Client
-from oic.utils.jwt import JWT
-from oic.oic.message import RegistrationResponse
-from oic.utils.authn.client import CLIENT_AUTHN_METHOD
 from passlib.hash import pbkdf2_sha256
 
+from oic.oic import Client
+from oic.oic.message import RegistrationResponse
+from oic.utils.authn.client import CLIENT_AUTHN_METHOD
+from oic.utils.jwt import JWT
+from sqlalchemy.orm.session import Session
 from tortuga.admin.api import AdminApi
 from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.authenticationFailed import AuthenticationFailed
-from .manager import AuthManager
 
+from .manager import AuthManager
+from tortuga.web_service.database import dbm
 
 logger = getLogger(__name__)
 
@@ -171,10 +173,6 @@ class UsernamePasswordAuthenticationMethod(AuthenticationMethod):
     keyword arguments.
 
     """
-    def __init__(self):
-        super().__init__()
-        self._auth_manager: AuthManager = AuthManager()
-
     def do_authentication(self, **kwargs) -> str:
         """
         An authentication implementation that requires a username and
@@ -190,22 +188,25 @@ class UsernamePasswordAuthenticationMethod(AuthenticationMethod):
         if not username or not password:
             raise AuthenticationFailed()
 
-        principal = self._auth_manager.get_principal(username)
+        with dbm.session() as session:
+            auth_manager = AuthManager(session=session)
 
-        if not principal:
-            #
-            # See if there is a new admin available
-            #
-            AuthManager().reloadPrincipals()
-            principal = AuthManager().get_principal(username)
+            principal = auth_manager.get_principal(username)
 
-        if not principal:
+            if not principal:
+                #
+                # See if there is a new admin available
+                #
+                auth_manager.reloadPrincipals()
+                principal = auth_manager.get_principal(username)
+
+            if not principal:
+                raise AuthenticationFailed()
+
+            if pbkdf2_sha256.verify(password, principal.get_password()):
+                return username
+
             raise AuthenticationFailed()
-
-        if pbkdf2_sha256.verify(password, principal.get_password()):
-            return username
-
-        raise AuthenticationFailed()
 
 
 class JwtAuthenticationMethod(AuthenticationMethod):
@@ -247,14 +248,15 @@ class JwtAuthenticationMethod(AuthenticationMethod):
         # Assuming the token is valid, if we can't find the user, we
         # add them as an admin
         #
-        if not AuthManager().get_principal(username):
-            self._create_admin(username)
+        with dbm.session() as session:
+            if not AuthManager(session=session).get_principal(username):
+                self._create_admin(session, username)
 
-        return username
+            return username
 
-    def _create_admin(self, username):
+    def _create_admin(self, session, username):
         admin_api = AdminApi()
-        admin_api.addAdmin(name=username)
+        admin_api.addAdmin(session, name=username)
 
     @staticmethod
     def openid_client_config_path():

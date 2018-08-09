@@ -20,7 +20,7 @@ import select
 import signal
 from typing import Dict, List, Optional
 
-from tortuga.db.dbManager import DbManager
+
 from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
 from tortuga.db.models.node import Node
 from tortuga.db.nodesDbHandler import NodesDbHandler
@@ -162,19 +162,19 @@ class Default(ResourceAdapter):
             # pylint: disable=no-self-use
         bhm = osUtility.getOsObjectFactory().getOsBootHostManager()
 
-        with DbManager().session() as session:
-            if softwareProfileChanged:
-                softwareprofile = SoftwareProfilesDbHandler().\
-                    getSoftwareProfile(session, softwareProfileName)
+        if softwareProfileChanged:
+            softwareprofile = \
+                SoftwareProfilesDbHandler().getSoftwareProfile(
+                    self.session, softwareProfileName)
 
-                # Mark node for network boot if software profile changed
-                node.bootFrom = 0
-            else:
-                softwareprofile = None
+            # Mark node for network boot if software profile changed
+            node.bootFrom = 0
+        else:
+            softwareprofile = None
 
-            bhm.writePXEFile(node,
-                             localboot=not softwareProfileChanged,
-                             softwareprofile=softwareprofile)
+        bhm.writePXEFile(node,
+                            localboot=not softwareProfileChanged,
+                            softwareprofile=softwareprofile)
 
     def abort(self):
         self.looping = False
@@ -203,17 +203,12 @@ class Default(ResourceAdapter):
         if self.__is_duplicate_mac_in_session(mac, session_nodes):
             return True
 
-        session = DbManager().openSession()
-
         try:
-            NodesDbHandler().getNodeByMac(session, mac)
+            NodesDbHandler().getNodeByMac(self.session, mac)
 
             return True
         except NodeNotFound:
             return False
-
-        finally:
-            DbManager().closeSession()
 
     def __get_node_details(self, addNodesRequest, dbHardwareProfile,
                            dbSoftwareProfile): \
@@ -301,22 +296,17 @@ class Default(ResourceAdapter):
         # check for the configuration.  This may change in the
         # future!
 
-        dbSession = DbManager().openSession()
+        dbInstallerNode = dbHardwareProfile.nics[0].node \
+            if dbHardwareProfile.nics else \
+            NodesDbHandler().getNode(self.session, self._cm.getInstaller())
 
-        try:
-            dbInstallerNode = dbHardwareProfile.nics[0].node \
-                if dbHardwareProfile.nics else \
-                NodesDbHandler().getNode(dbSession, self._cm.getInstaller())
+        components = [c for c in dbInstallerNode.softwareprofile.components
+                        if c.name == 'dhcpd']
 
-            components = [c for c in dbInstallerNode.softwareprofile.components
-                          if c.name == 'dhcpd']
-
-            if not components:
-                raise CommandFailed(
-                    'dhcpd component must be enabled on the'
-                    ' installer in order to provision local nodes')
-        finally:
-            DbManager().closeSession()
+        if not components:
+            raise CommandFailed(
+                'dhcpd component must be enabled on the'
+                ' installer in order to provision local nodes')
 
     def __add_predefined_nodes(self, addNodesRequest: dict, dbSession,
                                dbHardwareProfile, dbSoftwareProfile,

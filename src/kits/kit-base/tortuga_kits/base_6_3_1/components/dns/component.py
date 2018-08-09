@@ -16,7 +16,6 @@ from logging import getLogger
 
 from jinja2 import Template
 
-from tortuga.db.dbManager import DbManager
 from tortuga.db.nodesDbHandler import NodesDbHandler
 from tortuga.db.models.hardwareProfile import HardwareProfile
 from tortuga.os_utility.osUtility import getOsObjectFactory
@@ -188,8 +187,7 @@ class ComponentInstaller(ComponentInstallerBase):
         super().__init__(kit)
         self.provider = DnsmasqDnsProvider(self._private_dns_zone)
 
-    @staticmethod
-    def _get_global_parameter(key, default=None):
+    def _get_global_parameter(self, key, default=None):
         """
         Get parameter from the DB.
 
@@ -198,11 +196,11 @@ class ComponentInstaller(ComponentInstallerBase):
         :returns: DbObject
         """
         try:
-            return GlobalParameterDbApi().getParameter(key).getValue()
+            return GlobalParameterDbApi().getParameter(
+                self.session, key).getValue()
         except ParameterNotFound:
             return default
 
-    @property
     def _private_dns_zone(self):
         return self._get_global_parameter('DNSZone')
 
@@ -213,10 +211,13 @@ class ComponentInstaller(ComponentInstallerBase):
         :param provisioning_nic: Object
         :returns: None
         """
+
+        private_dns_zone = self._private_dns_zone()
+
         # write record for installer host name and private zone
         self.provider.add_record(
-            '{}.{}'.format(provisioning_nic.node.name.split('.', 1)[0],
-                           self._private_dns_zone),
+            '{}.{}'.format(
+                provisioning_nic.node.name.split('.', 1)[0], private_dns_zone),
             provisioning_nic.ip
         )
 
@@ -322,16 +323,15 @@ class ComponentInstaller(ComponentInstallerBase):
         :param **kwargs: Unused
         :returns: None
         """
-        with DbManager().session() as session:
-            installer_node = NodesDbHandler().getNode(
-                session,
-                self.kit_installer.config_manager.getInstaller()
-            )
+        installer_node = NodesDbHandler().getNode(
+            self.session,
+            self.kit_installer.config_manager.getInstaller()
+        )
 
-            for provisioning_nic in installer_node.hardwareprofile.nics:
-                self._provisioning_nics(provisioning_nic)
+        for provisioning_nic in installer_node.hardwareprofile.nics:
+            self._provisioning_nics(provisioning_nic)
 
-            self._node_nics(session)
+        self._node_nics(self.session)
 
     def action_pre_add_host(self, hardware_profile, software_profile,
                             hostname, ip, *args, **kwargs):

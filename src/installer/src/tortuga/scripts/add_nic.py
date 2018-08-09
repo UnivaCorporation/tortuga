@@ -100,12 +100,13 @@ class AddNicCli(TortugaCli):
     def runCommand(self):
         self.parseArgs('Register provisioning network interface in Tortuga')
 
-        if self.getArgs().autodetect:
-            self._findUnmanagedNics()
-        elif self.getArgs().nic:
-            # Attempt to automatically determine the parameters for the
-            # specified NIC and associate with installer
-            self._addNic(self.getArgs().nic)
+        with DbManager().session() as session:
+            if self.getArgs().autodetect:
+                self._findUnmanagedNics(session)
+            elif self.getArgs().nic:
+                # Attempt to automatically determine the parameters for the
+                # specified NIC and associate with installer
+                self._addNic(session, self.getArgs().nic)
 
     def _getSystemNics(self): \
             # pylint: disable=no-self-use
@@ -135,13 +136,13 @@ class AddNicCli(TortugaCli):
             str(item) for item in results[0].split(',') if item != 'lo'
         ]
 
-    def _findUnmanagedNics(self):
+    def _findUnmanagedNics(self, session: Session):
         # Get list of all NICs on the installer
         systemNics = set(self._getSystemNics())
 
         # Get provisioning NICs on installer
         node_api = nodeApiFactory.getNodeApi()
-        nics = node_api.getInstallerNode().getNics()
+        nics = node_api.getInstallerNode(session).getNics()
 
         # Filter out the NIC names
         primaryInstallerNics = set(
@@ -240,7 +241,7 @@ class AddNicCli(TortugaCli):
             # the result and proceed as normal.
             pass
 
-    def _addNic(self, nicName):
+    def _addNic(self, session, nicName):
         # Get IP address and netmask using facter
 
         facterNicName = nicName.replace(':', '_').replace('.', '_')
@@ -290,87 +291,86 @@ class AddNicCli(TortugaCli):
         # Check if nic is the default gateway as well...
         self._check_default_gateway_nic(nicName)
 
-        with DbManager().session() as session:
-            dbNetwork = None
+        dbNetwork = None
 
-            # Attempt to find matching network
-            try:
-                dbNetwork = session.query(Network).filter(
-                    and_(
-                        Network.address == network,
-                        Network.netmask == netmask)).one()
+        # Attempt to find matching network
+        try:
+            dbNetwork = session.query(Network).filter(
+                and_(
+                    Network.address == network,
+                    Network.netmask == netmask)).one()
 
-                print('Found network [%s/%s]' % (
-                    dbNetwork.address, dbNetwork.netmask))
-            except NoResultFound:
-                # Network is not known to Tortuga, add it
-                pass
+            print('Found network [%s/%s]' % (
+                dbNetwork.address, dbNetwork.netmask))
+        except NoResultFound:
+            # Network is not known to Tortuga, add it
+            pass
 
-            if dbNetwork is None:
-                print('Adding network [%s/%s]' % (network, netmask))
+        if dbNetwork is None:
+            print('Adding network [%s/%s]' % (network, netmask))
 
-                dbNetwork = self._addNetwork(nicName, network, netmask, session)
+            dbNetwork = self._addNetwork(nicName, network, netmask, session)
 
-            # Attempt to find entry in NetworkDevices
-            dbNetworkDevice = self._getNetworkDevice(nicName, session)
-            if not dbNetworkDevice:
-                # Create network device
-                print('Adding network device [%s] as provisioning NIC' % (nicName))
+        # Attempt to find entry in NetworkDevices
+        dbNetworkDevice = self._getNetworkDevice(nicName, session)
+        if not dbNetworkDevice:
+            # Create network device
+            print('Adding network device [%s] as provisioning NIC' % (nicName))
 
-                dbNetworkDevice = self._addNetworkDevice(nicName, session)
-            else:
-                print('Found existing network device [%s]' % (nicName))
+            dbNetworkDevice = self._addNetworkDevice(nicName, session)
+        else:
+            print('Found existing network device [%s]' % (nicName))
 
-            dbNode = NodesDbHandler().getNode(session, self._cm.getInstaller())
+        dbNode = NodesDbHandler().getNode(session, self._cm.getInstaller())
 
-            # Attempt to find Nics entry
-            for dbNic in dbNode.nics:
-                if dbNic.networkdevice.name == nicName.lower():
-                    print('Found existing NIC entry for [%s]' % (
-                        dbNic.networkdevice.name))
+        # Attempt to find Nics entry
+        for dbNic in dbNode.nics:
+            if dbNic.networkdevice.name == nicName.lower():
+                print('Found existing NIC entry for [%s]' % (
+                    dbNic.networkdevice.name))
 
-                    break
-            else:
-                print('Creating NIC entry for [%s]' % (dbNetworkDevice.name))
+                break
+        else:
+            print('Creating NIC entry for [%s]' % (dbNetworkDevice.name))
 
-                dbNic = Nic()
-                dbNic.networkdevice = dbNetworkDevice
-                dbNic.ip = ipaddress
-                dbNic.boot = True
-                dbNic.network = dbNetwork
+            dbNic = Nic()
+            dbNic.networkdevice = dbNetworkDevice
+            dbNic.ip = ipaddress
+            dbNic.boot = True
+            dbNic.network = dbNetwork
 
-                dbNode.nics.append(dbNic)
+            dbNode.nics.append(dbNic)
 
-            # Attempt to find NIC association with hardware profile (commonly
-            # known as hardware profile provisioning NIC)
-            for dbHwProfileNic in dbNode.hardwareprofile.nics:
-                if dbHwProfileNic == dbNic:
-                    break
-            else:
-                print('Adding NIC [%s] to hardware profile [%s]' % (
-                    dbNic.networkdevice.name, dbNode.hardwareprofile.name))
+        # Attempt to find NIC association with hardware profile (commonly
+        # known as hardware profile provisioning NIC)
+        for dbHwProfileNic in dbNode.hardwareprofile.nics:
+            if dbHwProfileNic == dbNic:
+                break
+        else:
+            print('Adding NIC [%s] to hardware profile [%s]' % (
+                dbNic.networkdevice.name, dbNode.hardwareprofile.name))
 
-                dbNode.hardwareprofile.nics.append(dbNic)
+            dbNode.hardwareprofile.nics.append(dbNic)
 
-            # Attempt to find 'HardwareProfileNetworks' entry
-            for dbHardwareProfileNetwork in \
-                    dbNode.hardwareprofile.hardwareprofilenetworks:
-                if dbHardwareProfileNetwork.network == dbNetwork and \
-                   dbHardwareProfileNetwork.networkdevice == dbNetworkDevice:
-                    print('Found existing hardware profile/network association')
-                    break
-            else:
-                dbHardwareProfileNetwork = HardwareProfileNetwork()
+        # Attempt to find 'HardwareProfileNetworks' entry
+        for dbHardwareProfileNetwork in \
+                dbNode.hardwareprofile.hardwareprofilenetworks:
+            if dbHardwareProfileNetwork.network == dbNetwork and \
+                dbHardwareProfileNetwork.networkdevice == dbNetworkDevice:
+                print('Found existing hardware profile/network association')
+                break
+        else:
+            dbHardwareProfileNetwork = HardwareProfileNetwork()
 
-                dbHardwareProfileNetwork.network = dbNetwork
-                dbHardwareProfileNetwork.networkdevice = dbNetworkDevice
+            dbHardwareProfileNetwork.network = dbNetwork
+            dbHardwareProfileNetwork.networkdevice = dbNetworkDevice
 
-                dbNode.hardwareprofile.hardwareprofilenetworks.append(
-                    dbHardwareProfileNetwork)
+            dbNode.hardwareprofile.hardwareprofilenetworks.append(
+                dbHardwareProfileNetwork)
 
-            session.commit()
+        session.commit()
 
-            bUpdated = self._updateNetworkConfig(session, dbNode)
+        bUpdated = self._updateNetworkConfig(session, dbNode)
 
         if bUpdated and self.getArgs().bSync:
             print('Applying changes to Tortuga...')

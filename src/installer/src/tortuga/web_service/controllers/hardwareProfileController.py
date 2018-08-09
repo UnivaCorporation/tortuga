@@ -111,11 +111,12 @@ class HardwareProfileController(TortugaController):
 
                 hardwareProfiles = TortugaObjectList(
                     [HardwareProfileManager().getHardwareProfile(
+                        cherrypy.request.db,
                         kwargs['name'], optionDict=options)])
             else:
                 hardwareProfiles = \
                     HardwareProfileManager().getHardwareProfileList(
-                        tags=tagspec)
+                        cherrypy.request.db, tags=tagspec)
 
             response = {
                 'hardwareprofiles': hardwareProfiles.getCleanDict(),
@@ -137,7 +138,8 @@ class HardwareProfileController(TortugaController):
         TODO: implement support for optionDict through query string
         """
         try:
-            hp = HardwareProfileManager().getHardwareProfileById(hwprofile_id)
+            hp = HardwareProfileManager().getHardwareProfileById(
+                cherrypy.request.db, hwprofile_id)
 
             response = createHwProfileResponse(hp)
         except HardwareProfileNotFound as ex:
@@ -179,7 +181,7 @@ class HardwareProfileController(TortugaController):
 
         try:
             HardwareProfileManager().createHardwareProfile(
-                hwProfile, settingsDict=settingsDict)
+                cherrypy.request.db, hwProfile, settingsDict=settingsDict)
         except Exception as ex:
             self.getLogger().exception(
                 'hardware profile WS API createHardwareProfile() failed')
@@ -202,7 +204,7 @@ class HardwareProfileController(TortugaController):
 
         try:
             HardwareProfileManager().deleteHardwareProfile(
-                hardwareProfileName)
+                cherrypy.request.db, hardwareProfileName)
         except HardwareProfileNotFound as ex:
             self.handleException(ex)
             code = self.getTortugaStatusCode(ex)
@@ -232,7 +234,7 @@ class HardwareProfileController(TortugaController):
             hw_profile = HardwareProfile.getFromDict(postdata)
             hw_profile.setId(hardwareProfileId)
             hp_mgr = HardwareProfileManager()
-            hp_mgr.updateHardwareProfile(hw_profile)
+            hp_mgr.updateHardwareProfile(cherrypy.request.db, hw_profile)
 
         except HardwareProfileNotFound as ex:
             self.handleException(ex)
@@ -258,7 +260,8 @@ class HardwareProfileController(TortugaController):
         try:
             self.__checkUser(hardwareProfileName)
 
-            hpMgr.addAdmin(hardwareProfileName, adminUsername)
+            hpMgr.addAdmin(
+                cherrypy.request.db, hardwareProfileName, adminUsername)
         except Exception as ex:
             self.getLogger().exception(
                 'hardware profile WS API addAdmin() failed')
@@ -280,7 +283,8 @@ class HardwareProfileController(TortugaController):
         try:
             self.__checkUser(hardwareProfileName)
 
-            hpMgr.deleteAdmin(hardwareProfileName, adminUsername)
+            hpMgr.deleteAdmin(
+                cherrypy.request.db, hardwareProfileName, adminUsername)
         except Exception as ex:
             self.getLogger().exception(
                 'hardware profile WS API deleteAdmin() failed')
@@ -295,6 +299,7 @@ class HardwareProfileController(TortugaController):
         hpMgr = HardwareProfileManager()
 
         admins = hpMgr.getHardwareProfile(
+            cherrypy.request.db,
             hardwareProfileName, {
                 'admins': True,
             }).getAdmins()
@@ -318,6 +323,7 @@ class HardwareProfileController(TortugaController):
             hpMgr = HardwareProfileManager()
 
             hpMgr.copyHardwareProfile(
+                cherrypy.request.db,
                 srcHardwareProfileName, dstHardwareProfileName)
         except HardwareProfileNotFound as ex:
             self.handleException(ex)

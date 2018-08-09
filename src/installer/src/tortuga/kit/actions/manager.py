@@ -16,10 +16,9 @@
 
 from tortuga.kit.registry import get_all_kit_installers
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
-from tortuga.types import Singleton
 
 
-class KitActionsManager(TortugaObjectManager, Singleton):
+class KitActionsManager(TortugaObjectManager):
     def get_cloud_config(self, node, hardware_profile, software_profile,
                          user_data, *args, **kwargs):
         self.getLogger().debug(
@@ -91,7 +90,8 @@ class KitActionsManager(TortugaObjectManager, Singleton):
         # This needs to be here because of circular imports :(
         #
         from tortuga.db.nodeDbApi import NodeDbApi
-        nodes = NodeDbApi().getNodesByAddHostSession(add_host_session)
+        nodes = NodeDbApi().getNodesByAddHostSession(
+            self.session, add_host_session)
 
         self._run_action_with_node_list(component_installers,
                                         hardware_profile_name,
@@ -145,9 +145,6 @@ class KitActionsManager(TortugaObjectManager, Singleton):
         component_installers = self._get_enabled_component_installers(
             self._get_all_component_installers(base_kit_order='last'))
 
-        from tortuga.db.dbManager import DbManager
-        session = DbManager().openSession()
-
         #
         # Get all nodes marked as 'Deleted' that may still exist in the
         # database. We shouldn't have to do this, but occasionally a
@@ -156,15 +153,13 @@ class KitActionsManager(TortugaObjectManager, Singleton):
         #
         from tortuga.db.nodesDbHandler import NodesDbHandler
         nodes_db = NodesDbHandler()
-        try:
-            if software_profile_name:
-                nodes = nodes_db.getNodeListByNodeStateAndSoftwareProfileName(
-                        session, 'Deleted', software_profile_name)
-            else:
-                nodes = nodes_db.getNodesByNodeState(session, 'Deleted')
 
-        finally:
-            DbManager().closeSession()
+        if software_profile_name:
+            nodes = nodes_db.getNodeListByNodeStateAndSoftwareProfileName(
+                    self.session, 'Deleted', software_profile_name)
+        else:
+            nodes = nodes_db.getNodesByNodeState(self.session, 'Deleted')
+
 
         if 'nodes' in kwargs:
             aggregated_nodes = list(set(kwargs['nodes']) |
@@ -187,6 +182,7 @@ class KitActionsManager(TortugaObjectManager, Singleton):
         all_components = []
         for kit_installer_class in self._load_kits(base_kit_order):
             kit_installer = kit_installer_class()
+            kit_installer.session = self.session
             all_components.extend(
                 kit_installer.get_all_component_installers())
         return all_components
@@ -197,7 +193,7 @@ class KitActionsManager(TortugaObjectManager, Singleton):
         enabled_components = []
         api = SoftwareProfileDbApi()
 
-        db_enabled_components = api.getAllEnabledComponentList()
+        db_enabled_components = api.getAllEnabledComponentList(self.session)
         for component in component_list:
             for db_component in db_enabled_components:
                 if component.name == db_component.getName():

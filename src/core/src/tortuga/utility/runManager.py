@@ -14,15 +14,14 @@
 
 import os
 import threading
+
+from tortuga.exceptions.anotherInstanceOwnsLock import AnotherInstanceOwnsLock
+from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.os_utility import osUtility
-from tortuga.exceptions.invalidArgument import InvalidArgument
-from tortuga.exceptions.anotherInstanceOwnsLock \
-    import AnotherInstanceOwnsLock
-from tortuga.types import Singleton
 
 
-class RunManager(TortugaObjectManager, Singleton):
+class RunManager(TortugaObjectManager):
     def __init__(self):
         super(RunManager, self).__init__()
 

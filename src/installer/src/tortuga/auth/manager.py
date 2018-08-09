@@ -14,15 +14,18 @@
 
 from passlib.hash import pbkdf2_sha256
 
+from sqlalchemy.orm.session import Session
 from tortuga.config.configManager import ConfigManager
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
-from tortuga.types import Singleton
+
 from .principal import AuthPrincipal
 
 
-class AuthManager(TortugaObjectManager, Singleton):
-    def __init__(self):
+class AuthManager(TortugaObjectManager):
+    def __init__(self, *, session: Session):
         super(AuthManager, self).__init__()
+
+        self.session = session
 
         self._configManager = ConfigManager()
 
@@ -64,7 +67,7 @@ class AuthManager(TortugaObjectManager, Singleton):
 
         # Add users from DB
         if self._configManager.isInstaller():
-            for admin in AdminApi().getAdminList():
+            for admin in AdminApi().getAdminList(self.session):
                 self.__principals[admin.getUsername()] = AuthPrincipal(
                     admin.getUsername(), admin.getPassword(),
                     attributes={'id': admin.getId()})

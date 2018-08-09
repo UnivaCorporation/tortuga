@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tortuga.db.dbManager import DbManager
+
 from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
 from tortuga.kit.installer import ComponentInstallerBase
 from tortuga.node.nodeApi import NodeApi
@@ -57,13 +57,10 @@ class ComponentInstaller(ComponentInstallerBase):
         #
         # Write /etc/netgroup
         #
-        fp = open('/etc/netgroup', 'w')
-        dbm = DbManager()
-        session = dbm.openSession()
-
-        try:
+        with open('/etc/netgroup', 'w') as fp:
             software_profiles = \
-                SoftwareProfilesDbHandler().getSoftwareProfileList(session)
+                SoftwareProfilesDbHandler().getSoftwareProfileList(
+                    self.session)
             for software_profile in software_profiles:
                 if not software_profile.nodes:
                     continue
@@ -82,11 +79,6 @@ class ComponentInstaller(ComponentInstallerBase):
                         ' '.join(['({},,)'.format(node) for node in software_profile_node_list])
                     )
                 )
-
-        finally:
-            fp.close()
-            dbm.closeSession()
-            fp.close()
 
     def action_add_host(self, hardware_profile_name, software_profile_name,
                         nodes, *args, **kwargs):

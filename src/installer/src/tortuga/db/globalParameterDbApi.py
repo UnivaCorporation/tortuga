@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tortuga.db.tortugaDbApi import TortugaDbApi
+from sqlalchemy.orm.session import Session
 from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
+from tortuga.db.tortugaDbApi import TortugaDbApi
 from tortuga.exceptions.tortugaException import TortugaException
-from tortuga.db.dbManager import DbManager
 from tortuga.objects.parameter import Parameter
 
 
@@ -29,12 +29,10 @@ class GlobalParameterDbApi(TortugaDbApi):
 
         self._globalParametersDbHandler = GlobalParametersDbHandler()
 
-    def getParameter(self, name):
+    def getParameter(self, session: Session, name):
         """
         Returns the named parameter
         """
-
-        session = DbManager().openSession()
 
         try:
             dbParam = self._globalParametersDbHandler.getParameter(
@@ -46,10 +44,8 @@ class GlobalParameterDbApi(TortugaDbApi):
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise
-        finally:
-            DbManager().closeSession()
 
-    def getParameterList(self):
+    def getParameterList(self, session: Session):
         """
         Get list of all available parameters from the db.
 
@@ -58,8 +54,6 @@ class GlobalParameterDbApi(TortugaDbApi):
             Throws:
                 DbError
         """
-
-        session = DbManager().openSession()
 
         try:
             dbParameters = self._globalParametersDbHandler.getParameterList(
@@ -71,10 +65,8 @@ class GlobalParameterDbApi(TortugaDbApi):
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise
-        finally:
-            DbManager().closeSession()
 
-    def addParameter(self, parameter):
+    def addParameter(self, session: Session, parameter):
         """
         Insert parameter into the db.
 
@@ -84,8 +76,6 @@ class GlobalParameterDbApi(TortugaDbApi):
                 ParameterAlreadyExists
                 DbError
         """
-
-        session = DbManager().openSession()
 
         try:
             self._globalParametersDbHandler.addParameter(
@@ -99,12 +89,8 @@ class GlobalParameterDbApi(TortugaDbApi):
             session.rollback()
             self.getLogger().exception('%s' % ex)
             raise
-        finally:
-            DbManager().closeSession()
 
-    def upsertParameter(self, parameter):
-        session = DbManager().openSession()
-
+    def upsertParameter(self, session: Session, parameter):
         try:
             self._globalParametersDbHandler.upsertParameter(
                 session, parameter.getName(), parameter.getValue(),
@@ -118,10 +104,8 @@ class GlobalParameterDbApi(TortugaDbApi):
             session.rollback()
             self.getLogger().exception('upsertParameter failed')
             raise
-        finally:
-            DbManager().closeSession()
 
-    def deleteParameter(self, name):
+    def deleteParameter(self, session: Session, name):
         """
         Delete parameter from the db.
 
@@ -132,21 +116,20 @@ class GlobalParameterDbApi(TortugaDbApi):
                 DbError
         """
 
-        with DbManager().session() as session:
-            try:
-                p = self._globalParametersDbHandler.getParameter(session, name)
+        try:
+            p = self._globalParametersDbHandler.getParameter(session, name)
 
-                self.getLogger().debug('Deleting parameter [%s]' % (name))
+            self.getLogger().debug('Deleting parameter [%s]' % (name))
 
-                session.delete(p)
+            session.delete(p)
 
-                session.commit()
+            session.commit()
 
-                self.getLogger().info('Deleted parameter [%s]' % name)
-            except TortugaException:
-                session.rollback()
-                raise
-            except Exception as ex:
-                session.rollback()
-                self.getLogger().exception('%s' % ex)
-                raise
+            self.getLogger().info('Deleted parameter [%s]' % name)
+        except TortugaException:
+            session.rollback()
+            raise
+        except Exception as ex:
+            session.rollback()
+            self.getLogger().exception('%s' % ex)
+            raise

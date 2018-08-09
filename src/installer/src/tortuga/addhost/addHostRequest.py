@@ -18,7 +18,7 @@ import datetime
 import json
 import logging
 
-from tortuga.db.dbManager import DbManager
+from sqlalchemy.orm.session import Session
 from tortuga.db.nodeRequestsDbHandler import NodeRequestsDbHandler
 from tortuga.events.types import AddNodeRequestComplete
 from tortuga.exceptions.tortugaException import TortugaException
@@ -30,52 +30,51 @@ logger = logging.getLogger('tortuga.addhost')
 logger.addHandler(logging.NullHandler())
 
 
-def process_addhost_request(addHostSession):
-    with DbManager().session() as session:
-        req = NodeRequestsDbHandler().get_by_addHostSession(
-            session, addHostSession)
+def process_addhost_request(session: Session, addHostSession):
+    req = NodeRequestsDbHandler().get_by_addHostSession(
+        session, addHostSession)
 
-        if req is None:
-            # session was deleted prior to being processed; nothing to do...
-            return
+    if req is None:
+        # session was deleted prior to being processed; nothing to do...
+        return
 
-        addHostRequest = json.loads(req.request)
+    addHostRequest = json.loads(req.request)
 
-        #
-        # Save this data so that we have it for firing the event below
-        #
-        evt_req_id = req.id
-        evt_req_request = addHostRequest
+    #
+    # Save this data so that we have it for firing the event below
+    #
+    evt_req_id = req.id
+    evt_req_request = addHostRequest
 
-        addHostRequest['addHostSession'] = addHostSession
+    addHostRequest['addHostSession'] = addHostSession
 
-        with AddHostSessionContextManager(req.addHostSession) as ahm:
-            try:
-                logger.debug(
-                    'process_addhost_request(): Processing add host'
-                    ' request [%s]' % (req.addHostSession))
+    with AddHostSessionContextManager(req.addHostSession) as ahm:
+        try:
+            logger.debug(
+                'process_addhost_request(): Processing add host'
+                ' request [%s]' % (req.addHostSession))
 
-                ahm.addHosts(session, addHostRequest)
+            ahm.addHosts(session, addHostRequest)
 
-                # Delete session log
-                ahm.delete_session(req.addHostSession)
+            # Delete session log
+            ahm.delete_session(req.addHostSession)
 
-                # Completed node requests are deleted immediately
-                session.delete(req)
+            # Completed node requests are deleted immediately
+            session.delete(req)
 
-                logger.debug(
-                    'Add host request [%s] processed successfully' % (
-                        req.addHostSession))
-            except Exception as exc:
-                if not isinstance(exc, TortugaException):
-                    logger.exception(
-                        'Exception occurred during add host workflow')
+            logger.debug(
+                'Add host request [%s] processed successfully' % (
+                    req.addHostSession))
+        except Exception as exc:
+            if not isinstance(exc, TortugaException):
+                logger.exception(
+                    'Exception occurred during add host workflow')
 
-                req.state = 'error'
-                req.message = 'Exception: {}: {}'.format(
-                    exc.__class__.__name__, exc if exc.args else '<None>')
-                req.last_update = datetime.datetime.utcnow()
-            finally:
-                session.commit()
-                AddNodeRequestComplete.fire(request_id=evt_req_id,
-                                            request=evt_req_request)
+            req.state = 'error'
+            req.message = 'Exception: {}: {}'.format(
+                exc.__class__.__name__, exc if exc.args else '<None>')
+            req.last_update = datetime.datetime.utcnow()
+        finally:
+            session.commit()
+            AddNodeRequestComplete.fire(request_id=evt_req_id,
+                                        request=evt_req_request)

@@ -20,7 +20,7 @@ from tortuga.config.configManager import ConfigManager, getfqdn
 from tortuga.db import (adminDbApi, globalParameterDbApi, hardwareProfileDbApi,
                         kitDbApi, networkDbApi, nodeDbApi,
                         softwareProfileDbApi)
-from tortuga.db.dbManager import DbManagerBase
+from tortuga.db.dbManager import DbManager
 from tortuga.db.models.admin import Admin
 from tortuga.db.models.component import Component
 from tortuga.db.models.hardwareProfile import HardwareProfile
@@ -97,7 +97,7 @@ def cm_class(request, cm):
 
 @pytest.fixture(scope='session')
 def dbm():
-    dbmgr = DbManagerBase(create_engine('sqlite:///:memory:', echo=False))
+    dbmgr = DbManager(create_engine('sqlite:///:memory:', echo=False))
 
     dbmgr.init_database()
 

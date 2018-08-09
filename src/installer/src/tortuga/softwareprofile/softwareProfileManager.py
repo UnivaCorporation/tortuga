@@ -16,6 +16,7 @@ import os
 import shutil
 from typing import Dict, Optional
 
+from sqlalchemy.orm.session import Session
 from tortuga.config.configManager import ConfigManager
 from tortuga.db.componentDbApi import ComponentDbApi
 from tortuga.db.globalParameterDbApi import GlobalParameterDbApi
@@ -31,11 +32,10 @@ from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.os_utility import osUtility
 from tortuga.puppet import Puppet
-from tortuga.types import Singleton
 from tortuga.utility import validation
 
 
-class SoftwareProfileManager(TortugaObjectManager, Singleton): \
+class SoftwareProfileManager(TortugaObjectManager): \
         # pylint: disable=too-many-public-methods
 
     BASE_KIT_NAME = 'base'
@@ -49,30 +49,34 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
         self._kit_db_api = KitDbApi()
         self._config_manager = ConfigManager()
 
-    def getSoftwareProfileList(self, tags=None):
+    def getSoftwareProfileList(self, session: Session, tags=None):
         """Return all of the softwareprofiles with referenced components
         in this softwareprofile
         """
 
-        results = self._sp_db_api.getSoftwareProfileList(tags=tags)
+        results = self._sp_db_api.getSoftwareProfileList(session, tags=tags)
 
         for software_profile_obj in results:
             # load any available software profile metadata
             software_profile_obj.setMetadata(
                 self.get_software_profile_metadata(
-                    software_profile_obj.getName()))
+                    session,
+                    software_profile_obj.getName()
+                )
+            )
 
         return results
 
-    def getIdleSoftwareProfileList(self):
+    def getIdleSoftwareProfileList(self, session: Session):
         """ Return all of the idle softwareprofiles """
-        return self._sp_db_api.getIdleSoftwareProfileList()
+        return self._sp_db_api.getIdleSoftwareProfileList(session)
 
-    def setIdleState(self, softwareProfileName, state):
+    def setIdleState(self, session: Session, softwareProfileName, state):
         """ Sets the  idle state of a softwareprofile """
-        return self._sp_db_api.setIdleState(softwareProfileName, state)
+        return self._sp_db_api.setIdleState(
+            session, softwareProfileName, state)
 
-    def addAdmin(self, softwareProfileName, adminUsername):
+    def addAdmin(self, session: Session, softwareProfileName, adminUsername):
         """
         Add an admin as an authorized user.
 
@@ -83,9 +87,11 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
                 AdminNotFound
                 SoftwareProfileNotFound
         """
-        return self._sp_db_api.addAdmin(softwareProfileName, adminUsername)
+        return self._sp_db_api.addAdmin(
+            session, softwareProfileName, adminUsername)
 
-    def deleteAdmin(self, softwareProfileName, adminUsername):
+    def deleteAdmin(self, session: Session, softwareProfileName,
+                    adminUsername):
         """
         Remove an admin as an authorized user.
 
@@ -96,16 +102,18 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
                 AdminNotFound
                 SoftwareProfileNotFound
         """
-        return self._sp_db_api.deleteAdmin(softwareProfileName, adminUsername)
+        return self._sp_db_api.deleteAdmin(
+            session, softwareProfileName, adminUsername)
 
-    def updateSoftwareProfile(self, softwareProfileObject):
+    def updateSoftwareProfile(self, session: Session,
+                              softwareProfileObject):
         self.getLogger().debug(
             'Updating software profile: %s' % (
                 softwareProfileObject.getName()))
 
         # First get the object from the db we are updating...
-        existingProfile = self.\
-            getSoftwareProfileById(softwareProfileObject.getId())
+        existingProfile = self.getSoftwareProfileById(
+            session, softwareProfileObject.getId())
 
         # Set parameters that we will not allow updating
         softwareProfileObject.setOsInfo(existingProfile.getOsInfo())
@@ -113,48 +121,53 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
         softwareProfileObject.setIsIdle(existingProfile.getIsIdle())
         softwareProfileObject.setType(existingProfile.getType())
 
-        self._sp_db_api.updateSoftwareProfile(softwareProfileObject)
+        self._sp_db_api.updateSoftwareProfile(session, softwareProfileObject)
 
     def getSoftwareProfile(
             self,
+            session: Session,
             name: str,
             optionDict: Optional[Dict[str, bool]] = None) -> SoftwareProfile:
         """
         Retrieve software profile by name
 
         """
-        software_profile_obj = self._sp_db_api.getSoftwareProfile(
-            name, optionDict=optionDict)
+        software_profile_obj: SoftwareProfile = \
+            self._sp_db_api.getSoftwareProfile(
+                session, name, optionDict=optionDict)
 
         # load any available software profile metadata
         software_profile_obj.setMetadata(
-            self.get_software_profile_metadata(name))
+            self.get_software_profile_metadata(session, name))
 
         return software_profile_obj
 
     def getSoftwareProfileById(
             self,
+            session: Session,
             id_: int,
             optionDict: Optional[Dict[str, bool]] = None) -> SoftwareProfile:
         """
         Retrieve software profile by id
 
         """
-        software_profile_obj = self._sp_db_api.getSoftwareProfileById(
-            id_, optionDict=optionDict)
+        software_profile_obj: SoftwareProfile = \
+            self._sp_db_api.getSoftwareProfileById(
+                session, id_, optionDict=optionDict)
 
         # load any available software profile metadata
         software_profile_obj.setMetadata(
-            self.get_software_profile_metadata(software_profile_obj.getName()))
+            self.get_software_profile_metadata(
+                session, software_profile_obj.getName()))
 
         return software_profile_obj
 
-    def _getCoreComponentForOsInfo(self, osInfo):
+    def _getCoreComponentForOsInfo(self, session: Session, osInfo):
         # Find core component
 
         baseKit = None
 
-        for baseKit in self._kit_db_api.getKitList():
+        for baseKit in self._kit_db_api.getKitList(session):
             if not baseKit.getName() == self.BASE_KIT_NAME:
                 continue
 
@@ -174,19 +187,20 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
                                     % ('core', baseKit.getName()))
 
         comp = self._component_db_api.getBestMatchComponent(
-            baseComp.getName(), baseComp.getVersion(), osInfo,
+            session, baseComp.getName(), baseComp.getVersion(), osInfo,
             baseKit.getId())
 
         comp.setKit(baseKit)
 
         return comp
 
-    def _getOsInfo(self, bOsMediaRequired: bool):
+    def _getOsInfo(self, session: Session, bOsMediaRequired: bool):
         if not bOsMediaRequired:
             # As a placeholder, use the same OS as the installer
 
             # Find installer node entry
             node = self._node_db_api.getNode(
+                session,
                 ConfigManager().getInstaller(),
                 {'softwareprofile': True})
 
@@ -195,7 +209,7 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
         # Use available operating system kit; raise exception if
         # multiple available
 
-        os_kits = self._kit_db_api.getKitList(os_kits_only=True)
+        os_kits = self._kit_db_api.getKitList(session, os_kits_only=True)
         if not os_kits:
             raise KitNotFound('No operating system kit installed')
 
@@ -205,6 +219,7 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
                 ' operating system')
 
         kit = self._kit_db_api.getKit(
+            session,
             os_kits[0].getName(), os_kits[0].getVersion(), '0')
 
         components = kit.getComponentList()
@@ -222,7 +237,8 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
 
         return osinfo_list[0]
 
-    def createSoftwareProfile(self, swProfileSpec, settingsDict=None):
+    def createSoftwareProfile(self, session: Session, swProfileSpec,
+                              settingsDict=None):
         """
         Exceptions:
             ConfigurationError
@@ -254,16 +270,18 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
             'Creating software profile [%s]' % (swProfileSpec))
 
         osInfo = swProfileSpec.getOsInfo() \
-            if swProfileSpec.getOsInfo() else self._getOsInfo(bOsMediaRequired)
+            if swProfileSpec.getOsInfo() else self._getOsInfo(
+                session, bOsMediaRequired)
 
         # If we're creating an unmanaged software profile (no
         # DHCP/PXE/kickstart/OS) just create it now and we're done
         if unmanagedProfile:
-            self._sp_db_api.addSoftwareProfile(swProfileSpec)
+            self._sp_db_api.addSoftwareProfile(session, swProfileSpec)
         else:
             if bOsMediaRequired and swProfileSpec.getOsInfo():
                 try:
                     self._kit_db_api.getKit(
+                        session,
                         swProfileSpec.getOsInfo().getName(),
                         swProfileSpec.getOsInfo().getVersion(),
                         '0')
@@ -297,6 +315,7 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
             # Iterate over components, adding them to the software profile
             for c in spComponents:
                 cobj = self._component_db_api.getBestMatchComponent(
+                    session,
                     c.getName(),
                     c.getVersion(),
                     osInfo,
@@ -327,6 +346,7 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
 
                 try:
                     osComponent = self._component_db_api.getComponent(
+                        session,
                         osCompName,
                         osInfo.getVersion(),
                         osInfo,
@@ -344,7 +364,7 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
                 # if one exists for this OS
 
                 try:
-                    comp = self._getCoreComponentForOsInfo(osInfo)
+                    comp = self._getCoreComponentForOsInfo(session, osInfo)
 
                     self.getLogger().debug(
                         'Automatically adding [core] component'
@@ -367,7 +387,7 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
                         osObjFactory.getOsSysManager().getInitrd(osInfo))
 
             # Add the software profile
-            self._sp_db_api.addSoftwareProfile(swProfileSpec)
+            self._sp_db_api.addSoftwareProfile(session, swProfileSpec)
 
             # Enable components in one fell swoop
             for comp in components:
@@ -376,13 +396,13 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
 
                 if comp.getKit().getIsOs():
                     # Don't use enableComponent() on OS kit
-                    self._component_db_api.\
-                        addComponentToSoftwareProfile(
-                            comp.getId(), swProfileSpec.getId())
+                    self._component_db_api.addComponentToSoftwareProfile(
+                        session, comp.getId(), swProfileSpec.getId())
 
                     continue
 
-                self.enableComponent(swProfileSpec.getName(),
+                self.enableComponent(session,
+                                     swProfileSpec.getName(),
                                      comp.getKit().getName(),
                                      comp.getKit().getVersion(),
                                      comp.getKit().getIteration(),
@@ -409,7 +429,8 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
 
         return comp
 
-    def _get_kit_by_component(self, comp_name, comp_version=None):
+    def _get_kit_by_component(self, session: Session, comp_name,
+                              comp_version=None):
         """
         Gets a kit by compoent name/version.
         :param comp_name:    the name of the component
@@ -419,7 +440,7 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
         :raises ComponentNotFound:
 
         """
-        kit_list = self._kit_db_api.getKitList()
+        kit_list = self._kit_db_api.getKitList(session)
         kits = [
             kit
             for kit in kit_list
@@ -440,7 +461,8 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
 
         return kits[0]
 
-    def enableComponent(self, software_profile_name: str, kit_name: str,
+    def enableComponent(self, session: Session,
+                        software_profile_name: str, kit_name: str,
                         kit_version: str, kit_iteration: str,
                         comp_name: str, comp_version: Optional[str] = None,
                         sync: bool = True):
@@ -460,17 +482,18 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
 
         """
         kit, comp_version = self._get_kit_and_component_version(
-            kit_name, kit_version, kit_iteration, comp_name, comp_version)
+            session, kit_name, kit_version, kit_iteration, comp_name,
+            comp_version)
 
-        software_profile = self.getSoftwareProfile(software_profile_name,
-                                                   {'os': True})
+        software_profile = self.getSoftwareProfile(
+            session, software_profile_name, {'os': True})
 
         if kit.getIsOs():
             best_match_component = self._enable_os_kit_component(
-                kit, comp_name, comp_version, software_profile)
+                session, kit, comp_name, comp_version, software_profile)
         else:
             best_match_component = self._enable_kit_component(
-                kit, comp_name, comp_version, software_profile)
+                session, kit, comp_name, comp_version, software_profile)
 
         if not best_match_component:
             self.getLogger().info(
@@ -485,7 +508,8 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
             if sync:
                 Puppet().agent()
 
-    def _get_kit_and_component_version(self, kit_name, kit_version,
+    def _get_kit_and_component_version(self, session: Session,
+                                       kit_name, kit_version,
                                        kit_iteration, comp_name,
                                        comp_version=None):
         """
@@ -502,7 +526,8 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
         """
         kit = None
         if kit_name is None:
-            kit = self._get_kit_by_component(comp_name,
+            kit = self._get_kit_by_component(session,
+                                             comp_name,
                                              comp_version=comp_version)
             #
             # Get component version if required
@@ -514,7 +539,7 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
                         break
         elif kit_version is None or kit_iteration is None:
             kits_found = 0
-            for k in self._kit_db_api.getKitList():
+            for k in self._kit_db_api.getKitList(session):
                 if k.getName() == kit_name and \
                         (kit_version is None or
                          k.getVersion() == kit_version) and \
@@ -531,13 +556,13 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
                     raise KitNotFound('Multiple kits found {}'.format(
                         kit_name))
         else:
-            kit = self._kit_db_api.getKit(kit_name, kit_version,
-                                          kit_iteration)
+            kit = self._kit_db_api.getKit(
+                session, kit_name, kit_version, kit_iteration)
 
         return kit, comp_version
 
-    def _enable_kit_component(self, kit, comp_name, comp_version,
-                              software_profile):
+    def _enable_kit_component(self, session: Session, kit, comp_name,
+                              comp_version, software_profile):
         """
         Enables a regular kit component on a specific software profile.
 
@@ -554,6 +579,7 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
         kit_spec = (kit.getName(), kit.getVersion(), kit.getIteration())
 
         installer = get_kit_installer(kit_spec)()
+        installer.session = session
         comp_installer = installer.get_component_installer(comp_name)
         if not comp_installer.is_enableable(software_profile):
             self.getLogger().warning(
@@ -565,7 +591,7 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
         comp_installer.run_action('pre_enable', software_profile.getName())
 
         best_match_component = self._add_component_to_software_profile(
-            kit, comp_name, comp_version, software_profile)
+            session, kit, comp_name, comp_version, software_profile)
 
         comp_installer.run_action('enable', software_profile.getName())
         comp_installer.run_action('post_enable',
@@ -573,8 +599,8 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
 
         return best_match_component
 
-    def _enable_os_kit_component(self, kit, comp_name, comp_version,
-                                 software_profile):
+    def _enable_os_kit_component(self, session: Session, kit, comp_name,
+                                 comp_version, software_profile):
         """
         Enables an OS kit component on a specific software profile.
 
@@ -589,9 +615,10 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
 
         """
         return self._add_component_to_software_profile(
-            kit, comp_name, comp_version, software_profile)
+            session, kit, comp_name, comp_version, software_profile)
 
-    def _add_component_to_software_profile(self, kit, comp_name, comp_version,
+    def _add_component_to_software_profile(self, session: Session, kit,
+                                           comp_name, comp_version,
                                            software_profile):
         """
         Adds a kit to a software profile. This is a data-only operation,
@@ -609,16 +636,19 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
         """
         best_match_component = \
             self._component_db_api.getBestMatchComponent(
+                session,
                 comp_name, comp_version, software_profile.getOsInfo(),
                 kit.getId())
+
         self._component_db_api.addComponentToSoftwareProfile(
+            session,
             best_match_component.getId(), software_profile.getId())
 
         return best_match_component
 
-    def disableComponent(self, software_profile_name, kit_name, kit_version,
-                         kit_iteration, comp_name, comp_version=None,
-                         sync=True): \
+    def disableComponent(self, session: Session, software_profile_name,
+                         kit_name, kit_version, kit_iteration,
+                         comp_name, comp_version=None, sync=True): \
             # pylint: disable=unused-argument
         """
         Disables a component on a software profile.
@@ -636,17 +666,17 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
 
         """
         kit, comp_version = self._get_kit_and_component_version(
-            kit_name, kit_version, kit_iteration, comp_name)
+            session, kit_name, kit_version, kit_iteration, comp_name)
 
-        software_profile = self.getSoftwareProfile(software_profile_name,
-                                                   {'os': True})
+        software_profile = self.getSoftwareProfile(
+            session, software_profile_name, {'os': True})
 
         if kit.getIsOs():
             best_match_component = self._disable_os_kit_component(
-                kit, comp_name, comp_version, software_profile)
+                session, kit, comp_name, comp_version, software_profile)
         else:
             best_match_component = self._disable_kit_component(
-                kit, comp_name, comp_version, software_profile)
+                session, kit, comp_name, comp_version, software_profile)
 
         self.getLogger().info(
             'Disabled component on software profile: {} -> {}'.format(
@@ -657,7 +687,7 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
         if sync:
             Puppet().agent()
 
-    def _disable_kit_component(self, kit, comp_name, comp_version,
+    def _disable_kit_component(self, session, kit, comp_name, comp_version,
                                software_profile):
         """
         Disables a regular kit component on a specific software profile.
@@ -675,6 +705,7 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
         kit_spec = (kit.getName(), kit.getVersion(), kit.getIteration())
 
         installer = get_kit_installer(kit_spec)()
+        installer.session = session
         comp_installer = installer.get_component_installer(comp_name)
         comp_installer.run_action('pre_disable',
                                   software_profile.getName())
@@ -683,15 +714,15 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
 
         best_match_component = \
             self._remove_component_from_software_profile(
-                kit, comp_name, comp_version, software_profile)
+                session, kit, comp_name, comp_version, software_profile)
 
         comp_installer.run_action('post_disable',
                                   software_profile.getName())
 
         return best_match_component
 
-    def _disable_os_kit_component(self, kit, comp_name, comp_version,
-                                  software_profile):
+    def _disable_os_kit_component(self, session, kit, comp_name,
+                                  comp_version, software_profile):
         """
         Enables an OS kit component on a specific software profile.
 
@@ -706,9 +737,10 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
 
         """
         return self._remove_component_from_software_profile(
-            kit, comp_name, comp_version, software_profile)
+            session, kit, comp_name, comp_version, software_profile)
 
-    def _remove_component_from_software_profile(self, kit, comp_name,
+    def _remove_component_from_software_profile(self, session: Session,
+                                                kit, comp_name,
                                                 comp_version,
                                                 software_profile):
         """
@@ -726,14 +758,15 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
 
         """
         best_match_component = self._component_db_api.getBestMatchComponent(
-            comp_name, comp_version, software_profile.getOsInfo(),
+            session, comp_name, comp_version, software_profile.getOsInfo(),
             kit.getId())
+
         self._component_db_api.deleteComponentFromSoftwareProfile(
-            best_match_component.getId(), software_profile.getId())
+            session, best_match_component.getId(), software_profile.getId())
 
         return best_match_component
 
-    def deleteSoftwareProfile(self, name):
+    def deleteSoftwareProfile(self, session: Session, name):
         """
         Delete software profile by name
 
@@ -741,7 +774,7 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
             SoftwareProfileNotFound
         """
 
-        self._sp_db_api.deleteSoftwareProfile(name)
+        self._sp_db_api.deleteSoftwareProfile(session, name)
 
         # Remove all flags for software profile
         swProfileFlagPath = os.path.join(
@@ -751,34 +784,34 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
 
         self.getLogger().info('Deleted software profile [%s]' % (name))
 
-    def getNodeList(self, softwareProfileName):
-        return self._sp_db_api.getNodeList(softwareProfileName)
+    def getNodeList(self, session: Session, softwareProfileName):
+        return self._sp_db_api.getNodeList(session, softwareProfileName)
 
-    def getEnabledComponentList(self, name):
+    def getEnabledComponentList(self, session: Session, name):
         """ Get the list of enabled components """
-        return self._sp_db_api.getEnabledComponentList(name)
+        return self._sp_db_api.getEnabledComponentList(session, name)
 
-    def getPartitionList(self, softwareProfileName):
+    def getPartitionList(self, session: Session, softwareProfileName):
         """ Get list of partitions. """
-        return self._sp_db_api.getPartitionList(softwareProfileName)
+        return self._sp_db_api.getPartitionList(
+            session, softwareProfileName)
 
-    def addUsableHardwareProfileToSoftwareProfile(self, hardwareProfileName,
+    def addUsableHardwareProfileToSoftwareProfile(self, session: Session,
+                                                  hardwareProfileName,
                                                   softwareProfileName):
         self._logger.info(
             'Mapping hardware profile [%s] to software profile [%s]' % (
                 hardwareProfileName, softwareProfileName))
 
-        return self._sp_db_api.\
-            addUsableHardwareProfileToSoftwareProfile(hardwareProfileName,
-                                                      softwareProfileName)
+        return self._sp_db_api.addUsableHardwareProfileToSoftwareProfile(
+            session, hardwareProfileName, softwareProfileName)
 
     def deleteUsableHardwareProfileFromSoftwareProfile(
-            self, hardwareProfileName, softwareProfileName):
-        return self._sp_db_api.\
-            deleteUsableHardwareProfileFromSoftwareProfile(
-                hardwareProfileName, softwareProfileName)
+            self, session: Session, hardwareProfileName, softwareProfileName):
+        return self._sp_db_api.deleteUsableHardwareProfileFromSoftwareProfile(
+            session, hardwareProfileName, softwareProfileName)
 
-    def copySoftwareProfile(self, srcSoftwareProfileName,
+    def copySoftwareProfile(self, session: Session, srcSoftwareProfileName,
                             dstSoftwareProfileName):
         # Validate software profile name
         validation.validateProfileName(dstSoftwareProfileName)
@@ -787,23 +820,23 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
             'Copying software profile [%s] to [%s]' % (
                 srcSoftwareProfileName, dstSoftwareProfileName))
 
-        softwareProfile = self._sp_db_api.\
-            copySoftwareProfile(srcSoftwareProfileName,
-                                dstSoftwareProfileName)
+        softwareProfile = self._sp_db_api.copySoftwareProfile(
+            session, srcSoftwareProfileName, dstSoftwareProfileName)
 
         return softwareProfile
 
-    def getUsableNodes(self, softwareProfileName):
-        return self._sp_db_api.getUsableNodes(softwareProfileName)
+    def getUsableNodes(self, session: Session, softwareProfileName):
+        return self._sp_db_api.getUsableNodes(session, softwareProfileName)
 
-    def get_software_profile_metadata(self, name: str) -> Dict[str, str]:
+    def get_software_profile_metadata(self, session: Session, name: str) \
+            -> Dict[str, str]:
         """
         Call action_get_metadata() method for all kits
         """
 
         metadata = {}
 
-        kits = self._kit_db_api.getKitList()
+        kits = self._kit_db_api.getKitList(session)
 
         for kit in kits:
             if kit.getIsOs():
@@ -812,6 +845,9 @@ class SoftwareProfileManager(TortugaObjectManager, Singleton): \
 
             installer_ = get_kit_installer(
                 (kit.getName(), kit.getVersion(), kit.getIteration()))
+
+            installer_obj = installer_()
+            installer_obj.session = session
 
             # we are only interested in software profile metadata
             item = installer_().action_get_metadata(software_profile_name=name)

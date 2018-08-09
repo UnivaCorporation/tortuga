@@ -17,7 +17,7 @@
 from typing import Optional
 
 from sqlalchemy.exc import IntegrityError
-from tortuga.db.dbManager import DbManager
+from sqlalchemy.orm.session import Session
 from tortuga.db.networksDbHandler import NetworksDbHandler
 from tortuga.db.tortugaDbApi import TortugaDbApi
 from tortuga.exceptions.deleteNetworkFailed import DeleteNetworkFailed
@@ -42,25 +42,24 @@ class NetworkDbApi(TortugaDbApi):
 
         self._networksDbHandler = NetworksDbHandler()
 
-    def getNetworkList(self) -> TortugaObjectList:
+    def getNetworkList(self, session: Session) -> TortugaObjectList:
         """
         Get list of networks from the db.
         """
 
         self.getLogger().debug('getNetworkList()')
 
-        with DbManager().session() as session:
-            try:
-                dbList = self._networksDbHandler.getNetworkList(session)
+        try:
+            dbList = self._networksDbHandler.getNetworkList(session)
 
-                return self.getTortugaObjectList(Network, dbList)
-            except TortugaException:
-                raise
-            except Exception as ex:
-                self.getLogger().exception('%s' % ex)
-                raise
+            return self.getTortugaObjectList(Network, dbList)
+        except TortugaException:
+            raise
+        except Exception as ex:
+            self.getLogger().exception('%s' % ex)
+            raise
 
-    def getNetwork(self, address: str, netmask: str):
+    def getNetwork(self, session: Session, address: str, netmask: str):
         """
         Get a network from the db.
         """
@@ -68,37 +67,35 @@ class NetworkDbApi(TortugaDbApi):
         self.getLogger().debug(
             'Retrieving network [%s/%s]' % (address, netmask))
 
-        with DbManager().session() as session:
-            try:
-                network = self._networksDbHandler.getNetwork(
-                    session, address, netmask)
+        try:
+            network = self._networksDbHandler.getNetwork(
+                session, address, netmask)
 
-                return Network.getFromDbDict(network.__dict__)
-            except TortugaException:
-                raise
-            except Exception as ex:
-                self.getLogger().exception('%s' % ex)
-                raise
+            return Network.getFromDbDict(network.__dict__)
+        except TortugaException:
+            raise
+        except Exception as ex:
+            self.getLogger().exception('%s' % ex)
+            raise
 
-    def getNetworkById(self, id_):
+    def getNetworkById(self, session: Session, id_):
         """
         Get a network by id from the db.
         """
 
         self.getLogger().debug('Retrieving network ID [%s]' % (id_))
 
-        with DbManager().session() as session:
-            try:
-                network = self._networksDbHandler.getNetworkById(session, id_)
+        try:
+            network = self._networksDbHandler.getNetworkById(session, id_)
 
-                return Network.getFromDbDict(network.__dict__)
-            except TortugaException:
-                raise
-            except Exception as ex:
-                self.getLogger().exception('%s' % ex)
-                raise
+            return Network.getFromDbDict(network.__dict__)
+        except TortugaException:
+            raise
+        except Exception as ex:
+            self.getLogger().exception('%s' % ex)
+            raise
 
-    def addNetwork(self, network):
+    def addNetwork(self, session: Session, network):
         """
         Insert network into the db.
 
@@ -110,38 +107,37 @@ class NetworkDbApi(TortugaDbApi):
 
         self.getLogger().debug('Adding network [%s]' % network)
 
-        with DbManager().session() as session:
+        try:
             try:
-                try:
-                    self._networksDbHandler.getNetwork(
-                        session, network.getAddress(), network.getNetmask())
+                self._networksDbHandler.getNetwork(
+                    session, network.getAddress(), network.getNetmask())
 
-                    raise NetworkAlreadyExists(
-                        'Network [%s] already exists' % (network))
-                except NetworkNotFound:
-                    pass
+                raise NetworkAlreadyExists(
+                    'Network [%s] already exists' % (network))
+            except NetworkNotFound:
+                pass
 
-                dbNetwork = populate_network(network)
+            dbNetwork = populate_network(network)
 
-                session.add(dbNetwork)
+            session.add(dbNetwork)
 
-                session.commit()
+            session.commit()
 
-                self.getLogger().info('Added network [%s]' % (network))
+            self.getLogger().info('Added network [%s]' % (network))
 
-                return dbNetwork.id
-            except TortugaException:
-                session.rollback()
+            return dbNetwork.id
+        except TortugaException:
+            session.rollback()
 
-                raise
-            except Exception as ex:
-                session.rollback()
+            raise
+        except Exception as ex:
+            session.rollback()
 
-                self.getLogger().exception('%s' % ex)
+            self.getLogger().exception('%s' % ex)
 
-                raise
+            raise
 
-    def updateNetwork(self, network: Network):
+    def updateNetwork(self, session: Session, network: Network):
         """
         Updates network in DB..
 
@@ -152,38 +148,37 @@ class NetworkDbApi(TortugaDbApi):
                 InvalidArgument
         """
 
-        with DbManager().session() as session:
-            try:
-                if not network.getId():
-                    raise InvalidArgument(
-                        'Network id not set: unable to identify network')
+        try:
+            if not network.getId():
+                raise InvalidArgument(
+                    'Network id not set: unable to identify network')
 
-                self.getLogger().debug('Updating network [%s]' % (network))
+            self.getLogger().debug('Updating network [%s]' % (network))
 
-                dbNetwork = self._networksDbHandler.getNetworkById(
-                    session, network.getId())
+            dbNetwork = self._networksDbHandler.getNetworkById(
+                session, network.getId())
 
-                dbNetwork = populate_network(network, dbNetwork)
+            dbNetwork = populate_network(network, dbNetwork)
 
-                newNetwork = Network.getFromDbDict(dbNetwork.__dict__)
+            newNetwork = Network.getFromDbDict(dbNetwork.__dict__)
 
-                session.commit()
+            session.commit()
 
-                self.getLogger().info('Updated network [%s]' % (network))
+            self.getLogger().info('Updated network [%s]' % (network))
 
-                return newNetwork
-            except TortugaException:
-                session.rollback()
+            return newNetwork
+        except TortugaException:
+            session.rollback()
 
-                raise
-            except Exception as ex:
-                session.rollback()
+            raise
+        except Exception as ex:
+            session.rollback()
 
-                self.getLogger().exception('%s' % ex)
+            self.getLogger().exception('%s' % ex)
 
-                raise
+            raise
 
-    def deleteNetwork(self, id_: int):
+    def deleteNetwork(self, session: Session, id_: int):
         """
         Delete network from the db.
 
@@ -195,48 +190,47 @@ class NetworkDbApi(TortugaDbApi):
                 DeleteNetworkFailed
         """
 
-        with DbManager().session() as session:
-            try:
-                dbNetwork = \
-                    self._networksDbHandler.getNetworkById(session, id_)
+        try:
+            dbNetwork = \
+                self._networksDbHandler.getNetworkById(session, id_)
 
-                self.getLogger().debug(
-                    'Attempting to delete network [%s/%s]' % (
-                        dbNetwork.address, dbNetwork.netmask))
+            self.getLogger().debug(
+                'Attempting to delete network [%s/%s]' % (
+                    dbNetwork.address, dbNetwork.netmask))
 
-                # Make sure this network is not associated with anything
-                if dbNetwork.hardwareprofilenetworks:
-                    nets = [
-                        net.hardwareprofile.name
-                        for net in dbNetwork.hardwareprofilenetworks
-                    ]
+            # Make sure this network is not associated with anything
+            if dbNetwork.hardwareprofilenetworks:
+                nets = [
+                    net.hardwareprofile.name
+                    for net in dbNetwork.hardwareprofilenetworks
+                ]
 
-                    raise DeleteNetworkFailed(
-                        'Network enabled on hardware profile(s): [%s]' % (
-                            ' '.join(nets)))
+                raise DeleteNetworkFailed(
+                    'Network enabled on hardware profile(s): [%s]' % (
+                        ' '.join(nets)))
 
-                if dbNetwork.nics:
-                    raise DeleteNetworkFailed('Network has active NIC(s)')
+            if dbNetwork.nics:
+                raise DeleteNetworkFailed('Network has active NIC(s)')
 
-                session.delete(dbNetwork)
+            session.delete(dbNetwork)
 
-                session.commit()
+            session.commit()
 
-                self.getLogger().info(
-                    'Deleted network [%s/%s]' % (
-                        dbNetwork.address, dbNetwork.netmask))
-            except TortugaException:
-                session.rollback()
+            self.getLogger().info(
+                'Deleted network [%s/%s]' % (
+                    dbNetwork.address, dbNetwork.netmask))
+        except TortugaException:
+            session.rollback()
 
-                raise
-            except IntegrityError:
-                raise NetworkInUse('Network is in use')
-            except Exception as ex:
-                session.rollback()
+            raise
+        except IntegrityError:
+            raise NetworkInUse('Network is in use')
+        except Exception as ex:
+            session.rollback()
 
-                self.getLogger().exception('%s' % ex)
+            self.getLogger().exception('%s' % ex)
 
-                raise
+            raise
 
 
 def populate_network(network: Network,

@@ -13,11 +13,13 @@
 # limitations under the License.
 
 import argparse
-import sys
-import os
 import logging
-from tortuga.kit.registry import get_kit_installer
+import os
+import sys
+
+from tortuga.db.dbManager import DbManager
 from tortuga.kit.loader import load_kits
+from tortuga.kit.registry import get_kit_installer
 
 
 logger = logging.getLogger(__name__)
@@ -58,9 +60,12 @@ def main():
 
     load_kits()
     kit_spec = (kitName, kitVersion, kitIteration)
-    kit_installer = get_kit_installer(kit_spec)()
-    c = kit_installer.get_component_installer(compName)
-    c.run_action('post_install')
+
+    with DbManager().session() as session:
+        kit_installer = get_kit_installer(kit_spec)()
+        kit_installer.session = session
+        c = kit_installer.get_component_installer(compName)
+        c.run_action('post_install')
 
     logger.debug(
         'post_install component action run for [%s] from kit [%s]' % (

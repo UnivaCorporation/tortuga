@@ -26,7 +26,6 @@ from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.dbError import DbError
 from tortuga.kit.registry import get_all_kit_installers
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
-from tortuga.types import Singleton
 # from .tables import get_all_table_mappers
 from .sessionContextManager import SessionContextManager
 from .models.base import ModelBase
@@ -37,7 +36,7 @@ from . import models  # noqa pylint: disable=unused-import
 logger = getLogger(__name__)
 
 
-class DbManagerBase(TortugaObjectManager):
+class DbManager(TortugaObjectManager):
     """
     Class for db management.
 
@@ -49,9 +48,7 @@ class DbManagerBase(TortugaObjectManager):
 
     """
     def __init__(self, engine=None):
-        super(DbManagerBase, self).__init__()
-
-        self.Session = None
+        super(DbManager, self).__init__()
 
         if not engine:
             self._cm = ConfigManager()
@@ -68,21 +65,12 @@ class DbManagerBase(TortugaObjectManager):
 
                 os.close(fd)
 
-            if self._dbConfig['engine'] == 'mysql':
-                # Set default SQLAlchemy engine arguments for MySQL
-                kwargs = {
-                    'pool_size': 10,
-                    'max_overflow': 2,
-                    'pool_recycle': 600,
-                    'echo': False,
-                    'pool_timeout': 60,
-                }
-            else:
-                kwargs = {}
-
-            self._engine = sqlalchemy.create_engine(engineURI, **kwargs)
+            self._engine = sqlalchemy.create_engine(engineURI)
         else:
             self._engine = engine
+
+        self.Session = sqlalchemy.orm.scoped_session(
+            sqlalchemy.orm.sessionmaker(bind=self.engine))
 
     def _map_db_tables(self):
         #
@@ -256,8 +244,6 @@ class DbManagerBase(TortugaObjectManager):
 
     def openSession(self):
         """ Open db session. """
-        session_factory = sqlalchemy.orm.sessionmaker(bind=self.engine)
-        self.Session = sqlalchemy.orm.scoped_session(session_factory)
 
         return self.Session()
 
@@ -265,7 +251,3 @@ class DbManagerBase(TortugaObjectManager):
         """Close scoped_session."""
 
         self.Session.remove()
-
-
-class DbManager(DbManagerBase, Singleton):
-    pass

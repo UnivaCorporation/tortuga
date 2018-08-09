@@ -71,7 +71,8 @@ class KitController(TortugaController):
             'getKit(): name=[%s], version=[%s], iteration=[%s]' % (
                 name, version, iteration))
 
-        return KitManager().getKit(name, version=version, iteration=iteration)
+        return KitManager().getKit(
+            cherrypy.request.db, name, version=version, iteration=iteration)
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
@@ -80,7 +81,7 @@ class KitController(TortugaController):
         """ Return info for the specified kit by id. """
 
         try:
-            kit = KitManager().getKitById(kit_id)
+            kit = KitManager().getKitById(cherrypy.request.db, kit_id)
 
             response = {
                 'kit': kit.getCleanDict(),
@@ -108,7 +109,8 @@ class KitController(TortugaController):
             iteration = kwargs.get('iteration')
 
             if cherrypy.request.method == 'DELETE':
-                KitManager().deleteKit(name, version, iteration)
+                KitManager().deleteKit(
+                    cherrypy.request.db, name, version, iteration)
             else:
                 # GET method
                 if name:
@@ -120,7 +122,7 @@ class KitController(TortugaController):
                     )
                 else:
                     # get all kits
-                    kitList = KitManager().getKitList()
+                    kitList = KitManager().getKitList(cherrypy.request.db)
 
                 response = {'kits': kitList.getCleanDict()}
         except KitNotFound as ex:
@@ -141,7 +143,7 @@ class KitController(TortugaController):
 
         try:
             KitManager().installKit(
-                name, version, iteration, key)
+                cherrypy.request.db, name, version, iteration, key)
         except Exception as ex:
             self.getLogger().error('%s' % ex)
             self.handleException(ex)
@@ -154,7 +156,7 @@ class KitController(TortugaController):
 
         try:
             eula = KitManager().get_kit_eula(
-                name, version, iteration)
+                cherrypy.request.db, name, version, iteration)
 
             response = eula.getCleanDict()
         except Exception as ex:

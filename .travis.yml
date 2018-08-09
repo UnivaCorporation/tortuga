@@ -11,8 +11,8 @@ before_install:
 install:
   - docker run -it --rm -v `pwd`:/tortuga univa/tortuga-builder
 script:
-  - docker run -it --rm -v `pwd`:/tortuga univa/tortuga-builder tox -c src/core/tox.ini
-  - docker run -it --rm -v `pwd`:/tortuga univa/tortuga-builder tox -c src/installer/tox.ini
+  # - docker run -it --rm -v `pwd`:/tortuga univa/tortuga-builder tox -c src/core/tox.ini
+  # - docker run -it --rm -v `pwd`:/tortuga univa/tortuga-builder tox -c src/installer/tox.ini
   - docker run -it --rm -v `pwd`:/tortuga univa/tortuga-builder chown -R `id -u`:`id -g` ./install
   - cp -f docker/*.build-kit install
   - docker build -t univa/tortuga-build-kit:$TRAVIS_BUILD_NUMBER -f ./install/Dockerfile.build-kit ./install

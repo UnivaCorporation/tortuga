@@ -13,8 +13,10 @@
 # limitations under the License.
 
 from tortuga.node import state
-from .base import BaseListener
+from tortuga.tasks.celery import dbm
+
 from ..types import NodeStateChanged
+from .base import BaseListener
 
 
 class NodeProvisioningListener(BaseListener):
@@ -47,14 +49,18 @@ class NodeProvisioningListener(BaseListener):
         from tortuga.node.nodeManager import NodeManager
         from tortuga.exceptions.nodeNotFound import NodeNotFound
 
-        manager: NodeManager = NodeManager()
+        with dbm.session() as session:
+            manager: NodeManager = NodeManager()
 
-        try:
-            node = manager.getNode(event.node['name'])
+            try:
+                node = manager.getNode(session, event.node['name'])
 
-            if node.getState() != state.NODE_STATE_INSTALLED:
-                manager.updateNodeStatus(node.getName(),
-                                         state.NODE_STATE_UNRESPONSIVE)
-        except NodeNotFound:
-            # node has been deleted; nothing to do
-            pass
+                if node.getState() != state.NODE_STATE_INSTALLED:
+                    manager.updateNodeStatus(
+                        session,
+                        node.getName(),
+                        state.NODE_STATE_UNRESPONSIVE
+                    )
+            except NodeNotFound:
+                # node has been deleted; nothing to do
+                pass

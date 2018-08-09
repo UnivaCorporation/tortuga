@@ -15,18 +15,18 @@
 # pylint: disable=no-member
 
 import configparser
-import os
 import logging
+import os
+
 from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.configurationError import ConfigurationError
 from tortuga.objects.osInfo import OsInfo
 from tortuga.os_utility import osUtility
-from tortuga.types import Singleton
 
 
-class RepoManager(Singleton):
+class RepoManager:
     """
-    Singleton class for repository management.
+    Class for repository management.
     """
 
     def __init__(self):

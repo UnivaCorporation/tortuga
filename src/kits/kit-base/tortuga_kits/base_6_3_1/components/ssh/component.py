@@ -16,10 +16,11 @@ from logging import getLogger
 import os
 import shutil
 
-from tortuga.db.dbManager import DbManager
 from tortuga.db.models.nic import Nic
 from tortuga.kit.installer import ComponentInstallerBase
 from tortuga.os_utility import tortugaSubprocess
+from tortuga.db.globalParameterDbApi import GlobalParameterDbApi
+from tortuga.exceptions.parameterNotFound import ParameterNotFound
 
 
 logger = getLogger(__name__)
@@ -37,8 +38,8 @@ class ComponentInstaller(ComponentInstallerBase):
 
     def configure(self):
         fp = open(CONFIG_FILE, 'w')
-        dbm = DbManager()
-        session = dbm.openSession()
+
+        session = self.session
 
         try:
             print("# ", file=fp)
@@ -47,7 +48,14 @@ class ComponentInstaller(ComponentInstallerBase):
             print("#", file=fp)
             print("", file=fp)
 
-            dnszone = self.kit_installer.get_db_parameter_value('DNSZone')
+            try:
+                result = GlobalParameterDbApi().getParameter(
+                    self.session, 'DNSZone'
+                )
+
+                dnszone = result.getValue()
+            except ParameterNotFound:
+                dnszone = ''
 
             for db_nic in session.query(Nic).order_by(Nic.ip).all():
                 if db_nic.node.state == 'Deleted':
@@ -79,7 +87,6 @@ class ComponentInstaller(ComponentInstallerBase):
 
         finally:
             fp.close()
-            dbm.closeSession()
 
     def action_add_host(self, hardware_profile_name, software_profile_name,
                         nodes, *args, **kwargs):

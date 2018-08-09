@@ -20,6 +20,7 @@ import urllib.parse
 import urllib.request
 from typing import Any, List
 
+from sqlalchemy.orm.session import Session
 from tortuga.boot.distro import DistributionFactory
 from tortuga.config import VERSION, version_is_compatible
 from tortuga.config.configManager import ConfigManager
@@ -47,7 +48,6 @@ from tortuga.os_utility import osUtility
 from tortuga.os_utility.osUtility import getOsObjectFactory, mapOsName
 from tortuga.repo import repoManager
 from tortuga.softwareprofile import softwareProfileFactory
-from tortuga.types import Singleton
 from tortuga.utility.actionManager import ActionManager
 
 from .eula import BaseEulaValidator
@@ -55,7 +55,7 @@ from .loader import load_kits
 from .registry import get_kit_installer
 
 
-class KitManager(TortugaObjectManager, Singleton):
+class KitManager(TortugaObjectManager):
     def __init__(self, eula_validator=None):
         super(KitManager, self).__init__()
 
@@ -68,14 +68,14 @@ class KitManager(TortugaObjectManager, Singleton):
         self._kits_root = self._config_manager.getKitDir()
         self._component_db_api = componentDbApi.ComponentDbApi()
 
-    def getKitList(self):
+    def getKitList(self, session: Session):
         """
         Get all installed kits.
 
         """
-        return self._kit_db_api.getKitList()
+        return self._kit_db_api.getKitList(session)
 
-    def getKit(self, name, version=None, iteration=None):
+    def getKit(self, session: Session, name, version=None, iteration=None):
         """
         Get a single kit by name, and optionally version and/or iteration.
 
@@ -85,9 +85,9 @@ class KitManager(TortugaObjectManager, Singleton):
         :return:          the kit instance
 
         """
-        return self._kit_db_api.getKit(name, version, iteration)
+        return self._kit_db_api.getKit(session, name, version, iteration)
 
-    def getKitById(self, id_):
+    def getKitById(self,session: Session, id_):
         """
         Get a single kit by id.
 
@@ -95,7 +95,7 @@ class KitManager(TortugaObjectManager, Singleton):
         :return:    the kit instance
 
         """
-        return self._kit_db_api.getKitById(id_)
+        return self._kit_db_api.getKitById(session, id_)
 
     def get_kit_url(self, name, version, iteration):
         kit = Kit(name, version, iteration)
@@ -103,7 +103,7 @@ class KitManager(TortugaObjectManager, Singleton):
         return os.path.join(
             native_repo.getRemoteUrl(), kit.getTarBz2FileName())
 
-    def installKit(self, name, version, iteration, key=None):
+    def installKit(self, db_manager, name, version, iteration, key=None):
         """
         Install kit using kit name/version/iteration.
 
@@ -124,15 +124,16 @@ class KitManager(TortugaObjectManager, Singleton):
         kitPkgUrl = self.get_kit_url(name, version, iteration)
 
         # Check for kit existence.
-        self._check_if_kit_exists(kit)
+        with db_manager.session() as session:
+            self._check_if_kit_exists(session, kit)
 
         self.getLogger().debug(
             '[{0}] Installing kit [{1}]'.format(
                 self.__class__.__name__, kit))
 
-        return self.installKitPackage(kitPkgUrl, key)
+        return self.installKitPackage(db_manager, kitPkgUrl, key)
 
-    def installKitPackage(self, kit_pkg_url, key=None):
+    def installKitPackage(self, db_manager, kit_pkg_url, key=None):
         """
         Install kit from the given kit url (url might be a local file). Kit
         will be installed for all operating systems that:
@@ -180,87 +181,90 @@ class KitManager(TortugaObjectManager, Singleton):
                 'Kit is not installable: {}'.format(kit_spec))
             return
 
-        kit = installer.get_kit()
+        with db_manager.session() as session:
+            installer.session = session
 
-        #
-        # This method will throw KitAlreadyExists, if it does...
-        #
-        self._check_if_kit_exists(kit)
+            kit = installer.get_kit()
 
-        #
-        # Validate eula
-        #
-        eula = installer.get_eula()
-        if not eula:
-            self.getLogger().debug('No EULA acceptance required')
-        else:
-            if not self._eula_validator.validate_eula(eula):
-                raise EulaAcceptanceRequired(
-                    'You must accept the EULA to install this kit')
+            #
+            # This method will throw KitAlreadyExists, if it does...
+            #
+            self._check_if_kit_exists(session, kit)
 
-        #
-        # Runs the kit pre install method
-        #
-        installer.run_action('pre_install')
+            #
+            # Validate eula
+            #
+            eula = installer.get_eula()
+            if not eula:
+                self.getLogger().debug('No EULA acceptance required')
+            else:
+                if not self._eula_validator.validate_eula(eula):
+                    raise EulaAcceptanceRequired(
+                        'You must accept the EULA to install this kit')
 
-        #
-        # Get list of operating systems supported by this installer
-        #
-        os_info_list = [
-            repo.getOsInfo() for repo in repoManager.getRepoList()
-        ]
+            #
+            # Runs the kit pre install method
+            #
+            installer.run_action('pre_install')
 
-        #
-        # Install operating system specific packages
-        #
-        self._install_os_packages(kit, os_info_list)
+            #
+            # Get list of operating systems supported by this installer
+            #
+            os_info_list = [
+                repo.getOsInfo() for repo in repoManager.getRepoList()
+            ]
 
-        #
-        # Initialize andy DB tables provided by the kit
-        #
-        db_manager = DbManager()
-        db_manager.init_database()
+            #
+            # Install operating system specific packages
+            #
+            self._install_os_packages(kit, os_info_list)
 
-        #
-        # Add the kit to the database
-        #
-        self._kit_db_api.addKit(kit)
+            #
+            # Initialize any DB tables provided by the kit
+            #
+            # db_manager = DbManager()
+            db_manager.init_database()
 
-        #
-        # Clean up the kit archive directory
-        #
-        self._clean_kit_achiv_dir(kit, installer.install_path)
+            #
+            # Add the kit to the database
+            #
+            self._kit_db_api.addKit(session, kit)
 
-        #
-        # Install puppet modules
-        #
-        installer.run_action('install_puppet_modules')
+            #
+            # Clean up the kit archive directory
+            #
+            self._clean_kit_achiv_dir(kit, installer.install_path)
 
-        #
-        # Run post install
-        #
-        try:
-            installer.run_action('post_install')
-        except Exception as e:
-            self._uninstall_kit(kit, True)
-            raise KitInstallError(
-                'Kit installation failed during post_install: {}'.format(e))
+            #
+            # Install puppet modules
+            #
+            installer.run_action('install_puppet_modules')
 
-        if eula:
-            ActionManager().logAction(
-                'Kit [{}] installed and EULA accepted at [{}]'
-                ' local machine time.'.format(
-                    installer.spec, time.ctime())
-            )
-        else:
-            ActionManager().logAction(
-                'Kit [{}] installed at [{}] local machine time.'.format(
-                    installer.spec, time.ctime())
-            )
+            #
+            # Run post install
+            #
+            try:
+                installer.run_action('post_install')
+            except Exception as e:
+                self._uninstall_kit(session, kit, True)
+                raise KitInstallError(
+                    'Kit installation failed during post_install: {}'.format(e))
 
-        return kit
+            if eula:
+                ActionManager().logAction(
+                    'Kit [{}] installed and EULA accepted at [{}]'
+                    ' local machine time.'.format(
+                        installer.spec, time.ctime())
+                )
+            else:
+                ActionManager().logAction(
+                    'Kit [{}] installed at [{}] local machine time.'.format(
+                        installer.spec, time.ctime())
+                )
 
-    def _check_if_kit_exists(self, kit):
+            return kit
+
+    def _check_if_kit_exists(self, session: Session, kit):
         """
         Check if a kit exists, if it does then raise an exception.
 
@@ -268,8 +272,8 @@ class KitManager(TortugaObjectManager, Singleton):
 
         """
         try:
-            self._kit_db_api.getKit(kit.getName(), kit.getVersion(),
-                                    kit.getIteration())
+            self._kit_db_api.getKit(
+                session, kit.getName(), kit.getVersion(), kit.getIteration())
             raise KitAlreadyExists(
                 'Kit already exists: ({}, {}, {})'.format(
                     kit.getName(), kit.getVersion(), kit.getIteration()
@@ -646,7 +650,8 @@ class KitManager(TortugaObjectManager, Singleton):
                         'Skipping non-existent package: {}'.format(
                             package_path))
 
-    def deleteKit(self, name, version=None, iteration=None, force=False):
+    def deleteKit(self, session: Session, name, version=None, iteration=None,
+                  force=False):
         """
         Delete a kit.
 
@@ -656,15 +661,16 @@ class KitManager(TortugaObjectManager, Singleton):
         :param force:     whether or not to force the deletion
 
         """
-        kit = self.getKit(name, version, iteration)
+        kit = self.getKit(session, name, version, iteration)
+
         if kit.getIsOs():
-            self._delete_os_kit(kit, force)
+            self._delete_os_kit(session, kit, force)
         else:
-            self._delete_kit(kit, force)
+            self._delete_kit(session, kit, force)
 
         self.getLogger().info('Deleted kit: {}'.format(kit))
 
-    def _delete_kit(self, kit, force):
+    def _delete_kit(self, session, kit, force):
         """
         Deletes a regular kit.
 
@@ -677,13 +683,14 @@ class KitManager(TortugaObjectManager, Singleton):
             kit_spec = (kit.getName(), kit.getVersion(), kit.getIteration())
 
             installer = get_kit_installer(kit_spec)()
+            installer.session = session
 
             installer.run_action('pre_uninstall')
-            self._uninstall_kit(kit, force)
+            self._uninstall_kit(session, kit, force)
             installer.run_action('uninstall_puppet_modules')
             installer.run_action('post_uninstall')
 
-    def _delete_os_kit(self, kit, force):
+    def _delete_os_kit(self, session: Session, kit, force):
         """
         Deletes an OS kit.
 
@@ -694,9 +701,9 @@ class KitManager(TortugaObjectManager, Singleton):
         osi = kit.getComponentList()[0].getOsInfoList()[0]
         repo_dir = os.path.join(kit.getName(), kit.getVersion(),
                                 osi.getArch())
-        self._uninstall_kit(kit, force)
+        self._uninstall_kit(session, kit, force)
 
-    def _uninstall_kit(self, kit, force):
+    def _uninstall_kit(self, session: Session, kit, force):
         """
         Uninstalls the kit and it's file repos.
 
@@ -709,7 +716,7 @@ class KitManager(TortugaObjectManager, Singleton):
         #
         # Remove the kit from the DB
         #
-        self._kit_db_api.deleteKit(kit.getName(), kit.getVersion(),
+        self._kit_db_api.deleteKit(session, kit.getName(), kit.getVersion(),
                                    kit.getIteration(), force=force)
 
         #

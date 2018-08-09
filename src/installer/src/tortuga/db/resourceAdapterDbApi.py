@@ -14,8 +14,8 @@
 
 from typing import List, Type
 
+from sqlalchemy.orm.session import Session
 from tortuga.db import resourceAdaptersDbHandler
-from tortuga.db.dbManager import DbManager
 from tortuga.db.tortugaDbApi import TortugaDbApi
 from tortuga.exceptions.resourceAdapterAlreadyExists import \
     ResourceAdapterAlreadyExists
@@ -34,11 +34,10 @@ class ResourceAdapterDbApi(TortugaDbApi):
         self._resourceAdaptersDbHandler = resourceAdaptersDbHandler.\
             ResourceAdaptersDbHandler()
 
-    def getResourceAdapter(self, name):
+    def getResourceAdapter(self, session: Session, name):
         ra_obj = None
 
         try:
-            session = DbManager().openSession()
             db_ra = self._resourceAdaptersDbHandler.getResourceAdapter(
                 session, name)
             self.loadRelations(db_ra, {'kit': True})
@@ -53,7 +52,7 @@ class ResourceAdapterDbApi(TortugaDbApi):
 
         return ra_obj
 
-    def addResourceAdapter(self, name, kitId=None):
+    def addResourceAdapter(self, session: Session, name, kitId=None):
         """
         Add resource adapter
 
@@ -66,7 +65,7 @@ class ResourceAdapterDbApi(TortugaDbApi):
         self.getLogger().debug('addResourceAdapter(name=[%s])' % (name))
 
         try:
-            self.getResourceAdapter(name)
+            self.getResourceAdapter(session, name)
 
             raise ResourceAdapterAlreadyExists(
                 'Resource adapter [%s/%s] already exists' % (name, kitId))
@@ -75,8 +74,6 @@ class ResourceAdapterDbApi(TortugaDbApi):
             pass
 
         try:
-            session = DbManager().openSession()
-
             dbResourceAdapter = self._resourceAdaptersDbHandler.\
                 addResourceAdapter(session, name, kitId)
 
@@ -94,7 +91,7 @@ class ResourceAdapterDbApi(TortugaDbApi):
 
         return resourceAdapterObj
 
-    def deleteResourceAdapter(self, name):
+    def deleteResourceAdapter(self, session: Session, name):
         """
         Remove resource adapter
 
@@ -104,8 +101,6 @@ class ResourceAdapterDbApi(TortugaDbApi):
         self.getLogger().debug('deleteResourceAdapter(name=[%s])' % (name))
 
         try:
-            session = DbManager().openSession()
-
             self._resourceAdaptersDbHandler.deleteResourceAdapter(
                 session, name)
 
@@ -122,9 +117,8 @@ class ResourceAdapterDbApi(TortugaDbApi):
         # Success!
         self.getLogger().info('Deleted resource adapter [%s]' % (name))
 
-    def getResourceAdapterList(self) -> List[ResourceAdapter]:
+    def getResourceAdapterList(self, session: Session) -> List[ResourceAdapter]:
         try:
-            session = DbManager().openSession()
             db_ra_list: List[ResourceAdapterModel] = \
                 self._resourceAdaptersDbHandler.getResourceAdapterList(
                     session)
@@ -139,9 +133,6 @@ class ResourceAdapterDbApi(TortugaDbApi):
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise
-
-        finally:
-            DbManager().closeSession()
 
     def getTortugaObjectList(self,
                              cls: Type[ResourceAdapter],

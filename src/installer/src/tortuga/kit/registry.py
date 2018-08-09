@@ -13,8 +13,8 @@
 # limitations under the License.
 
 import importlib
-from logging import getLogger
 import pkgutil
+from logging import getLogger
 
 from tortuga.exceptions.kitNotFound import KitNotFound
 
@@ -49,6 +49,7 @@ def discover_kit_installers_in_package(pkg_name):
     except ModuleNotFoundError:
         logger.debug('Package not found: {}'.format(pkg_name))
         return
+
     for _, name, is_pkg in pkgutil.iter_modules(pkg.__path__):
         if is_pkg:
             full_pkg_path = '{}.{}'.format(pkg_name, name)

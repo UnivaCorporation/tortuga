@@ -61,8 +61,8 @@ class OSSupport(OsSupportBase):
         self._globalParameterDbApi = GlobalParameterDbApi()
 
         try:
-            depot_dir = \
-                self._globalParameterDbApi.getParameter('depot').getValue()
+            depot_dir = self._globalParameterDbApi.getParameter(
+                self.session, 'depot').getValue()
         except ParameterNotFound:
             # Fallback to legacy default
             depot_dir = '/opt/tortuga/depot'
@@ -216,7 +216,7 @@ class OSSupport(OsSupportBase):
 
     def __kickstart_get_timezone(self) -> str:
         tz = self._globalParameterDbApi.getParameter(
-            'Timezone_zone').getValue()
+            self.session, 'Timezone_zone').getValue()
 
         # Ensure timezone does not contain any spaces
         return tz.replace(' ', '_')
@@ -415,8 +415,9 @@ dd if=/dev/zero of=$d%s bs=512 count=1
         installer_private_ip: str = hardwareprofile.nics[0].ip
 
         try:
-            private_domain: Optional[str] = self._globalParameterDbApi.\
-                getParameter('DNSZone').getValue()
+            private_domain: Optional[str] = \
+                self._globalParameterDbApi.getParameter(
+                    self.session, 'DNSZone').getValue()
         except ParameterNotFound:
             private_domain: Optional[str] = None
 

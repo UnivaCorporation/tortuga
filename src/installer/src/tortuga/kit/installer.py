@@ -229,6 +229,8 @@ class KitInstallerBase(ConfigurableMixin, metaclass=KitInstallerMeta):
         self._ws_controller_classes = []
         self._ws_controller_classes_loaded = False
 
+        self.session = None
+
     def get_config_base(self):
         return self.config_manager.getKitConfigBase()
 
@@ -316,6 +318,7 @@ class KitInstallerBase(ConfigurableMixin, metaclass=KitInstallerMeta):
                 #
                 comp_inst_class = comp_inst_mod.ComponentInstaller
                 comp_inst = comp_inst_class(self)
+                comp_inst.session = self.session
                 self._component_installers[comp_inst_class.name] = \
                     comp_inst
                 logger.debug(

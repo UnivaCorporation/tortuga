@@ -20,53 +20,58 @@ from tortuga.exceptions.adminAlreadyExists import AdminAlreadyExists
 
 
 def test_getAdmin(dbm):
-    result = AdminApi().getAdmin('admin')
+    with dbm.session() as session:
+        result = AdminApi().getAdmin(session, 'admin')
 
     assert result.getUsername() == 'admin' and \
         result.getRealname() == 'realname'
 
 
 def test_getAdminList(dbm):
-    result = AdminApi().getAdminList()
+    with dbm.session() as session:
+        result = AdminApi().getAdminList(session)
 
     assert 'admin' in [admin.getUsername() for admin in result]
 
 
 def test_addAdmin(dbm):
-    realname = 'Another admin user'
+    with dbm.session() as session:
+        realname = 'Another admin user'
 
-    AdminApi().addAdmin('testuser', 'password', realname=realname)
+        AdminApi().addAdmin(session, 'testuser', 'password', realname=realname)
 
-    result = AdminApi().getAdmin('testuser')
+        result = AdminApi().getAdmin(session, 'testuser')
 
-    assert result.getUsername() == 'testuser'
+        assert result.getUsername() == 'testuser'
 
-    result2 = AdminApi().getAdminById(result.getId())
+        result2 = AdminApi().getAdminById(session, result.getId())
 
-    assert result.getUsername() == result2.getUsername() and \
-        result.getRealname() == result2.getRealname()
+        assert result.getUsername() == result2.getUsername() and \
+            result.getRealname() == result2.getRealname()
 
-    with pytest.raises(AdminAlreadyExists):
-        AdminApi().addAdmin('testuser', 'password')
+        with pytest.raises(AdminAlreadyExists):
+            AdminApi().addAdmin(session, 'testuser', 'password')
 
-    AdminApi().deleteAdmin('testuser')
+        AdminApi().deleteAdmin(session, 'testuser')
 
-    with pytest.raises(AdminNotFound):
-        AdminApi().getAdmin('testuser')
+        with pytest.raises(AdminNotFound):
+            AdminApi().getAdmin(session, 'testuser')
 
 
 def test_deleteAdmin(dbm):
-    with pytest.raises(AdminNotFound):
-        AdminApi().deleteAdmin('nonexistentuser')
+    with dbm.session() as session:
+        with pytest.raises(AdminNotFound):
+            AdminApi().deleteAdmin(session, 'nonexistentuser')
 
 
 def test_updateAdmin(dbm):
-    result = AdminApi().getAdmin('admin')
+    with dbm.session() as session:
+        result = AdminApi().getAdmin(session, 'admin')
 
-    result.setRealname('Joe User')
+        result.setRealname('Joe User')
 
-    AdminApi().updateAdmin(result)
+        AdminApi().updateAdmin(session, result)
 
-    result2 = AdminApi().getAdmin('admin')
+        result2 = AdminApi().getAdmin(session, 'admin')
 
-    assert result2.getRealname() == 'Joe User'
+        assert result2.getRealname() == 'Joe User'
