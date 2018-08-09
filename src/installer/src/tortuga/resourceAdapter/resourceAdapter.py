@@ -592,7 +592,8 @@ class ResourceAdapter(UserDataMixin): \
     def private_dns_zone(self) -> str:
         if self.__private_dns_zone is None:
             self.__private_dns_zone = \
-                ParameterApi().getParameter('DNSZone').getValue()
+                ParameterApi().getParameter(
+                    self.session, 'DNSZone').getValue()
 
         return self.__private_dns_zone
 
