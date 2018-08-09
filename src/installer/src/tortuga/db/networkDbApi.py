@@ -137,7 +137,7 @@ class NetworkDbApi(TortugaDbApi):
 
             raise
 
-    def updateNetwork(self, session: Session, network: Network):
+    def updateNetwork(self, session: Session, network: Network) -> Network:
         """
         Updates network in DB..
 
