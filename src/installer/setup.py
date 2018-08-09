@@ -179,7 +179,8 @@ setup(
             'tortuga-setup=tortuga.scripts.tortuga_setup:main',
             'update_hiera.py=tortuga.scripts.update_hiera:main',
             'make-backup=tortuga.scripts.make_backup:main',
-            'restore-backup=tortuga.scripts.restore_backup:main'
+            'restore-backup=tortuga.scripts.restore_backup:main',
+            'uc-tag=tortuga.scripts.uc_tag:main',
         ],
     },
     cmdclass={
