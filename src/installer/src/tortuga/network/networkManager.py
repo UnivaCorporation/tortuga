@@ -14,8 +14,10 @@
 
 import ipaddress
 
+from sqlalchemy.orm.session import Session
 from tortuga.db.networkDbApi import NetworkDbApi
 from tortuga.exceptions.invalidArgument import InvalidArgument
+from tortuga.objects.network import Network
 from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 
@@ -35,29 +37,30 @@ class NetworkManager(TortugaObjectManager):
 
         self._networkDbApi = NetworkDbApi()
 
-    def getNetwork(self, address, netmask):
-        return self._networkDbApi.getNetwork(address, netmask)
+    def getNetwork(self, session: Session, address: str, netmask: str) \
+            -> Network:
+        return self._networkDbApi.getNetwork(session, address, netmask)
 
-    def getNetworkById(self, id_):
-        return self._networkDbApi.getNetworkById(id_)
+    def getNetworkById(self, session: Session, id_) -> Network:
+        return self._networkDbApi.getNetworkById(session, id_)
 
-    def getNetworkList(self) -> TortugaObjectList:
-        return self._networkDbApi.getNetworkList()
+    def getNetworkList(self, session: Session) -> TortugaObjectList:
+        return self._networkDbApi.getNetworkList(session)
 
-    def addNetwork(self, network):
+    def addNetwork(self, session: Session, network: Network) -> int:
         self.__validateNetwork(network)
 
-        return self._networkDbApi.addNetwork(network)
+        return self._networkDbApi.addNetwork(session, network)
 
-    def updateNetwork(self, network):
+    def updateNetwork(self, session: Session, network: Network) -> Network:
         self.__validateNetwork(network)
 
-        return self._networkDbApi.updateNetwork(network)
+        return self._networkDbApi.updateNetwork(session, network)
 
-    def deleteNetwork(self, network_id):
-        return self._networkDbApi.deleteNetwork(network_id)
+    def deleteNetwork(self, session: Session, network_id: int):
+        return self._networkDbApi.deleteNetwork(session, network_id)
 
-    def __validateNetwork(self, network): \
+    def __validateNetwork(self, network: Network) -> None: \
             # pylint: disable=no-self-use
         """
         Raises:

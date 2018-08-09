@@ -14,8 +14,10 @@
 
 # pylint: disable=no-member
 
+from sqlalchemy.orm.session import Session
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.network.networkManager import NetworkManager
+from tortuga.objects.network import Network
 from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.utility.tortugaApi import TortugaApi
 
@@ -25,7 +27,8 @@ class NetworkApi(TortugaApi):
     Network API class.
     """
 
-    def getNetwork(self, networkAddress, networkSubnet):
+    def getNetwork(self, session: Session, networkAddress: str,
+                   networkSubnet: str):
         """
         Get network information.
 
@@ -37,15 +40,15 @@ class NetworkApi(TortugaApi):
                 TortugaException
         """
         try:
-            return NetworkManager().\
-                getNetwork(networkAddress, networkSubnet)
+            return NetworkManager().getNetwork(
+                session, networkAddress, networkSubnet)
         except TortugaException as ex:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
 
-    def getNetworkById(self, id_):
+    def getNetworkById(self, session: Session, id_: str):
         """
         Get network information by id.
 
@@ -57,14 +60,14 @@ class NetworkApi(TortugaApi):
                 TortugaException
         """
         try:
-            return NetworkManager().getNetworkById(id_)
+            return NetworkManager().getNetworkById(session, id_)
         except TortugaException as ex:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
 
-    def getNetworkList(self) -> TortugaObjectList:
+    def getNetworkList(self, session: Session) -> TortugaObjectList:
         """
         Get network list.
 
@@ -75,14 +78,14 @@ class NetworkApi(TortugaApi):
                 TortugaException
         """
         try:
-            return NetworkManager().getNetworkList()
+            return NetworkManager().getNetworkList(session)
         except TortugaException as ex:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
 
-    def addNetwork(self, network):
+    def addNetwork(self, session: Session, network: Network) -> int:
         """
         Add a new network to the system.
 
@@ -94,14 +97,14 @@ class NetworkApi(TortugaApi):
                 TortugaException
         """
         try:
-            return NetworkManager().addNetwork(network)
+            return NetworkManager().addNetwork(session, network)
         except TortugaException as ex:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
 
-    def deleteNetwork(self, id_):
+    def deleteNetwork(self, session: Session, id_: str):
         """
         Delete a network from the DB.
 
@@ -113,14 +116,14 @@ class NetworkApi(TortugaApi):
                 TortugaException
         """
         try:
-            return NetworkManager().deleteNetwork(id_)
+            return NetworkManager().deleteNetwork(session, id_)
         except TortugaException as ex:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
 
-    def updateNetwork(self, network):
+    def updateNetwork(self, session: Session, network: Network) -> Network:
         """
         Update a network in the DB.
 
@@ -132,7 +135,7 @@ class NetworkApi(TortugaApi):
                 TortugaException
         """
         try:
-            return NetworkManager().updateNetwork(network)
+            return NetworkManager().updateNetwork(session, network)
         except TortugaException as ex:
             raise
         except Exception as ex:
