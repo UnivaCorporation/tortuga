@@ -26,6 +26,7 @@ import socket
 import subprocess
 import sys
 import time
+from typing import Tuple
 
 import yaml
 from six import print_
@@ -836,7 +837,7 @@ class TortugaDeployer(object): \
 
         self._logger.debug('Puppet pre-configuration completed')
 
-    def initDatabase(self) -> Session:
+    def initDatabase(self) -> Tuple[DbManager, Session]:
         msg = _('Initializing database')
 
         self._logger.info(msg)
