@@ -275,6 +275,7 @@ class HardwareProfileDbApi(TortugaDbApi):
                             srcHardwareProfileName: str,
                             dstHardwareProfileName: str):
         srcHardwareProfile = self.getHardwareProfile(
+            session,
             srcHardwareProfileName, {
                 'admins': True,
                 'hardwareprofilenetworks': True,
