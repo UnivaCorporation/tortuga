@@ -146,7 +146,7 @@ setup(
         'Routes',
         'oic',
         'six',
-        'pyzmq',
+        'pyzmq<17.1.1',
         'redis',
         'gevent<1.3.2',
         'marshmallow-sqlalchemy',
