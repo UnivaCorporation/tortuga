@@ -283,7 +283,7 @@ class HardwareProfileDbApi(TortugaDbApi):
             })
 
         dstHardwareProfile = \
-            self.getHardwareProfile(srcHardwareProfileName)
+            self.getHardwareProfile(session, srcHardwareProfileName)
 
         dstHardwareProfile.setName(dstHardwareProfileName)
 
@@ -300,7 +300,7 @@ class HardwareProfileDbApi(TortugaDbApi):
         dstHardwareProfile.setResourceAdapter(
             srcHardwareProfile.getResourceAdapter())
 
-        self.addHardwareProfile(dstHardwareProfile, session)
+        self.addHardwareProfile(session, dstHardwareProfile)
 
         session.commit()
 
