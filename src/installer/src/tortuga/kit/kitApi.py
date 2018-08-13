@@ -174,7 +174,8 @@ class KitApi(TortugaApi):
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
 
-    def installOsKit(self, os_media_urls: List[str], **kwargs) -> None:
+    def installOsKit(self, session: Session, os_media_urls: List[str],
+                     **kwargs) -> Kit:
         """
             Install OS kit
 
@@ -187,7 +188,8 @@ class KitApi(TortugaApi):
                 TortugaException
         """
         try:
-            return self._kit_manager.installOsKit(os_media_urls, **kwargs)
+            return self._kit_manager.installOsKit(
+                session, os_media_urls, **kwargs)
         except TortugaException:
             raise
         except Exception as ex:

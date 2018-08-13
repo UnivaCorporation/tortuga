@@ -15,6 +15,7 @@
 from typing import List
 
 from tortuga.cli.tortugaCli import TortugaCli
+from tortuga.db.dbManager import DbManager
 from tortuga.kit.kitApiFactory import getKitApi
 from tortuga.kit.loader import load_kits
 from tortuga.puppet import Puppet
@@ -58,12 +59,14 @@ package-based node provisioning.
         # Pre-process the media URL list
         os_media_urls: List[str] = self.getArgs().osMediaUrl.split(',')
 
-        api.installOsKit(
-            os_media_urls,
-            bUseSymlinks=self.getArgs().symlinksFlag,
-            bInteractive=True,
-            mirror=self.getArgs().mirror
-        )
+        with DbManager().session() as session:
+            api.installOsKit(
+                session,
+                os_media_urls,
+                bUseSymlinks=self.getArgs().symlinksFlag,
+                bInteractive=True,
+                mirror=self.getArgs().mirror
+            )
 
         if self.getArgs().sync:
             Puppet().agent()

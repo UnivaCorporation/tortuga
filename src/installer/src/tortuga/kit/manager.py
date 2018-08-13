@@ -413,19 +413,20 @@ class KitManager(TortugaObjectManager):
         except ImportError:
             raise OsNotSupported('Currently unsupported distribution')
 
-    def _checkExistingKit(self, kitname, kitversion, kitarch):
+    def _checkExistingKit(self, session: Session, kitname: str,
+                          kitversion: str, kitarch: str):
         """
         Raises:
             KitAlreadyExists
         """
 
         try:
-            kit = self._kit_db_api.getKit(kitname, kitversion)
+            kit = self._kit_db_api.getKit(session, kitname, kitversion)
 
             longname = format_kit_descriptor(kitname, kitversion, kitarch)
 
             # Attempt to get matching OS component
-            for c in kit.getComponentList():
+            for c in kit.getComponentList(session):
                 if c.getName() != longname:
                     continue
 
@@ -438,7 +439,7 @@ class KitManager(TortugaObjectManager):
         except KitNotFound:
             pass
 
-    def _create_kit_db_entry(self, kit):
+    def _create_kit_db_entry(self, session: Session, kit) -> Kit:
         """
         Creates a database entry for a kit.
 
@@ -447,7 +448,7 @@ class KitManager(TortugaObjectManager):
 
         """
         try:
-            return self._kit_db_api.getKit(kit['name'], kit['ver'])
+            return self._kit_db_api.getKit(session, kit['name'], kit['ver'])
         except KitNotFound:
             pass
 
@@ -469,11 +470,12 @@ class KitManager(TortugaObjectManager):
         kitObj.addComponent(newComp)
 
         # Kit does not previously exist, perform 'normal' add kit operation
-        self._kit_db_api.addKit(kitObj)
+        self._kit_db_api.addKit(session, kitObj)
 
         return kitObj
 
-    def installOsKit(self, os_media_urls: List[str], **kwargs):
+    def installOsKit(self, session: Session, os_media_urls: List[str],
+                     **kwargs) -> Kit:
         """
 
         :param os_media_urls:
@@ -546,6 +548,7 @@ class KitManager(TortugaObjectManager):
                 # perform copy operation...
                 try:
                     self._checkExistingKit(
+                        session,
                         os_info.getName(),
                         os_info.getVersion(),
                         os_info.getArch())
@@ -588,13 +591,13 @@ class KitManager(TortugaObjectManager):
                     if os.path.exists(media['localFilePath']):
                         os.unlink(media['localFilePath'])
 
-        kit_object = self._create_kit_db_entry(kit)
+        kit_object = self._create_kit_db_entry(session, kit)
 
-        self._postInstallOsKit(kit_object)
+        self._postInstallOsKit(session, kit_object)
 
         return kit_object
 
-    def _postInstallOsKit(self, kit):
+    def _postInstallOsKit(self, session: Session, kit):
         """
         Enable the OS component that may already be associated with an
         existing software profile.  This is possible when OS media is
@@ -606,19 +609,22 @@ class KitManager(TortugaObjectManager):
         kitOsInfo = osComponents[0].getOsComponentList()[0].getOsInfo()
 
         # Load the newly added kit component from the database
-        c = self._component_db_api.getComponent(osComponents[0].getName(),
-                                                osComponents[0].getVersion(),
-                                                kitOsInfo)
+        c = self._component_db_api.getComponent(
+            session,
+            osComponents[0].getName(),
+            osComponents[0].getVersion(),
+            kitOsInfo
+        )
 
         # Iterate over all software profiles looking for matching OS
-        for swProfile in swProfileApi.getSoftwareProfileList():
+        for swProfile in swProfileApi.getSoftwareProfileList(session):
             if swProfile.getOsInfo() != kitOsInfo:
                 continue
 
             # Ensure OS component is enabled on this software profile
             try:
                 self._component_db_api.addComponentToSoftwareProfile(
-                    c.getId(), swProfile.getId())
+                    session, c.getId(), swProfile.getId())
             except SoftwareProfileComponentAlreadyExists:
                 # Not an error...
                 pass
