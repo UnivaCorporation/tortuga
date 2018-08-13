@@ -15,7 +15,6 @@
 import os
 import shlex
 import socket
-import subprocess
 from typing import Union
 
 from tortuga.objects.provisioningInfo import ProvisioningInfo
@@ -178,10 +177,6 @@ class ConfigManager(dict): \
         self.__setFromEnvVariable(
             'repoConfigFile', 'TORTUGA_REPO_CONFIG_FILE')
 
-        # If 'TORTUGA_ROOT' is not set, check for it in Hiera
-        if 'root' not in self or self['root'] is None:
-            self.__setFromHiera('root', hieraKey='tortuga::config::instroot')
-
     def __init_from_provinfo(self):
         # Initialize the ProvisioningInfo structure
         self.__initializeProvisioningInfo(DEFAULT_TORTUGA_PROFILE_NII_FILE)
@@ -237,8 +232,6 @@ class ConfigManager(dict): \
             self['installer'] = self['host'] = getfqdn()
         else:
             self['host'] = self.getProvisioningInfo().getNode().getName()
-
-        self.__setFromHiera('tortugaDepotDir', hieraKey='depot')
 
     def __setRootSubdirectories(self):
         self['reposDir'] = os.path.join(
@@ -306,42 +299,6 @@ class ConfigManager(dict): \
                 # Ignore 'Permission denied', raise all others
                 if exc.errno != 13:
                     raise
-
-    def __setFromHiera(self, key, hieraKey=None):
-        if hieraKey is None:
-            hieraKey = key
-
-        try:
-            p = subprocess.Popen(
-                ['/opt/puppetlabs/bin/hiera', hieraKey],
-                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                bufsize=1)
-
-            results = b''
-
-            while True:
-                buf = p.stdout.readline()
-                if not buf:
-                    break
-
-                results += buf
-
-                break
-
-            retval = p.wait()
-            if retval != 0:
-                # Unable to get value from hiera, use the built-in default
-                self[key] = self.__getKeyValue(key)
-
-                return
-
-            value = results.decode().rstrip()
-
-            self[key] = value if value != 'nil' else self.__getKeyValue(key)
-        except OSError:
-            # This could be raised if running in a 'virtualenv' test suite
-            # that does not have Puppet available to it.
-            self[key] = self.__getKeyValue(key)
 
     def __getKeyValue(self, key, default='__internal__'):
         """
