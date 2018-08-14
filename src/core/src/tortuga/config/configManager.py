@@ -236,6 +236,7 @@ class ConfigManager(dict): \
     def __setRootSubdirectories(self):
         self['reposDir'] = os.path.join(
             self.getRoot(), DEFAULT_TORTUGA_RELATIVE_REPOS_DIR)
+        self['tortugaDepotDir'] = os.path.join(self.getRoot(), 'depot')
         self['kickstartsDir'] = os.path.join(
             self.getRoot(), DEFAULT_TORTUGA_RELATIVE_KICKSTARTS_DIR)
         self['webRoot'] = os.path.join(
