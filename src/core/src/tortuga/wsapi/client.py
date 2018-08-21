@@ -16,7 +16,6 @@ import json
 from logging import getLogger
 from typing import Optional, Type, Union
 
-import marshmallow
 import requests
 
 from tortuga.config.configManager import ConfigManager
@@ -46,15 +45,6 @@ class RequestError(Exception):
         self.status_code = status_code
         self.data = data
         super().__init__(*args, **kwargs)
-
-
-class InvalidResponse(Exception):
-    """
-    An exception that is raised if we get a response from the server that we
-    cannot validate.
-
-    """
-    pass
 
 
 class RestApiClient:
@@ -120,12 +110,9 @@ class RestApiClient:
 
         return '{}{}'.format(self.baseurl, path)
 
-    def process_response(
-            self,
-            response: requests.Response,
-            response_schema: Optional[Type[marshmallow.Schema]] = None,
-            error_schema: Optional[Type[marshmallow.Schema]] = None
-            ) -> Optional[Union[list, dict]]:
+    def process_response(self,
+                         response: requests.Response
+                         ) -> Optional[Union[list, dict]]:
         """
         Process the response, parsing out the data and handling
         errors/exceptions as required.
@@ -163,30 +150,14 @@ class RestApiClient:
 
         logger.debug('Response Payload: {}'.format(json.dumps(data)))
 
-        #
-        # If a response schema is provided, then validate the response against
-        # the schema.
-        #
-        if response_schema:
-            try:
-                data = response_schema().load(data).data
-
-            except marshmallow.ValidationError:
-                raise InvalidResponse('ERROR: Invalid Server Response')
-
         return data
 
-    def process_error_response(
-            self,
-            error_response: requests.Response,
-            error_schema: Optional[Type[marshmallow.Schema]] = None):
+    def process_error_response(self, error_response: requests.Response):
         """
         Process the response as an error.
 
         :param requests.Response error_response:
                     the response from the request
-        :param Optional[Type[marshmallow.Schema]] error_schema:
-                    validate the error payload against a schema?
 
         :raises RequestError:   if the a non 2xx status code is returned
         :raises InvalidResponse if the response or error cannot be properly
@@ -207,28 +178,13 @@ class RestApiClient:
 
         logger.debug('ERROR Payload: {}'.format(json.dumps(data)))
 
-        #
-        # If an error schema is provided, then validate the error data
-        # against the schema
-        #
-        if error_schema:
-            try:
-                data = error_schema().load(data).data
-
-            except marshmallow.ValidationError:
-                raise InvalidResponse('ERROR: Invalid Server Response')
-
         raise RequestError(
             "ERROR: API Request Error {}".format(error_response.status_code),
             status_code=error_response.status_code,
             data=data
         )
 
-    def get(self,
-            path: str,
-            response_schema: Optional[Type[marshmallow.Schema]] = None,
-            error_schema: Optional[Type[marshmallow.Schema]] = None
-            ) -> Union[list, dict]:
+    def get(self, path: str) -> Union[list, dict]:
         """
         Performs a GET request on the specified path. It is assumed the
         result is JSON, and it is decoded as such.
@@ -250,14 +206,9 @@ class RestApiClient:
             **self.get_requests_kwargs()
         )
 
-        return self.process_response(result, response_schema, error_schema)
+        return self.process_response(result)
 
-    def post(self,
-             path: str,
-             data: Optional[dict] = None,
-             response_schema: Optional[Type[marshmallow.Schema]] = None,
-             error_schema: Optional[Type[marshmallow.Schema]] = None
-             ) -> Optional[dict]:
+    def post(self, path: str, data: Optional[dict] = None) -> Optional[dict]:
         """
         Post data to a specified path (API endpoint). Data will automatically
         be encoded as JSON.
@@ -281,14 +232,9 @@ class RestApiClient:
             **self.get_requests_kwargs()
         )
 
-        return self.process_response(result, response_schema, error_schema)
+        return self.process_response(result)
 
-    def put(self,
-            path: str,
-            data: Optional[dict] = None,
-            response_schema: Optional[Type[marshmallow.Schema]] = None,
-            error_schema: Optional[Type[marshmallow.Schema]] = None
-            ) -> Optional[dict]:
+    def put(self, path: str, data: Optional[dict] = None) -> Optional[dict]:
         """
         Put data to a specified path (API endpoint). Data will automatically
         be encoded as JSON.
@@ -312,13 +258,9 @@ class RestApiClient:
             **self.get_requests_kwargs()
         )
 
-        return self.process_response(result, response_schema, error_schema)
+        return self.process_response(result)
 
-    def delete(self,
-               path: str,
-               response_schema: Optional[Type[marshmallow.Schema]] = None,
-               error_schema: Optional[Type[marshmallow.Schema]] = None
-               ) -> Optional[dict]:
+    def delete(self, path: str) -> Optional[dict]:
         """
         Delete from the specified path.
 
@@ -339,13 +281,9 @@ class RestApiClient:
             **self.get_requests_kwargs()
         )
 
-        return self.process_response(result, response_schema, error_schema)
+        return self.process_response(result)
 
-    def patch(self,
-              path: str, data: Optional[dict] = None,
-              response_schema: Optional[Type[marshmallow.Schema]] = None,
-              error_schema: Optional[Type[marshmallow.Schema]] = None
-              ) -> Optional[dict]:
+    def patch(self, path: str, data: Optional[dict] = None) -> Optional[dict]:
         """
         Patch data to a specified path (API endpoint). Data will automatically
         be encoded as JSON.
@@ -369,4 +307,4 @@ class RestApiClient:
             **self.get_requests_kwargs()
         )
 
-        return self.process_response(result, response_schema, error_schema)
+        return self.process_response(result)
