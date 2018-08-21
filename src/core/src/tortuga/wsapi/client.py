@@ -14,7 +14,7 @@
 
 import json
 from logging import getLogger
-from typing import Optional, Type, Union
+from typing import Optional, Union
 
 import requests
 
@@ -119,16 +119,10 @@ class RestApiClient:
 
         :param requests.Response response:        the response from the
                                                   request
-        :param Optional[Type[marshmallow.Schema]] response_schema:
-                    validate the response against a schema?
-        :param Optional[Type[marshmallow.Schema]] error_schema:
-                    validate the error payload against a schema?
 
         :return Optional[Union[list, dict]]: the response
         
         :raises RequestError:   if the a non 2xx status code is returned
-        :raises InvalidResponse if the response or error cannot be properly
-                                validated
 
         """
         #
@@ -160,8 +154,6 @@ class RestApiClient:
                     the response from the request
 
         :raises RequestError:   if the a non 2xx status code is returned
-        :raises InvalidResponse if the response or error cannot be properly
-                                validated
 
         """
         logger.debug('ERROR Code: {}'.format(error_response.status_code))
@@ -190,10 +182,6 @@ class RestApiClient:
         result is JSON, and it is decoded as such.
 
         :param str path: the API path to get from
-        :param Optional[Type[marshmallow.Schema]] response_schema:
-                         validate the response against a schema?
-        :param Optional[Type[marshmallow.Schema]] error_schema:
-                         validate the error payload against a schema?
 
         :return Union[list, dict]: the response, JSON decoded
 
@@ -215,10 +203,6 @@ class RestApiClient:
 
         :param str path:  the API path to post to
         :param dict data: the data to post
-        :param Optional[Type[marshmallow.Schema]] response_schema:
-                          validate the response against a schema?
-        :param Optional[Type[marshmallow.Schema]] error_schema:
-                          validate the error payload against a schema?
 
         :return dict: the response of the request
 
@@ -241,10 +225,6 @@ class RestApiClient:
 
         :param str path:  the API path to put to
         :param dict data: the data to post
-        :param Optional[Type[marshmallow.Schema]] response_schema:
-                          validate the response against a schema?
-        :param Optional[Type[marshmallow.Schema]] error_schema:
-                          validate the error payload against a schema?
 
         :return dict: the response of the request
 
@@ -265,10 +245,6 @@ class RestApiClient:
         Delete from the specified path.
 
         :param str path: the path to delete
-        :param Optional[Type[marshmallow.Schema]] response_schema:
-                         validate the response against a schema?
-        :param Optional[Type[marshmallow.Schema]] error_schema:
-                         validate the error payload against a schema?
 
         :return dict : the result of the delete
 
@@ -290,10 +266,6 @@ class RestApiClient:
 
         :param str path:  the API path to put to
         :param dict data: the data to post
-        :param Optional[Type[marshmallow.Schema]] response_schema:
-                          validate the response against a schema?
-        :param Optional[Type[marshmallow.Schema]] error_schema:
-                          validate the error payload against a schema?
 
         :return dict: the response of the request
 
