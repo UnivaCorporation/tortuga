@@ -35,6 +35,7 @@ class ComponentCli(TortugaCli):
 
         excl_option_group.add_argument(
             '--software-profile', dest='softwareProfileName',
+            metavar='NAME',
             help=_('Software profile to act on'))
 
         excl_option_group.add_argument(
@@ -44,19 +45,23 @@ class ComponentCli(TortugaCli):
             help=_('Perform action on Tortuga installer software profile')
         )
 
-        self.addOption('--kit-name', dest='kitName',
+        self.addOption('--kit-name', dest='kitName', metavar='NAME',
                        help=_('kit name'))
 
         self.addOption('--kit-version', dest='kitVersion',
+                       metavar='VERSION',
                        help=_('kit version'))
 
         self.addOption('--kit-iteration', dest='kitIteration',
+                       metavar='ITERATION',
                        help=_('kit iteration'))
 
         self.addOption('--comp-name', dest='compName',
+                       metavar='NAME',
                        help=_('component name'))
 
         self.addOption('--comp-version', dest='compVersion',
+                       metavar='VERSION',
                        help=_('component version'))
 
         self.addOption('--no-sync', dest='sync', action='store_false',
