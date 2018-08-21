@@ -14,10 +14,10 @@
 
 # pylint: disable=no-member
 
-import json
 import urllib.error
 import urllib.parse
 import urllib.request
+from typing import Dict, Optional
 
 from tortuga.exceptions.softwareProfileNotFound import SoftwareProfileNotFound
 from tortuga.exceptions.tortugaException import TortugaException
@@ -32,7 +32,8 @@ class SoftwareProfileWsApi(TortugaWsApi):
     """
     SoftwareProfile WS API class.
     """
-    def getSoftwareProfile(self, softwareProfileName, optionDict=None):
+    def getSoftwareProfile(self, softwareProfileName,
+                           optionDict: Optional[Dict[str, bool]] = None):
         """
         Get software profile information
 
@@ -44,18 +45,25 @@ class SoftwareProfileWsApi(TortugaWsApi):
         """
         url = 'softwareprofiles/?name=%s' % (softwareProfileName)
 
+        if optionDict:
+            for key, value in optionDict.items():
+                if not value:
+                    continue
+                url += '&include={}'.format(key)
+
         try:
             responseDict = self.get(url)
 
             return SoftwareProfile.getListFromDict(responseDict)[0]
-        
+
         except TortugaException:
             raise
-        
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
-    def getSoftwareProfileById(self, swProfileId, optionDict=None):
+    def getSoftwareProfileById(self, swProfileId,
+                               optionDict: Optional[Dict[str, bool]] = None):
         """
         Get software profile information
 
@@ -66,6 +74,12 @@ class SoftwareProfileWsApi(TortugaWsApi):
                 TortugaException
         """
         url = 'softwareprofiles/%d' % (swProfileId)
+
+        if optionDict:
+            for key, value in optionDict.items():
+                if not value:
+                    continue
+                url += '&include={}'.format(key)
 
         try:
             responseDict = self.get(url)
@@ -208,10 +222,10 @@ class SoftwareProfileWsApi(TortugaWsApi):
             responseDict = self.post(url)
 
             return responseDict
-        
+
         except TortugaException as ex:
             raise
-        
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -235,10 +249,10 @@ class SoftwareProfileWsApi(TortugaWsApi):
             responseDict = self.delete(url)
 
             return responseDict
-        
+
         except TortugaException as ex:
             raise
-        
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -276,10 +290,10 @@ class SoftwareProfileWsApi(TortugaWsApi):
 
         try:
             self.put(url, postdata)
-            
+
         except TortugaException:
             raise
-        
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -316,10 +330,10 @@ class SoftwareProfileWsApi(TortugaWsApi):
 
         try:
             self.put(url, postdata)
-            
+
         except TortugaException:
             raise
-        
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -344,10 +358,10 @@ class SoftwareProfileWsApi(TortugaWsApi):
             responseDict = self.post(url, data=postdata)
 
             return responseDict
-        
+
         except TortugaException as ex:
             raise
-        
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -372,10 +386,10 @@ class SoftwareProfileWsApi(TortugaWsApi):
             responseDict = self.delete(url)
 
             return responseDict
-        
+
         except TortugaException as ex:
             raise
-        
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -396,10 +410,10 @@ class SoftwareProfileWsApi(TortugaWsApi):
             responseDict = self.delete(url)
 
             return responseDict
-        
+
         except TortugaException as ex:
             raise
-        
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -426,10 +440,10 @@ class SoftwareProfileWsApi(TortugaWsApi):
             responseDict = self.post(url, postdata)
 
             return responseDict
-        
+
         except TortugaException as ex:
             raise
-        
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -441,9 +455,9 @@ class SoftwareProfileWsApi(TortugaWsApi):
             responseDict = self.get(url)
 
             return Node.getListFromDict(responseDict)
-        
+
         except TortugaException as ex:
             raise
-        
+
         except Exception as ex:
             raise TortugaException(exception=ex)
