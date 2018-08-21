@@ -169,8 +169,7 @@ class RestApiClient:
         #
         if response_schema:
             try:
-                unmarshalled = response_schema().load(data)
-                data = unmarshalled.data
+                data = response_schema().load(data).data
 
             except marshmallow.ValidationError:
                 raise InvalidResponse('ERROR: Invalid Server Response')
@@ -214,8 +213,7 @@ class RestApiClient:
         #
         if error_schema:
             try:
-                unmarshalled = error_schema().load(data)
-                data = unmarshalled.data
+                data = error_schema().load(data).data
 
             except marshmallow.ValidationError:
                 raise InvalidResponse('ERROR: Invalid Server Response')
