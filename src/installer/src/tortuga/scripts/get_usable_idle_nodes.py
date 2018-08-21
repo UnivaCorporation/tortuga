@@ -17,6 +17,7 @@
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.node.nodeApiFactory import getNodeApi
 from tortuga.db.softwareUsesHardwareDbApi import SoftwareUsesHardwareDbApi
+from tortuga.db.dbManager import DbManager
 
 
 class GetUsableIdleNodesCli(TortugaCli):
@@ -49,18 +50,18 @@ Display list of nodes that are able to use the specified software profile.
 
         softwareUsesHardwareDbApi = SoftwareUsesHardwareDbApi()
 
-        # YAY for super long API names
-        hardwareProfileIdList = \
-            softwareUsesHardwareDbApi.\
-            getAllowedHardwareProfilesBySoftwareProfileName(
-                softwareProfileName)
+        with DbManager().session() as session:
+            hardwareProfileIdList = \
+                softwareUsesHardwareDbApi.\
+                getAllowedHardwareProfilesBySoftwareProfileName(
+                    session, softwareProfileName)
 
-        nodeList = nodeApi.getNodeList()
+            nodeList = nodeApi.getNodeList(session)
 
-        for node in nodeList:
-            if node.getHardwareProfile().getId() in \
-               hardwareProfileIdList and node.getIsIdle():
-                print('%s' % node)
+            for node in nodeList:
+                if node.getHardwareProfile().getId() in \
+                hardwareProfileIdList and node.getIsIdle():
+                    print('%s' % node)
 
 
 def main():
