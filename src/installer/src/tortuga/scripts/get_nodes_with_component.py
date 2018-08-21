@@ -15,8 +15,8 @@
 # pylint: disable=no-member
 
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.softwareprofile.softwareProfileFactory \
-    import getSoftwareProfileApi
+from tortuga.wsapi.softwareProfileWsApi \
+    import SoftwareProfileWsApi
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
 
 
@@ -86,7 +86,13 @@ result set can be filtered by state and count.
         else:
             numNodes = -1
 
-        api = getSoftwareProfileApi(self.getUsername(), self.getPassword())
+        api = SoftwareProfileWsApi(
+            username=self.getUsername(),
+            password=self.getPassword(),
+            baseurl=self.getUrl(),
+            verify=self._verify
+        )
+
         optionDict = {}
         optionDict['nodes'] = True
 
