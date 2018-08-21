@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 from logging import getLogger
 from typing import Optional, Union
 
@@ -21,6 +22,29 @@ from tortuga.config.configManager import ConfigManager
 
 
 logger = getLogger(__name__)
+
+
+class RequestError(Exception):
+    """
+    An exception that is raised if we get a non 2xx response from the
+    API server.
+
+    """
+    def __init__(self, *args, status_code: int,
+                 data: Optional[Union[dict, list]] = None,
+                 **kwargs):
+        """
+        Initializer.
+
+        :param args:
+        :param int status_code:                  the HTTP status code
+        :param Optional[Union[dict, list]] data: the response data, if any
+        :param kwargs:
+
+        """
+        self.status_code = status_code
+        self.data = data
+        super().__init__(*args, **kwargs)
 
 
 class RestApiClient:
@@ -86,15 +110,71 @@ class RestApiClient:
 
         return '{}{}'.format(self.baseurl, path)
 
-    def process_response(self, response: requests.Response
+    def process_response(self,
+                         response: requests.Response
                          ) -> Optional[Union[list, dict]]:
+        """
+        Process the response, parsing out the data and handling
+        errors/exceptions as required.
+
+        :param requests.Response response:        the response from the
+                                                  request
+
+        :return Optional[Union[list, dict]]: the response
+        
+        :raises RequestError:   if the a non 2xx status code is returned
+
+        """
+        #
+        # Check for 2xx status code. If it isn't a 2xx status code, then
+        # treat it as an error, and handle appropriately
+        #
+        if round(response.status_code / 100) != 2:
+            self.process_error_response(response)
+
+        #
+        # Attempt to get JSON from the response, otherwise None
+        #
+        data = None
         try:
-            return response.json()
+            data = response.json()
 
-        except ValueError:
-            response.raise_for_status()
+        except Exception:
+            pass
 
-            return None
+        logger.debug('Response Payload: {}'.format(json.dumps(data)))
+
+        return data
+
+    def process_error_response(self, error_response: requests.Response):
+        """
+        Process the response as an error.
+
+        :param requests.Response error_response:
+                    the response from the request
+
+        :raises RequestError:   if the a non 2xx status code is returned
+
+        """
+        logger.debug('ERROR Code: {}'.format(error_response.status_code))
+
+        #
+        # Attempt to get JSON data from the error response
+        #
+        data = None
+        try:
+            data = error_response.json()
+
+        except Exception:
+            pass
+
+        logger.debug('ERROR Payload: {}'.format(json.dumps(data)))
+
+        raise RequestError(
+            "ERROR: API Request Error {}".format(error_response.status_code),
+            status_code=error_response.status_code,
+            data=data
+        )
 
     def get(self, path: str) -> Union[list, dict]:
         """
