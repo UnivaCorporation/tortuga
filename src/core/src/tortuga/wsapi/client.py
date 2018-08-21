@@ -125,7 +125,7 @@ class RestApiClient:
             response: requests.Response,
             response_schema: Optional[Type[marshmallow.Schema]] = None,
             error_schema: Optional[Type[marshmallow.Schema]] = None
-        ) -> Optional[Union[list, dict]]:
+            ) -> Optional[Union[list, dict]]:
         """
         Process the response, parsing out the data and handling
         errors/exceptions as required.
@@ -224,16 +224,20 @@ class RestApiClient:
             data=data
         )
 
-    def get(self, path: str,
-            valid_response_required: bool = False) -> Union[list, dict]:
+    def get(self,
+            path: str,
+            response_schema: Optional[Type[marshmallow.Schema]] = None,
+            error_schema: Optional[Type[marshmallow.Schema]] = None
+            ) -> Union[list, dict]:
         """
         Performs a GET request on the specified path. It is assumed the
         result is JSON, and it is decoded as such.
 
-        :param str path:                     the API path to get from
-        :param bool valid_response_required: whether or not a valid response
-                                             (i.e. not None) is required
-                                             from the server for this call
+        :param str path: the API path to get from
+        :param Optional[Type[marshmallow.Schema]] response_schema:
+                         validate the response against a schema?
+        :param Optional[Type[marshmallow.Schema]] error_schema:
+                         validate the error payload against a schema?
 
         :return Union[list, dict]: the response, JSON decoded
 
@@ -246,19 +250,24 @@ class RestApiClient:
             **self.get_requests_kwargs()
         )
 
-        return self.process_response(result, valid_response_required)
+        return self.process_response(result, response_schema, error_schema)
 
-    def post(self, path: str, data: Optional[dict] = None,
-             valid_response_required: bool = False) -> Optional[dict]:
+    def post(self,
+             path: str,
+             data: Optional[dict] = None,
+             response_schema: Optional[Type[marshmallow.Schema]] = None,
+             error_schema: Optional[Type[marshmallow.Schema]] = None
+             ) -> Optional[dict]:
         """
         Post data to a specified path (API endpoint). Data will automatically
         be encoded as JSON.
 
-        :param str path:                     the API path to post to
-        :param dict data:                    the data to post
-        :param bool valid_response_required: whether or not a valid response
-                                             (i.e. not None) is required
-                                             from the server for this call
+        :param str path:  the API path to post to
+        :param dict data: the data to post
+        :param Optional[Type[marshmallow.Schema]] response_schema:
+                          validate the response against a schema?
+        :param Optional[Type[marshmallow.Schema]] error_schema:
+                          validate the error payload against a schema?
 
         :return dict: the response of the request
 
@@ -272,19 +281,24 @@ class RestApiClient:
             **self.get_requests_kwargs()
         )
 
-        return self.process_response(result, valid_response_required)
+        return self.process_response(result, response_schema, error_schema)
 
-    def put(self, path: str, data: Optional[dict] = None,
-            valid_response_required: bool = False) -> Optional[dict]:
+    def put(self,
+            path: str,
+            data: Optional[dict] = None,
+            response_schema: Optional[Type[marshmallow.Schema]] = None,
+            error_schema: Optional[Type[marshmallow.Schema]] = None
+            ) -> Optional[dict]:
         """
         Put data to a specified path (API endpoint). Data will automatically
         be encoded as JSON.
 
-        :param str path:                     the API path to put to
-        :param dict data:                    the data to post
-        :param bool valid_response_required: whether or not a valid response
-                                             (i.e. not None) is required
-                                             from the server for this call
+        :param str path:  the API path to put to
+        :param dict data: the data to post
+        :param Optional[Type[marshmallow.Schema]] response_schema:
+                          validate the response against a schema?
+        :param Optional[Type[marshmallow.Schema]] error_schema:
+                          validate the error payload against a schema?
 
         :return dict: the response of the request
 
@@ -298,17 +312,21 @@ class RestApiClient:
             **self.get_requests_kwargs()
         )
 
-        return self.process_response(result, valid_response_required)
+        return self.process_response(result, response_schema, error_schema)
 
-    def delete(self, path: str,
-               valid_response_required: bool = False) -> Optional[dict]:
+    def delete(self,
+               path: str,
+               response_schema: Optional[Type[marshmallow.Schema]] = None,
+               error_schema: Optional[Type[marshmallow.Schema]] = None
+               ) -> Optional[dict]:
         """
         Delete from the specified path.
 
-        :param str path:                     the path to delete
-        :param bool valid_response_required: whether or not a valid response
-                                             (i.e. not None) is required
-                                             from the server for this call
+        :param str path: the path to delete
+        :param Optional[Type[marshmallow.Schema]] response_schema:
+                         validate the response against a schema?
+        :param Optional[Type[marshmallow.Schema]] error_schema:
+                         validate the error payload against a schema?
 
         :return dict : the result of the delete
 
@@ -321,19 +339,23 @@ class RestApiClient:
             **self.get_requests_kwargs()
         )
 
-        return self.process_response(result, valid_response_required)
+        return self.process_response(result, response_schema, error_schema)
 
-    def patch(self, path: str, data: Optional[dict] = None,
-              valid_response_required: bool = False) -> Optional[dict]:
+    def patch(self,
+              path: str, data: Optional[dict] = None,
+              response_schema: Optional[Type[marshmallow.Schema]] = None,
+              error_schema: Optional[Type[marshmallow.Schema]] = None
+              ) -> Optional[dict]:
         """
         Patch data to a specified path (API endpoint). Data will automatically
         be encoded as JSON.
 
-        :param str path:                     the API path to put to
-        :param dict data:                    the data to post
-        :param bool valid_response_required: whether or not a valid response
-                                             (i.e. not None) is required
-                                             from the server for this call
+        :param str path:  the API path to put to
+        :param dict data: the data to post
+        :param Optional[Type[marshmallow.Schema]] response_schema:
+                          validate the response against a schema?
+        :param Optional[Type[marshmallow.Schema]] error_schema:
+                          validate the error payload against a schema?
 
         :return dict: the response of the request
 
@@ -347,4 +369,4 @@ class RestApiClient:
             **self.get_requests_kwargs()
         )
 
-        return self.process_response(result, valid_response_required)
+        return self.process_response(result, response_schema, error_schema)
