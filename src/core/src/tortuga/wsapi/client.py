@@ -31,8 +31,18 @@ class RequestError(Exception):
     API server.
 
     """
-    def __init__(self, *args, status_code: int, data: Optional[dict] = None,
+    def __init__(self, *args, status_code: int,
+                 data: Optional[Union[dict, list]] = None,
                  **kwargs):
+        """
+        Initializer.
+
+        :param args:
+        :param int status_code:                  the HTTP status code
+        :param Optional[Union[dict, list]] data: the response data, if any
+        :param kwargs:
+
+        """
         self.status_code = status_code
         self.data = data
         super().__init__(*args, **kwargs)
