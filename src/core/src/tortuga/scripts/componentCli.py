@@ -60,7 +60,9 @@ class ComponentCli(TortugaCli):
                        help=_('component version'))
 
         self.addOption('--no-sync', dest='sync', action='store_false',
-                       default=True, help=_('component version'))
+                       default=True,
+                       help=_('Disable Puppet sync after component state'
+                              ' change'))
 
         self.addOption('args', nargs='*')
 
