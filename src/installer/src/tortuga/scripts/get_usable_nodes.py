@@ -16,6 +16,7 @@
 
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.db.softwareProfileDbApi import SoftwareProfileDbApi
+from tortuga.db.dbManager import DbManager
 
 
 class GetUsableNodesCli(TortugaCli):
@@ -44,10 +45,11 @@ class GetUsableNodesCli(TortugaCli):
 Display list of nodes able to use the specified software profile.
 """))
 
-        print('\n'.join(
-            [node.getName()
-             for node in SoftwareProfileDbApi().getUsableNodes(
-                 self.getArgs().softwareProfile)]))
+        with DbManager().session() as session:
+            print('\n'.join(
+                [node.getName()
+                 for node in SoftwareProfileDbApi().getUsableNodes(
+                     session, self.getArgs().softwareProfile)]))
 
 
 def main():

@@ -15,9 +15,11 @@
 # pylint: disable=no-member
 
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.node.nodeApiFactory import getNodeApi
-from tortuga.db.softwareUsesHardwareDbApi import SoftwareUsesHardwareDbApi
+from tortuga.db.dbManager import DbManager
 from tortuga.db.hardwareProfileDbApi import HardwareProfileDbApi
+from tortuga.db.softwareUsesHardwareDbApi import SoftwareUsesHardwareDbApi
+from tortuga.kit.loader import load_kits
+from tortuga.node.nodeApi import NodeApi
 
 
 class GetUsableIdleNodesByLowCostCli(TortugaCli):
@@ -47,34 +49,38 @@ ordered by cost.
 """))
         softwareProfileName = self.getArgs().softwareProfile
 
-        nodeApi = getNodeApi(self.getUsername(), self.getPassword())
+        nodeApi = NodeApi()
         softwareUsesHardwareDbApi = SoftwareUsesHardwareDbApi()
         hardwareProfileDbApi = HardwareProfileDbApi()
-        hwPList = hardwareProfileDbApi.getHardwareProfileList()
 
-        hardwareProfileIdList = softwareUsesHardwareDbApi.\
-            getAllowedHardwareProfilesBySoftwareProfileName(
-                softwareProfileName)
+        load_kits()
 
-        nodeList = nodeApi.getNodeList()
-        usableNodes = []
-        for node in nodeList:
-            if (node.getHardwareProfile().getId() in hardwareProfileIdList) \
-                    and node.getIsIdle():
-                usableNodes.append(node)
+        with DbManager().session() as session:
+            hwPList = hardwareProfileDbApi.getHardwareProfileList(session)
 
-        costNameList = []
-        for node in usableNodes:
-            nodeHwP = node.getHardwareProfile().getId()
-            for hwP in hwPList:
-                if hwP.getId() == nodeHwP:
-                    costNameList.append([int(hwP.getCost()), node.getName()])
-                    break
+            hardwareProfileIdList = softwareUsesHardwareDbApi.\
+                getAllowedHardwareProfilesBySoftwareProfileName(
+                    session, softwareProfileName)
 
-        costNameList.sort()
+            nodeList = nodeApi.getNodeList(session)
+            usableNodes = []
+            for node in nodeList:
+                if (node.getHardwareProfile().getId() in hardwareProfileIdList) \
+                        and node.getIsIdle():
+                    usableNodes.append(node)
 
-        for node in costNameList:
-            print('%s' % (node[1]))
+            costNameList = []
+            for node in usableNodes:
+                nodeHwP = node.getHardwareProfile().getId()
+                for hwP in hwPList:
+                    if hwP.getId() == nodeHwP:
+                        costNameList.append([int(hwP.getCost()), node.getName()])
+                        break
+
+            costNameList.sort()
+
+            for node in costNameList:
+                print('%s' % (node[1]))
 
 
 def main():

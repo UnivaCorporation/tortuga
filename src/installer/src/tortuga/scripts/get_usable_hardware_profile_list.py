@@ -15,9 +15,11 @@
 # pylint: disable=no-member
 
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.softwareprofile.softwareProfileFactory import getSoftwareProfileApi
+from tortuga.db.dbManager import DbManager
 from tortuga.db.softwareUsesHardwareDbApi import SoftwareUsesHardwareDbApi
-from tortuga.hardwareprofile.hardwareProfileFactory import getHardwareProfileApi
+from tortuga.hardwareprofile.hardwareProfileApi import HardwareProfileApi
+from tortuga.kit.loader import load_kits
+from tortuga.softwareprofile.softwareProfileApi import SoftwareProfileApi
 
 
 class GetUsableHardwareProfileListCli(TortugaCli):
@@ -29,14 +31,19 @@ class GetUsableHardwareProfileListCli(TortugaCli):
         self.parseArgs(_("""
 Lists all software to hardware profile mappings in the system.
 """))
+        load_kits()
+
         softwareUsesHardwareDbApi = SoftwareUsesHardwareDbApi()
 
-        hwApi = getHardwareProfileApi(self.getUsername(), self.getPassword())
-        swApi = getSoftwareProfileApi(self.getUsername(), self.getPassword())
-        hwPList = hwApi.getHardwareProfileList()
-        swPList = swApi.getSoftwareProfileList()
+        hwApi = HardwareProfileApi()
+        swApi = SoftwareProfileApi()
 
-        mappingList = softwareUsesHardwareDbApi.getSoftwareUsesHardwareList()
+        with DbManager().session() as session:
+            hwPList = hwApi.getHardwareProfileList(session)
+            swPList = swApi.getSoftwareProfileList(session)
+
+            mappingList = softwareUsesHardwareDbApi.getSoftwareUsesHardwareList(session)
+
         print('Current mappings:')
         print('Software Profile               Hardware Profile')
         for mapping in mappingList:

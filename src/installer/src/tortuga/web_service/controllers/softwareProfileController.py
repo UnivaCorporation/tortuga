@@ -25,7 +25,8 @@ from tortuga.softwareprofile.softwareProfileManager import \
     SoftwareProfileManager
 from tortuga.utility.helper import str2bool
 from tortuga.web_service.auth.decorators import authentication_required
-from .common import parse_tag_query_string
+
+from .common import make_options_from_query_string, parse_tag_query_string
 from .tortugaController import TortugaController
 
 
@@ -167,12 +168,17 @@ class SoftwareProfileController(TortugaController):
                 tagspec.extend(parse_tag_query_string(kwargs['tag']))
 
             if 'name' in kwargs and kwargs['name']:
-                options = {
-                    'components': True,
-                    'partitions': True,
-                    'hardwareprofiles': True,
-                    'tags': True,
-                }
+                default_options = [
+                    'components',
+                    'partitions',
+                    'hardwareprofiles',
+                    'tags',
+                ]
+
+                options = make_options_from_query_string(
+                    kwargs['include']
+                    if 'include' in kwargs else None,
+                    default_options)
 
                 softwareProfiles = TortugaObjectList(
                     [self._softwareProfileManager.getSoftwareProfile(

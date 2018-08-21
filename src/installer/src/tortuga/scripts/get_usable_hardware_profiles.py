@@ -13,10 +13,10 @@
 # limitations under the License.
 
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.db.softwareUsesHardwareDbApi \
-    import SoftwareUsesHardwareDbApi
-from tortuga.hardwareprofile.hardwareProfileFactory \
-    import getHardwareProfileApi
+from tortuga.db.dbManager import DbManager
+from tortuga.db.softwareUsesHardwareDbApi import SoftwareUsesHardwareDbApi
+from tortuga.hardwareprofile.hardwareProfileApi import HardwareProfileApi
+from tortuga.kit.loader import load_kits
 
 
 class GetUsableHardwareProfilesCli(TortugaCli):
@@ -36,21 +36,24 @@ class GetUsableHardwareProfilesCli(TortugaCli):
 Show the software to hardware profile mappings for the specified software
 profile."""))
 
+        load_kits()
+
         softwareUsesHardwareDbApi = SoftwareUsesHardwareDbApi()
 
-        api = getHardwareProfileApi(self.getUsername(), self.getPassword())
+        with DbManager().session() as session:
+            api = HardwareProfileApi()
 
-        hardwareProfileIdList = softwareUsesHardwareDbApi.\
-            getAllowedHardwareProfilesBySoftwareProfileName(
-                self.getArgs().swprofile)
+            hardwareProfileIdList = softwareUsesHardwareDbApi.\
+                getAllowedHardwareProfilesBySoftwareProfileName(
+                    session, self.getArgs().swprofile)
 
-        print('Software Profile [%s] is allowed to use the following'
-              ' hardware profiles:' % (self.getArgs().swprofile))
+            print('Software Profile [%s] is allowed to use the following'
+                ' hardware profiles:' % (self.getArgs().swprofile))
 
-        for hardwareProfileId in hardwareProfileIdList:
-            for hp in api.getHardwareProfileList():
-                if hp.getId() == hardwareProfileId:
-                    print(hp.getName())
+            for hardwareProfileId in hardwareProfileIdList:
+                for hp in api.getHardwareProfileList(session):
+                    if hp.getId() == hardwareProfileId:
+                        print(hp.getName())
 
 
 def main():
