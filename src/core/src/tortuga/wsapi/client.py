@@ -26,6 +26,11 @@ logger = getLogger(__name__)
 
 
 class RequestError(Exception):
+    """
+    An exception that is raised if we get a non 2xx response from the
+    API server.
+
+    """
     def __init__(self, *args, status_code: int, data: Optional[dict] = None,
                  **kwargs):
         self.status_code = status_code
@@ -34,6 +39,11 @@ class RequestError(Exception):
 
 
 class InvalidResponse(Exception):
+    """
+    An exception that is raised if we get a response from the server that we
+    cannot validate.
+
+    """
     pass
 
 
