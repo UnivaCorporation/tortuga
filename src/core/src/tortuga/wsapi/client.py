@@ -12,16 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 from logging import getLogger
-from typing import Optional, Union
-import yaml
+from typing import Optional, Type, Union
 
+import marshmallow
 import requests
 
 from tortuga.config.configManager import ConfigManager
 
 
 logger = getLogger(__name__)
+
+
+class RequestError(Exception):
+    def __init__(self, *args, status_code: int, data: Optional[dict] = None,
+                 **kwargs):
+        self.status_code = status_code
+        self.data = data
+        super().__init__(*args, **kwargs)
+
+
+class InvalidResponse(Exception):
+    pass
 
 
 class RestApiClient:
@@ -87,19 +100,28 @@ class RestApiClient:
 
         return '{}{}'.format(self.baseurl, path)
 
-    def process_response(self, response: requests.Response,
-                         valid_json_response_required=False
-                         ) -> Optional[Union[list, dict]]:
+    def process_response(
+            self,
+            response: requests.Response,
+            response_schema: Optional[Type[marshmallow.Schema]] = None,
+            error_schema: Optional[Type[marshmallow.Schema]] = None
+        ) -> Optional[Union[list, dict]]:
         """
         Process the response, parsing out the data and handling
         errors/exceptions as required.
 
         :param requests.Response response:        the response from the
                                                   request
-        :param bool valid_json_response_required: whether or not a valid
-                                                  json response is required
+        :param Optional[Type[marshmallow.Schema]] response_schema:
+                    validate the response against a schema?
+        :param Optional[Type[marshmallow.Schema]] error_schema:
+                    validate the error payload against a schema?
 
         :return Optional[Union[list, dict]]: the response
+        
+        :raises RequestError:   if the a non 2xx status code is returned
+        :raises InvalidResponse if the response or error cannot be properly
+                                validated
 
         """
         #
@@ -115,22 +137,41 @@ class RestApiClient:
         data = None
         try:
             data = response.json()
-        except:
+
+        except Exception:
             pass
 
-        if not data and valid_json_response_required:
-            raise Exception('ERROR: Invalid response from server')
+        #
+        # If a response schema is provided, then validate the response against
+        # the schema.
+        #
+        if response_schema:
+            try:
+                response_schema().load(data)
+
+            except marshmallow.ValidationError:
+                raise InvalidResponse('ERROR: Invalid Server Response')
 
         return data
 
-    def process_error_response(self, error_response: requests.Response):
+    def process_error_response(
+            self,
+            error_response: requests.Response,
+            error_schema: Optional[Type[marshmallow.Schema]] = None):
         """
         Process the response as an error.
 
-        :param requests.Response error_response: the response from the request
+        :param requests.Response error_response:
+                    the response from the request
+        :param Optional[Type[marshmallow.Schema]] error_schema:
+                    validate the error payload against a schema?
+
+        :raises RequestError:   if the a non 2xx status code is returned
+        :raises InvalidResponse if the response or error cannot be properly
+                                validated
 
         """
-        logger.warning('ERROR Code: {}'.format(error_response.status_code))
+        logger.debug('ERROR Code: {}'.format(error_response.status_code))
 
         #
         # Attempt to get JSON data from the error response
@@ -138,21 +179,28 @@ class RestApiClient:
         data = None
         try:
             data = error_response.json()
-        except:
+
+        except Exception:
             pass
 
-        #
-        # If there is no JSON data, then let requests raise the appropriate
-        # exception.
-        #
-        if not data:
-            error_response.raise_for_status()
+        logger.debug('ERROR Payload: {}'.format(json.dumps(data)))
 
         #
-        # If there is JSON data, then raise that as the exception, but
-        # format it as human readable YAML
+        # If an error schema is provided, then validate the error data
+        # against the schema
         #
-        raise Exception(yaml.safe_dump(data, default_flow_style=False))
+        if error_schema:
+            try:
+                error_schema().load(data)
+
+            except marshmallow.ValidationError:
+                raise InvalidResponse('ERROR: Invalid Server Response')
+
+        raise RequestError(
+            "ERROR: API Request Error {}".format(error_response.status_code),
+            status_code=error_response.status_code,
+            data=data
+        )
 
     def get(self, path: str,
             valid_response_required: bool = False) -> Union[list, dict]:
