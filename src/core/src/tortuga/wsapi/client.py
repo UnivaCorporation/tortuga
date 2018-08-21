@@ -161,6 +161,8 @@ class RestApiClient:
         except Exception:
             pass
 
+        logger.debug('Response Payload: {}'.format(json.dumps(data)))
+
         #
         # If a response schema is provided, then validate the response against
         # the schema.
