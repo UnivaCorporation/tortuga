@@ -14,6 +14,7 @@
 
 from logging import getLogger
 from typing import Optional, Union
+import yaml
 
 import requests
 
@@ -86,22 +87,83 @@ class RestApiClient:
 
         return '{}{}'.format(self.baseurl, path)
 
-    def process_response(self, response: requests.Response
+    def process_response(self, response: requests.Response,
+                         valid_json_response_required=False
                          ) -> Optional[Union[list, dict]]:
+        """
+        Process the response, parsing out the data and handling
+        errors/exceptions as required.
+
+        :param requests.Response response:        the response from the
+                                                  request
+        :param bool valid_json_response_required: whether or not a valid
+                                                  json response is required
+
+        :return Optional[Union[list, dict]]: the response
+
+        """
+        #
+        # Check for 2xx status code. If it isn't a 2xx status code, then
+        # treat it as an error, and handle appropriately
+        #
+        if round(response.status_code / 100) != 2:
+            self.process_error_response(response)
+
+        #
+        # Attempt to get JSON from the response, otherwise None
+        #
+        data = None
         try:
-            return response.json()
+            data = response.json()
+        except:
+            pass
 
-        except ValueError:
-            response.raise_for_status()
+        if not data and valid_json_response_required:
+            raise Exception('ERROR: Invalid response from server')
 
-            return None
+        return data
 
-    def get(self, path: str) -> Union[list, dict]:
+    def process_error_response(self, error_response: requests.Response):
+        """
+        Process the response as an error.
+
+        :param requests.Response error_response: the response from the request
+
+        """
+        logger.warning('ERROR Code: {}'.format(error_response.status_code))
+
+        #
+        # Attempt to get JSON data from the error response
+        #
+        data = None
+        try:
+            data = error_response.json()
+        except:
+            pass
+
+        #
+        # If there is no JSON data, then let requests raise the appropriate
+        # exception.
+        #
+        if not data:
+            error_response.raise_for_status()
+
+        #
+        # If there is JSON data, then raise that as the exception, but
+        # format it as human readable YAML
+        #
+        raise Exception(yaml.safe_dump(data, default_flow_style=False))
+
+    def get(self, path: str,
+            valid_response_required: bool = False) -> Union[list, dict]:
         """
         Performs a GET request on the specified path. It is assumed the
         result is JSON, and it is decoded as such.
 
-        :param str path: the API path to get from
+        :param str path:                     the API path to get from
+        :param bool valid_response_required: whether or not a valid response
+                                             (i.e. not None) is required
+                                             from the server for this call
 
         :return Union[list, dict]: the response, JSON decoded
 
@@ -114,15 +176,19 @@ class RestApiClient:
             **self.get_requests_kwargs()
         )
 
-        return self.process_response(result)
+        return self.process_response(result, valid_response_required)
 
-    def post(self, path: str, data: Optional[dict] = None) -> Optional[dict]:
+    def post(self, path: str, data: Optional[dict] = None,
+             valid_response_required: bool = False) -> Optional[dict]:
         """
         Post data to a specified path (API endpoint). Data will automatically
         be encoded as JSON.
 
-        :param str path:  the API path to post to
-        :param dict data: the data to post
+        :param str path:                     the API path to post to
+        :param dict data:                    the data to post
+        :param bool valid_response_required: whether or not a valid response
+                                             (i.e. not None) is required
+                                             from the server for this call
 
         :return dict: the response of the request
 
@@ -136,15 +202,19 @@ class RestApiClient:
             **self.get_requests_kwargs()
         )
 
-        return self.process_response(result)
+        return self.process_response(result, valid_response_required)
 
-    def put(self, path: str, data: Optional[dict] = None) -> Optional[dict]:
+    def put(self, path: str, data: Optional[dict] = None,
+            valid_response_required: bool = False) -> Optional[dict]:
         """
         Put data to a specified path (API endpoint). Data will automatically
         be encoded as JSON.
 
-        :param str path:  the API path to put to
-        :param dict data: the data to post
+        :param str path:                     the API path to put to
+        :param dict data:                    the data to post
+        :param bool valid_response_required: whether or not a valid response
+                                             (i.e. not None) is required
+                                             from the server for this call
 
         :return dict: the response of the request
 
@@ -158,13 +228,17 @@ class RestApiClient:
             **self.get_requests_kwargs()
         )
 
-        return self.process_response(result)
+        return self.process_response(result, valid_response_required)
 
-    def delete(self, path: str) -> Optional[dict]:
+    def delete(self, path: str,
+               valid_response_required: bool = False) -> Optional[dict]:
         """
         Delete from the specified path.
 
-        :param str path: the path to delete
+        :param str path:                     the path to delete
+        :param bool valid_response_required: whether or not a valid response
+                                             (i.e. not None) is required
+                                             from the server for this call
 
         :return dict : the result of the delete
 
@@ -177,15 +251,19 @@ class RestApiClient:
             **self.get_requests_kwargs()
         )
 
-        return self.process_response(result)
+        return self.process_response(result, valid_response_required)
 
-    def patch(self, path: str, data: Optional[dict] = None) -> Optional[dict]:
+    def patch(self, path: str, data: Optional[dict] = None,
+              valid_response_required: bool = False) -> Optional[dict]:
         """
         Patch data to a specified path (API endpoint). Data will automatically
         be encoded as JSON.
 
-        :param str path:  the API path to put to
-        :param dict data: the data to post
+        :param str path:                     the API path to put to
+        :param dict data:                    the data to post
+        :param bool valid_response_required: whether or not a valid response
+                                             (i.e. not None) is required
+                                             from the server for this call
 
         :return dict: the response of the request
 
@@ -199,4 +277,4 @@ class RestApiClient:
             **self.get_requests_kwargs()
         )
 
-        return self.process_response(result)
+        return self.process_response(result, valid_response_required)
