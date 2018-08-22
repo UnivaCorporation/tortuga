@@ -14,12 +14,11 @@
 
 # pylint: disable=no-member
 
-import json
 from typing import Optional, Union
 
 from tortuga.exceptions.tortugaException import TortugaException
-import tortuga.objects.provisioningInfo
 from tortuga.objects.hardwareProfile import HardwareProfile
+
 from .tortugaWsApi import TortugaWsApi
 
 
@@ -35,10 +34,11 @@ class HardwareProfileWsApi(TortugaWsApi):
         """
         url = 'hardwareprofiles/?name=%s' % (hardwareProfileName)
 
-        for key, value in optionDict.items():
-            if not value:
-                continue
-            url += '&include={}'.format(key)
+        if optionDict:
+            for key, value in optionDict.items():
+                if not value:
+                    continue
+                url += '&include={}'.format(key)
 
         try:
             responseDict = self.get(url)
@@ -56,6 +56,12 @@ class HardwareProfileWsApi(TortugaWsApi):
         Get hardware profile by name
         """
         url = 'hardwareprofiles/%d' % (id_)
+
+        if optionDict:
+            for key, value in optionDict.items():
+                if not value:
+                    continue
+                url += '&include={}'.format(key)
 
         try:
             responseDict = self.get(url)
