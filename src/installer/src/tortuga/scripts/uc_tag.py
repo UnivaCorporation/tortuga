@@ -13,19 +13,21 @@
 # limitations under the License.
 
 import sys
-from tortuga.db.dbManager import DbManager
-from tortuga.db.tags import Tags
-from tortuga.db.tagsDbHandler import TagsDbHandler
+from typing import Optional
+
+from sqlalchemy.orm.session import Session
+
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.wsapi.hardwareProfileWsApi import HardwareProfileWsApi
-from tortuga.wsapi.nodeWsApi import NodeWsApi
-from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
+from tortuga.db.dbManager import DbManager
+from tortuga.db.hardwareProfilesDbHandler import HardwareProfilesDbHandler
+from tortuga.db.models.tag import Tag
+from tortuga.db.nodesDbHandler import NodesDbHandler
+from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
+from tortuga.db.tagsDbHandler import TagsDbHandler
 
 
 class UctagCli(TortugaCli):
-    def __init__(self):
-        super().__init__()
-
+    def parseArgs(self, usage: Optional[str] = None):
         subparsers = self.getParser().add_subparsers(help='sub-command help',
                                                      dest='subparser_name')
 
@@ -57,13 +59,18 @@ class UctagCli(TortugaCli):
         list_subparser.add_argument('--hardware-profiles', action='store_true')
         list_subparser.set_defaults(func=self.list_tag)
 
-    def runCommand(self):
-        self.parseArgs()
-        args = self.getArgs()
-        args.func(args)
+        return super().parseArgs(usage=usage)
 
-    def add_tag(self, args):
-        """Handle 'add' action - associate tag(s) with resources"""
+    def runCommand(self):
+        args = self.parseArgs()
+
+        with DbManager().session() as session:
+            args.func(session, args)
+
+    def add_tag(self, session: Session, args):
+        """
+        Handle 'add' action - associate tag(s) with resources
+        """
 
         if not args.nodespec and not args.software_profile and \
                 not args.hardware_profile:
@@ -72,85 +79,71 @@ class UctagCli(TortugaCli):
             sys.stderr.flush()
             sys.exit(1)
 
-        session = DbManager().openSession()
+        nodes = []
+        softwareprofiles = []
+        hardwareprofiles = []
 
-        try:
-            nodes = []
-            softwareprofiles = []
-            hardwareprofiles = []
+        if args.nodespec:
+            node_api = NodesDbHandler()
+            nodes = node_api.expand_nodespec(session, args.nodespec)
+            if not nodes:
+                sys.stderr.write(
+                    'No nodes matching nodespec [{0}]\n'.format(
+                        args.nodespec))
 
-            if args.nodespec:
-                node_api = NodeWsApi(username=self.getUsername(),
-                                     password=self.getPassword(),
-                                     baseurl=self.getUrl(),
-                                     verify=self._verify)
-                nodespec = args.nodespec.replace('*', '%')
-                nodes = node_api.getNode(nodespec)
-                if not nodes:
-                    sys.stderr.write(
-                        'No nodes matching nodespec [{0}]\n'.format(
-                            args.nodespec))
+                sys.stderr.flush()
+                sys.exit(1)
 
-                    sys.stderr.flush()
-                    sys.exit(1)
+        if args.software_profile:
+            sw_profile_api = SoftwareProfilesDbHandler()
 
-            if args.software_profile:
-                sw_profile_api = SoftwareProfileWsApi(
-                    username=self.getUsername(),
-                    password=self.getPassword(),
-                    baseurl=self.getUrl(),
-                    verify=self._verify)
-                for softwareprofile_name in args.software_profile.split(','):
-                    softwareprofile = sw_profile_api.getSoftwareProfile(
-                        softwareprofile_name)
-                    softwareprofiles.append(softwareprofile)
+            for softwareprofile_name in args.software_profile.split(','):
+                softwareprofile = sw_profile_api.getSoftwareProfile(
+                    session, softwareprofile_name)
+                softwareprofiles.append(softwareprofile)
 
-            if args.hardware_profile:
-                hw_profile_api = HardwareProfileWsApi(
-                    username=self.getUsername(),
-                    password=self.getPassword(),
-                    baseurl=self.getUrl(),
-                    verify=self._verify)
-                for hardwareprofile_name in args.hardware_profile.split(','):
-                    hardwareprofile = hw_profile_api.getHardwareProfile(
-                        hardwareprofile_name)
-                    hardwareprofiles.append(hardwareprofile)
+        if args.hardware_profile:
+            hw_profile_api = HardwareProfilesDbHandler()
 
-            # Create list of 'Tags' database objects
-            tag_objs = self.get_tag_objects(session, args.tags)
+            for hardwareprofile_name in args.hardware_profile.split(','):
+                hardwareprofile = hw_profile_api.getHardwareProfile(
+                    session, hardwareprofile_name)
+                hardwareprofiles.append(hardwareprofile)
 
-            # Associate with nodes
-            for node in nodes or []:
-                for tag_obj in tag_objs:
-                    if tag_obj in node.tags:
-                        # Tag already exists
-                        continue
+        # Create list of 'Tags' database objects
+        tag_objs = self.get_tag_objects(session, args.tags)
 
-                    node.tags.append(tag_obj)
+        # Associate with nodes
+        for node in nodes or []:
+            for tag_obj in tag_objs:
+                if tag_obj in node.tags:
+                    # Tag already exists
+                    continue
 
-                print(node.name, node.tags)
+                node.tags.append(tag_obj)
 
-            # Associate with software profiles
-            for softwareprofile in softwareprofiles:
-                for tag_obj in tag_objs:
-                    if tag_obj in softwareprofile.tags:
-                        continue
+            print(node.name, node.tags)
 
-                    softwareprofile.tags.append(tag_obj)
+        # Associate with software profiles
+        for softwareprofile in softwareprofiles:
+            for tag_obj in tag_objs:
+                if tag_obj in softwareprofile.tags:
+                    continue
 
-            # Associate with hardware profiles
-            for hardwareprofile in hardwareprofiles:
-                for tag_obj in tag_objs:
-                    if tag_obj in hardwareprofile.tags:
-                        continue
+                softwareprofile.tags.append(tag_obj)
 
-                    hardwareprofile.tags.append(tag_obj)
+        # Associate with hardware profiles
+        for hardwareprofile in hardwareprofiles:
+            for tag_obj in tag_objs:
+                if tag_obj in hardwareprofile.tags:
+                    continue
 
-            session.commit()
-        finally:
-            DbManager().closeSession()
+                hardwareprofile.tags.append(tag_obj)
 
-    def get_tag_objects(self, session, tags):
+        session.commit()
+
+    def get_tag_objects(self, session, tags): \
+            # pylint: disable=no-self-use
         """Given a list of (key, value) tuples, query database objects.
 
         Any tags that do not exist will be added to the session
@@ -165,23 +158,21 @@ class UctagCli(TortugaCli):
 
                 continue
 
-            new_tag = Tags(key, value)
+            new_tag = Tag(name=key, value=value)
             tag_objs.append(new_tag)
 
             session.add(new_tag)
 
         return tag_objs
 
-    def remove_tag(self, args):
+    def remove_tag(self, session: Session, args):
         """Remove tags from specified resources"""
 
-    def delete_tag(self, args):
+    def delete_tag(self, session: Session, args):
         """Delete specific tags"""
 
-        session = DbManager().openSession()
-
         for key in args.tags:
-            tag_obj = session.query(Tags).filter(Tags.name == key).first()
+            tag_obj = session.query(Tag).filter(Tag.name == key).first()
 
             if tag_obj is None:
                 sys.stderr.write('Tag [{0}] not found\n'.format(key))
@@ -195,17 +186,23 @@ class UctagCli(TortugaCli):
                      tag_obj.hardwareprofiles):
                 # Warn user if tag is associated with any resources
 
-                print('Tag [{0}] is in use by the following resources:'.format(key))
+                print('Tag [{0}] is in use by the following'
+                      ' resources:'.format(key))
                 print()
 
                 if tag_obj.nodes:
-                    print('Nodes: ' + ' '.join([node.name for node in tag_obj.nodes]))
+                    print('Nodes: ' + ' '.join(
+                        [node.name for node in tag_obj.nodes]))
 
                 if tag_obj.softwareprofiles:
-                    print('Software profiles: ' + ' '.join([softwareprofile for softwareprofile in tag_obj.softwareprofiles]))
+                    print('Software profiles: ' + ' '.join(
+                        [softwareprofile
+                         for softwareprofile in tag_obj.softwareprofiles]))
 
                 if tag_obj.hardwareprofiles:
-                    print('Hardware profiles: ' + ' '.join([hardwareprofile for hardwareprofile in tag_obj.hardwareprofiles]))
+                    print('Hardware profiles: ' + ' '.join(
+                        [hardwareprofile
+                         for hardwareprofile in tag_obj.hardwareprofiles]))
 
                 print('Do you wish to delete this tag [N/y/a/?]? ')
                 input_ = input('')
@@ -227,25 +224,21 @@ class UctagCli(TortugaCli):
 
         session.commit()
 
-    def list_tag(self, args):
-        session = DbManager().openSession()
+    def list_tag(self, session: Session, args): \
+            # pylint: disable=no-self-use
+        tags = TagsDbHandler().get_tags(session)
 
-        try:
-            tags = TagsDbHandler().get_tags(session)
+        if not tags:
+            sys.exit(0)
 
-            if not tags:
-                sys.exit(0)
+        for tag in tags:
+            print('{0}: {1}'.format(tag.name, tag.value))
 
-            for tag in tags:
-                print('{0}: {1}'.format(tag.name, tag.value))
+            if args.all_resources or args.nodes:
+                print('    ' + 'Node(s): ' + ' '.join([node.name for node in tag.nodes]))
 
-                if args.all_resources or args.nodes:
-                    print('    ' + 'Node(s): ' + ' '.join([node.name for node in tag.nodes]))
-
-                if args.all_resources or args.software_profiles:
-                    print('    ' + 'Software profile(s): ' + ' '.join([softwareprofile.name for softwareprofile in tag.softwareprofiles]))
-        finally:
-            DbManager().closeSession()
+            if args.all_resources or args.software_profiles:
+                print('    ' + 'Software profile(s): ' + ' '.join([softwareprofile.name for softwareprofile in tag.softwareprofiles]))
 
 
 def key_value_pair(arg):
@@ -256,4 +249,3 @@ def key_value_pair(arg):
 
 def main():
     UctagCli().run()
-
