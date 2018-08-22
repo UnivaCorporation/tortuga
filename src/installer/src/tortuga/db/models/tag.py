@@ -28,9 +28,3 @@ class Tag(ModelBase):
     id = Column(Integer, primary_key=True)
     name = Column(String(255), nullable=False)
     value = Column(String(255))
-
-    def __init__(self, name=None, value=None):
-        super().__init__()
-
-        self.name = name
-        self.value = value
