@@ -167,22 +167,7 @@ class ComponentInstaller(ComponentInstallerBase):
             getOsObjectFactory().getOsKitApplicationManager(name, dir_name)
         return dhcpd_manager
 
-    # @staticmethod
-    # def _get_global_parameter(key, default=None):
-    #     """
-    #     Get parameter from the DB.
-
-    #     :param key: String
-    #     :param default: String
-    #     :returns: DbObject
-    #     """
-    #     try:
-    #         return GlobalParameterDbApi().getParameter(key).getValue()
-    #     except ParameterNotFound:
-    #         return default
-
-    @staticmethod
-    def _get_provisioning_networks():
+    def _get_provisioning_networks(self):
         """
         Get provisioning networks.
 
@@ -192,8 +177,7 @@ class ComponentInstaller(ComponentInstallerBase):
             if network.type == 'provision':
                 yield network
 
-    @staticmethod
-    def _get_provisioning_nics(node):
+    def _get_provisioning_nics(self, node):
         """
         Get provisioning nics.
 
@@ -242,7 +226,6 @@ class ComponentInstaller(ComponentInstallerBase):
         raise NicNotFound(
             'Network has no corresponding provisioning NIC on installer')
 
-    @property
     def _dhcp_subnets(self):
         """
         DHCP subnet dictionary.
@@ -352,10 +335,9 @@ class ComponentInstaller(ComponentInstallerBase):
         try:
             result = GlobalParameterDbApi().getParameter(
                 self.session,
-                'DNSZone',
+                'DNSZone')
 
-                dns_zone = result.getValue()
-            )
+            dns_zone = result.getValue()
         except ParameterNotFound:
             dns_zone = ''
 
@@ -365,7 +347,7 @@ class ComponentInstaller(ComponentInstallerBase):
             dhcp_lease_time,
             dns_zone,
             self._get_provisioning_nics_ip(installer_node),
-            self._dhcp_subnets,
+            self._dhcp_subnets(),
             installerNode=installer_node,
             bUpdateSysconfig=kwargs.get('bUpdateSysconfig', True),
             kit_settings=self._get_kit_settings_dictionary
