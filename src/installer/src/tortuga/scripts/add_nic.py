@@ -23,6 +23,7 @@ import sys
 import yaml
 from sqlalchemy import and_
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.orm.session import Session
 
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.db.models.component import Component

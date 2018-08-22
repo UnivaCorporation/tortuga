@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import subprocess
-import platform
 
 from tortuga.exceptions.commandFailed import CommandFailed
 
@@ -68,9 +67,7 @@ class TortugaSubprocess(subprocess.Popen):
 def executeCommand(command):
     """ Create subprocess and run it, return subprocess object. """
 
-    close_fds = platform.system() != 'Windows'
-
-    p = TortugaSubprocess(command, close_fds=close_fds)
+    p = TortugaSubprocess(command)
 
     p.run()
 
@@ -85,9 +82,7 @@ def executeCommandAndIgnoreFailure(command):
     subprocess object.
     """
 
-    close_fds = platform.system() != 'Windows'
-
-    p = TortugaSubprocess(command, close_fds=close_fds)
+    p = TortugaSubprocess(command)
 
     try:
         p.run()
