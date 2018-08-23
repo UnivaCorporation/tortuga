@@ -216,7 +216,8 @@ class SoftwareProfile(TortugaObject): \
             'maxNodes',
             'lockedState',
             'isIdle',
-            'metadata'
+            'metadata',
+            'tags',
         ]
 
     @classmethod
