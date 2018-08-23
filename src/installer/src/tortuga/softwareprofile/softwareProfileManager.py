@@ -17,6 +17,7 @@ import shutil
 from typing import Dict, Optional
 
 from sqlalchemy.orm.session import Session
+
 from tortuga.config.configManager import ConfigManager
 from tortuga.db.componentDbApi import ComponentDbApi
 from tortuga.db.globalParameterDbApi import GlobalParameterDbApi
@@ -27,6 +28,7 @@ from tortuga.exceptions.componentNotFound import ComponentNotFound
 from tortuga.exceptions.kitNotFound import KitNotFound
 from tortuga.helper import osHelper
 from tortuga.kit.registry import get_kit_installer
+from tortuga.objects.kit import Kit
 from tortuga.objects.softwareProfile import SoftwareProfile
 from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
@@ -561,8 +563,8 @@ class SoftwareProfileManager(TortugaObjectManager): \
 
         if kit is None:
             raise KitNotFound(
-                'Kit [%s] not found' % self.__get_kit_spec_descr(
-                    kit_name, kit_version, kit_iteration))
+                'Kit [%s] not found' % (
+                    Kit(kit_name, kit_version, kit_iteration)))
 
         return kit, comp_version
 
@@ -869,19 +871,3 @@ class SoftwareProfileManager(TortugaObjectManager): \
                 metadata.update(item)
 
         return metadata
-
-    def __get_kit_spec_descr(self, name: str, version: str,
-                             iteration: str) -> str:
-        """
-        Return kit descriptor string in same format as Kit TortugaObject
-        """
-
-        kitspec = name
-
-        if version:
-            kitspec += '-' + version
-
-        if iteration:
-            kitspec += '-' + iteration
-
-        return kitspec
