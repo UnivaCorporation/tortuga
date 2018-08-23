@@ -16,7 +16,6 @@ from marshmallow import fields
 import pytest
 import time
 
-from tortuga.events.listeners.base import BaseListener, get_all_listener_classes
 from tortuga.events.types.base import BaseEvent, BaseEventSchema
 from tortuga.events.manager import EventStoreManager, PubSubManager
 from tortuga.events.store import ObjectStoreEventStore
@@ -129,6 +128,8 @@ def test_event_listener(event_store, celery_worker):
     # any event listeners that are setup to run, are run by Celery
     #
     was_run = []
+
+    from tortuga.events.listeners.base import BaseListener
 
     class RunMixin:
         def run(self, _):

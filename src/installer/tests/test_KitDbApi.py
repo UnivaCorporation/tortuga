@@ -16,7 +16,8 @@ from tortuga.db.kitDbApi import KitDbApi
 from tortuga.objects.tortugaObject import TortugaObjectList
 
 
-def test_getKitList():
-    result = KitDbApi().getKitList()
+def test_getKitList(dbm):
+    with dbm.session() as session:
+        result = KitDbApi().getKitList(session)
 
     assert isinstance(result, TortugaObjectList)
