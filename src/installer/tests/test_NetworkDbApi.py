@@ -21,34 +21,38 @@ from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.networkAlreadyExists import NetworkAlreadyExists
 
 
-def test_getNetworkList():
-    networks = NetworkDbApi().getNetworkList()
+def test_getNetworkList(dbm):
+    with dbm.session() as session:
+        networks = NetworkDbApi().getNetworkList(session)
 
-    assert networks
+        assert networks
 
-    assert isinstance(networks[0], Network)
+        assert isinstance(networks[0], Network)
 
-    assert isinstance(networks, TortugaObjectList)
+        assert isinstance(networks, TortugaObjectList)
 
-    assert NetworkDbApi().getNetwork(networks[0].getAddress(),
-                                     networks[0].getNetmask())
+        assert NetworkDbApi().getNetwork(session,
+                                         networks[0].getAddress(),
+                                         networks[0].getNetmask())
 
-    assert NetworkDbApi().getNetworkById(networks[0].getId())
-
-
-def test_getNetwork():
-    with pytest.raises(NetworkNotFound):
-        NetworkDbApi().getNetwork('AAAA', 'BBBB')
+        assert NetworkDbApi().getNetworkById(session, networks[0].getId())
 
 
-def test_updateNetwork_failed():
+def test_getNetwork(dbm):
+    with dbm.session() as session:
+        with pytest.raises(NetworkNotFound):
+            NetworkDbApi().getNetwork(session, 'AAAA', 'BBBB')
+
+
+def test_updateNetwork_failed(dbm):
     bogus_network = Network()
 
-    with pytest.raises(InvalidArgument):
-        NetworkDbApi().updateNetwork(bogus_network)
+    with dbm.session() as session:
+        with pytest.raises(InvalidArgument):
+            NetworkDbApi().updateNetwork(session, bogus_network)
 
 
-def test_add_and_delete_network():
+def test_add_and_delete_network(dbm):
     address = '192.168.1.0'
     netmask = '255.255.255.0'
 
@@ -57,28 +61,30 @@ def test_add_and_delete_network():
     network.setNetmask(netmask)
     network.setType('provision')
 
-    NetworkDbApi().addNetwork(network)
+    with dbm.session() as session:
+        NetworkDbApi().addNetwork(session, network)
 
-    # attempt to add the same network twice..
-    with pytest.raises(NetworkAlreadyExists):
-        NetworkDbApi().addNetwork(network)
+        # attempt to add the same network twice..
+        with pytest.raises(NetworkAlreadyExists):
+            NetworkDbApi().addNetwork(session, network)
 
-    stored_network = NetworkDbApi().getNetwork(address, netmask)
+        stored_network = NetworkDbApi().getNetwork(session, address, netmask)
 
-    assert stored_network
+        assert stored_network
 
-    new_netmask = '255.255.0.0'
+        new_netmask = '255.255.0.0'
 
-    stored_network.setNetmask(new_netmask)
+        stored_network.setNetmask(new_netmask)
 
-    assert NetworkDbApi().updateNetwork(stored_network)
+        assert NetworkDbApi().updateNetwork(session, stored_network)
 
-    updated_network = NetworkDbApi().getNetworkById(stored_network.getId())
+        updated_network = NetworkDbApi().getNetworkById(session,
+                                                        stored_network.getId())
 
-    assert updated_network.getNetmask() == new_netmask
+        assert updated_network.getNetmask() == new_netmask
 
-    NetworkDbApi().deleteNetwork(updated_network.getId())
+        NetworkDbApi().deleteNetwork(session, updated_network.getId())
 
-    # attempt to delete network already deleted
-    with pytest.raises(NetworkNotFound):
-        NetworkDbApi().getNetwork(address, new_netmask)
+        # attempt to delete network already deleted
+        with pytest.raises(NetworkNotFound):
+            NetworkDbApi().getNetwork(session, address, new_netmask)

@@ -26,36 +26,45 @@ from tortuga.objects.node import Node
 from tortuga.objects.tortugaObject import TortugaObjectList
 
 
-def test_getSoftwareProfile():
-    swprofile = SoftwareProfileDbApi().getSoftwareProfile('Installer')
+def test_getSoftwareProfile(dbm):
+    with dbm.session() as session:
+        swprofile = SoftwareProfileDbApi().getSoftwareProfile(session,
+                                                              'Installer')
 
-    assert swprofile
+        assert swprofile
 
-    assert not swprofile.getNodes()
+        assert not swprofile.getNodes()
 
-    assert SoftwareProfileDbApi().getSoftwareProfileById(swprofile.getId())
+        assert SoftwareProfileDbApi().getSoftwareProfileById(session,
+                                                             swprofile.getId())
 
 
-def test_getSoftwareProfile_with_options():
-    swprofile = SoftwareProfileDbApi().getSoftwareProfile(
-        'Installer', optionDict={'nodes': True})
+def test_getSoftwareProfile_with_options(dbm):
+    with dbm.session() as session:
+        swprofile = SoftwareProfileDbApi().getSoftwareProfile(
+            session, 'Installer', optionDict={'nodes': True})
 
     assert swprofile
 
     assert swprofile.getNodes()
 
 
-def test_getSoftwareProfileById_failed():
-    with pytest.raises(SoftwareProfileNotFound):
-        SoftwareProfileDbApi().getSoftwareProfileById(9999)
+def test_getSoftwareProfileById_failed(dbm):
+    with dbm.session() as session:
+        with pytest.raises(SoftwareProfileNotFound):
+            SoftwareProfileDbApi().getSoftwareProfileById(session, 9999)
 
 
-def test_getSoftwareProfileList():
-    assert SoftwareProfileDbApi().getSoftwareProfileList()
+def test_getSoftwareProfileList(dbm):
+    with dbm.session() as session:
+        assert SoftwareProfileDbApi().getSoftwareProfileList(session)
 
 
-def test_getIdleSoftwareProfileList():
-    assert isinstance(SoftwareProfileDbApi().getIdleSoftwareProfileList(), TortugaObjectList)
+def test_getIdleSoftwareProfileList(dbm):
+    with dbm.session() as session:
+        assert isinstance(
+            SoftwareProfileDbApi().getIdleSoftwareProfileList(session),
+            TortugaObjectList)
 
 
 # def test_addSoftwareProfile():
@@ -102,12 +111,15 @@ def test_getIdleSoftwareProfileList():
 #             pass
 
 
-def test_getAllEnabledComponentList():
-    assert SoftwareProfileDbApi().getAllEnabledComponentList()
+def test_getAllEnabledComponentList(dbm):
+    with dbm.session() as session:
+        assert SoftwareProfileDbApi().getAllEnabledComponentList(session)
 
 
-def test_getEnabledComponentList():
-    components = SoftwareProfileDbApi().getEnabledComponentList('Installer')
+def test_getEnabledComponentList(dbm):
+    with dbm.session() as session:
+        components = SoftwareProfileDbApi().getEnabledComponentList(session,
+                                                                    'Installer')
 
     assert components
 
@@ -116,8 +128,9 @@ def test_getEnabledComponentList():
     assert isinstance(components[0], Component)
 
 
-def test_getNodeList():
-    nodes = SoftwareProfileDbApi().getNodeList('Installer')
+def test_getNodeList(dbm):
+    with dbm.session() as session:
+        nodes = SoftwareProfileDbApi().getNodeList(session, 'Installer')
 
     assert isinstance(nodes, TortugaObjectList)
 
@@ -126,18 +139,23 @@ def test_getNodeList():
     assert nodes[0].getSoftwareProfile() is None
 
 
-def test_getUsableNodes():
-    nodes = SoftwareProfileDbApi().getUsableNodes('Installer')
+def test_getUsableNodes(dbm):
+    with dbm.session() as session:
+        nodes = SoftwareProfileDbApi().getUsableNodes(session, 'Installer')
 
     assert nodes
 
 
-def test_copySoftwareProfile():
-    SoftwareProfileDbApi().copySoftwareProfile('Installer', 'NotInstaller')
+def test_copySoftwareProfile(dbm):
+    with dbm.session() as session:
+        SoftwareProfileDbApi().copySoftwareProfile(
+            session, 'Installer', 'NotInstaller')
 
-    assert SoftwareProfileDbApi().getSoftwareProfile('NotInstaller')
+        assert SoftwareProfileDbApi().getSoftwareProfile(session,
+                                                         'NotInstaller')
 
-    SoftwareProfileDbApi().deleteSoftwareProfile('NotInstaller')
+        SoftwareProfileDbApi().deleteSoftwareProfile(session,
+                                                     'NotInstaller')
 
-    with pytest.raises(SoftwareProfileNotFound):
-        SoftwareProfileDbApi().getSoftwareProfile('NotInstaller')
+        with pytest.raises(SoftwareProfileNotFound):
+            SoftwareProfileDbApi().getSoftwareProfile(session, 'NotInstaller')

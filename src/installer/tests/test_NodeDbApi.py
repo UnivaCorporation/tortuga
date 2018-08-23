@@ -21,7 +21,8 @@ from tortuga.exceptions.nodeNotFound import NodeNotFound
 
 
 def test_getNode(dbm):
-    result = NodeDbApi().getNode('compute-01.private')
+    with dbm.session() as session:
+        result = NodeDbApi().getNode(session, 'compute-01.private')
 
     assert isinstance(result, Node)
 
@@ -29,7 +30,8 @@ def test_getNode(dbm):
 def test_getNode_with_options(dbm):
     options = dict(hardwareprofile=True)
 
-    result = NodeDbApi().getNode('compute-01.private', options)
+    with dbm.session() as session:
+        result = NodeDbApi().getNode(session, 'compute-01.private', options)
 
     assert isinstance(result, Node)
 
@@ -37,13 +39,15 @@ def test_getNode_with_options(dbm):
 
 
 def test_getNodeByAddHostSession(dbm):
-    result = NodeDbApi().getNodesByAddHostSession('xxxx')
+    with dbm.session() as session:
+        result = NodeDbApi().getNodesByAddHostSession(session, 'xxxx')
 
     assert not result
 
 
 def test_getNodesByNameFilter(dbm):
-    result = NodeDbApi().getNodesByNameFilter('compute-*')
+    with dbm.session() as session:
+        result = NodeDbApi().getNodesByNameFilter(session, 'compute-*')
 
     assert isinstance(result, TortugaObjectList)
 
@@ -51,18 +55,21 @@ def test_getNodesByNameFilter(dbm):
 
 
 def test_getNodeById(dbm):
-    result = NodeDbApi().getNodeById(1)
+    with dbm.session() as session:
+        result = NodeDbApi().getNodeById(session, 1)
 
     assert isinstance(result, Node)
 
 
 def test_getNodeByIp(dbm):
-    with pytest.raises(NodeNotFound):
-        result = NodeDbApi().getNodeByIp('127.0.0.1')
+    with dbm.session() as session:
+        with pytest.raises(NodeNotFound):
+            result = NodeDbApi().getNodeByIp(session, '127.0.0.1')
 
 
 def test_getNodeList(dbm):
-    result = NodeDbApi().getNodeList()
+    with dbm.session() as session:
+        result = NodeDbApi().getNodeList(session)
 
     assert isinstance(result, TortugaObjectList)
 

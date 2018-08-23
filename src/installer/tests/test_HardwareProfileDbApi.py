@@ -30,7 +30,8 @@ def test_getHardwareProfile(dbm):
 
     name = 'aws'
 
-    result = HardwareProfileDbApi().getHardwareProfile(name)
+    with dbm.session() as session:
+        result = HardwareProfileDbApi().getHardwareProfile(session, name)
 
     assert isinstance(result, HardwareProfile)
 
@@ -49,7 +50,8 @@ def test_getHardwareProfile_alt(dbm):
 
     name = 'aws2'
 
-    result = HardwareProfileDbApi().getHardwareProfile(name)
+    with dbm.session() as session:
+        result = HardwareProfileDbApi().getHardwareProfile(session, name)
 
     assert isinstance(result, HardwareProfile)
 
@@ -63,8 +65,10 @@ def test_getHardwareProfile_alt(dbm):
 
 
 def test_getHardwareProfile_failed(dbm):
-    with pytest.raises(HardwareProfileNotFound):
-        HardwareProfileDbApi().getHardwareProfile('doesnotexistEXAMPLE')
+    with dbm.session() as session:
+        with pytest.raises(HardwareProfileNotFound):
+            HardwareProfileDbApi().getHardwareProfile(session,
+                                                      'doesnotexistEXAMPLE')
 
 
 def test_updateHardwareProfile_resource_adapter_config(dbm):
@@ -74,28 +78,31 @@ def test_updateHardwareProfile_resource_adapter_config(dbm):
 
     name = 'aws'
 
-    hwprofile = hardwareProfileDbApi.getHardwareProfile(name)
+    with dbm.session() as session:
+        hwprofile = hardwareProfileDbApi.getHardwareProfile(session, name)
 
-    assert not hwprofile.getDefaultResourceAdapterConfig()
+        assert not hwprofile.getDefaultResourceAdapterConfig()
 
-    # update resource adapter config to 'nondefault' (preexisting)
-    hwprofile.setDefaultResourceAdapterConfig('nondefault')
+        # update resource adapter config to 'nondefault' (preexisting)
+        hwprofile.setDefaultResourceAdapterConfig('nondefault')
 
-    hardwareProfileDbApi.updateHardwareProfile(hwprofile)
+        hardwareProfileDbApi.updateHardwareProfile(session, hwprofile)
 
-    # get updated hardware profile
-    hwprofile_updated = hardwareProfileDbApi.getHardwareProfile(name)
+        # get updated hardware profile
+        hwprofile_updated = hardwareProfileDbApi.getHardwareProfile(session,
+                                                                    name)
 
-    # ensure resource adapter config has been updated
-    assert hwprofile_updated.getDefaultResourceAdapterConfig() == 'nondefault'
+        # ensure resource adapter config has been updated
+        assert hwprofile_updated.getDefaultResourceAdapterConfig() == 'nondefault'
 
-    # clear resource adapter config
-    hwprofile_updated.setDefaultResourceAdapterConfig(None)
+        # clear resource adapter config
+        hwprofile_updated.setDefaultResourceAdapterConfig(None)
 
-    hardwareProfileDbApi.updateHardwareProfile(hwprofile_updated)
+        hardwareProfileDbApi.updateHardwareProfile(session, hwprofile_updated)
 
-    # validate updated hardware profile
-    hwprofile_updated2 = hardwareProfileDbApi.getHardwareProfile(name)
+        # validate updated hardware profile
+        hwprofile_updated2 = hardwareProfileDbApi.getHardwareProfile(session,
+                                                                     name)
 
     assert not hwprofile_updated2.getDefaultResourceAdapterConfig()
 
@@ -108,15 +115,16 @@ def test_updateHardwareProfile_resource_adapter_config_invalid(dbm):
 
     name = 'aws'
 
-    hwprofile = hardwareProfileDbApi.getHardwareProfile(name)
+    with dbm.session() as session:
+        hwprofile = hardwareProfileDbApi.getHardwareProfile(session, name)
 
-    assert not hwprofile.getDefaultResourceAdapterConfig()
+        assert not hwprofile.getDefaultResourceAdapterConfig()
 
-    # update resource adapter config to 'nondefault' (preexisting)
-    hwprofile.setDefaultResourceAdapterConfig('doesnotexistEXAMPLE')
+        # update resource adapter config to 'nondefault' (preexisting)
+        hwprofile.setDefaultResourceAdapterConfig('doesnotexistEXAMPLE')
 
-    with pytest.raises(InvalidArgument):
-        hardwareProfileDbApi.updateHardwareProfile(hwprofile)
+        with pytest.raises(InvalidArgument):
+            hardwareProfileDbApi.updateHardwareProfile(session, hwprofile)
 
 
 def test_addHardwareProfile(dbm):
@@ -128,11 +136,12 @@ def test_addHardwareProfile(dbm):
     hwprofile.setName('example')
     hwprofile.setNameFormat('compute-#NN')
 
-    hardwareProfileDbApi.addHardwareProfile(hwprofile)
+    with dbm.session() as session:
+        hardwareProfileDbApi.addHardwareProfile(session, hwprofile)
 
-    stored_hwprofile = hardwareProfileDbApi.getHardwareProfile(hwprofile.getName())
+        stored_hwprofile = hardwareProfileDbApi.getHardwareProfile(
+            session, hwprofile.getName())
 
-    assert stored_hwprofile.getName() == hwprofile.getName()
+        assert stored_hwprofile.getName() == hwprofile.getName()
 
-    hardwareProfileDbApi.updateHardwareProfile(stored_hwprofile)
-
+        hardwareProfileDbApi.updateHardwareProfile(session, stored_hwprofile)

@@ -19,7 +19,7 @@ from tortuga.db.models.tag import Tag
 
 class TestTagsTable(unittest.TestCase):
     def test_simple(self):
-        t = Tag('mike', 'value')
+        t = Tag(name='mike', value='value')
 
         assert t.name == 'mike'
         assert t.value == 'value'
