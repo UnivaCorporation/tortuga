@@ -15,8 +15,10 @@
 import importlib
 import pkgutil
 from logging import getLogger
+from typing import Tuple
 
 from tortuga.exceptions.kitNotFound import KitNotFound
+from tortuga.objects.kit import Kit
 
 
 logger = getLogger(__name__)
@@ -72,7 +74,7 @@ def register_kit_installer(kit_class):
     logger.info('Kit installer registered: {}'.format(kit_class.spec))
 
 
-def get_kit_installer(kit_spec):
+def get_kit_installer(kit_spec: Tuple[str, str, str]):
     """
     Gets a kit installer from the registry.
 
@@ -81,10 +83,12 @@ def get_kit_installer(kit_spec):
     :raises KitNotfound:
 
     """
-    try:
-        return KIT_INSTALLER_REGISTRY[kit_spec]
-    except KeyError:
-        raise KitNotFound()
+    kit = KIT_INSTALLER_REGISTRY.get(kit_spec)
+
+    if kit is None:
+        raise KitNotFound('Kit [%s] not found' % (Kit(*kit_spec)))
+
+    return kit
 
 
 def get_all_kit_installers():

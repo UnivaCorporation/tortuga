@@ -18,6 +18,7 @@ import os
 import sys
 
 from tortuga.db.dbManager import DbManager
+from tortuga.exceptions.componentNotFound import ComponentNotFound
 from tortuga.kit.loader import load_kits
 from tortuga.kit.registry import get_kit_installer
 
@@ -61,19 +62,29 @@ def main():
     load_kits()
     kit_spec = (kitName, kitVersion, kitIteration)
 
-    with DbManager().session() as session:
-        kit_installer = get_kit_installer(kit_spec)()
-        kit_installer.session = session
-        c = kit_installer.get_component_installer(compName)
-        c.run_action('post_install')
+    try:
+        with DbManager().session() as session:
+            kit_installer = get_kit_installer(kit_spec)()
+            kit_installer.session = session
+            c = kit_installer.get_component_installer(compName)
+            if c is None:
+                raise ComponentNotFound(
+                    'Component [%s] not found in kit [%s]' % (
+                        compName, kitName))
 
-    logger.debug(
-        'post_install component action run for [%s] from kit [%s]' % (
-            args.component, args.kit))
+            c.run_action('post_install')
 
-    # Ensure destination directory exists
-    if not os.path.exists(os.path.dirname(flagFile)):
-        os.makedirs(os.path.dirname(flagFile))
+        logger.debug(
+            'post_install component action run for [%s] from kit [%s]' % (
+                args.component, args.kit))
 
-    # touch flagFile
-    open(flagFile, 'w').close()
+        # Ensure destination directory exists
+        if not os.path.exists(os.path.dirname(flagFile)):
+            os.makedirs(os.path.dirname(flagFile))
+
+        # touch flagFile
+        open(flagFile, 'w').close()
+    except Exception as exc:  # noqa pylint: disable=broad-except
+        print('Error: %s' % (exc), file=sys.stderr)
+
+        sys.exit(1)

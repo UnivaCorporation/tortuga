@@ -17,6 +17,7 @@ import shutil
 from typing import Dict, Optional
 
 from sqlalchemy.orm.session import Session
+
 from tortuga.config.configManager import ConfigManager
 from tortuga.db.componentDbApi import ComponentDbApi
 from tortuga.db.globalParameterDbApi import GlobalParameterDbApi
@@ -27,6 +28,7 @@ from tortuga.exceptions.componentNotFound import ComponentNotFound
 from tortuga.exceptions.kitNotFound import KitNotFound
 from tortuga.helper import osHelper
 from tortuga.kit.registry import get_kit_installer
+from tortuga.objects.kit import Kit
 from tortuga.objects.softwareProfile import SoftwareProfile
 from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
@@ -559,6 +561,11 @@ class SoftwareProfileManager(TortugaObjectManager): \
             kit = self._kit_db_api.getKit(
                 session, kit_name, kit_version, kit_iteration)
 
+        if kit is None:
+            raise KitNotFound(
+                'Kit [%s] not found' % (
+                    Kit(kit_name, kit_version, kit_iteration)))
+
         return kit, comp_version
 
     def _enable_kit_component(self, session: Session, kit, comp_name,
@@ -581,6 +588,11 @@ class SoftwareProfileManager(TortugaObjectManager): \
         installer = get_kit_installer(kit_spec)()
         installer.session = session
         comp_installer = installer.get_component_installer(comp_name)
+
+        if comp_installer is None:
+            raise ComponentNotFound(
+                'Component [%s] not found in kit [%s]' % (comp_name, kit))
+
         if not comp_installer.is_enableable(software_profile):
             self.getLogger().warning(
                 'Component cannot be enabled: {}'.format(
@@ -706,7 +718,13 @@ class SoftwareProfileManager(TortugaObjectManager): \
 
         installer = get_kit_installer(kit_spec)()
         installer.session = session
+
         comp_installer = installer.get_component_installer(comp_name)
+
+        if comp_installer is None:
+            raise ComponentNotFound(
+                'Component [%s] not found in kit [%s]' % (comp_name, kit))
+
         comp_installer.run_action('pre_disable',
                                   software_profile.getName())
         comp_installer.run_action('disable',

@@ -161,12 +161,18 @@ class Kit(TortugaObject): \
         docRoot = ConfigManager().getTortugaWebRoot() + '/docs'
         return '%s/%s-%s' % (docRoot, self.getName(), self.getDbVersion())
 
-    def getDbVersion(self):
-        """ Get version used in db. """
-        if self.getIteration():
+    def getDbVersion(self) -> Optional[str]:
+        """
+        Get version used in db
+        """
+
+        if self.getVersion() and self.getIteration():
             return '%s-%s' % (self.getVersion(), self.getIteration())
-        else:
+
+        if self.getVersion():
             return '%s' % (self.getVersion())
+
+        return None
 
     def addComponent(self, component):
         """ Add component. """
@@ -224,7 +230,12 @@ class Kit(TortugaObject): \
 
     def __repr__(self):
         """ Get short display string. """
-        return '%s-%s' % (self.getName(), self.getDbVersion())
+
+        version = self.getDbVersion()
+        if version:
+            return '%s-%s' % (self.getName(), self.getDbVersion())
+
+        return self.getName()
 
     @staticmethod
     def getKeys():
