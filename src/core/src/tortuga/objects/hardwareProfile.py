@@ -253,6 +253,7 @@ class HardwareProfile(TortugaObject): \
             'localBootParams',
             'cost',
             'default_resource_adapter_config',
+            'tags',
         ]
 
     @classmethod
