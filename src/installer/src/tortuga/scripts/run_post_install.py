@@ -21,7 +21,6 @@ from tortuga.db.dbManager import DbManager
 from tortuga.exceptions.componentNotFound import ComponentNotFound
 from tortuga.kit.loader import load_kits
 from tortuga.kit.registry import get_kit_installer
-from tortuga.exceptions.tortugaException import TortugaException
 
 
 logger = logging.getLogger(__name__)
