@@ -395,9 +395,9 @@ class KitInstallerBase(ConfigurableMixin, metaclass=KitInstallerMeta):
             logger.debug('EULA not found: {}'.format(eula_path))
         return eula
 
-    def get_component_installer(self, component_name):
+    def get_component_installer(self, component_name: str):
         self._load_component_installers()
-        return self._component_installers[component_name]
+        return self._component_installers.get(component_name)
 
     def get_all_component_installers(self):
         self._load_component_installers()
