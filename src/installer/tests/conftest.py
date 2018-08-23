@@ -16,6 +16,7 @@ import pytest
 from passlib.hash import pbkdf2_sha256
 from sqlalchemy import create_engine
 
+import tortuga.db.dbManager
 from tortuga.config.configManager import ConfigManager, getfqdn
 from tortuga.db import (adminDbApi, globalParameterDbApi, hardwareProfileDbApi,
                         kitDbApi, networkDbApi, nodeDbApi,
@@ -41,33 +42,18 @@ from tortuga.deployer.dbUtility import init_global_parameters, primeDb
 from tortuga.node import nodeManager
 from tortuga.objects import osFamilyInfo, osInfo
 from tortuga.objectstore import manager as objectstore_manager
-from tortuga.tasks.celery import app
 
 from .mocks.redis import MockRedis
 
 
 @pytest.fixture(autouse=True)
 def disable_DbManager(monkeypatch, dbm):
-    def mockreturn():
-        return dbm
-
-    # Patch "DbManager" in all *DbApi modules to use fixture
-    monkeypatch.setattr(adminDbApi, 'DbManager', mockreturn)
-    monkeypatch.setattr(globalParameterDbApi, 'DbManager', mockreturn)
-    monkeypatch.setattr(hardwareProfileDbApi, 'DbManager', mockreturn)
-    monkeypatch.setattr(nodeDbApi, 'DbManager', mockreturn)
-    monkeypatch.setattr(softwareProfileDbApi, 'DbManager', mockreturn)
-    monkeypatch.setattr(networkDbApi, 'DbManager', mockreturn)
-    monkeypatch.setattr(kitDbApi, 'DbManager', mockreturn)
-    monkeypatch.setattr(nodeManager, 'DbManager', mockreturn)
+    monkeypatch.setattr(tortuga.db.dbManager, 'DbManager', lambda: dbm)
 
 
 @pytest.fixture(autouse=True)
 def mock_redis(monkeypatch, redis):
-    def mockreturn():
-        return redis
-
-    monkeypatch.setattr(objectstore_manager, 'Redis', mockreturn)
+    monkeypatch.setattr(objectstore_manager, 'Redis', lambda: redis)
 
 
 @pytest.fixture()
@@ -81,7 +67,9 @@ def redis():
 # in our tasks library, and just refer to that here.
 #
 @pytest.fixture()
-def celery_app():
+def celery_app(monkeypatch, dbm):
+    from tortuga.tasks.celery import app
+
     return app
 
 
