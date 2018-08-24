@@ -1571,7 +1571,7 @@ class NodeManager(TortugaObjectManager): \
             hardwareProfile.resourceadapter.name) \
             if hardwareProfile.resourceadapter else None
 
-    def __isNodeTransferrable(self, dbNode: Node) -> bool:
+    def __isNodeTransferrable(self, dbNode: NodeModel) -> bool:
         # Only nodes that are not locked and in Installed state are
         # eligible for transfer.
         return not self.__isNodeLocked(dbNode) and \
@@ -1628,22 +1628,22 @@ class NodeManager(TortugaObjectManager): \
             dbSrcSoftwareProfile, dbDstSoftwareProfile,
             self.__isNodeSoftLocked)
 
-    def __isNodeLocked(self, dbNode: Node) -> bool:
+    def __isNodeLocked(self, dbNode: NodeModel) -> bool:
         return dbNode.lockedState != 'Unlocked'
 
-    def __isNodeHardLocked(self, dbNode: Node) -> bool:
+    def __isNodeHardLocked(self, dbNode: NodeModel) -> bool:
         return dbNode.lockedState == 'HardLocked'
 
-    def __isNodeSoftLocked(self, dbNode: Node) -> bool:
+    def __isNodeSoftLocked(self, dbNode: NodeModel) -> bool:
         return dbNode.lockedState == 'SoftLocked'
 
-    def __getNodeState(self, dbNode: Node) -> str:
+    def __getNodeState(self, dbNode: NodeModel) -> str:
         return dbNode.state
 
-    def __isNodeStateDeleted(self, node: Node) -> bool:
+    def __isNodeStateDeleted(self, node: NodeModel) -> bool:
         return self.__getNodeState(node) == state.NODE_STATE_DELETED
 
-    def __isNodeStateInstalled(self, dbNode: Node) -> bool:
+    def __isNodeStateInstalled(self, dbNode: NodeModel) -> bool:
         return self.__getNodeState(dbNode) == \
             state.NODE_STATE_INSTALLED
 
