@@ -185,7 +185,8 @@ class ComponentInstaller(ComponentInstallerBase):
         Initialise parent class.
         """
         super().__init__(kit)
-        self.provider = DnsmasqDnsProvider(self._private_dns_zone)
+
+        self.provider = DnsmasqDnsProvider(self._private_dns_zone())
 
     def _get_global_parameter(self, key, default=None):
         """
@@ -197,7 +198,7 @@ class ComponentInstaller(ComponentInstallerBase):
         """
         try:
             return GlobalParameterDbApi().getParameter(
-                self.session, key).getValue()
+                self.kit_installer.session, key).getValue()
         except ParameterNotFound:
             return default
 
@@ -324,14 +325,14 @@ class ComponentInstaller(ComponentInstallerBase):
         :returns: None
         """
         installer_node = NodesDbHandler().getNode(
-            self.session,
+            self.kit_installer.session,
             self.kit_installer.config_manager.getInstaller()
         )
 
         for provisioning_nic in installer_node.hardwareprofile.nics:
             self._provisioning_nics(provisioning_nic)
 
-        self._node_nics(self.session)
+        self._node_nics(self.kit_installer.session)
 
     def action_pre_add_host(self, hardware_profile, software_profile,
                             hostname, ip, *args, **kwargs):
