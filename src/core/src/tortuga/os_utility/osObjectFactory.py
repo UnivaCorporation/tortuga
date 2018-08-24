@@ -14,14 +14,16 @@
 
 # pylint: disable=no-self-use
 
-import sys
 import logging
+import sys
+
+from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.abstractMethod import AbstractMethod
-from tortuga.exceptions.invalidApplicationModule \
-    import InvalidApplicationModule
+from tortuga.exceptions.invalidApplicationModule import \
+    InvalidApplicationModule
 
 
-class OsObjectFactory(object):
+class OsObjectFactory:
     """
     Base os object factory class.
     """
@@ -146,7 +148,7 @@ class OsObjectFactory(object):
             'getComponentManager() has to be overriden in the derived'
             ' class.')
 
-    def getOsBootHostManager(self):
+    def getOsBootHostManager(self, configManager: ConfigManager):
         """Get manager for boothost"""
         raise AbstractMethod(
             'getOsBootHostManager() has to be overridden in the derived'

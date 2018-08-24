@@ -17,8 +17,12 @@
 import os
 import subprocess
 from textwrap import dedent
+from typing import List, Optional
+
+from sqlalchemy.orm.session import Session
 
 from tortuga.db.models.hardwareProfile import HardwareProfile
+from tortuga.db.models.nic import Nic
 from tortuga.db.models.node import Node
 from tortuga.db.models.softwareProfile import SoftwareProfile
 from tortuga.exceptions.nicNotFound import NicNotFound
@@ -34,8 +38,9 @@ class BootHostManager(OsBootHostManagerCommon):
     Methods for manipulating PXE files
     """
 
-    def __getPxelinuxBootFilePath(self, mac):
-        pxeconfigDir = os.path.join(self.getTftproot(), 'tortuga/pxelinux.cfg')
+    def __getPxelinuxBootFilePath(self, mac: str):
+        pxeconfigDir = os.path.join(
+            self.getTftproot(), 'tortuga/pxelinux.cfg')
 
         return os.path.join(
             pxeconfigDir, '01-%s' % (mac.replace(':', '-')))
@@ -43,7 +48,7 @@ class BootHostManager(OsBootHostManagerCommon):
     def __get_kickstart_file_path(self, node: Node):
         return os.path.join(self._cm.getKickstartsDir(), node.name + '.ks')
 
-    def __getPXEFiles(self, dbNode):
+    def __getPXEFiles(self, dbNode: Node) -> List[str]:
         '''
         Returns a list of fully-qualified paths to the PXE file(s)
         associated with the given nodename.
@@ -63,7 +68,7 @@ class BootHostManager(OsBootHostManagerCommon):
         except NicNotFound:
             return []
 
-    def rmPXEFile(self, dbNode):
+    def rmPXEFile(self, dbNode: Node):
         '''
         Remove any/all PXE file(s) associated with the given nodename.
         '''
@@ -85,7 +90,7 @@ class BootHostManager(OsBootHostManagerCommon):
         # Call OS-specific cleanup routine
         self.deleteNodeCleanup(dbNode)
 
-    def deleteNodeCleanup(self, node):
+    def deleteNodeCleanup(self, node: Node):
         if not node.softwareprofile:
             self.getLogger().debug(
                 'deleteNodeCleanup(): node [%s] has no associated'
@@ -98,8 +103,11 @@ class BootHostManager(OsBootHostManagerCommon):
 
         self.__get_ossupport(node.softwareprofile).deleteNodeCleanup(node)
 
-    def writePXEFile(self, node, localboot=None, hardwareprofile=None,
-                     softwareprofile=None):
+    def writePXEFile(self, session: Session, node: Node,
+                     localboot: Optional[bool] = None,
+                     hardwareprofile: Optional[HardwareProfile] = None,
+                     softwareprofile: Optional[SoftwareProfile] = None): \
+            # pylint: disable=unused-argument
         # 'hardwareProfile', 'softwareProfile', and 'localboot' are
         # overrides.  If not specified, node.hardwareprofile,
         # node.softwareprofile, and node.bootFrom values are used
@@ -218,14 +226,15 @@ label Reinstall
 
         if hwprofile.installType == 'package':
             # Now write out the kickstart file
-            self._writeKickstartFile(node, hwprofile, swprofile)
+            self._writeKickstartFile(session, node, hwprofile, swprofile)
 
         # Write 'cloud-init' configuration
 
         self.write_other_boot_files(node, hwprofile, swprofile)
 
-    def _writeKickstartFile(self, node: Node, hardwareprofile: HardwareProfile,
-                            softwareprofile: SoftwareProfile):
+    def _writeKickstartFile(self, session: Session, node: Node,
+                            hardwareprofile: HardwareProfile,
+                            softwareprofile: SoftwareProfile) -> None:
         """
         Generate kickstart file for specified node
 
@@ -251,16 +260,16 @@ label Reinstall
             softwareprofile.os.family.arch)
 
         contents = OSSupport(tmpOsFamilyInfo).getKickstartFileContents(
-            node, hardwareprofile, softwareprofile)
+            session, node, hardwareprofile, softwareprofile)
 
         with open(self.__get_kickstart_file_path(node), 'w') as fp:
             fp.write(contents)
 
-    def _getDhcpNodeName(self, node, nic): \
+    def _getDhcpNodeName(self, node: Node, nic: Nic): \
             # pylint: disable=unused-argument,no-self-use
         return node.name
 
-    def addDhcpLease(self, node, nic) -> None:
+    def addDhcpLease(self, node: Node, nic: Nic) -> None:
         self.getLogger().debug(
             'Adding DHCP lease for node [%s] MAC [%s]' % (node.name, nic.mac))
 
@@ -289,7 +298,7 @@ label Reinstall
                 'Error adding DHCP lease for node [%s] (retval=%d): %s' % (
                     node.name, p.returncode, stdout))
 
-    def removeDhcpLease(self, node) -> None:
+    def removeDhcpLease(self, node: Node) -> None:
         # Find first provisioning NIC
         try:
             nic = get_provisioning_nic(node)
@@ -400,3 +409,9 @@ label Reinstall
 
         self.__get_ossupport(softwareprofile).write_other_boot_files(
             node, hardwareprofile, softwareprofile)
+
+    def setNodeForNetworkBoot(self, session: Session, dbNode: Node):
+        super().setNodeForNetworkBoot(session, dbNode)
+
+        # Write the updated file
+        self.writePXEFile(session, dbNode)

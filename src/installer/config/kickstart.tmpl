@@ -189,10 +189,7 @@ curl -sk -X PUT --retry 5 --retry-delay 12 \
     -d "{ \"state\": \"Provisioned\", \"bootFrom\": \"1\" }" \
     {{ installer_url }}/v1/nodes/{{ fqdn }} >/dev/null 2>&1
 
-# Disable enabled YUM repos
-yum-config-manager --disable \*
-
 # These repositories must be enabled to gain access to SCL
-yum-config-manager --enable extras,updates
+yum-config-manager --enable base,extras,updates
 
 %end
