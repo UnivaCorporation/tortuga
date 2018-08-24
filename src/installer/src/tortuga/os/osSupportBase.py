@@ -15,11 +15,19 @@
 # pylint: disable=no-member
 
 import logging
+from typing import Optional
+
+from sqlalchemy.orm.session import Session
+
 from tortuga.config.configManager import ConfigManager
+from tortuga.db.models.hardwareProfile import HardwareProfile
+from tortuga.db.models.node import Node
+from tortuga.db.models.softwareProfile import SoftwareProfile
+from tortuga.objects.osFamilyInfo import OsFamilyInfo
 
 
-class OsSupportBase(object):
-    def __init__(self, osFamilyInfo):
+class OsSupportBase:
+    def __init__(self, osFamilyInfo: OsFamilyInfo) -> None:
         self._osFamilyInfo = osFamilyInfo
         self._logger = logging.getLogger('tortuga.os')
         self._logger.addHandler(logging.NullHandler())
@@ -28,26 +36,25 @@ class OsSupportBase(object):
     def getLogger(self):
         return self._logger
 
-    def getKickstartFileContents(self, node, hardwareprofile,
-                                 softwareprofile): \
-            # pylint: disable=no-self-use,unused-argument
-        '''
-        Returns a string representing the boot file.  For example, the
-        Kickstart file on RHEL-based derivatives.
-
-        Note: 'dbNode' is an instance of Nodes (the SQLAlchemy
-        representation of the Nodes table), it is *not* a Node
-        TortugaObject
-        '''
+    def getKickstartFileContents(
+            self, session: Session, node: Node,
+            hardwareprofile: HardwareProfile,
+            softwareprofile: SoftwareProfile) -> str: \
+        # pylint: disable=no-self-use,unused-argument
+        """
+        Returns entire Kickstart file contents
+        """
 
         return ''
 
-    def getPXEReinstallSnippet(self, ksurl, node, hardwareprofile=None,
-                               softwareprofile=None): \
+    def getPXEReinstallSnippet(
+            self, ksurl: str, node: Node,
+            hardwareprofile: Optional[HardwareProfile] = None,
+            softwareprofile: Optional[SoftwareProfile] = None): \
             # pylint: disable=no-self-use,unused-argument
         return ''
 
-    def deleteNodeCleanup(self, node): \
+    def deleteNodeCleanup(self, node: Node): \
             # pylint: disable=no-self-use,unused-argument
         '''
         Called when the specified node is being deleted.  This method
@@ -55,14 +62,17 @@ class OsSupportBase(object):
         natively managed by Tortuga.
         '''
 
-    def write_other_boot_files(self, node, hardwareprofile, softwareprofile): \
+    def write_other_boot_files(self, node: Node,
+                               hardwareprofile: HardwareProfile,
+                               softwareprofile: SoftwareProfile): \
             # pylint: disable=no-self-use,unused-argument
         '''
         Can optionally be used to write files after node is added prior to
         node being started/booted.
         '''
 
-    def get_cloud_config(self, node, hardwareprofile, softwareprofile): \
+    def get_cloud_config(self, node: Node, hardwareprofile: HardwareProfile,
+                         softwareprofile: SoftwareProfile): \
             # pylint: disable=no-self-use,unused-argument
         '''
         Return dict containing node-specific cloud-init compatible user data

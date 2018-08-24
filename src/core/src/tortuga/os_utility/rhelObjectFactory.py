@@ -14,10 +14,11 @@
 
 # pylint: disable=no-self-use
 
-from tortuga.os_utility.osObjectFactory import OsObjectFactory
+from tortuga.config.configManager import ConfigManager
 from tortuga.objects.yumRepo import YumRepo
-from tortuga.os_objects.rhel.rhelServiceManager import RhelServiceManager
 from tortuga.os_objects.rhel.rhelPackageManager import RhelPackageManager
+from tortuga.os_objects.rhel.rhelServiceManager import RhelServiceManager
+from tortuga.os_utility.osObjectFactory import OsObjectFactory
 
 
 class RhelObjectFactory(OsObjectFactory):
@@ -60,9 +61,9 @@ class RhelObjectFactory(OsObjectFactory):
         from tortuga.os_objects.rhel.componentManager import ComponentManager
         return ComponentManager()
 
-    def getOsBootHostManager(self):
+    def getOsBootHostManager(self, configManager: ConfigManager):
         from tortuga.os_objects.rhel.bootHostManager import BootHostManager
-        return BootHostManager()
+        return BootHostManager(configManager)
 
     def getOsAddHostManager(self):
         from tortuga.os_objects.rhel.addHostManager import AddHostManager

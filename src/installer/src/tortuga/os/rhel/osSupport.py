@@ -20,6 +20,8 @@ from random import choice
 from typing import Any, Dict, List, Optional
 
 from jinja2 import Template
+from sqlalchemy.orm.session import Session
+
 from tortuga.config.configManager import getfqdn
 from tortuga.db.globalParameterDbApi import GlobalParameterDbApi
 from tortuga.db.helper import get_installer_hostname_suffix
@@ -33,6 +35,7 @@ from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.exceptions.parameterNotFound import ParameterNotFound
 from tortuga.os.osSupportBase import OsSupportBase
 from tortuga.utility.bootParameters import getBootParameters
+from tortuga.objects.osFamilyInfo import OsFamilyInfo
 
 
 def sort_by_devicename_comparator(nic1: Nic, nic2: Nic) -> int:
@@ -54,37 +57,43 @@ def sort_by_devicename_comparator(nic1: Nic, nic2: Nic) -> int:
     return 0
 
 
+def get_provisioning_nic(nics: List[Nic]):
+    """
+    Returns first nic with boot flag enabled or None
+    """
+
+    nics = [nic for nic in nics if nic.boot]
+
+    if not nics:
+        return None
+
+    # Choose the first one
+    return nics[0]
+
+
 class OSSupport(OsSupportBase):
-    def __init__(self, osFamilyInfo):
-        super(OSSupport, self).__init__(osFamilyInfo)
+    def __init__(self, osFamilyInfo: OsFamilyInfo):
+        super().__init__(osFamilyInfo)
 
         self._globalParameterDbApi = GlobalParameterDbApi()
-
-        try:
-            depot_dir = self._globalParameterDbApi.getParameter(
-                self.session, 'depot').getValue()
-        except ParameterNotFound:
-            # Fallback to legacy default
-            depot_dir = '/opt/tortuga/depot'
-
-        self._cm.setDepotDir(depot_dir)
 
     def getPXEReinstallSnippet(
             self, ksurl: str, node: Node,
             hardwareprofile: Optional[HardwareProfile] = None,
             softwareprofile: Optional[SoftwareProfile] = None) \
             -> str:  # pylint: disable=no-self-use
+        """
+        Raises:
+            NicNotFound
+        """
+
         # General kickstart/kernel parameters
 
         # Find the first nic marked as bootable
-        nics = [nic for nic in node.nics if nic.boot]
-
-        if not nics:
+        nic = get_provisioning_nic(node.nics)
+        if nic is None:
             raise NicNotFound(
                 'Node [%s] does not have a bootable NIC' % (node.name))
-
-        # Choose the first one
-        nic = nics[0]
 
         if hardwareprofile is None:
             hardwareprofile = node.hardwareprofile
@@ -108,7 +117,7 @@ class OSSupport(OsSupportBase):
             bootargs.append(
                 'inst.ks=%s ip=%s:dhcp' % (ksurl, nic.networkdevice.name))
         else:
-            # RHEL 5.x and 6.x
+            # RHEL 6.x
             bootargs.append('ks=%s' % (ksurl))
 
             bootargs.append('ksdevice=%s' % (nic.networkdevice.name))
@@ -123,10 +132,10 @@ class OSSupport(OsSupportBase):
 
         return result
 
-    def __get_kickstart_network_entry(self, dbNode: None,
-                                      hardwareprofile: HardwareProfile,
-                                      nic: Nic) -> str: \
-            # pylint: disable=no-self-use
+    def __get_kickstart_network_entry(
+            self, dbNode: Node, hardwareprofile: HardwareProfile,
+            nic: Nic) -> str: \
+        # pylint: disable=no-self-use
         bProvisioningNic = nic.network == hardwareprofile.nics[0].network
 
         installer_private_ip = hardwareprofile.nics[0].ip
@@ -214,15 +223,15 @@ class OSSupport(OsSupportBase):
             raise NicNotFound('Node [%s] has no associated nics' % (
                 node.name))
 
-    def __kickstart_get_timezone(self) -> str:
+    def __kickstart_get_timezone(self, session: Session) -> str:
         tz = self._globalParameterDbApi.getParameter(
-            self.session, 'Timezone_zone').getValue()
+            session, 'Timezone_zone').getValue()
 
         # Ensure timezone does not contain any spaces
         return tz.replace(' ', '_')
 
-    def __kickstart_get_network_section(self, node: Node,
-                                        hardwareprofile: HardwareProfile) -> str:
+    def __kickstart_get_network_section(
+            self, node: Node, hardwareprofile: HardwareProfile) -> str:
         # Ensure nics are processed in order (ie. eth0, eth1, eth2...)
         nics = node.nics
         nics.sort(key=lambda nic: nic.networkdevice.name)
@@ -248,9 +257,17 @@ class OSSupport(OsSupportBase):
 
         return '\n'.join(network_entries)
 
-    def __kickstart_get_repos(self, dbSwProfile: SoftwareProfile,
+    def __kickstart_get_repos(self, session: Session,
+                              dbSwProfile: SoftwareProfile,
                               installer_private_ip: str) -> List[str]:
         repo_entries = []
+
+        try:
+            depot_dir = self._globalParameterDbApi.getParameter(
+                session, 'depot').getValue()
+        except ParameterNotFound:
+            # Fallback to legacy default
+            depot_dir = self._cm.getDepotDir()
 
         for dbComponent in dbSwProfile.components:
             dbKit = dbComponent.kit
@@ -264,7 +281,7 @@ class OSSupport(OsSupportBase):
             subpath = '%s/%s/%s' % (dbKit.name, kitVer, kitArch)
 
             # Check if repository actually exists
-            if not os.path.exists(os.path.join(self._cm.getDepotDir(),
+            if not os.path.exists(os.path.join(depot_dir,
                                                'kits',
                                                subpath,
                                                'repodata',
@@ -316,17 +333,10 @@ class OSSupport(OsSupportBase):
                                           softwareprofile: SoftwareProfile) -> str:
         buf = """\
 #!/bin/sh
+
 # Determine how many drives we have
-"""
+set $(list-harddrives)
 
-        # Temporary workaround for RHEL 5.7 based distros
-        # https://bugzilla.redhat.com/show_bug.cgi?format=multiple&id=709880
-        if softwareprofile.os.version == '5.7':
-            buf += 'set $(PYTHONPATH=/usr/lib/booty list-harddrives)\n'
-        else:
-            buf += 'set $(list-harddrives)\n'
-
-        buf += """
 d1=$1
 d2=$3
 d3=$5
@@ -395,9 +405,10 @@ dd if=/dev/zero of=$d%s bs=512 count=1
 
         return buf
 
-    def __get_template_subst_dict(self, node: Node,
-                                  hardwareprofile: HardwareProfile,
-                                  softwareprofile: SoftwareProfile) -> Dict[str, Any]:
+    def __get_template_subst_dict(
+            self, session: Session, node: Node,
+            hardwareprofile: HardwareProfile,
+            softwareprofile: SoftwareProfile) -> Dict[str, Any]:
         """
         :param node: Object
         :param hardwareprofile: Object
@@ -417,7 +428,7 @@ dd if=/dev/zero of=$d%s bs=512 count=1
         try:
             private_domain: Optional[str] = \
                 self._globalParameterDbApi.getParameter(
-                    self.session, 'DNSZone').getValue()
+                    session, 'DNSZone').getValue()
         except ParameterNotFound:
             private_domain: Optional[str] = None
 
@@ -461,10 +472,11 @@ dd if=/dev/zero of=$d%s bs=512 count=1
                 node, hardwareprofile
             ),
             'rootpw': self._generatePassword(),
-            'timezone': self.__kickstart_get_timezone(),
+            'timezone': self.__kickstart_get_timezone(session),
             'includes': '%include /tmp/partinfo',
             'repos': '\n'.join(
                 self.__kickstart_get_repos(
+                    session,
                     softwareprofile,
                     installer_private_fqdn
                 )
@@ -479,14 +491,14 @@ dd if=/dev/zero of=$d%s bs=512 count=1
             'cfmstring': self._cm.getCfmPassword()
         }
 
-    def getKickstartFileContents(self, node: Node,
+    def getKickstartFileContents(self, session: Session, node: Node,
                                  hardwareprofile: HardwareProfile,
                                  softwareprofile: SoftwareProfile) -> str:
         # Perform basic sanity checking before proceeding
         self.__validate_node(node)
 
         template_subst_dict = self.__get_template_subst_dict(
-            node, hardwareprofile, softwareprofile)
+            session, node, hardwareprofile, softwareprofile)
 
         with open(self.__get_kickstart_template(softwareprofile)) as fp:
             tmpl = fp.read()
