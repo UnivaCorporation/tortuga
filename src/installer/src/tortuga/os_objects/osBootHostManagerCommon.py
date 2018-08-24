@@ -18,16 +18,22 @@ import os
 import pwd
 import shutil
 
-from tortuga.os_objects.osObjectManager import OsObjectManager
+from sqlalchemy.orm.session import Session
+
 from tortuga.config.configManager import ConfigManager
+from tortuga.db.models.nic import Nic
+from tortuga.db.models.node import Node
 from tortuga.node import state
+from tortuga.os_objects.osObjectManager import OsObjectManager
 
 
 class OsBootHostManagerCommon(OsObjectManager):
-    """Methods for manipulating PXE files"""
+    """
+    Methods for manipulating PXE files
+    """
 
-    def __init__(self):
-        OsObjectManager.__init__(self)
+    def __init__(self, configManager: ConfigManager) -> None:
+        super().__init__(configManager)
 
         # Cache this for later
         try:
@@ -39,9 +45,9 @@ class OsBootHostManagerCommon(OsObjectManager):
             else:
                 self.passdata = pwd.getpwnam(username)
 
-        self._cm = ConfigManager()
+        self._cm = configManager
 
-    def deletePuppetNodeCert(self, nodeName):
+    def deletePuppetNodeCert(self, nodeName: str) -> None:
         # Remove the Puppet certificate when the node is reinstalled
 
         self.getLogger().debug(
@@ -78,7 +84,7 @@ class OsBootHostManagerCommon(OsObjectManager):
                     'Error attempting to remove %s (reason: %s)' % (
                         fn, exc))
 
-    def nodeCleanup(self, nodeName):
+    def nodeCleanup(self, nodeName: str):
         """
         Remove files related to the node
         """
@@ -89,22 +95,22 @@ class OsBootHostManagerCommon(OsObjectManager):
         if os.path.exists(private_dir):
             shutil.rmtree(private_dir)
 
-    def addDhcpLease(self, node, nic):
+    def addDhcpLease(self, node: Node, nic: Nic):
         # Add DHCP lease to DHCP server
         pass
 
-    def removeDhcpLease(self, nodeName):
+    def removeDhcpLease(self, node: Node) -> None: \
+            # pylint: disable=unused-argument
         # Remove the DHCP lease from the DHCP server.  This will be
         # a no-op on any platform that doesn't support the operation
         # (ie. any platform not running ISC DHCPD)
         pass
 
-    def setNodeForNetworkBoot(self, dbNode):
+    def setNodeForNetworkBoot(
+            self, session: Session, dbNode: Node) -> None: \
+        # pylint: disable=unused-argument
         # Update node status to "Expired" and boot from network
         dbNode.state = state.NODE_STATE_EXPIRED
         dbNode.bootFrom = 0
 
         self.deletePuppetNodeCert(dbNode.name)
-
-        # Write the updated file
-        self.writePXEFile(dbNode)

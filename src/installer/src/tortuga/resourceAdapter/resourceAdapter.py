@@ -25,6 +25,7 @@ from typing import Any, Dict, List, Optional
 
 import gevent
 from sqlalchemy.orm.session import Session
+
 from tortuga.addhost.addHostManager import AddHostManager
 from tortuga.config.configManager import ConfigManager
 from tortuga.db.models.hardwareProfile import HardwareProfile
@@ -501,18 +502,18 @@ class ResourceAdapter(UserDataMixin): \
             return
 
         # Set up DHCP/PXE for newly addded node
-        bhm = getOsObjectFactory().getOsBootHostManager()
+        bhm = getOsObjectFactory().getOsBootHostManager(self._cm)
 
         # Write out the PXE file
         bhm.writePXEFile(
-            node, hardwareprofile=hardwareprofile,
+            self.session, node, hardwareprofile=hardwareprofile,
             softwareprofile=softwareprofile, localboot=False)
 
         # Add a DHCP lease
         bhm.addDhcpLease(node, nic)
 
     def removeLocalBootConfiguration(self, node: Node) -> None:
-        bhm = self.osObject.getOsBootHostManager()
+        bhm = self.osObject.getOsBootHostManager(self._cm)
 
         bhm.rmPXEFile(node)
         bhm.removeDhcpLease(node)

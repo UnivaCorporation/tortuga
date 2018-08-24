@@ -70,7 +70,8 @@ class NodeManager(TortugaObjectManager): \
         self._hardwareProfileDbApi = HardwareProfileDbApi()
         self._cm = ConfigManager()
         self._san = san.San()
-        self._bhm = osUtility.getOsObjectFactory().getOsBootHostManager()
+        self._bhm = osUtility.getOsObjectFactory().getOsBootHostManager(
+            self._cm)
         self._syncApi = SyncApi()
         self._nodesDbHandler = NodesDbHandler()
 
@@ -406,7 +407,7 @@ class NodeManager(TortugaObjectManager): \
                 dbNode.softwareprofile.type != 'installer' and \
                 dbNode.hardwareprofile.location != 'remote':
             # update local boot configuration for on-premise nodes
-            self._bhm.writePXEFile(dbNode, localboot=bootFrom)
+            self._bhm.writePXEFile(session, dbNode, localboot=bootFrom)
 
         session.commit()
 
@@ -628,10 +629,9 @@ class NodeManager(TortugaObjectManager): \
                 if hwprofile.location == 'local':
                     # Only attempt to remove local boot configuration for
                     # nodes that are marked as 'local'
-                    bhm = osUtility.getOsObjectFactory().getOsBootHostManager()
 
-                    bhm.rmPXEFile(dbNode)
-                    bhm.removeDhcpLease(dbNode)
+                    self._bhm.rmPXEFile(dbNode)
+                    self._bhm.removeDhcpLease(dbNode)
 
                 for tag in dbNode.tags:
                     if len(tag.nodes) == 1 and \
@@ -1424,7 +1424,7 @@ class NodeManager(TortugaObjectManager): \
 
         if bReinstall:
             for dbNode in nodes:
-                self._bhm.setNodeForNetworkBoot(dbNode)
+                self._bhm.setNodeForNetworkBoot(session, dbNode)
 
         for dbHardwareProfile, detailsDict in \
                 self.__processNodeList(nodes).items():
@@ -1571,7 +1571,7 @@ class NodeManager(TortugaObjectManager): \
             hardwareProfile.resourceadapter.name) \
             if hardwareProfile.resourceadapter else None
 
-    def __isNodeTransferrable(self, dbNode: Node) -> bool:
+    def __isNodeTransferrable(self, dbNode: NodeModel) -> bool:
         # Only nodes that are not locked and in Installed state are
         # eligible for transfer.
         return not self.__isNodeLocked(dbNode) and \
@@ -1628,22 +1628,22 @@ class NodeManager(TortugaObjectManager): \
             dbSrcSoftwareProfile, dbDstSoftwareProfile,
             self.__isNodeSoftLocked)
 
-    def __isNodeLocked(self, dbNode: Node) -> bool:
+    def __isNodeLocked(self, dbNode: NodeModel) -> bool:
         return dbNode.lockedState != 'Unlocked'
 
-    def __isNodeHardLocked(self, dbNode: Node) -> bool:
+    def __isNodeHardLocked(self, dbNode: NodeModel) -> bool:
         return dbNode.lockedState == 'HardLocked'
 
-    def __isNodeSoftLocked(self, dbNode: Node) -> bool:
+    def __isNodeSoftLocked(self, dbNode: NodeModel) -> bool:
         return dbNode.lockedState == 'SoftLocked'
 
-    def __getNodeState(self, dbNode: Node) -> str:
+    def __getNodeState(self, dbNode: NodeModel) -> str:
         return dbNode.state
 
-    def __isNodeStateDeleted(self, node: Node) -> bool:
+    def __isNodeStateDeleted(self, node: NodeModel) -> bool:
         return self.__getNodeState(node) == state.NODE_STATE_DELETED
 
-    def __isNodeStateInstalled(self, dbNode: Node) -> bool:
+    def __isNodeStateInstalled(self, dbNode: NodeModel) -> bool:
         return self.__getNodeState(dbNode) == \
             state.NODE_STATE_INSTALLED
 
