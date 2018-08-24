@@ -272,7 +272,7 @@ def unpack_archive(kit_archive_path: str,
     #
     # Remove world write permissions, if any
     #
-    cmd = 'chmod -R o-w {}'.format(destdir)
+    cmd = 'chmod -R a-w {}'.format(destdir)
     TortugaSubprocess(cmd).run()
 
     logger.debug(
