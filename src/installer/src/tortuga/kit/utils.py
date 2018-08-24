@@ -262,12 +262,18 @@ def unpack_archive(kit_archive_path: str,
         '[utils.parse()] Unpacking [%s] into [%s]' % (
             kit_archive_path, destdir))
 
-    cmd = 'tar --extract --bzip2 --strip-components 1 --file %s -C %s' % (
+    #
+    # Extract the file
+    #
+    cmd = 'tar --extract --bzip2 --strip-components 1 --file {} -C {}'.format(
         kit_archive_path, destdir)
+    TortugaSubprocess(cmd).run()
 
-    p = TortugaSubprocess(cmd)
-
-    p.run()
+    #
+    # Remove world write permissions, if any
+    #
+    cmd = 'chmod -R o-w {}'.format(destdir)
+    TortugaSubprocess(cmd).run()
 
     logger.debug(
         '[utils.parse()] Unpacked [%s] into [%s]' % (
