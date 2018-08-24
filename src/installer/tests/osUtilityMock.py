@@ -12,11 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from sqlalchemy.orm.session import Session
+
+from tortuga.config.configManager import ConfigManager
+from tortuga.db.models.node import Node
 from tortuga.node import state
 
 
 class MockBootHostManager:
-    def setNodeForNetworkBoot(self, dbNode):
+    def __init__(self, configManager: ConfigManager) -> None:
+        pass
+
+    def setNodeForNetworkBoot(self, session: Session, dbNode: Node): \
+            # pylint: disable=unused-argument
         dbNode.state = state.NODE_STATE_EXPIRED
 
     def writePXEFile(self, *args, **kwargs): \
@@ -29,11 +37,11 @@ class MockBootHostManager:
 
 
 class MockOsObjectFactory:
-    def getOsBootHostManager(self):
-        return MockBootHostManager()
+    def getOsBootHostManager(self, configManager: ConfigManager): \
+            # pylint: disable=unused-argument,no-self-use
+        return MockBootHostManager(configManager)
 
 
 def get_os_object_factory(osName: str = None): \
         # pylint: disable=unused-argument
     return MockOsObjectFactory()
-

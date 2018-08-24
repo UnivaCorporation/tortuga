@@ -70,7 +70,8 @@ class NodeManager(TortugaObjectManager): \
         self._hardwareProfileDbApi = HardwareProfileDbApi()
         self._cm = ConfigManager()
         self._san = san.San()
-        self._bhm = osUtility.getOsObjectFactory().getOsBootHostManager()
+        self._bhm = osUtility.getOsObjectFactory().getOsBootHostManager(
+            self._cm)
         self._syncApi = SyncApi()
         self._nodesDbHandler = NodesDbHandler()
 
@@ -406,7 +407,7 @@ class NodeManager(TortugaObjectManager): \
                 dbNode.softwareprofile.type != 'installer' and \
                 dbNode.hardwareprofile.location != 'remote':
             # update local boot configuration for on-premise nodes
-            self._bhm.writePXEFile(dbNode, localboot=bootFrom)
+            self._bhm.writePXEFile(session, dbNode, localboot=bootFrom)
 
         session.commit()
 
@@ -628,10 +629,9 @@ class NodeManager(TortugaObjectManager): \
                 if hwprofile.location == 'local':
                     # Only attempt to remove local boot configuration for
                     # nodes that are marked as 'local'
-                    bhm = osUtility.getOsObjectFactory().getOsBootHostManager()
 
-                    bhm.rmPXEFile(dbNode)
-                    bhm.removeDhcpLease(dbNode)
+                    self._bhm.rmPXEFile(dbNode)
+                    self._bhm.removeDhcpLease(dbNode)
 
                 for tag in dbNode.tags:
                     if len(tag.nodes) == 1 and \
@@ -1424,7 +1424,7 @@ class NodeManager(TortugaObjectManager): \
 
         if bReinstall:
             for dbNode in nodes:
-                self._bhm.setNodeForNetworkBoot(dbNode)
+                self._bhm.setNodeForNetworkBoot(session, dbNode)
 
         for dbHardwareProfile, detailsDict in \
                 self.__processNodeList(nodes).items():

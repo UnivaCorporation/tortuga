@@ -15,30 +15,31 @@
 # pylint: disable=no-self-use
 
 import logging
-from tortuga.os_utility import tortugaSubprocess
+from typing import Optional
+
 from tortuga.config.configManager import ConfigManager
+from tortuga.os_utility import tortugaSubprocess
 
 
-class OsObjectManager(object):
+class OsObjectManager:
     """
     Base tortuga os object manager class.
     """
-    def __init__(self):
-        self._logger = logging.\
-            getLogger('tortuga.%s' % (self.__class__.__name__))
+    def __init__(self, configManager: Optional[ConfigManager] = None) -> None:
+        self._logger = logging.getLogger(
+            'tortuga.%s' % (self.__class__.__name__))
         self._logger.addHandler(logging.NullHandler())
-        self._cm = ConfigManager()
 
-    def execute(self, cmd, echo=False):
+        self._cm = configManager if configManager else ConfigManager()
+
+    def execute(self, cmd, echo: bool = False): \
+            # pylint: disable=unused-argument
         """
         Raises:
             TortugaException
         """
 
-        if echo:
-            return tortugaSubprocess.executeCommandAndLogToStdOut(cmd)
-        else:
-            return tortugaSubprocess.executeCommand(cmd)
+        return tortugaSubprocess.executeCommand(cmd)
 
     def executeAndIgnoreFailure(self, cmd):
         return tortugaSubprocess.executeCommandAndIgnoreFailure(cmd)

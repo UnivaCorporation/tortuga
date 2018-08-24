@@ -46,7 +46,7 @@ class OsKitOps(object):
         self._cm = ConfigManager()
 
         self.pxeboot_dir = os.path.join(
-            getOsObjectFactory().getOsBootHostManager().getTftproot(),
+            getOsObjectFactory().getOsBootHostManager(self._cm).getTftproot(),
             'tortuga')
 
     @property

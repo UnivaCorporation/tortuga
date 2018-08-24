@@ -20,7 +20,6 @@ import select
 import signal
 from typing import Dict, List, Optional
 
-
 from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
 from tortuga.db.models.node import Node
 from tortuga.db.nodesDbHandler import NodesDbHandler
@@ -64,8 +63,11 @@ class Default(ResourceAdapter):
         'boot_host_hook_script': ra_settings.FileSetting()
     }
 
-    def __init__(self, addHostSession=None):
-        super(Default, self).__init__(addHostSession=addHostSession)
+    def __init__(self, addHostSession: Optional[str] = None) -> None:
+        super().__init__(addHostSession=addHostSession)
+
+        self._bhm = \
+            osUtility.getOsObjectFactory().getOsBootHostManager(self._cm)
 
         self.looping = False
 
@@ -137,12 +139,10 @@ class Default(ResourceAdapter):
             NodeNotFound
         """
 
-        bhm = osUtility.getOsObjectFactory().getOsBootHostManager()
-
         for dbNode, _ in nodeIdSoftwareProfileTuples:
             # Ensure PXE files are properly in place before triggering
             # the reboot.
-            bhm.setNodeForNetworkBoot(dbNode)
+            self._bhm.setNodeForNetworkBoot(self.session, dbNode)
 
         self.rebootNode([dbNode for dbNode, _ in nodeIdSoftwareProfileTuples])
 
@@ -160,8 +160,6 @@ class Default(ResourceAdapter):
     def activateIdleNode(self, node: Node, softwareProfileName: str,
                          softwareProfileChanged: bool):
             # pylint: disable=no-self-use
-        bhm = osUtility.getOsObjectFactory().getOsBootHostManager()
-
         if softwareProfileChanged:
             softwareprofile = \
                 SoftwareProfilesDbHandler().getSoftwareProfile(
@@ -172,9 +170,10 @@ class Default(ResourceAdapter):
         else:
             softwareprofile = None
 
-        bhm.writePXEFile(node,
-                            localboot=not softwareProfileChanged,
-                            softwareprofile=softwareprofile)
+        self._bhm.writePXEFile(
+            self.session, node, localboot=not softwareProfileChanged,
+            softwareprofile=softwareprofile
+        )
 
     def abort(self):
         self.looping = False
