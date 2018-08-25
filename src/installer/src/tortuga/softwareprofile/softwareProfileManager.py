@@ -835,13 +835,11 @@ class SoftwareProfileManager(TortugaObjectManager): \
         validation.validateProfileName(dstSoftwareProfileName)
 
         self._logger.info(
-            'Copying software profile [%s] to [%s]' % (
-                srcSoftwareProfileName, dstSoftwareProfileName))
+            'Copying software profile [%s] to [%s]',
+                srcSoftwareProfileName, dstSoftwareProfileName)
 
-        softwareProfile = self._sp_db_api.copySoftwareProfile(
+        self._sp_db_api.copySoftwareProfile(
             session, srcSoftwareProfileName, dstSoftwareProfileName)
-
-        return softwareProfile
 
     def getUsableNodes(self, session: Session, softwareProfileName):
         return self._sp_db_api.getUsableNodes(session, softwareProfileName)
