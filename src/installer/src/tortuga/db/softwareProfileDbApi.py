@@ -402,26 +402,6 @@ class SoftwareProfileDbApi(TortugaDbApi):
             self.getLogger().exception('%s' % ex)
             raise
 
-    def getNodeListByNodeStateAndSoftwareProfileName(
-            self, session: Session, nodeState: str,
-            softwareProfileName: str) -> TortugaObjectList:
-        """
-        Return a list of Node objects based on the specified node state
-        and software profile
-        """
-
-        try:
-            dbNodes = \
-                self._nodesDbHandler.getNodeListByNodeStateAndSoftwareProfileName(
-                    session, nodeState, softwareProfileName)
-
-            return self.getTortugaObjectList(Node, dbNodes)
-        except TortugaException:
-            raise
-        except Exception as ex:
-            self.getLogger().exception('%s' % ex)
-            raise
-
     def getPartitionList(
             self, session: Session, softwareProfileName: str) \
             -> TortugaObjectList:
