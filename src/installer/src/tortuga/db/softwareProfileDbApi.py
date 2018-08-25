@@ -14,7 +14,7 @@
 
 # pylint: disable=not-callable,multiple-statements,no-member
 
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 
 from sqlalchemy import func
 from sqlalchemy.orm.session import Session
@@ -682,7 +682,7 @@ class SoftwareProfileDbApi(TortugaDbApi):
         dbSoftwareProfile.isIdle = softwareProfile.getIsIdle()
 
         # Add partitions
-        partitions = {}
+        partitions: Dict[Tuple[str, str], Partition] = {}
         for partition in softwareProfile.getPartitions():
             # This is a new partition
             dbPartition = PartitionModel()
