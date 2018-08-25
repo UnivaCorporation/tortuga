@@ -791,7 +791,8 @@ class SoftwareProfileDbApi(TortugaDbApi):
 
         session.commit()
 
-    def getUsableNodes(self, session, name):
+    def getUsableNodes(self, session: Session, name: str) \
+            -> TortugaObjectList:
         """
         Return list of nodes with same software/hardware profile mapping
         as the specified software profile.
