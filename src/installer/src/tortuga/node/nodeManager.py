@@ -1144,7 +1144,8 @@ class NodeManager(TortugaObjectManager): \
 
             raise
 
-    def __process_activateNode_results(self, tmp_results, dstswprofilename):
+    def __process_activateNode_results(self, session: Session, tmp_results,
+                                       dstswprofilename):
         results = {}
 
         for key, values in tmp_results.items():
@@ -1172,7 +1173,7 @@ class NodeManager(TortugaObjectManager): \
             # For each 'addHostSession', call postAddHost()
             for addHostSession, hwprofile in addHostSessions.items():
                 AddHostManager().postAddHost(
-                    hwprofile, dstswprofilename, addHostSession)
+                    session, hwprofile, dstswprofilename, addHostSession)
 
         return results
 
@@ -1322,7 +1323,7 @@ class NodeManager(TortugaObjectManager): \
             session.commit()
 
             results = self.__process_activateNode_results(
-                activateNodeResults, softwareProfileName)
+                session, activateNodeResults, softwareProfileName)
 
             session.commit()
 
