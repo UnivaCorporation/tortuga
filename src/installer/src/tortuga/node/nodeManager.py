@@ -18,10 +18,10 @@ import time
 from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy.orm.session import Session
+
 from tortuga.addhost.addHostManager import AddHostManager
 from tortuga.addhost.addHostServerLocal import AddHostServerLocal
 from tortuga.config.configManager import ConfigManager
-from tortuga.db.hardwareProfileDbApi import HardwareProfileDbApi
 from tortuga.db.models.hardwareProfile import \
     HardwareProfile as HardwareProfileModel
 from tortuga.db.models.node import Node as NodeModel
@@ -66,7 +66,6 @@ class NodeManager(TortugaObjectManager): \
         super(NodeManager, self).__init__()
 
         self._nodeDbApi = NodeDbApi()
-        self._hardwareProfileDbApi = HardwareProfileDbApi()
         self._cm = ConfigManager()
         self._san = san.San()
         self._bhm = osUtility.getOsObjectFactory().getOsBootHostManager(
