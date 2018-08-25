@@ -48,7 +48,6 @@ from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.os_utility import osUtility
 from tortuga.resourceAdapter import resourceAdapterFactory
-from tortuga.san import san
 from tortuga.softwareprofile.softwareProfileManager import \
     SoftwareProfileManager
 from tortuga.sync.syncApi import SyncApi
@@ -67,7 +66,6 @@ class NodeManager(TortugaObjectManager): \
 
         self._nodeDbApi = NodeDbApi()
         self._cm = ConfigManager()
-        self._san = san.San()
         self._bhm = osUtility.getOsObjectFactory().getOsBootHostManager(
             self._cm)
         self._syncApi = SyncApi()
@@ -1432,61 +1430,6 @@ class NodeManager(TortugaObjectManager): \
             adapter.rebootNode(detailsDict['nodes'], bSoftReset)
 
         session.commit()
-
-    def addStorageVolume(self, nodeName: str, volume: str,
-                         isDirect: Optional[str] = "DEFAULT") -> None:
-        """
-        Raises:
-            VolumeDoesNotExist
-            UnsupportedOperation
-        """
-
-        node = self.getNode(nodeName, {'hardwareprofile': True})
-
-        # Only allow persistent volumes to be attached...
-        vol = self._san.getVolume(volume)
-        if vol is None:
-            raise VolumeDoesNotExist('Volume [%s] does not exist' % (volume))
-
-        if not vol.getPersistent():
-            raise UnsupportedOperation(
-                'Only persistent volumes can be attached')
-
-        api = resourceAdapterFactory.get_api(
-            node.getHardwareProfile().getResourceAdapter().getName())
-
-        if isDirect == "DEFAULT":
-            api.addVolumeToNode(node, volume)
-
-        api.addVolumeToNode(node, volume, isDirect)
-
-    def removeStorageVolume(self, nodeName: str, volume: str) -> None:
-        """
-        Raises:
-            VolumeDoesNotExist
-            UnsupportedOperation
-        """
-
-        node = self.getNode(nodeName, {'hardwareprofile': True})
-
-        api = resourceAdapterFactory.get_api(
-            node.getHardwareProfile().getResourceAdapter().getName())
-
-        vol = self._san.getVolume(volume)
-
-        if vol is None:
-            raise VolumeDoesNotExist(
-                'The volume [%s] does not exist' % (volume))
-
-        if not vol.getPersistent():
-            raise UnsupportedOperation(
-                'Only persistent volumes can be detached')
-
-        api.removeVolumeFromNode(node, volume)
-
-    def getStorageVolumes(self, session: Session, nodeName: str):
-        return self._san.getNodeVolumes(
-            self.getNode(session, nodeName).getName())
 
     def getNodesByNodeState(self, session, node_state: str,
                             optionDict: Optional[OptionDict] = None) \
