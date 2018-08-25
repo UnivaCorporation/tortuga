@@ -167,10 +167,10 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def updateNode(self, name: str, updateNodeRequest):
+    def updateNode(self, session: Session, name: str, updateNodeRequest: dict):
         try:
             return self._nodeManager.updateNode(
-                name, updateNodeRequest)
+                session, name, updateNodeRequest)
         except TortugaException:
             raise
         except Exception as ex:
