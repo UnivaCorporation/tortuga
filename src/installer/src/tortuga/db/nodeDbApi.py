@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=no-member,E0705
-
 from typing import Dict, List, Optional
 
 from sqlalchemy.orm.session import Session
