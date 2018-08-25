@@ -92,20 +92,6 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def getNode2(self, session: Session, name: str) -> NodeModel:
-        """
-        Get node by name
-        """
-        try:
-            return self._nodeManager.getNode2(session, name)
-        except TortugaException:
-            raise
-        except Exception as ex:
-            self.getLogger().exception(
-                'Fatal error retrieving node [{}]'.format(name))
-
-            raise TortugaException(exception=ex)
-
     def getInstallerNode(self, session,
                          optionDict: Optional[OptionDict] = None) \
             -> Node:
