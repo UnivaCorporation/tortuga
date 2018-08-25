@@ -43,7 +43,6 @@ from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
 from tortuga.exceptions.volumeDoesNotExist import VolumeDoesNotExist
 from tortuga.kit.actions import KitActionsManager
-from tortuga.kit.loader import load_kits
 from tortuga.objects.node import Node
 from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
@@ -74,8 +73,6 @@ class NodeManager(TortugaObjectManager): \
             self._cm)
         self._syncApi = SyncApi()
         self._nodesDbHandler = NodesDbHandler()
-
-        load_kits()
 
     def __validateHostName(self, hostname: str, name_format: str) -> None:
         """
