@@ -264,7 +264,8 @@ class NodeManager(TortugaObjectManager): \
 
         return nodes
 
-    def updateNode(self, session, nodeName, updateNodeRequest):
+    def updateNode(self, session: Session, nodeName: str,
+            updateNodeRequest: dict) -> None:
         """
         Calls updateNode() method of resource adapter
         """

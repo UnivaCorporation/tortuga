@@ -15,9 +15,11 @@
 # pylint: disable=no-member
 
 import datetime
+from typing import Optional
 
 import cherrypy
 from sqlalchemy.orm.session import Session
+
 from tortuga.addhost.addHostManager import AddHostManager
 from tortuga.db.models.nodeRequest import NodeRequest
 from tortuga.events.types import DeleteNodeRequestQueued
@@ -230,7 +232,8 @@ class NodeController(TortugaController):
     def updateNodeRequest(self, name):
         postdata = cherrypy.request.json
 
-        new_state = postdata['state'] if 'state' in postdata else None
+        new_state: Optional[str] = postdata['state'] \
+            if 'state' in postdata else None
 
         try:
             # If 'bootFrom' is not an int value, this will raise ValueError
