@@ -487,7 +487,8 @@ class SoftwareProfileDbApi(TortugaDbApi):
             raise
 
     def addUsableHardwareProfileToSoftwareProfile(
-            self, session: Session, hardwareProfileName, softwareProfileName):
+            self, session: Session, hardwareProfileName: str,
+            softwareProfileName: str) -> None:
         """
          Add hardwareProfile to softwareProfile
 
@@ -501,11 +502,10 @@ class SoftwareProfileDbApi(TortugaDbApi):
         """
 
         try:
-            swUsesHwId = self._softwareProfilesDbHandler.\
-                addUsableHardwareProfileToSoftwareProfile(
-                    session, hardwareProfileName, softwareProfileName)
+             self._softwareProfilesDbHandler.addUsableHardwareProfileToSoftwareProfile(
+                session, hardwareProfileName, softwareProfileName)
+
             session.commit()
-            return swUsesHwId
         except TortugaException:
             session.rollback()
             raise

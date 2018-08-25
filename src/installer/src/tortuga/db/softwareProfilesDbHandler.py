@@ -136,9 +136,9 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
             raise HardwareProfileNotFound(
                 'Hardware profile [%s] not found' % (hardwareProfileName))
 
-    def addUsableHardwareProfileToSoftwareProfile(self, session,
-                                                  hardwareProfileName,
-                                                  softwareProfileName):
+    def addUsableHardwareProfileToSoftwareProfile(
+            self, session: Session, hardwareProfileName: str,
+            softwareProfileName: str) -> None:
         """
         Add usable hardwareProfile to softwareProfile.
 

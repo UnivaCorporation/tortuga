@@ -814,14 +814,18 @@ class SoftwareProfileManager(TortugaObjectManager): \
         return self._sp_db_api.getPartitionList(
             session, softwareProfileName)
 
-    def addUsableHardwareProfileToSoftwareProfile(self, session: Session,
-                                                  hardwareProfileName,
-                                                  softwareProfileName):
-        self._logger.info(
-            'Mapping hardware profile [%s] to software profile [%s]' % (
-                hardwareProfileName, softwareProfileName))
+    def addUsableHardwareProfileToSoftwareProfile(
+            self, session: Session, hardwareProfileName: str,
+            softwareProfileName: str) -> None:
+        """
+        Map software profile to hardware profile
+        """
 
-        return self._sp_db_api.addUsableHardwareProfileToSoftwareProfile(
+        self._logger.info(
+            'Mapping hardware profile [%s] to software profile [%s]',
+                hardwareProfileName, softwareProfileName)
+
+        self._sp_db_api.addUsableHardwareProfileToSoftwareProfile(
             session, hardwareProfileName, softwareProfileName)
 
     def deleteUsableHardwareProfileFromSoftwareProfile(
@@ -836,7 +840,7 @@ class SoftwareProfileManager(TortugaObjectManager): \
 
         self._logger.info(
             'Copying software profile [%s] to [%s]',
-                srcSoftwareProfileName, dstSoftwareProfileName)
+            srcSoftwareProfileName, dstSoftwareProfileName)
 
         self._sp_db_api.copySoftwareProfile(
             session, srcSoftwareProfileName, dstSoftwareProfileName)

@@ -177,9 +177,9 @@ class SoftwareProfileApi(TortugaApi): \
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
 
-    def addUsableHardwareProfileToSoftwareProfile(self, session: Session,
-                                                  hardwareProfileName,
-                                                  softwareProfileName):
+    def addUsableHardwareProfileToSoftwareProfile(
+            self, session: Session, hardwareProfileName: str,
+            softwareProfileName: str) -> None:
         """
         Set useable hardware profile
 
@@ -191,9 +191,9 @@ class SoftwareProfileApi(TortugaApi): \
                 TortugaException
         """
         try:
-            return self._softwareProfileManager.addUsableHardwareProfileToSoftwareProfile(
+            self._softwareProfileManager.addUsableHardwareProfileToSoftwareProfile(
                 session, hardwareProfileName, softwareProfileName)
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
