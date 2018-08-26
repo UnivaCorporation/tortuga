@@ -15,14 +15,15 @@
 # pylint: disable=no-member
 
 import datetime
-from typing import Optional
 
 import cherrypy
+from marshmallow import Schema, ValidationError, fields, validates
 from sqlalchemy.orm.session import Session
 
 from tortuga.addhost.addHostManager import AddHostManager
 from tortuga.db.models.nodeRequest import NodeRequest
 from tortuga.events.types import DeleteNodeRequestQueued
+from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.exceptions.operationFailed import OperationFailed
 from tortuga.node import state
@@ -35,6 +36,18 @@ from tortuga.web_service.auth.decorators import authentication_required
 
 from .common import make_options_from_query_string, parse_tag_query_string
 from .tortugaController import TortugaController
+
+
+class UpdateNodeRequestSchema(Schema):
+    state = fields.String(255)
+    bootFrom = fields.Integer()
+
+    @validates('bootFrom')
+    def validates_bootFrom(self, value):
+        if value not in (0, 1):
+            raise ValidationError(
+                'bootFrom must be 0 (disk) or 1 (network)'
+            )
 
 
 class NodeController(TortugaController):
@@ -230,27 +243,35 @@ class NodeController(TortugaController):
     @cherrypy.tools.json_in()
     @authentication_required()
     def updateNodeRequest(self, name):
-        postdata = cherrypy.request.json
-
-        new_state: Optional[str] = postdata['state'] \
-            if 'state' in postdata else None
-
         try:
-            # If 'bootFrom' is not an int value, this will raise ValueError
-            bootFrom = int(postdata['bootFrom']) \
-                if 'bootFrom' in postdata and \
-                postdata['bootFrom'] is not None else None
+            request_data, errors = \
+                UpdateNodeRequestSchema().load(cherrypy.request.json)
+            if not errors:
+                result = self.app.node_api.updateNodeStatus(
+                    cherrypy.request.db,
+                    name,
+                    request_data['state']
+                    if 'state' in request_data else None,
+                    request_data['bootFrom']
+                    if 'bootFrom' in request_data else None
+                )
 
-            result = self.app.node_api.updateNodeStatus(
-                cherrypy.request.db, name, new_state, bootFrom)
+                response = {
+                    'changed': result,
+                }
+            else:
+                buf = 'Invalid argument(s): '
 
-            response = {
-                'changed': result,
-            }
+                for field, messages in errors.items():
+                    buf += '%s: %s' % (field, ', '.join(messages))
+
+                raise InvalidArgument(buf)
         except Exception as ex:  # noqa pylint: disable=broad-except
             self.getLogger().exception(
                 'node WS API updateNodeRequest() failed')
+
             self.handleException(ex)
+
             response = self.errorResponse(str(ex))
 
         return self.formatResponse(response)
