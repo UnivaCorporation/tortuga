@@ -110,8 +110,13 @@ def run_server(daemonize: bool = False, pidfile: str = None):
 
     if pidfile:
         plugins.PIDFile(cherrypy.engine, pidfile).subscribe()
+
     DatabasePlugin(cherrypy.engine).subscribe()
-    WebsocketPlugin(cherrypy.engine).subscribe()
+
+    WebsocketPlugin(
+        app.cm.getWebsocketScheme(),
+        app.cm.getWebsocketPort(),
+        cherrypy.engine).subscribe()
 
     #
     # Setup the signal handler to stop the application while running.
