@@ -25,6 +25,7 @@ from tortuga.db.models.nodeRequest import NodeRequest
 from tortuga.events.types import DeleteNodeRequestQueued
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.nodeNotFound import NodeNotFound
+from tortuga.exceptions.nodeTransferNotValid import NodeTransferNotValid
 from tortuga.exceptions.operationFailed import OperationFailed
 from tortuga.node import state
 from tortuga.node.nodeManager import NodeManager
@@ -48,6 +49,13 @@ class UpdateNodeRequestSchema(Schema):
             raise ValidationError(
                 'bootFrom must be 0 (disk) or 1 (network)'
             )
+
+
+class TransferNodesRequestSchema(Schema):
+    srcSoftwareProfile = fields.String(255)
+    dstSoftwareProfile = fields.String(255, required=True)
+    count = fields.Integer()
+    bForce = fields.Boolean(default=False)
 
 
 class NodeController(TortugaController):
@@ -122,12 +130,6 @@ class NodeController(TortugaController):
             'path': '/v1/identify-node',
             'action': 'getNodeByIpRequest',
             'method': ['GET']
-        },
-        {
-            'name': 'transferNode',
-            'path': '/v1/transfer-node/:(nodespec)',
-            'action': 'transferNode',
-            'method': ['PUT'],
         },
         {
             'name': 'transferNodes',
@@ -418,56 +420,41 @@ class NodeController(TortugaController):
 
         return self.formatResponse(response)
 
-    @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
     @authentication_required()
-    def transferNode(self, nodespec):
-        postdata = cherrypy.request.json
-
+    def transferNodes(self, **kwargs):
         try:
-            # TODO: add request validation here
+            request_data, errors = \
+                TransferNodesRequestSchema().load(cherrypy.request.json)
+            if errors:
+                buf = 'Invalid argument(s): '
 
-            nodeList = self.app.node_api.transferNode(
+                for field, messages in errors.items():
+                    buf += '%s: %s' % (field, ', '.join(messages))
+
+                raise InvalidArgument(buf)
+
+            nodespec = kwargs.get('nodespec')
+
+            self.app.node_api.transferNodes(
                 cherrypy.request.db,
-                nodespec, postdata['softwareProfileName'],
-                bForce=str2bool(postdata['bForce'])
-                if 'bForce' in postdata else False,
+                request_data['dstSoftwareProfile'],
+                count=request_data['count'] if not nodespec else None,
+                bForce=request_data.get('bForce', False),
+                nodespec=nodespec,
+                srcSoftwareProfile=request_data.get('srcSoftwareProfile'),
             )
 
-            response = nodeList.getCleanDict()
+            response = None
         except NodeNotFound as ex:
             self.handleException(ex)
             code = self.getTortugaStatusCode(ex)
             response = self.notFoundErrorResponse(str(ex), code)
-        except Exception as ex:  # noqa pylint: disable=broad-except
-            self.getLogger().exception(str(ex))
+        except NodeTransferNotValid as ex:
             self.handleException(ex)
+            code = self.getTortugaStatusCode(ex)
             response = self.errorResponse(str(ex))
-
-        return self.formatResponse(response)
-
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
-    @authentication_required()
-    def transferNodes(self):
-        postdata = cherrypy.request.json
-
-        try:
-            # TODO: add request validation here
-
-            nodeList = self.app.node_api.transferNodes(
-                cherrypy.request.db,
-                postdata['srcSoftwareProfile'],
-                postdata['dstSoftwareProfile'],
-                count=postdata['count'],
-                bForce=postdata['bForce']
-            )
-
-            response = nodeList.getCleanDict()
-        except NodeNotFound as ex:
-            self.handleException(ex)
-            code = self.getTortugaStatusCode(ex)
-            response = self.notFoundErrorResponse(str(ex), code)
         except Exception as ex:  # noqa pylint: disable=broad-except
             self.getLogger().exception(str(ex))
             self.handleException(ex)

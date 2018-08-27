@@ -193,31 +193,33 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def transferNode(self, session: Session, nodespec: str,
-                     softwareProfileName: str, bForce: Optional[bool] = False):
+    def transferNodes(self, session: Session,
+                      dstSoftwareProfile: str,
+                      *,
+                      count: Optional[int] = None,
+                      srcSoftwareProfile: Optional[str],
+                      bForce: Optional[bool] = False,
+                      nodespec: Optional[str] = None) -> dict:
         try:
-            return self._nodeManager.transferNode(
-                session, nodespec, softwareProfileName, bForce=bForce)
-        except TortugaException:
-            raise
-        except Exception as ex:
-            self.getLogger().exception(
-                'Fatal error transferring nodes matching nodespec'
-                ' [{}]'.format(nodespec))
+            if nodespec:
+                return self._nodeManager.transferNode(
+                    session, nodespec, dstSoftwareProfile, bForce=bForce
+                )
 
-            raise TortugaException(exception=ex)
-
-    def transferNodes(self, session: Session, srcSoftwareProfile: str,
-                      dstSoftwareProfile: str, count: int,
-                      bForce: Optional[bool] = False):
-        try:
             return self._nodeManager.transferNodes(
                 session, srcSoftwareProfile, dstSoftwareProfile, count,
-                bForce=bForce)
+                bForce=bForce
+            )
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('Fatal error transferring nodes')
+            if nodespec:
+                excmsg = 'Fatal error transferring nodes matching nodespec'
+                ' [{}]'.format(nodespec)
+            else:
+                excmsg = 'Fatal error transferring nodes'
+
+            self.getLogger().exception(excmsg)
 
             raise TortugaException(exception=ex)
 
