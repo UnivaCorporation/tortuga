@@ -15,9 +15,10 @@
 import cherrypy
 
 from .controllers.rootController import RootController
+from .app import app
 
 
-rootController = RootController()
+rootController = RootController(app)
 
 
 def setupRoutes():

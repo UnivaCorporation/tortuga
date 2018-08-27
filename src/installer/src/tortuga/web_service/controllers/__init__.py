@@ -29,7 +29,7 @@ from .resourceAdapterConfigurationController import \
 from .softwareProfileController import SoftwareProfileController
 from .tagController import TagController
 from .updateController import UpdateController
-
+from ..app import app
 
 #
 # Register web service controllers
@@ -64,7 +64,7 @@ def setup_routes():
     dispatcher = cherrypy.dispatch.RoutesDispatcher()
     dispatcher.mapper.explicit = False
     for controller_class in get_all_ws_controllers():
-        controller = controller_class()
+        controller = controller_class(app)
         for action in controller.actions:
             dispatcher.connect(
                 action['name'],
