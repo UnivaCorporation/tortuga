@@ -14,12 +14,18 @@
 
 import argparse
 import json
+import logging
+import os
+import time
 from typing import Any, Optional
 
 import yaml
 
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
 from tortuga.objects.osInfo import OsInfo
+
+
+logger = logging.getLogger(__name__)
 
 
 class ParseOperatingSystemArgAction(argparse.Action):
@@ -74,3 +80,21 @@ def pretty_print(data: Any, fmt: Optional[str] = None) -> None:
 
     # fallback to default
     print(yaml.safe_dump(data, default_flow_style=False))
+
+
+def wait_for_tortuga(timeout: int = 300):
+    """
+    Waits for Tortuga to finish booting before proceeding.
+
+    :param int timeout: how long to wait, in seconds, before timing out.
+
+    """
+    firstboot = '/.tortuga_firstboot'
+    deadline = time.time() + timeout
+    if os.path.exists(firstboot):
+        logger.warning('Waiting for Tortuga to finish starting...')
+        while os.path.exists(firstboot):
+            if time.time() > deadline:
+                raise Exception(
+                    'Tortuga failed to start in the specified wait period')
+            time.sleep(1)
