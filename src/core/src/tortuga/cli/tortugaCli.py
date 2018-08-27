@@ -24,6 +24,7 @@ from abc import ABCMeta, abstractmethod
 
 from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.tortugaException import TortugaException
+from .utils import wait_for_tortuga
 
 
 def check_for_root(cls):
@@ -273,8 +274,10 @@ class TortugaCli(metaclass=ABCMeta):
     def run(self):
         """
         Invoke runCommand() in derivative class and handle exceptions.
+
         """
         try:
+            wait_for_tortuga()
             self.runCommand()
         except TortugaException as ex:
             print('%s' % (ex.getErrorMessage()))
