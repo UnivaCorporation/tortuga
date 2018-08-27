@@ -144,19 +144,19 @@ def run_server(daemonize: bool = False, pidfile: str = None):
 def error_page_400(status, message, traceback, version): \
         # pylint: disable=unused-argument
     cherrypy.response.headers['Content-Type'] = 'application/json'
-    return json.dumps(TortugaController().errorResponse(message))
+    return json.dumps(TortugaController(app).errorResponse(message))
 
 
 def error_page_404(status, message, traceback, version): \
         # pylint: disable=unused-argument
     cherrypy.response.headers['Content-Type'] = 'application/json'
     return json.dumps(
-        TortugaController().errorResponse(message, http_status=404))
+        TortugaController(app).errorResponse(message, http_status=404))
 
 
 def handle_error():
     cherrypy.response.headers['Content-Type'] = 'application/json'
-    return json.dumps(TortugaController().errorResponse(
+    return json.dumps(TortugaController(app).errorResponse(
         'Internal error', http_status=500))
 
 
