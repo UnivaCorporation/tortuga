@@ -12,10 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=no-member
+
 import base64
 from logging import getLogger
+from typing import Tuple
 
 import cherrypy
+
 from tortuga.auth.methods import (AuthenticationMethod,
                                   JwtAuthenticationMethod,
                                   UsernamePasswordAuthenticationMethod)
@@ -25,9 +29,10 @@ from tortuga.exceptions.authenticationFailed import AuthenticationFailed
 logger = getLogger(__name__)
 
 
-class AuthorizationHeaderMixin:
+class AuthorizationHeaderMixin: \
+        # pylint: disable=too-few-public-methods
     @staticmethod
-    def parse_authorization_header() -> (str, str):
+    def parse_authorization_header() -> Tuple[str, str]:
         """
         Parses an authorization header.
 
@@ -82,7 +87,8 @@ class HttpBasicAuthenticationMethod(AuthorizationHeaderMixin,
 
         return super().do_authentication(username=username, password=password)
 
-    def parse_username_password(self, encoded: str) -> (str, str):
+    def parse_username_password(self, encoded: str) -> Tuple[str, str]: \
+            # pylint: disable=no-self-use
         """
         Parses an base64 encoded header value and extracts the username
         and password.
