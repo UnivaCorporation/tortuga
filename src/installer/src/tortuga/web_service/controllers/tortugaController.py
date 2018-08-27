@@ -23,7 +23,7 @@ from tortuga.utility import tortugaStatus
 from tortuga.types.application import Application
 
 
-class TortugaController(object):
+class TortugaController:
     """
     Base controller class.
 
@@ -39,9 +39,10 @@ class TortugaController(object):
     #    }
     #
     actions = []
-    app = Application()
 
-    def __init__(self):
+    def __init__(self, app: Application) -> None:
+        self.app = app
+
         self._logger = logging.getLogger(
             'tortuga.web_service.%s' % (self.__class__.__name__))
         self._logger.addHandler(logging.NullHandler())

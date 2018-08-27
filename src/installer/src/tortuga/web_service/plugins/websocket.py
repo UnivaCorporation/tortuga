@@ -19,11 +19,12 @@ import ssl
 import threading
 
 import cherrypy
-from cherrypy.process import plugins
 import websockets
+from cherrypy.process import plugins
 
-from tortuga.config.configManager import ConfigManager
 from tortuga.web_service.websocket.state_manager import StateManager
+
+from ..app import app
 
 
 logger = logging.getLogger(__name__)
@@ -36,7 +37,7 @@ class WebsocketPlugin(plugins.SimplePlugin):
     """
     def __init__(self, bus):
         super().__init__(bus)
-        self._cm = ConfigManager()
+
         self._loop: asyncio.AbstractEventLoop = None
         self._thread: threading.Thread = None
 
@@ -61,8 +62,8 @@ class WebsocketPlugin(plugins.SimplePlugin):
         self._loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self._loop)
 
-        scheme = self._cm.getWebsocketScheme()
-        port = self._cm.getWebsocketPort()
+        scheme = app.cm.getWebsocketScheme()
+        port = app.cm.getWebsocketPort()
 
         try:
             if scheme == 'wss':

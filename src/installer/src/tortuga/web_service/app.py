@@ -12,26 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import cherrypy
-
-from .controllers.rootController import RootController
-from .app import app
+from tortuga.types.application import Application
 
 
-rootController = RootController(app)
-
-
-def setupRoutes():
-    dispatcher = cherrypy.dispatch.RoutesDispatcher()
-    dispatcher.mapper.explicit = False
-
-    for action in rootController.actions:
-        dispatcher.connect(
-            action['name'],
-            action['path'],
-            action=action['action'],
-            controller=rootController,
-            conditions=dict(method=action['method'])
-        )
-
-    return dispatcher
+# global tortugawsd application context
+app = Application()

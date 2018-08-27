@@ -15,7 +15,9 @@
 import cherrypy
 
 from tortuga.sync.syncApi import SyncApi
+from tortuga.types.application import Application
 from tortuga.web_service.auth.decorators import authentication_required
+
 from .tortugaController import TortugaController
 
 
@@ -33,8 +35,8 @@ class UpdateController(TortugaController):
         },
     ]
 
-    def __init__(self):
-        super(UpdateController, self).__init__()
+    def __init__(self, app: Application) -> None:
+        super().__init__(app)
 
         self._syncApi = SyncApi()
 

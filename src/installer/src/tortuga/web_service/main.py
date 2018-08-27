@@ -24,10 +24,11 @@ from pathlib import Path
 
 import cherrypy
 from cherrypy.process import plugins
+
 from tortuga.kit.loader import load_kits
-from tortuga.types.application import Application
 
 from . import controllers, controllers_v2, rootRouteMapper
+from .app import app
 from .auth import methods as auth_methods
 from .auth.authenticator import CherryPyAuthenticator
 from .controllers.tortugaController import TortugaController
@@ -36,11 +37,8 @@ from .plugins.websocket import WebsocketPlugin
 from .tools.database import DatabaseTool
 
 
-_app = Application()
-
-
 # read logging configuration
-log_conf_file = Path(_app.cm.getEtcDir()) / 'tortugawsd.log.conf'
+log_conf_file = Path(app.cm.getEtcDir()) / 'tortugawsd.log.conf'
 if log_conf_file.exists():
     logging.config.fileConfig(str(log_conf_file))
 
@@ -165,7 +163,7 @@ def handle_error():
 def main():
     p = argparse.ArgumentParser()
 
-    wsPort = _app.cm.getAdminPort()
+    wsPort = app.cm.getAdminPort()
 
     p.add_argument('-d', action="store_true",
                    dest='daemonize', help="run the server as a daemon")
@@ -230,7 +228,7 @@ def main():
         cherrypy.config.update({
             'server.ssl_module': 'builtin',
             'server.ssl_certificate_chain': os.path.join(
-                _app.cm.getEtcDir(), 'CA/ca.pem'),
+                app.cm.getEtcDir(), 'CA/ca.pem'),
             'server.ssl_certificate': args.sslCert,
             'server.ssl_private_key': args.sslKey,
         })
