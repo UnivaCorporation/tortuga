@@ -18,6 +18,8 @@ from logging import getLogger
 import pkgutil
 from typing import List, Optional, Type
 
+from .utils import wait_for_tortuga
+
 
 logger = getLogger(__name__)
 
@@ -220,6 +222,7 @@ class Cli(Command):
 
         """
         try:
+            wait_for_tortuga()
             args = self.parser.parse_args()
             self.pre_execute(args)
             args.command.execute(args)

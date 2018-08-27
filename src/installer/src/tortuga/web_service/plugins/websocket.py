@@ -17,12 +17,12 @@ import logging
 import os
 import ssl
 import threading
+from typing import Optional
 
 import cherrypy
-from cherrypy.process import plugins
 import websockets
+from cherrypy.process import plugins
 
-from tortuga.config.configManager import ConfigManager
 from tortuga.web_service.websocket.state_manager import StateManager
 
 
@@ -34,11 +34,14 @@ class WebsocketPlugin(plugins.SimplePlugin):
     A CherryPy plugin that opens a websocket for sending event notifications.
 
     """
-    def __init__(self, bus):
+    def __init__(self, scheme: str, port: int, bus) -> None:
         super().__init__(bus)
-        self._cm = ConfigManager()
-        self._loop: asyncio.AbstractEventLoop = None
-        self._thread: threading.Thread = None
+
+        self.scheme = scheme
+        self.port = port
+
+        self._loop: Optional[asyncio.AbstractEventLoop] = None
+        self._thread: Optional[threading.Thread] = None
 
     def start(self):
         self._thread = threading.Thread(target=self.worker, daemon=True)
@@ -61,18 +64,16 @@ class WebsocketPlugin(plugins.SimplePlugin):
         self._loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self._loop)
 
-        scheme = self._cm.getWebsocketScheme()
-        port = self._cm.getWebsocketPort()
-
         try:
-            if scheme == 'wss':
-                server = self._start_secure(port=port)
+            if self.scheme == 'wss':
+                server = self._start_secure()
 
-            elif scheme == 'ws':
-                server = self._start_insecure(port=port)
+            elif self.scheme == 'ws':
+                server = self._start_insecure()
 
             else:
-                raise Exception('Unknown websocket scheme: {}'.format(scheme))
+                raise Exception(
+                    'Unknown websocket scheme: {}'.format(self.scheme))
 
         except Exception as ex:
             logger.error(str(ex))
@@ -83,13 +84,15 @@ class WebsocketPlugin(plugins.SimplePlugin):
         self._loop.run_until_complete(server)
         self._loop.run_forever()
 
-    def _start_secure(self, port: int) -> websockets.WebSocketServerProtocol:
+    def _start_secure(self) -> websockets.WebSocketServerProtocol:
         logger.debug(
-            'Starting websocket with SSL/TLS enabled on port {}'.format(port))
+            'Starting websocket with SSL/TLS enabled on port {}'.format(
+                self.port))
 
         ssl_context = self._get_ssl_context()
 
-        return websockets.serve(websocket_handler, port=port, ssl=ssl_context)
+        return websockets.serve(
+            websocket_handler, port=self.port, ssl=ssl_context)
 
     def _get_ssl_context(self) -> ssl.SSLContext:
         cherrypy_cert = cherrypy.config.get('server.ssl_certificate', '')
@@ -110,12 +113,12 @@ class WebsocketPlugin(plugins.SimplePlugin):
 
         return ssl_context
 
-    def _start_insecure(self, port: int) -> websockets.WebSocketServerProtocol:
+    def _start_insecure(self) -> websockets.WebSocketServerProtocol:
         logger.debug(
             'Starting websocket with SSL/TLS disabled on port {}'.format(
-                port))
+                self.port))
 
-        return websockets.serve(websocket_handler, port=port)
+        return websockets.serve(websocket_handler, port=self.port)
 
 
 async def websocket_handler(websocket, path):

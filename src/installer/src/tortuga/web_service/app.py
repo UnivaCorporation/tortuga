@@ -12,30 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import cherrypy
-
-from tortuga.web_service.auth.decorators import authentication_required
-
-from .tortugaController import TortugaController
+from tortuga.types.application import Application
 
 
-class RootController(TortugaController):
-    """
-    Root controller class
-
-    """
-    actions = [
-        {
-            'name': 'getNodeList',
-            'path': '/ping',
-            'action': 'ping',
-            'method': ['GET']
-        },
-    ]
-
-    @cherrypy.tools.json_out()
-    @authentication_required()
-    def ping(self, **kwargs):
-        """
-        """
-        return {'message': 'hello'}
+# global tortugawsd application context
+app = Application()

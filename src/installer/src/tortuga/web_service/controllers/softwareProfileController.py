@@ -23,6 +23,7 @@ from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.softwareprofile.softwareProfileApi import SoftwareProfileApi
 from tortuga.softwareprofile.softwareProfileManager import \
     SoftwareProfileManager
+from tortuga.types.application import Application
 from tortuga.utility.helper import str2bool
 from tortuga.web_service.auth.decorators import authentication_required
 
@@ -149,8 +150,8 @@ class SoftwareProfileController(TortugaController):
         },
     ]
 
-    def __init__(self):
-        TortugaController.__init__(self)
+    def __init__(self, app: Application) -> None:
+        super().__init__(app)
 
         self._softwareProfileManager = SoftwareProfileManager()
 
