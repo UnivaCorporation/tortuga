@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=no-member
-
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.wsapi.nodeWsApi import NodeWsApi
 
@@ -24,16 +22,22 @@ class TransferNodeCli(TortugaCli):
     """
 
     def parseArgs(self, usage=None):
-        self.addOption(
-            '--node', dest='nodeName', metavar='NAME',
-            help=_('Name of node to transfer'))
-        self.addOption(
-            '--count', '-n', dest='nodeCount', metavar='COUNT',
+        excl_group = \
+            self.getParser().add_mutually_exclusive_group(required=True)
+
+        excl_group.add_argument(
+            '--node', dest='nodespec', metavar='NODESPEC',
+            help=_('Name of node(s) to transfer'))
+
+        excl_group.add_argument(
+            '--count', '-n', metavar='COUNT',
             help=_('Number of nodes to transfer'), type=int)
+
         self.addOption(
             '--src-software-profile',
             dest='srcSoftwareProfileName', metavar='NAME',
             help=_('Source software profile'))
+
         self.addOption(
             '--software-profile', dest='softwareProfileName',
             required=True, metavar='NAME',
@@ -45,6 +49,13 @@ class TransferNodeCli(TortugaCli):
 
         super().parseArgs(usage=usage)
 
+        if self.getArgs().nodespec and \
+                self.getArgs().srcSoftwareProfileName:
+            self.getParser().error(
+                'argument --node: not allowed with argument:'
+                ' --src-software-profile'
+            )
+
     def runCommand(self):
         self.parseArgs('''
 Transfer nodes from one software profile to
@@ -52,44 +63,21 @@ another. This operation may need a reinstall of the node to apply
 the new software profile.
 ''')
 
-        nodeName = self.getArgs().nodeName
-        nodeCount = self.getArgs().nodeCount
-        dstSoftwareProfileName = self.getArgs().softwareProfileName
-        srcSoftwareProfileName = self.getArgs().srcSoftwareProfileName
+        api = NodeWsApi(
+            username=self.getUsername(),
+            password=self.getPassword(),
+            baseurl=self.getUrl(),
+            verify=self._verify
+        )
 
-        if nodeName:
-            if nodeCount:
-                self.usage(_("Can't use --count option with --node option"))
-            if srcSoftwareProfileName:
-                self.usage(
-                    _("Can't use --src-software-profile option with"
-                      " --node option"))
-
-        if not nodeName:
-            if not nodeCount:
-                self.usage(
-                    _("Must use --count option when not using --node"
-                      " option"))
-
-            # if not srcSoftwareProfileName:
-            #     self.usage(
-            #         _("Must use --src-software-profile option when not"
-            #           " using --node option"))
-
-        api = NodeWsApi(username=self.getUsername(),
-                        password=self.getPassword(),
-                        baseurl=self.getUrl(),
-                        verify=self._verify)
-
-        if nodeName:
-            api.transferNode(
-                nodeName, dstSoftwareProfileName,
-                bForce=self.getArgs().force)
-        else:
-            # Transfer 1 or more nodes from a source software profile
-            api.transferNodes(
-                srcSoftwareProfileName, dstSoftwareProfileName, nodeCount,
-                bForce=self.getArgs().force)
+        api.transferNodes(
+            self.getArgs().softwareProfileName,
+            srcSoftwareProfile=self.getArgs().srcSoftwareProfileName,
+            count=self.getArgs().count
+            if not self.getArgs().nodespec else None,
+            bForce=self.getArgs().force,
+            nodespec=self.getArgs().nodespec,
+        )
 
 
 def main():

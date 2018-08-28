@@ -17,11 +17,15 @@
 import datetime
 
 import cherrypy
+from marshmallow import Schema, ValidationError, fields, validates
 from sqlalchemy.orm.session import Session
+
 from tortuga.addhost.addHostManager import AddHostManager
 from tortuga.db.models.nodeRequest import NodeRequest
 from tortuga.events.types import DeleteNodeRequestQueued
+from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.nodeNotFound import NodeNotFound
+from tortuga.exceptions.nodeTransferNotValid import NodeTransferNotValid
 from tortuga.exceptions.operationFailed import OperationFailed
 from tortuga.node import state
 from tortuga.node.nodeManager import NodeManager
@@ -33,6 +37,25 @@ from tortuga.web_service.auth.decorators import authentication_required
 
 from .common import make_options_from_query_string, parse_tag_query_string
 from .tortugaController import TortugaController
+
+
+class UpdateNodeRequestSchema(Schema):
+    state = fields.String(255)
+    bootFrom = fields.Integer()
+
+    @validates('bootFrom')
+    def validates_bootFrom(self, value):
+        if value not in (0, 1):
+            raise ValidationError(
+                'bootFrom must be 0 (disk) or 1 (network)'
+            )
+
+
+class TransferNodesRequestSchema(Schema):
+    srcSoftwareProfile = fields.String(255)
+    dstSoftwareProfile = fields.String(255, required=True)
+    count = fields.Integer()
+    bForce = fields.Boolean(default=False)
 
 
 class NodeController(TortugaController):
@@ -107,12 +130,6 @@ class NodeController(TortugaController):
             'path': '/v1/identify-node',
             'action': 'getNodeByIpRequest',
             'method': ['GET']
-        },
-        {
-            'name': 'transferNode',
-            'path': '/v1/transfer-node/:(nodespec)',
-            'action': 'transferNode',
-            'method': ['PUT'],
         },
         {
             'name': 'transferNodes',
@@ -228,26 +245,35 @@ class NodeController(TortugaController):
     @cherrypy.tools.json_in()
     @authentication_required()
     def updateNodeRequest(self, name):
-        postdata = cherrypy.request.json
-
-        new_state = postdata['state'] if 'state' in postdata else None
-
         try:
-            # If 'bootFrom' is not an int value, this will raise ValueError
-            bootFrom = int(postdata['bootFrom']) \
-                if 'bootFrom' in postdata and \
-                postdata['bootFrom'] is not None else None
+            request_data, errors = \
+                UpdateNodeRequestSchema().load(cherrypy.request.json)
+            if not errors:
+                result = self.app.node_api.updateNodeStatus(
+                    cherrypy.request.db,
+                    name,
+                    request_data['state']
+                    if 'state' in request_data else None,
+                    request_data['bootFrom']
+                    if 'bootFrom' in request_data else None
+                )
 
-            result = self.app.node_api.updateNodeStatus(
-                cherrypy.request.db, name, new_state, bootFrom)
+                response = {
+                    'changed': result,
+                }
+            else:
+                buf = 'Invalid argument(s): '
 
-            response = {
-                'changed': result,
-            }
+                for field, messages in errors.items():
+                    buf += '%s: %s' % (field, ', '.join(messages))
+
+                raise InvalidArgument(buf)
         except Exception as ex:  # noqa pylint: disable=broad-except
             self.getLogger().exception(
                 'node WS API updateNodeRequest() failed')
+
             self.handleException(ex)
+
             response = self.errorResponse(str(ex))
 
         return self.formatResponse(response)
@@ -394,56 +420,41 @@ class NodeController(TortugaController):
 
         return self.formatResponse(response)
 
-    @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
     @authentication_required()
-    def transferNode(self, nodespec):
-        postdata = cherrypy.request.json
-
+    def transferNodes(self, **kwargs):
         try:
-            # TODO: add request validation here
+            request_data, errors = \
+                TransferNodesRequestSchema().load(cherrypy.request.json)
+            if errors:
+                buf = 'Invalid argument(s): '
 
-            nodeList = self.app.node_api.transferNode(
+                for field, messages in errors.items():
+                    buf += '%s: %s' % (field, ', '.join(messages))
+
+                raise InvalidArgument(buf)
+
+            nodespec = kwargs.get('nodespec')
+
+            self.app.node_api.transferNodes(
                 cherrypy.request.db,
-                nodespec, postdata['softwareProfileName'],
-                bForce=str2bool(postdata['bForce'])
-                if 'bForce' in postdata else False,
+                request_data['dstSoftwareProfile'],
+                count=request_data['count'] if not nodespec else None,
+                bForce=request_data.get('bForce', False),
+                nodespec=nodespec,
+                srcSoftwareProfile=request_data.get('srcSoftwareProfile'),
             )
 
-            response = nodeList.getCleanDict()
+            response = None
         except NodeNotFound as ex:
             self.handleException(ex)
             code = self.getTortugaStatusCode(ex)
             response = self.notFoundErrorResponse(str(ex), code)
-        except Exception as ex:  # noqa pylint: disable=broad-except
-            self.getLogger().exception(str(ex))
+        except NodeTransferNotValid as ex:
             self.handleException(ex)
+            code = self.getTortugaStatusCode(ex)
             response = self.errorResponse(str(ex))
-
-        return self.formatResponse(response)
-
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
-    @authentication_required()
-    def transferNodes(self):
-        postdata = cherrypy.request.json
-
-        try:
-            # TODO: add request validation here
-
-            nodeList = self.app.node_api.transferNodes(
-                cherrypy.request.db,
-                postdata['srcSoftwareProfile'],
-                postdata['dstSoftwareProfile'],
-                count=postdata['count'],
-                bForce=postdata['bForce']
-            )
-
-            response = nodeList.getCleanDict()
-        except NodeNotFound as ex:
-            self.handleException(ex)
-            code = self.getTortugaStatusCode(ex)
-            response = self.notFoundErrorResponse(str(ex), code)
         except Exception as ex:  # noqa pylint: disable=broad-except
             self.getLogger().exception(str(ex))
             self.handleException(ex)

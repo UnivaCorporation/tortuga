@@ -14,7 +14,6 @@
 
 # pylint: disable=no-member
 
-import json
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -77,17 +76,17 @@ class NodeWsApi(TortugaWsApi):
                 for cDict in responseDict['nodes']:
                     node = tortuga.objects.node.Node.getFromDict(cDict)
                     nodeList.append(node)
-                    
+
             else:
                 node = tortuga.objects.node.Node.getFromDict(
                     responseDict.get('node'))
                 nodeList.append(node)
 
             return nodeList
-        
+
         except TortugaException:
             raise
-        
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -116,10 +115,10 @@ class NodeWsApi(TortugaWsApi):
 
             return tortuga.objects.node.Node.getFromDict(
                 responseDict.get('nodes')[0])
-        
+
         except TortugaException:
             raise
-        
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -134,13 +133,13 @@ class NodeWsApi(TortugaWsApi):
 
         try:
             responseDict = self.get(url)
-            
+
             return tortuga.objects.node.Node.getFromDict(
                 responseDict['nodes'][0])
-        
+
         except TortugaException:
             raise
-        
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -160,10 +159,10 @@ class NodeWsApi(TortugaWsApi):
 
             return tortuga.objects.node.Node.getFromDict(
                 responseDict.get('node'))
-        
+
         except TortugaException:
             raise
-        
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -176,10 +175,10 @@ class NodeWsApi(TortugaWsApi):
             responseDict = self.delete(url)
 
             return responseDict
-        
+
         except TortugaException:
             raise
-        
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -196,10 +195,10 @@ class NodeWsApi(TortugaWsApi):
 
             return tortuga.objects.node.Node.getFromDict(
                 responseDict.get('nodes')[0])
-        
+
         except TortugaException:
             raise
-        
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -223,10 +222,10 @@ class NodeWsApi(TortugaWsApi):
 
         try:
             self.put(url, postdata)
-            
+
         except TortugaException:
             raise
-        
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -257,10 +256,10 @@ class NodeWsApi(TortugaWsApi):
                 getFromDict(pInfoDict)
 
             return info
-        
+
         except TortugaException:
             raise
-        
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -275,10 +274,10 @@ class NodeWsApi(TortugaWsApi):
             responseDict = self.get(url)
 
             return responseDict
-        
+
         except TortugaException:
             raise
-        
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -298,10 +297,10 @@ class NodeWsApi(TortugaWsApi):
             responseDict = self.post(url, postdata)
 
             return responseDict
-        
+
         except TortugaException:
             raise
-        
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -320,10 +319,10 @@ class NodeWsApi(TortugaWsApi):
 
         try:
             self.put(url, {})
-            
+
         except TortugaException:
             raise
-        
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -338,10 +337,10 @@ class NodeWsApi(TortugaWsApi):
 
         try:
             self.get(url)
-            
+
         except TortugaException:
             raise
-        
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -358,10 +357,10 @@ class NodeWsApi(TortugaWsApi):
 
         try:
             self.put(url)
-            
+
         except TortugaException:
             raise
-        
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
@@ -377,53 +376,50 @@ class NodeWsApi(TortugaWsApi):
             responseDict = self.get(url)
 
             return responseDict
-        
+
         except TortugaException:
             raise
-        
+
         except Exception as ex:
             raise TortugaException(exception=ex)
 
     def transferNode(self, nodespec: str, softwareProfileName: str,
                      bForce: bool = False):
         """
-        Transfer named node
+        Transfer nodes matching nodespec
         """
 
-        url = 'transfer-node/{}'.format(urllib.parse.quote_plus(nodespec))
+        return self.transferNodes(
+            softwareProfileName, nodespec=nodespec, bForce=bForce)
 
-        request = {
-            'softwareProfileName': softwareProfileName,
-            'bForce': bForce,
-        }
-
-        try:
-            return self.put(url, request)[1]
-        
-        except Exception as exc:  # noqa pylint: disable=broad-except
-            if not isinstance(exc, TortugaException):
-                raise TortugaException(exception=exc)
-            raise
-
-    def transferNodes(self, srcSoftwareProfile: str,
-                      dstSoftwareProfile: str, count: int,
-                      bForce: bool = False):
+    def transferNodes(self, dstSoftwareProfile: str, *,
+                      srcSoftwareProfile: Optional[str] = None,
+                      count: Optional[int] = None,
+                      bForce: bool = False,
+                      nodespec: Optional[str] = None):
         """
         Transfer node(s) between software profiles
         """
 
         url = 'transfer-nodes/'
 
+        if nodespec:
+            url += '?nodespec=%s' % urllib.parse.quote(nodespec)
+
         request = {
-            'srcSoftwareProfile': srcSoftwareProfile,
             'dstSoftwareProfile': dstSoftwareProfile,
-            'count': count,
             'bForce': bForce,
         }
 
+        if count is not None:
+            request['count'] = count
+
+        if srcSoftwareProfile:
+            request['srcSoftwareProfile'] = srcSoftwareProfile
+
         try:
-            return self.put(url, request)[1]
-        
+            return self.put(url, request)
+
         except Exception as exc:  # noqa pylint: disable=broad-except
             if not isinstance(exc, TortugaException):
                 raise TortugaException(exception=exc)

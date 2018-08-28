@@ -12,15 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 import sqlalchemy.exc
-import tortuga.objects.nic
 from sqlalchemy.orm.session import Session
+
+import tortuga.objects.nic
 from tortuga.config.configManager import ConfigManager
 from tortuga.db.adminsDbHandler import AdminsDbHandler
 from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
 from tortuga.db.hardwareProfilesDbHandler import HardwareProfilesDbHandler
+from tortuga.db.models.network import Network
+from tortuga.db.models.nic import Nic
+from tortuga.db.models.node import Node
 from tortuga.db.networkDevicesDbHandler import NetworkDevicesDbHandler
 from tortuga.db.networksDbHandler import NetworksDbHandler
 from tortuga.db.nicsDbHandler import NicsDbHandler
@@ -95,9 +99,9 @@ class HardwareProfileDbApi(TortugaDbApi):
             self.getLogger().exception('%s' % ex)
             raise
 
-    def getHardwareProfileById(self, session: Session,
-                               hardwareProfileId: int,
-                               optionDict: Optional[OptionDict] = None):
+    def getHardwareProfileById(
+            self, session: Session, hardwareProfileId: int,
+            optionDict: Optional[OptionDict] = None) -> HardwareProfile:
         """
         Get hardwareProfile from the db.
 
@@ -125,7 +129,7 @@ class HardwareProfileDbApi(TortugaDbApi):
 
     def getHardwareProfileList(
             self, session: Session, optionDict: Optional[OptionDict] = None,
-            tags: Optional[Tags] = None):
+            tags: Optional[Tags] = None) -> TortugaObjectList:
         """
         Get list of all available hardwareProfiles from the db.
 
@@ -160,10 +164,9 @@ class HardwareProfileDbApi(TortugaDbApi):
             self.getLogger().exception('%s' % ex)
             raise
 
-    def setIdleSoftwareProfile(self, session: Session,
-                               hardwareProfileName: str,
-                               softwareProfileName: Optional[str] = None) \
-            -> None:
+    def setIdleSoftwareProfile(
+            self, session: Session, hardwareProfileName: str,
+            softwareProfileName: Optional[str] = None) -> None:
         """
         Sets the idle software profile
 
@@ -193,8 +196,9 @@ class HardwareProfileDbApi(TortugaDbApi):
             self.getLogger().exception('%s' % ex)
             raise
 
-    def addHardwareProfile(self, session: Session,
-                           hardwareProfile: HardwareProfile):
+    def addHardwareProfile(
+            self, session: Session,
+            hardwareProfile: HardwareProfile) -> None:
         """
         Insert hardwareProfile into the db.
 
@@ -305,7 +309,9 @@ class HardwareProfileDbApi(TortugaDbApi):
 
         session.commit()
 
-    def addAdmin(self, session: Session, hardwareProfileName, adminUsername):
+    def addAdmin(
+            self, session: Session, hardwareProfileName,
+            adminUsername: str) -> None:
         """
         Add an admin to this hardware profile
 
@@ -336,7 +342,9 @@ class HardwareProfileDbApi(TortugaDbApi):
             self.getLogger().exception('%s' % ex)
             raise
 
-    def deleteAdmin(self, session: Session, hardwareProfileName, adminUsername):
+    def deleteAdmin(
+            self, session: Session, hardwareProfileName: str,
+            adminUsername: str) -> None:
         """
         Delete an admin from a hardware profile
 
@@ -366,7 +374,9 @@ class HardwareProfileDbApi(TortugaDbApi):
             self.getLogger().exception('%s' % ex)
             raise
 
-    def updateHardwareProfile(self, session: Session, hardwareProfileObject):
+    def updateHardwareProfile(
+            self, session: Session,
+            hardwareProfileObject: HardwareProfile) -> None:
         """
         Update Hardware Profile Object
         """
@@ -388,14 +398,14 @@ class HardwareProfileDbApi(TortugaDbApi):
             self.getLogger().exception('%s' % ex)
             raise
 
-    def __getInstallerNode(self, session):
+    def __getInstallerNode(self, session: Session) -> Node:
         return self._nodesDbHandler.getNode(
             session, ConfigManager().getInstaller())
 
-    def __get_provisioning_nics(self, session):
+    def __get_provisioning_nics(self, session: Session) -> List[Nic]:
         return self.__getInstallerNode(session).nics
 
-    def __get_all_networks(self, session):
+    def __get_all_networks(self, session: Session) -> List[Network]:
         return self._networksDbHandler.getNetworkList(session)
 
     def __populateHardwareProfile(
@@ -565,14 +575,16 @@ class HardwareProfileDbApi(TortugaDbApi):
                     break
             else:
                 raise NicNotFound(
-                    'Provisioning NIC with IP [%s] not found' % (nic.getIp()))
+                    'Provisioning NIC with IP [%s] not found' % nic.getIp())
 
             if dbNic not in dbHardwareProfile.nics:
                 dbHardwareProfile.nics.append(dbNic)
 
         return dbHardwareProfile
 
-    def setProvisioningNic(self, session: Session, hardwareProfileName, nicId):
+    def setProvisioningNic(
+            self, session: Session, hardwareProfileName: str,
+            nicId: int) -> None:
         try:
             dbNic = self._nicsDbHandler.getNicById(session, nicId)
 
@@ -593,7 +605,8 @@ class HardwareProfileDbApi(TortugaDbApi):
             self.getLogger().exception('%s' % ex)
             raise
 
-    def getProvisioningNicForNetwork(self, session: Session, network, netmask):
+    def getProvisioningNicForNetwork(
+            self, session: Session, network: str, netmask: str) -> Nic:
         """
         Raises:
             NicNotFound
@@ -618,7 +631,7 @@ class HardwareProfileDbApi(TortugaDbApi):
             raise
 
 
-def get_default_relations(relations: OptionDict):
+def get_default_relations(relations: Optional[OptionDict]):
     """
     Ensure hardware and software profiles and tags are populated when
     serializing node records.

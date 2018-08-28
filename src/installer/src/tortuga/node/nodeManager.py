@@ -18,10 +18,10 @@ import time
 from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy.orm.session import Session
+
 from tortuga.addhost.addHostManager import AddHostManager
 from tortuga.addhost.addHostServerLocal import AddHostServerLocal
 from tortuga.config.configManager import ConfigManager
-from tortuga.db.hardwareProfileDbApi import HardwareProfileDbApi
 from tortuga.db.models.hardwareProfile import \
     HardwareProfile as HardwareProfileModel
 from tortuga.db.models.node import Node as NodeModel
@@ -43,13 +43,11 @@ from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
 from tortuga.exceptions.volumeDoesNotExist import VolumeDoesNotExist
 from tortuga.kit.actions import KitActionsManager
-from tortuga.kit.loader import load_kits
 from tortuga.objects.node import Node
 from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.os_utility import osUtility
 from tortuga.resourceAdapter import resourceAdapterFactory
-from tortuga.san import san
 from tortuga.softwareprofile.softwareProfileManager import \
     SoftwareProfileManager
 from tortuga.sync.syncApi import SyncApi
@@ -67,15 +65,11 @@ class NodeManager(TortugaObjectManager): \
         super(NodeManager, self).__init__()
 
         self._nodeDbApi = NodeDbApi()
-        self._hardwareProfileDbApi = HardwareProfileDbApi()
         self._cm = ConfigManager()
-        self._san = san.San()
         self._bhm = osUtility.getOsObjectFactory().getOsBootHostManager(
             self._cm)
         self._syncApi = SyncApi()
         self._nodesDbHandler = NodesDbHandler()
-
-        load_kits()
 
     def __validateHostName(self, hostname: str, name_format: str) -> None:
         """
@@ -270,7 +264,8 @@ class NodeManager(TortugaObjectManager): \
 
         return nodes
 
-    def updateNode(self, session, nodeName, updateNodeRequest):
+    def updateNode(self, session: Session, nodeName: str,
+            updateNodeRequest: dict) -> None:
         """
         Calls updateNode() method of resource adapter
         """
@@ -616,8 +611,7 @@ class NodeManager(TortugaObjectManager): \
         #
         for hwprofile, hwprofile_nodes in nodes.items():
             # Get the ResourceAdapter
-            adapter = self.__get_resource_adapter(hwprofile)
-            adapter.session = session
+            adapter = self.__get_resource_adapter(session, hwprofile)
 
             # Call the resource adapter
             adapter.deleteNode(hwprofile_nodes)
@@ -648,7 +642,8 @@ class NodeManager(TortugaObjectManager): \
 
         return result
 
-    def __get_resource_adapter(self, hardwareProfile):
+    def __get_resource_adapter(self, session: Session,
+                               hardwareProfile: HardwareProfileModel):
         """
         Raises:
             OperationFailed
@@ -659,8 +654,12 @@ class NodeManager(TortugaObjectManager): \
                 'Hardware profile [%s] does not have an associated'
                 ' resource adapter' % (hardwareProfile.name))
 
-        return resourceAdapterFactory.get_api(
+        adapter = resourceAdapterFactory.get_api(
             hardwareProfile.resourceadapter.name)
+
+        adapter.session = session
+
+        return adapter
 
     def __process_delete_node_result(self, nodeErrorDict):
         # REALLY!?!? Convert a list of Nodes objects into a list of
@@ -796,7 +795,7 @@ class NodeManager(TortugaObjectManager): \
                 node_tuples.append((node, src_swprofile))
 
             # get resource adapter for hardware profile
-            adapter = self.__get_resource_adapter(hwprofile)
+            adapter = self.__get_resource_adapter(session, hwprofile)
 
             # call resource adapter
             adapter.transferNode(node_tuples, dst_swprofile)
@@ -822,32 +821,17 @@ class NodeManager(TortugaObjectManager): \
 
         return results
 
-    def transferNode(self, session, nodespec: str,
-                     dstSoftwareProfileName: str, bForce: bool = False):
+    def __transfer_node(self, session: Session, nodes: List[NodeModel],
+                        dbDstSoftwareProfile: SoftwareProfileModel,
+                        bForce: bool = False):
         """
-        Transfer nodes defined by 'nodespec' to 'dstSoftwareProfile'
-
-        Raises:
-            NodeNotFound
-            SoftwareProfileNotFound
-            NodeTransferNotValid
+        Common transfer node routine
         """
-
-        nodes: List[NodeModel] = self._nodesDbHandler.expand_nodespec(
-            session, nodespec)
-
-        if not nodes:
-            raise NodeNotFound(
-                'No nodes matching nodespec [%s]' % (nodespec))
-
-        dbDstSoftwareProfile = \
-            SoftwareProfilesDbHandler().getSoftwareProfile(
-                session, dstSoftwareProfileName)
 
         results: List[Dict[str, Any]] = []
 
         for node in nodes:
-            if node.hardwareprofile not in\
+            if node.hardwareprofile not in \
                     dbDstSoftwareProfile.hardwareprofiles:
                 raise ProfileMappingNotAllowed(
                     'Node [%s] belongs to hardware profile [%s] which is'
@@ -895,7 +879,34 @@ class NodeManager(TortugaObjectManager): \
         return self.__transferNodeCommon(
             session, dbDstSoftwareProfile, results)
 
-    def transferNodes(self, session, srcSoftwareProfileName: str,
+    def transferNode(self, session, nodespec: str,
+                     dstSoftwareProfileName: str,
+                     bForce: bool = False) -> TortugaObjectList:
+        """
+        Transfer nodes defined by 'nodespec' to 'dstSoftwareProfile'
+
+        Raises:
+            NodeNotFound
+            SoftwareProfileNotFound
+            NodeTransferNotValid
+        """
+
+        nodes: List[NodeModel] = self._nodesDbHandler.expand_nodespec(
+            session, nodespec)
+
+        if not nodes:
+            raise NodeNotFound(
+                'No nodes matching nodespec [%s]' % (nodespec))
+
+        dbDstSoftwareProfile = \
+            SoftwareProfilesDbHandler().getSoftwareProfile(
+                session, dstSoftwareProfileName)
+
+        return self.__transfer_node(
+            session, nodes, dbDstSoftwareProfile, bForce=bForce)
+
+    def transferNodes(self, session: Session,
+                      srcSoftwareProfileName: Optional[str],
                       dstSoftwareProfileName: str,
                       count: int, bForce: bool = False): \
             # pylint: disable=unused-argument
@@ -961,8 +972,8 @@ class NodeManager(TortugaObjectManager): \
             if nNodesAvailable < count:
                 # We still do not have enough nodes to transfer.
                 msg = ('Insufficient nodes available to transfer;'
-                        ' %d available, %d requested' % (
-                            nNodesAvailable, count))
+                       ' %d available, %d requested' % (
+                           nNodesAvailable, count))
 
                 self.getLogger().info(msg)
 
@@ -975,7 +986,7 @@ class NodeManager(TortugaObjectManager): \
         else:
             dbNodeList = dbUnlockedNodeList[:count]
 
-        results = self.transferNode(
+        results = self.__transfer_node(
             session, dbNodeList, dbDstSoftwareProfile)
 
         return self.__transferNodeCommon(
@@ -1150,7 +1161,8 @@ class NodeManager(TortugaObjectManager): \
 
             raise
 
-    def __process_activateNode_results(self, tmp_results, dstswprofilename):
+    def __process_activateNode_results(self, session: Session, tmp_results,
+                                       dstswprofilename):
         results = {}
 
         for key, values in tmp_results.items():
@@ -1178,7 +1190,7 @@ class NodeManager(TortugaObjectManager): \
             # For each 'addHostSession', call postAddHost()
             for addHostSession, hwprofile in addHostSessions.items():
                 AddHostManager().postAddHost(
-                    hwprofile, dstswprofilename, addHostSession)
+                    session, hwprofile, dstswprofilename, addHostSession)
 
         return results
 
@@ -1328,7 +1340,7 @@ class NodeManager(TortugaObjectManager): \
             session.commit()
 
             results = self.__process_activateNode_results(
-                activateNodeResults, softwareProfileName)
+                session, activateNodeResults, softwareProfileName)
 
             session.commit()
 
@@ -1437,61 +1449,6 @@ class NodeManager(TortugaObjectManager): \
 
         session.commit()
 
-    def addStorageVolume(self, nodeName: str, volume: str,
-                         isDirect: Optional[str] = "DEFAULT") -> None:
-        """
-        Raises:
-            VolumeDoesNotExist
-            UnsupportedOperation
-        """
-
-        node = self.getNode(nodeName, {'hardwareprofile': True})
-
-        # Only allow persistent volumes to be attached...
-        vol = self._san.getVolume(volume)
-        if vol is None:
-            raise VolumeDoesNotExist('Volume [%s] does not exist' % (volume))
-
-        if not vol.getPersistent():
-            raise UnsupportedOperation(
-                'Only persistent volumes can be attached')
-
-        api = resourceAdapterFactory.get_api(
-            node.getHardwareProfile().getResourceAdapter().getName())
-
-        if isDirect == "DEFAULT":
-            api.addVolumeToNode(node, volume)
-
-        api.addVolumeToNode(node, volume, isDirect)
-
-    def removeStorageVolume(self, nodeName: str, volume: str) -> None:
-        """
-        Raises:
-            VolumeDoesNotExist
-            UnsupportedOperation
-        """
-
-        node = self.getNode(nodeName, {'hardwareprofile': True})
-
-        api = resourceAdapterFactory.get_api(
-            node.getHardwareProfile().getResourceAdapter().getName())
-
-        vol = self._san.getVolume(volume)
-
-        if vol is None:
-            raise VolumeDoesNotExist(
-                'The volume [%s] does not exist' % (volume))
-
-        if not vol.getPersistent():
-            raise UnsupportedOperation(
-                'Only persistent volumes can be detached')
-
-        api.removeVolumeFromNode(node, volume)
-
-    def getStorageVolumes(self, session: Session, nodeName: str):
-        return self._san.getNodeVolumes(
-            self.getNode(session, nodeName).getName())
-
     def getNodesByNodeState(self, session, node_state: str,
                             optionDict: Optional[OptionDict] = None) \
             -> TortugaObjectList:
@@ -1578,7 +1535,7 @@ class NodeManager(TortugaObjectManager): \
             self.__isNodeStateInstalled(dbNode)
 
     def __getNodeTransferCandidates(
-            self, dbSrcSoftwareProfile: SoftwareProfileModel,
+            self, dbSrcSoftwareProfile: Optional[SoftwareProfileModel],
             dbDstSoftwareProfile: SoftwareProfileModel, compare_func):
         """
         Helper method for determining which nodes should be considered for
@@ -1607,7 +1564,7 @@ class NodeManager(TortugaObjectManager): \
             compare_func(dbNode)]
 
     def __getTransferrableNodes(
-            self, dbSrcSoftwareProfile: SoftwareProfileModel,
+            self, dbSrcSoftwareProfile: Optional[SoftwareProfileModel],
             dbDstSoftwareProfile: SoftwareProfileModel) -> List[Node]:
         """
         Return list of Unlocked nodes

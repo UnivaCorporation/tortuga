@@ -14,11 +14,12 @@
 
 # pylint: disable=not-callable,multiple-statements,no-member
 
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 from sqlalchemy import and_, or_
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.session import Session
+
 from tortuga.db.componentsDbHandler import ComponentsDbHandler
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
 from tortuga.exceptions.hardwareProfileNotFound import HardwareProfileNotFound
@@ -34,6 +35,7 @@ from tortuga.exceptions.softwareUsesHardwareAlreadyExists import \
     SoftwareUsesHardwareAlreadyExists
 from tortuga.exceptions.softwareUsesHardwareNotFound import \
     SoftwareUsesHardwareNotFound
+from tortuga.objects.partition import Partition as PartitionObject
 
 from .models.component import Component
 from .models.hardwareProfile import HardwareProfile
@@ -48,16 +50,20 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
     """
 
     def __init__(self):
-        TortugaDbObjectHandler.__init__(self)
+        super().__init__()
 
         self._componentsDbHandler = ComponentsDbHandler()
 
-    def getSoftwareProfile(self, session, name):
+    def getSoftwareProfile(
+            self, session: Session, name: str) -> SoftwareProfile:
         """
-        Return softwareProfile.
+        Return softwareProfile
+
+        Raises:
+            SoftwareProfileNotFound
         """
 
-        self.getLogger().debug('Retrieving software profile [%s]' % (name))
+        self.getLogger().debug('Retrieving software profile [%s]', name)
 
         try:
             return session.query(SoftwareProfile).filter(
@@ -66,7 +72,8 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
             raise SoftwareProfileNotFound(
                 'Software profile [%s] not found' % (name))
 
-    def getSoftwareProfileById(self, session, _id):
+    def getSoftwareProfileById(
+            self, session: Session, _id: int) -> SoftwareProfile:
         """
         Return software profile
 
@@ -75,7 +82,7 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
         """
 
         self.getLogger().debug(
-            'Retrieving software profile ID [%s]' % (_id))
+            'Retrieving software profile ID [%s]', _id)
 
         dbSoftwareProfile = session.query(SoftwareProfile).get(_id)
 
@@ -85,9 +92,9 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
 
         return dbSoftwareProfile
 
-    def getSoftwareProfileList(self, session,
-                               tags: List[Tuple[str, str]] = None,
-                               profile_type: Optional[str] = None):
+    def getSoftwareProfileList(
+            self, session, tags: List[Tuple[str, str]] = None,
+            profile_type: Optional[str] = None) -> List[SoftwareProfile]:
         """
         Get list of softwareProfiles from the db.
         """
@@ -117,7 +124,8 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
 
         return q.order_by(SoftwareProfile.name).all()
 
-    def getIdleSoftwareProfileList(self, session):
+    def getIdleSoftwareProfileList(self, session: Session) \
+            -> List[SoftwareProfile]:
         """
         Get list of idle softwareProfiles from the db.
         """
@@ -127,7 +135,8 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
         return session.query(SoftwareProfile).filter(
             SoftwareProfile.isIdle == 1).all()
 
-    def __getHardwareProfile(self, session, hardwareProfileName): \
+    def __getHardwareProfile(
+            self, session: Session, hardwareProfileName: str): \
             # pylint: disable=no-self-use
         try:
             return session.query(HardwareProfile).filter(
@@ -136,19 +145,21 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
             raise HardwareProfileNotFound(
                 'Hardware profile [%s] not found' % (hardwareProfileName))
 
-    def addUsableHardwareProfileToSoftwareProfile(self, session,
-                                                  hardwareProfileName,
-                                                  softwareProfileName):
+    def addUsableHardwareProfileToSoftwareProfile(
+            self, session: Session, hardwareProfileName: str,
+            softwareProfileName: str) -> None:
         """
         Add usable hardwareProfile to softwareProfile.
 
         Raises:
             HardwareProfileNotFound
+            SoftwareUsesHardwareAlreadyExists
         """
 
         self.getLogger().debug(
-            'Adding hardware profile [%s] to software profile [%s]' % (
-                hardwareProfileName, softwareProfileName))
+            'Adding hardware profile [%s] to software profile [%s]',
+            hardwareProfileName, softwareProfileName
+        )
 
         dbHardwareProfile = self.__getHardwareProfile(
             session, hardwareProfileName)
@@ -163,9 +174,9 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
 
         dbSoftwareProfile.hardwareprofiles.append(dbHardwareProfile)
 
-    def _deleteUsableHardwareProfileFromSoftwareProfile(self,
-                                                        hardwareprofile,
-                                                        softwareprofile):
+    def _deleteUsableHardwareProfileFromSoftwareProfile(
+            self, hardwareprofile: HardwareProfile,
+            softwareprofile: SoftwareProfile) -> None:
         """
         Raises:
             SoftwareUsesHardwareNotFound
@@ -183,9 +194,9 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
 
         softwareprofile.hardwareprofiles.remove(hardwareprofile)
 
-    def deleteUsableHardwareProfileFromSoftwareProfile(self, session,
-                                                       hardwareProfileName,
-                                                       softwareProfileName):
+    def deleteUsableHardwareProfileFromSoftwareProfile(
+            self, session: Session, hardwareProfileName: str,
+            softwareProfileName: str) -> None:
         """
         Delete usable hardwareProfile to softwareProfile.
 
@@ -204,8 +215,9 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
         self._deleteUsableHardwareProfileFromSoftwareProfile(
             dbHardwareProfile, dbSoftwareProfile)
 
-    def addComponentToSoftwareProfileEx(self, session, componentId,
-                                        dbSoftwareProfile):
+    def addComponentToSoftwareProfileEx(
+            self, session: Session, componentId: int,
+            dbSoftwareProfile: SoftwareProfile) -> None:
         """
         Raises:
             ComponentNotFound
@@ -216,7 +228,9 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
 
         self._addComponent(dbComponent, dbSoftwareProfile)
 
-    def _addComponent(self, dbComponent, dbSoftwareProfile):
+    def _addComponent(
+            self, dbComponent: Component,
+            dbSoftwareProfile: SoftwareProfile) -> None:
         self.getLogger().debug(
             'Adding component [%s] to software profile [%s]' % (
                 '%s-%s' % (dbComponent.name, dbComponent.version),
@@ -229,8 +243,9 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
 
         dbSoftwareProfile.components.append(dbComponent)
 
-    def addComponentToSoftwareProfile(self, session, componentId,
-                                      softwareProfileId):
+    def addComponentToSoftwareProfile(
+            self, session: Session, componentId: int,
+            softwareProfileId: int) -> None:
         """
         Add component to softwareProfile.
 
@@ -247,8 +262,9 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
 
         self._addComponent(dbComponent, dbSoftwareProfile)
 
-    def deleteComponentFromSoftwareProfile(self, session, componentId,
-                                           softwareProfileId):
+    def deleteComponentFromSoftwareProfile(
+            self, session: Session, componentId: int,
+            softwareProfileId: int) -> None:
         """
         Delete component from softwareProfile.
 
@@ -279,12 +295,14 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
             'Deleted component [%s] from software profile [%s]' % (
                 compDescr, dbSoftwareProfile.name))
 
-    def __getPartition(self, session, name):  # pylint: disable=no-self-use
+    def __getPartition(self, session: Session, name: str) -> Partition:  \
+        # pylint: disable=no-self-use
         return session.query(Partition).filter(
             Partition.name == name).one()
 
-    def addPartitionToSoftwareProfile(self, session, partition,
-                                      softwareProfileName):
+    def addPartitionToSoftwareProfile(
+            self, session: Session, partition: PartitionObject,
+            softwareProfileName: str) -> None:
         """
         Add partition to software profile.
         """
@@ -323,10 +341,14 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
 
         dbSoftwareProfile.partitions.append(dbPartition)
 
-    def deletePartitionFromSoftwareProfile(self, session, partitionName,
-                                           softwareProfileName):
+    def deletePartitionFromSoftwareProfile(
+            self, session: Session, partitionName: str,
+            softwareProfileName: str) -> None:
         """
         Delete partition from software profile.
+
+        Raises:
+            PartitionNotFound
         """
 
         self.getLogger().debug(
@@ -351,8 +373,8 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
 
     def get_software_profiles_with_component(
             self, session: Session, kit_name: str, component_name: str, *,
-            kit_version: Optional[str] = None) \
-        -> List[SoftwareProfile]:
+            kit_version: Optional[str] = None) -> List[SoftwareProfile]: \
+            # pylint: disable=no-self-use
         """
         Return list of software profiles with component enabled.
 

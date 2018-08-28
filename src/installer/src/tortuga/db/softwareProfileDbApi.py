@@ -14,10 +14,11 @@
 
 # pylint: disable=not-callable,multiple-statements,no-member
 
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 
 from sqlalchemy import func
 from sqlalchemy.orm.session import Session
+
 from tortuga.db.adminsDbHandler import AdminsDbHandler
 from tortuga.db.componentsDbHandler import ComponentsDbHandler
 from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
@@ -49,7 +50,7 @@ class SoftwareProfileDbApi(TortugaDbApi):
     """
 
     def __init__(self):
-        TortugaDbApi.__init__(self)
+        super().__init__()
 
         self._softwareProfilesDbHandler = SoftwareProfilesDbHandler()
         self._globalParametersDbHandler = GlobalParametersDbHandler()
@@ -82,10 +83,9 @@ class SoftwareProfileDbApi(TortugaDbApi):
             self.getLogger().exception('%s' % ex)
             raise
 
-    def __get_software_profile_obj(self,
-                                   software_profile: SoftwareProfileModel,
-                                   options: Optional[dict] = None) \
-            -> SoftwareProfile:
+    def __get_software_profile_obj(
+            self, software_profile: SoftwareProfileModel,
+            options: Optional[dict] = None) -> SoftwareProfile:
         """
         Deserialize SQLAlchemy object to TortugaObject
         """
@@ -105,7 +105,7 @@ class SoftwareProfileDbApi(TortugaDbApi):
         return software_profile_obj
 
     def getSoftwareProfileById(
-            self, session, softwareProfileId: int,
+            self, session: Session, softwareProfileId: int,
             optionDict: Optional[Dict[str, bool]] = None) -> SoftwareProfile:
         """
         Get softwareProfile from the db.
@@ -130,7 +130,7 @@ class SoftwareProfileDbApi(TortugaDbApi):
             self.getLogger().exception('%s' % ex)
             raise
 
-    def getSoftwareProfileList(self, session, tags=None):
+    def getSoftwareProfileList(self, session: Session, tags=None):
         """
         Get list of all available softwareProfiles from the db.
 
@@ -164,7 +164,7 @@ class SoftwareProfileDbApi(TortugaDbApi):
             self.getLogger().exception('%s' % ex)
             raise
 
-    def getIdleSoftwareProfileList(self, session):
+    def getIdleSoftwareProfileList(self, session: Session):
         """
         Get list of all available idle softwareProfiles from the db.
 
@@ -191,7 +191,9 @@ class SoftwareProfileDbApi(TortugaDbApi):
             self.getLogger().exception('%s' % ex)
             raise
 
-    def setIdleState(self, session: Session, softwareProfileName, state):
+    def setIdleState(
+            self, session: Session, softwareProfileName: str,
+            state: str) -> None:
         """
         Set idle state of a software profile
 
@@ -202,8 +204,9 @@ class SoftwareProfileDbApi(TortugaDbApi):
         """
 
         try:
-            dbSoftwareProfile = self._softwareProfilesDbHandler.\
-                getSoftwareProfile(session, softwareProfileName)
+            dbSoftwareProfile = \
+                self._softwareProfilesDbHandler.getSoftwareProfile(
+                    session, softwareProfileName)
 
             self.getLogger().debug(
                 'Setting idle state [%s] on software profile [%s]' % (
@@ -218,7 +221,9 @@ class SoftwareProfileDbApi(TortugaDbApi):
             self.getLogger().exception('%s' % ex)
             raise
 
-    def addSoftwareProfile(self, session: Session, softwareProfile):
+    def addSoftwareProfile(
+            self, session: Session,
+            softwareProfile: SoftwareProfile) -> SoftwareProfileModel:
         """
         Insert software profile into the db.
 
@@ -258,7 +263,7 @@ class SoftwareProfileDbApi(TortugaDbApi):
             self.getLogger().exception('%s' % ex)
             raise
 
-    def deleteSoftwareProfile(self, session: Session, name):
+    def deleteSoftwareProfile(self, session: Session, name: str) -> None:
         """
         Delete softwareProfile from the db.
 
@@ -315,7 +320,8 @@ class SoftwareProfileDbApi(TortugaDbApi):
             self.getLogger().exception('%s' % ex)
             raise
 
-    def getAllEnabledComponentList(self, session: Session):
+    def getAllEnabledComponentList(
+            self, session: Session) -> TortugaObjectList:
         """
         Get a list of all enabled components in the system
 
@@ -338,7 +344,8 @@ class SoftwareProfileDbApi(TortugaDbApi):
             self.getLogger().exception('%s' % ex)
             raise
 
-    def getEnabledComponentList(self, session, name):
+    def getEnabledComponentList(
+            self, session: Session, name: str) -> TortugaObjectList:
         """
         Get a list of enabled components from the db.
 
@@ -364,7 +371,9 @@ class SoftwareProfileDbApi(TortugaDbApi):
             self.getLogger().exception('%s' % ex)
             raise
 
-    def getNodeList(self, session: Session, softwareProfile):
+    def getNodeList(
+            self, session: Session,
+            softwareProfile: SoftwareProfile) -> TortugaObjectList:
         """
         Get list of nodes in 'softwareProfile'
 
@@ -375,8 +384,9 @@ class SoftwareProfileDbApi(TortugaDbApi):
         """
 
         try:
-            dbSoftwareProfile = self._softwareProfilesDbHandler.\
-                getSoftwareProfile(session, softwareProfile)
+            dbSoftwareProfile = \
+                self._softwareProfilesDbHandler.getSoftwareProfile(
+                    session, softwareProfile)
 
             nodeList = TortugaObjectList()
 
@@ -392,27 +402,9 @@ class SoftwareProfileDbApi(TortugaDbApi):
             self.getLogger().exception('%s' % ex)
             raise
 
-    def getNodeListByNodeStateAndSoftwareProfileName(self, session: Session,
-                                                     nodeState,
-                                                     softwareProfileName):
-        """
-        Return a list of Node objects based on the specified node state
-        and software profile
-        """
-
-        try:
-            dbNodes = self._nodesDbHandler.\
-                getNodeListByNodeStateAndSoftwareProfileName(
-                    session, nodeState, softwareProfileName)
-
-            return self.getTortugaObjectList(Node, dbNodes)
-        except TortugaException:
-            raise
-        except Exception as ex:
-            self.getLogger().exception('%s' % ex)
-            raise
-
-    def getPartitionList(self, session: Session, softwareProfileName):
+    def getPartitionList(
+            self, session: Session, softwareProfileName: str) \
+            -> TortugaObjectList:
         """
         Get a list of software profile partitions from the db.
 
@@ -424,8 +416,10 @@ class SoftwareProfileDbApi(TortugaDbApi):
         """
 
         try:
-            dbSoftwareProfile = self._softwareProfilesDbHandler.\
-                getSoftwareProfile(session, softwareProfileName)
+            dbSoftwareProfile = \
+                self._softwareProfilesDbHandler.getSoftwareProfile(
+                    session, softwareProfileName)
+
             return self.getTortugaObjectList(
                 Partition, dbSoftwareProfile.partitions)
         except TortugaException:
@@ -434,7 +428,9 @@ class SoftwareProfileDbApi(TortugaDbApi):
             self.getLogger().exception('%s' % ex)
             raise
 
-    def addPartition(self, session: Session, partitionName, softwareProfileName):
+    def addPartition(
+            self, session: Session, partitionName: str,
+            softwareProfileName: str) -> None:
         """
         Add software profile partition.
 
@@ -443,13 +439,11 @@ class SoftwareProfileDbApi(TortugaDbApi):
             Throws:
                 PartitionAlreadyExists
                 SoftwareProfileNotFound
-                DbError
         """
 
         try:
-            self._softwareProfilesDbHandler.\
-                addPartitionToSoftwareProfile(
-                    session, partitionName, softwareProfileName)
+            self._softwareProfilesDbHandler.addPartitionToSoftwareProfile(
+                session, partitionName, softwareProfileName)
 
             session.commit()
         except TortugaException:
@@ -460,8 +454,8 @@ class SoftwareProfileDbApi(TortugaDbApi):
             self.getLogger().exception('%s' % ex)
             raise
 
-    def deletePartition(self, session: Session, partitionName,
-                        softwareProfileName):
+    def deletePartition(self, session: Session, partitionName: str,
+                        softwareProfileName: str) -> None:
         """
         Delete node from the db.
 
@@ -474,9 +468,9 @@ class SoftwareProfileDbApi(TortugaDbApi):
         """
 
         try:
-            self._softwareProfilesDbHandler.\
-                deletePartitionFromSoftwareProfile(
-                    session, partitionName, softwareProfileName)
+            self._softwareProfilesDbHandler.deletePartitionFromSoftwareProfile(
+                session, partitionName, softwareProfileName)
+
             session.commit()
         except TortugaException:
             session.rollback()
@@ -487,7 +481,8 @@ class SoftwareProfileDbApi(TortugaDbApi):
             raise
 
     def addUsableHardwareProfileToSoftwareProfile(
-            self, session: Session, hardwareProfileName, softwareProfileName):
+            self, session: Session, hardwareProfileName: str,
+            softwareProfileName: str) -> None:
         """
          Add hardwareProfile to softwareProfile
 
@@ -501,11 +496,10 @@ class SoftwareProfileDbApi(TortugaDbApi):
         """
 
         try:
-            swUsesHwId = self._softwareProfilesDbHandler.\
-                addUsableHardwareProfileToSoftwareProfile(
-                    session, hardwareProfileName, softwareProfileName)
+            self._softwareProfilesDbHandler.addUsableHardwareProfileToSoftwareProfile(
+                session, hardwareProfileName, softwareProfileName)
+
             session.commit()
-            return swUsesHwId
         except TortugaException:
             session.rollback()
             raise
@@ -515,7 +509,8 @@ class SoftwareProfileDbApi(TortugaDbApi):
             raise
 
     def deleteUsableHardwareProfileFromSoftwareProfile(
-            self, session: Session, hardwareProfileName, softwareProfileName):
+            self, session: Session, hardwareProfileName: str,
+            softwareProfileName: str) -> None:
         """
         Delete hardwareProfile from softwareProfile
 
@@ -542,8 +537,15 @@ class SoftwareProfileDbApi(TortugaDbApi):
             self.getLogger().exception('%s' % ex)
             raise
 
-    def addAdmin(self, session: Session, softwareProfileName, adminUsername):
-        """ Add an admin to this software profile """
+    def addAdmin(self, session: Session, softwareProfileName: str,
+                 adminUsername: str) -> None:
+        """
+        Add an admin to this software profile
+
+        Raises:
+            AdminAlreadyExists
+        """
+
         try:
             dbAdmin = self._adminsDbHandler.getAdmin(
                 session, adminUsername)
@@ -557,6 +559,7 @@ class SoftwareProfileDbApi(TortugaDbApi):
                 raise AdminAlreadyExists(
                     'Admin [%s] already associated with %s' % (
                         adminUsername, softwareProfileName))
+
             session.commit()
         except TortugaException:
             session.rollback()
@@ -566,8 +569,11 @@ class SoftwareProfileDbApi(TortugaDbApi):
             self.getLogger().exception('%s' % ex)
             raise
 
-    def deleteAdmin(self, session: Session, softwareProfileName, adminUsername):
-        """ Delete an admin from a software profile """
+    def deleteAdmin(self, session: Session, softwareProfileName: str,
+                    adminUsername: str) -> None:
+        """
+        Delete an admin from a software profile
+        """
 
         try:
             dbAdmin = self._adminsDbHandler.getAdmin(
@@ -592,15 +598,21 @@ class SoftwareProfileDbApi(TortugaDbApi):
             self.getLogger().exception('%s' % ex)
             raise
 
-    def updateSoftwareProfile(self, session: Session, softwareProfileObject):
-        """ Update a software profile """
+    def updateSoftwareProfile(
+            self, session: Session,
+            softwareProfileObject: SoftwareProfile) -> None:
+        """
+        Update a software profile
+        """
 
         try:
             dbSoftwareProfile = self._softwareProfilesDbHandler.\
                 getSoftwareProfileById(
                     session, softwareProfileObject.getId())
+
             self.__populateSoftwareProfile(
                 session, softwareProfileObject, dbSoftwareProfile)
+
             session.commit()
         except TortugaException:
             session.rollback()
@@ -610,8 +622,10 @@ class SoftwareProfileDbApi(TortugaDbApi):
             self.getLogger().exception('%s' % ex)
             raise
 
-    def __populateSoftwareProfile(self, session, softwareProfile,
-                                  dbSoftwareProfile=None):
+    def __populateSoftwareProfile(
+            self, session: Session, softwareProfile: SoftwareProfile,
+            dbSoftwareProfile: Optional[SoftwareProfileModel] = None) \
+            -> SoftwareProfileModel:
         """
         Helper function for creating/updating dbSoftwareProfile Object
         """
@@ -648,7 +662,7 @@ class SoftwareProfileDbApi(TortugaDbApi):
         dbSoftwareProfile.isIdle = softwareProfile.getIsIdle()
 
         # Add partitions
-        partitions = {}
+        partitions: Dict[Tuple[str, str], Partition] = {}
         for partition in softwareProfile.getPartitions():
             # This is a new partition
             dbPartition = PartitionModel()
@@ -791,7 +805,8 @@ class SoftwareProfileDbApi(TortugaDbApi):
 
         session.commit()
 
-    def getUsableNodes(self, session, name):
+    def getUsableNodes(self, session: Session, name: str) \
+            -> TortugaObjectList:
         """
         Return list of nodes with same software/hardware profile mapping
         as the specified software profile.
