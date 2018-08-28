@@ -31,7 +31,6 @@ from tortuga.kit.metadata import KitMetadataSchema
 from tortuga.os_utility.tortugaSubprocess import TortugaSubprocess
 
 logger = getLogger(__name__)
-logger.addHandler(logging.NullHandler())
 
 
 def pip_install_requirements(requirements_path):

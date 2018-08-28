@@ -17,6 +17,7 @@ import logging
 import os
 import ssl
 import threading
+import tracemalloc
 from typing import Optional
 
 import cherrypy
@@ -34,8 +35,9 @@ class WebsocketPlugin(plugins.SimplePlugin):
     A CherryPy plugin that opens a websocket for sending event notifications.
 
     """
-    def __init__(self, scheme: str, port: int, bus) -> None:
+    def __init__(self, scheme: str, port: int, bus, debug: bool = False) -> None:
         super().__init__(bus)
+        self._debug = debug
 
         self.scheme = scheme
         self.port = port
@@ -49,6 +51,8 @@ class WebsocketPlugin(plugins.SimplePlugin):
 
     def stop(self):
         self._loop.stop()
+        if self._debug:
+            tracemalloc.stop()
 
     def worker(self):
         """
@@ -56,6 +60,12 @@ class WebsocketPlugin(plugins.SimplePlugin):
         websockets.
 
         """
+        #
+        # Start memory tracing, if debugging is on
+        #
+        if self._debug:
+            tracemalloc.start()
+
         logger.debug('Starting websocket server thread')
 
         #
@@ -80,6 +90,12 @@ class WebsocketPlugin(plugins.SimplePlugin):
             logger.error('Unable to start websocket server')
 
             return
+
+        #
+        # Log memory tracing, if debugging is on
+        #
+        if self._debug:
+            asyncio.ensure_future(memory_stats())
 
         self._loop.run_until_complete(server)
         self._loop.run_forever()
@@ -119,6 +135,20 @@ class WebsocketPlugin(plugins.SimplePlugin):
                 self.port))
 
         return websockets.serve(websocket_handler, port=self.port)
+
+
+async def memory_stats():
+    """
+    Prints memory stats to the log, for debugging memory utilization.
+
+    """
+    snapshot_initial = tracemalloc.take_snapshot()
+    while True:
+        await asyncio.sleep(60)
+        snapshot = tracemalloc.take_snapshot()
+        top_stats = snapshot.compare_to(snapshot_initial, 'lineno')
+        for stat in top_stats[:10]:
+            logger.debug('Memory: {}'.format(stat))
 
 
 async def websocket_handler(websocket, path):

@@ -94,7 +94,8 @@ def prepare_server():
     return cherrypy.tree.mount(root=None, config=config)
 
 
-def run_server(daemonize: bool = False, pidfile: str = None):
+def run_server(daemonize: bool = False, pidfile: str = None,
+               debug: bool = False):
     logger.debug('Starting service')
 
     #
@@ -116,7 +117,9 @@ def run_server(daemonize: bool = False, pidfile: str = None):
     WebsocketPlugin(
         app.cm.getWebsocketScheme(),
         app.cm.getWebsocketPort(),
-        cherrypy.engine).subscribe()
+        cherrypy.engine,
+        debug=debug
+    ).subscribe()
 
     #
     # Setup the signal handler to stop the application while running.
@@ -238,6 +241,6 @@ def main():
             'server.ssl_private_key': args.sslKey,
         })
 
-    ret = run_server(args.daemonize, args.pidfile)
+    ret = run_server(args.daemonize, args.pidfile, args.debug)
 
     sys.exit(ret)

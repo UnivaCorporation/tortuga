@@ -30,7 +30,6 @@ from tortuga.kit.registry import get_kit_installer
 
 
 logger = logging.getLogger('tortuga.puppet_enc')
-logger.addHandler(logging.NullHandler())
 
 dbm = DbManager()
 

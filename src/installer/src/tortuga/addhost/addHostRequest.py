@@ -27,7 +27,6 @@ from .contextManager import AddHostSessionContextManager
 
 
 logger = logging.getLogger('tortuga.addhost')
-logger.addHandler(logging.NullHandler())
 
 
 def process_addhost_request(session: Session, addHostSession):

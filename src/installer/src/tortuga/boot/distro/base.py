@@ -88,7 +88,6 @@ class DistributionBase(object):
         self._logger: logging.Logger = logging.getLogger(
             'tortuga.boot.distro.{}'.format(self.__class__.__name__)
         )
-        self._logger.addHandler(logging.NullHandler())
 
         self._primitives: Optional[DistributionPrimitivesBase] = None
 

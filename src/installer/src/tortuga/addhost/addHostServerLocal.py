@@ -50,7 +50,6 @@ session_nodes: List[Node] = []
 reservedIps: List[str] = []
 
 logger = logging.getLogger(__name__)
-logger.addHandler(logging.NullHandler())
 
 
 class AddHostServerLocal(TortugaApi):

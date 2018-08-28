@@ -28,7 +28,6 @@ from tortuga.node.nodeApi import NodeApi
 
 
 logger = logging.getLogger(__name__)
-logger.addHandler(logging.NullHandler())
 
 ahm = AddHostManager()
 

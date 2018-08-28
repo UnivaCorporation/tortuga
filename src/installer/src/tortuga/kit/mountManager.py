@@ -37,7 +37,6 @@ class MountManager(object):
         self.bIsIso = False
         self._logger = logging.getLogger(
             'tortuga.%s' % (self.__class__.__name__))
-        self._logger.addHandler(logging.NullHandler())
 
         self._cm = ConfigManager()
 
