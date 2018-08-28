@@ -45,7 +45,8 @@ class TestTransferNode:
 
         with dbm.session() as session:
             # xfer node 'compute-01' to 'compute2' software profile
-            result = NodeApi().transferNode(session, name, 'compute2')
+            result = NodeApi().transferNodes(
+                session, 'compute2', nodespec=name)
 
             # get node after xfer
             node = NodeApi().getNode(session, name)
@@ -63,7 +64,7 @@ class TestTransferNode:
             node_state_change_object.assert_called()
 
             # xfer node back to 'compute' software profile
-            NodeApi().transferNode(session, name, 'compute')
+            NodeApi().transferNodes(session, 'compute', nodespec=name)
 
             NodeApi().updateNodeStatus(session, name, state='Installed')
 
@@ -80,5 +81,5 @@ class TestTransferNode:
 
         with dbm.session() as session:
             with pytest.raises(NodeTransferNotValid):
-                NodeApi().transferNode(
-                    session, 'compute-02.private', 'compute')
+                NodeApi().transferNodes(
+                    session, 'compute', nodespec='compute-02.private')
