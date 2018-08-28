@@ -197,7 +197,7 @@ class NodeApi(TortugaApi):
                       dstSoftwareProfile: str,
                       *,
                       count: Optional[int] = None,
-                      srcSoftwareProfile: Optional[str],
+                      srcSoftwareProfile: Optional[str] = None,
                       bForce: Optional[bool] = False,
                       nodespec: Optional[str] = None) -> dict:
         try:
@@ -205,6 +205,11 @@ class NodeApi(TortugaApi):
                 return self._nodeManager.transferNode(
                     session, nodespec, dstSoftwareProfile, bForce=bForce
                 )
+
+            if srcSoftwareProfile is None:
+                raise TypeError(
+                    'transferNodes() missing required keyword-only'
+                    ' argument: \'srcSoftwareProfile\'')
 
             return self._nodeManager.transferNodes(
                 session, srcSoftwareProfile, dstSoftwareProfile, count,
