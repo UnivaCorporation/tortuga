@@ -43,7 +43,6 @@ class TortugaCli(metaclass=ABCMeta):
     def __init__(self, validArgCount=0):
         self._logger = logging.getLogger(
             'tortuga.cli.%s' % (self.__class__.__name__))
-        self._logger.addHandler(logging.NullHandler())
 
         self._parser = argparse.ArgumentParser()
         self._args = []

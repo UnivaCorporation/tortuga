@@ -83,7 +83,6 @@ class San(object): \
     def __init__(self):
         self._logger = logging.getLogger(
             'tortuga.san.%s' % self.__class__.__name__)
-        self._logger.addHandler(logging.NullHandler())
 
     def __read_cache_file(self, filename=None):
         if filename is None:

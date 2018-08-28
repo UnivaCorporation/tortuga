@@ -33,7 +33,6 @@ class RepoManager:
         """ Initialize repository manager instance. """
         self._logger = logging.getLogger(
             'tortuga.%s' % (self.__class__.__name__))
-        self._logger.addHandler(logging.NullHandler())
         self._kitArchiveDir = None
         self._cm = ConfigManager()
         self._repoRoot = self._cm.getReposDir()

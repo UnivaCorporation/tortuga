@@ -27,7 +27,6 @@ class TortugaDbApi:
     def __init__(self):
         self._logger = logging.getLogger(
             'tortuga.db.%s' % (self.__class__.__name__))
-        self._logger.addHandler(logging.NullHandler())
 
     def getLogger(self):
         """ Logger for this class. """

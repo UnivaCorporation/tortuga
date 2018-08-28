@@ -30,7 +30,6 @@ class OsSupportBase:
     def __init__(self, osFamilyInfo: OsFamilyInfo) -> None:
         self._osFamilyInfo = osFamilyInfo
         self._logger = logging.getLogger('tortuga.os')
-        self._logger.addHandler(logging.NullHandler())
         self._cm = ConfigManager()
 
     def getLogger(self):

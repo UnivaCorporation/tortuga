@@ -72,7 +72,6 @@ class ResourceAdapter(UserDataMixin): \
 
         self._logger = logging.getLogger(
             'tortuga.resourceAdapter.%s' % (self.__adaptername__))
-        self._logger.addHandler(logging.NullHandler())
 
         self.__installer_public_hostname = None
         self.__installer_public_ipaddress = None

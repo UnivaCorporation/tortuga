@@ -32,7 +32,6 @@ class StorageAdapter(object):
         self._logger = logging.\
             getLogger('tortuga.resourceAdapter.san.%s' % (
                 self.__class__.__name__))
-        self._logger.addHandler(logging.NullHandler())
 
     def allocateVolume(self, sizeInMB, nameFormat=None):
         '''Allocate a volume of the given size'''

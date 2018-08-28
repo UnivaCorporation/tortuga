@@ -41,7 +41,6 @@ class OsKitOps(object):
 
         self._logger = logging.getLogger(
             'tortuga.kit.%s' % self.__class__.__name__)
-        self._logger.addHandler(logging.NullHandler())
 
         self._cm = ConfigManager()
 

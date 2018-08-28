@@ -20,7 +20,6 @@ from tortuga.config.configManager import ConfigManager
 
 def get_api(moduleName):
     Logger = logging.getLogger(__name__)
-    Logger.addHandler(logging.NullHandler())
 
     # Add the module's directory to PYTHONPATH
     cm = ConfigManager()

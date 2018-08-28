@@ -24,7 +24,6 @@ from tortuga.kit.registry import get_kit_installer
 
 
 logger = logging.getLogger(__name__)
-logger.addHandler(logging.NullHandler())
 
 
 def main():
