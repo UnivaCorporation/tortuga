@@ -21,9 +21,38 @@ from tortuga.parameter.parameterApi import ParameterApi
 
 class Application:
     def __init__(self):
-        self.cm = ConfigManager()
-        self.node_api = NodeApi()
-        self.admin_api = AdminApi()
-        self.network_api = NetworkApi()
-        self.parameter_api = ParameterApi()
+        self._cm: ConfigManager = None
+        self._node_api: NodeApi = None
+        self._admin_api: AdminApi = None
+        self._network_api: NetworkApi = None
+        self._parameter_api: ParameterApi = None
 
+    @property
+    def cm(self):
+        if not self._cm:
+            self._cm = ConfigManager()
+        return self._cm
+
+    @property
+    def node_api(self):
+        if not self._node_api:
+            self._node_api = NodeApi()
+        return self._node_api
+
+    @property
+    def admin_api(self):
+        if not self._admin_api:
+            self._admin_api = AdminApi()
+        return self._admin_api
+
+    @property
+    def network_api(self):
+        if not self._network_api:
+            self._network_api = NetworkApi()
+        return self._network_api
+
+    @property
+    def parameter_api(self):
+        if not self._parameter_api:
+            self._parameter_api = ParameterApi()
+        return self._parameter_api

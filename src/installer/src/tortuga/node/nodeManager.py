@@ -40,8 +40,6 @@ from tortuga.exceptions.operationFailed import OperationFailed
 from tortuga.exceptions.profileMappingNotAllowed import \
     ProfileMappingNotAllowed
 from tortuga.exceptions.tortugaException import TortugaException
-from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
-from tortuga.exceptions.volumeDoesNotExist import VolumeDoesNotExist
 from tortuga.kit.actions import KitActionsManager
 from tortuga.objects.node import Node
 from tortuga.objects.tortugaObject import TortugaObjectList

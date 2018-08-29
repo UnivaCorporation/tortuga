@@ -14,9 +14,9 @@
 
 from typing import Dict, List, Optional, Type
 
-from ..types import BaseEvent
+from tortuga.types.application import Application
 from ..exceptions import ListenerNotFoundError
-
+from ..types import BaseEvent
 
 #
 # Dictionary, storing registered event classes
@@ -94,6 +94,9 @@ class BaseListener(metaclass=ListenerMeta):
     # How long to delay (in seconds) before running this as a task
     #
     countdown: Optional[int] = None
+
+    def __init__(self, app: Application):
+        self.app = app
 
     @classmethod
     def should_run(cls, event: BaseEvent):

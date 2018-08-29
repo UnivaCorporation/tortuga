@@ -18,16 +18,28 @@ from typing import List
 
 from celery import Celery
 from celery.contrib.testing.app import TestApp
+
+from tortuga.db.dbManager import DbManager
 from tortuga.kit.loader import load_kits
 from tortuga.kit.registry import get_all_kit_installers
-from tortuga.db.dbManager import DbManager
+from tortuga.types.application import Application
 
 
 logging.getLogger('tortuga').setLevel(logging.DEBUG)
 logging.getLogger('tortuga_kits').setLevel(logging.DEBUG)
 
 
-dbm = DbManager()
+class TortugaCeleryApp(Celery):
+    """
+    Tortuga main celery app.
+
+    """
+    app: Application = None
+    dbm: DbManager = None
+
+    def on_init(self):
+        TortugaCeleryApp.app = Application()
+        TortugaCeleryApp.dbm = DbManager()
 
 
 #
@@ -42,6 +54,9 @@ if 'TORTUGA_TEST' in os.environ:
             'tortuga.resourceAdapter.tasks',
         ]
     )
+    app.app = Application()
+    app.dbm = DbManager()
+
 
 #
 # In regular mode, we also want to load the kits, and include any tasks
@@ -55,7 +70,7 @@ else:
         kit_installer.register_event_listeners()
         kits_task_modules += kit_installer.task_modules
 
-    app = Celery(
+    app = TortugaCeleryApp(
         'tortuga.tasks.queue',
         broker='redis://localhost:6379/0',
         backend='redis://localhost:6379/0',

@@ -32,7 +32,7 @@ def run_event_listener(listener_name: str, event_dict: dict):
     # Load the event listener
     #
     listener_class: Type[BaseListener] = get_listnener_class(listener_name)
-    listener: BaseListener = listener_class()
+    listener: BaseListener = listener_class(app.app)
 
     #
     # Unmarshall the event
