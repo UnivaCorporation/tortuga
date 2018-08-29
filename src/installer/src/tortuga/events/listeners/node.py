@@ -13,10 +13,9 @@
 # limitations under the License.
 
 from tortuga.node import state
-from tortuga.tasks.celery import dbm
-
-from ..types import NodeStateChanged
+from tortuga.tasks.celery import app
 from .base import BaseListener
+from ..types import NodeStateChanged
 
 
 class NodeProvisioningListener(BaseListener):
@@ -49,7 +48,7 @@ class NodeProvisioningListener(BaseListener):
         from tortuga.node.nodeManager import NodeManager
         from tortuga.exceptions.nodeNotFound import NodeNotFound
 
-        with dbm.session() as session:
+        with app.dbm.session() as session:
             manager: NodeManager = NodeManager()
 
             try:

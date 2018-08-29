@@ -15,6 +15,7 @@
 # pylint: disable=no-member
 
 import socket
+import sys
 from unittest.mock import patch
 
 import pytest
@@ -22,6 +23,13 @@ import pytest
 from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.exceptions.softwareProfileNotFound import SoftwareProfileNotFound
+
+
+#
+# Skip all tests in this module if not on Linux
+#
+pytestmark = pytest.mark.skipif(sys.platform != 'linux',
+                                reason='Tests only supported on Linux')
 
 
 @patch('tortuga.softwareprofile.softwareProfileManager'
