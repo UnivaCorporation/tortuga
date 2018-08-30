@@ -15,28 +15,23 @@
 # pylint: disable=no-member
 
 import socket
-import sys
 from unittest.mock import patch
 
 import pytest
 
-from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.exceptions.softwareProfileNotFound import SoftwareProfileNotFound
+from tortuga.objects.tortugaObject import TortugaObjectList
 
 
-#
-# Skip all tests in this module if not on Linux
-#
-pytestmark = pytest.mark.skipif(sys.platform != 'linux',
-                                reason='Tests only supported on Linux')
-
-
+@patch('tortuga.node.nodeManager.osUtility.getOsObjectFactory')
 @patch('tortuga.softwareprofile.softwareProfileManager'
        '.SoftwareProfileManager.get_software_profile_metadata')
 @pytest.mark.usefixtures('dbm_class')
 class TestNodeApi:
-    def test_getNodeList(self, get_software_profile_metadata_mock):
+    def test_getNodeList(self, get_software_profile_metadata_mock,
+                         get_os_boot_host_manager_mock): \
+            # pylint: disable=unused-argument
         """
         Get all nodes
         """
@@ -67,7 +62,9 @@ class TestNodeApi:
     # def test_getNode(self, get_software_profile_metadata_mock):
     #     pass
 
-    def test_getNodeById(self, get_software_profile_metadata_mock):
+    def test_getNodeById(self, get_software_profile_metadata_mock,
+                         get_os_boot_host_manager_mock): \
+            # pylint: disable=unused-argument
         from tortuga.node.nodeApi import NodeApi
 
         node_id = 1
@@ -86,7 +83,8 @@ class TestNodeApi:
             session, node.getSoftwareProfile().getName())
 
     def test_getNodeById_nonexistent(
-            self, get_software_profile_metadata_mock): \
+            self, get_software_profile_metadata_mock,
+            get_os_boot_host_manager_mock): \
             # pylint: disable=unused-argument
         from tortuga.node.nodeApi import NodeApi
 
@@ -96,13 +94,13 @@ class TestNodeApi:
 
     @patch('tortuga.resourceAdapter.resourceAdapterFactory.get_resourceadapter_class')
     @patch('tortuga.resourceAdapter.default.Default')
-    @patch('tortuga.os_objects.rhel.bootHostManager.BootHostManager')
     def test_transferNodes_single_node(
             self,
             get_resourceadapter_class_mock,
             default_resource_adapter_mock,
-            boot_host_manager_mock,
-            get_software_profile_metadata_mock
+            # boot_host_manager_mock,
+            get_software_profile_metadata_mock,
+            get_os_boot_host_manager_mock
         ):  # pylint: disable=unused-argument
         from tortuga.node.nodeApi import NodeApi
 
@@ -120,7 +118,8 @@ class TestNodeApi:
                     session, 'compute', nodespec='compute-01.private')
 
     def test_invalid_software_profile_transferNode(
-            self, get_software_profile_metadata_mock): \
+            self, get_software_profile_metadata_mock,
+            get_os_boot_host_manager_mock): \
         # pylint: disable=unused-argument
 
         from tortuga.node.nodeApi import NodeApi
