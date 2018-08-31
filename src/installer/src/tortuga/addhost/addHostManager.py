@@ -16,6 +16,7 @@
 
 import threading
 import uuid
+from typing import Optional
 
 from sqlalchemy.orm.session import Session
 from tortuga.db.hardwareProfilesDbHandler import HardwareProfilesDbHandler
@@ -121,19 +122,30 @@ class AddHostManager(TortugaObjectManager):
         self.getLogger().debug('Add host workflow complete')
 
     def postAddHost(self, session: Session, hardwareProfileName: str,
-                    softwareProfileName: str, addHostSession):
-        """Perform post add host operations"""
+                    softwareProfileName: Optional[str],
+                    addHostSession: str) -> None:
+        """
+        Perform post add host operations
+        """
 
         self.getLogger().debug(
             'postAddHost(): hardwareProfileName=[%s]'
             ' softwareProfileName=[%s] addHostSession=[%s]' % (
                 hardwareProfileName, softwareProfileName, addHostSession))
 
+        # this query is redundant; in the calling method, we already have
+        # a list of Node (db) objects
+        from tortuga.node.nodeApi import NodeApi
+        nodes = NodeApi().getNodesByAddHostSession(session, addHostSession)
+
         mgr = KitActionsManager()
         mgr.session = session
 
         mgr.post_add_host(
-            hardwareProfileName, softwareProfileName, addHostSession)
+            hardwareProfileName,
+            softwareProfileName,
+            nodes
+        )
 
         # Always go over the web service for this call.
         SyncWsApi().scheduleClusterUpdate(updateReason='Node(s) added')

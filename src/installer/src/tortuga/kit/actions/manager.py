@@ -14,7 +14,10 @@
 
 # pylint: disable=no-name-in-module,no-member
 
+from typing import List
+
 from tortuga.kit.registry import get_all_kit_installers
+from tortuga.objects.node import Node
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 
 
@@ -63,40 +66,28 @@ class KitActionsManager(TortugaObjectManager):
                 **kwargs
             )
 
-    def post_add_host(self, hardware_profile_name, software_profile_name,
-                      add_host_session, *args, **kwargs):
+    def post_add_host(
+            self, hardware_profile_name: str, software_profile_name: str,
+            nodes: List[Node]) -> None:
         """
         Post add host processing on the installer node.
-
-        Arguments:
-            hardwareProfileName     the name of the hardware profile
-                                    that hosts are being added to
-            softwareProfileName     the name of the software profile
-                                    that hosts are being added to
-            newNodeIdList           list of new node id's just added.
-
         """
+
         self.getLogger().debug(
-            'post_add_host: {}, {}, {}, {}, {}'.format(
+            'post_add_host: {}, {}, nodes={}'.format(
                 hardware_profile_name, software_profile_name,
-                add_host_session, args, kwargs
+                '[...]' if nodes else '[]',
             )
         )
 
-        component_installers = self._get_enabled_component_installers(
-            self._get_all_component_installers())
-
-        #
-        # This needs to be here because of circular imports :(
-        #
-        from tortuga.node.nodeApi import NodeApi
-        nodes = NodeApi().getNodesByAddHostSession(
-            self.session, add_host_session)
-
-        self._run_action_with_node_list(component_installers,
-                                        hardware_profile_name,
-                                        software_profile_name, nodes,
-                                        'add_host', *args, **kwargs)
+        self._run_action_with_node_list(
+            self._get_enabled_component_installers(
+                self._get_all_component_installers()),
+            hardware_profile_name,
+            software_profile_name,
+            nodes,
+            'add_host'
+        )
 
     def refresh(self, software_profile_list, *args, **kwargs):
         self.getLogger().debug('refresh: {} {} kargs {}'.format(software_profile_list,
