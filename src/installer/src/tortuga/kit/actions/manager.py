@@ -89,8 +89,8 @@ class KitActionsManager(TortugaObjectManager):
         #
         # This needs to be here because of circular imports :(
         #
-        from tortuga.db.nodeDbApi import NodeDbApi
-        nodes = NodeDbApi().getNodesByAddHostSession(
+        from tortuga.node.nodeApi import NodeApi
+        nodes = NodeApi().getNodesByAddHostSession(
             self.session, add_host_session)
 
         self._run_action_with_node_list(component_installers,
