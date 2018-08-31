@@ -16,7 +16,7 @@
 
 import threading
 import uuid
-from typing import Optional
+from typing import List, Optional
 
 from sqlalchemy.orm.session import Session
 from tortuga.db.hardwareProfilesDbHandler import HardwareProfilesDbHandler
@@ -44,19 +44,18 @@ class AddHostManager(TortugaObjectManager):
         self._nodeDbApi = NodeDbApi()
         self._sessions = ObjectStoreManager.get(namespace='add-host-manager')
 
-    def addHosts(self, session, addHostRequest):
+    def addHosts(self, session: Session, addHostRequest: dict) -> None:
         """
         Raises:
             HardwareProfileNotFound
+            ResourceAdapterNotFound
         """
 
         self.getLogger().debug('addHosts()')
 
-        softwareProfilesDbHandler = SoftwareProfilesDbHandler()
-        hardwareProfilesDbHandler = HardwareProfilesDbHandler()
-
-        dbHardwareProfile = hardwareProfilesDbHandler.getHardwareProfile(
-            session, addHostRequest['hardwareProfile'])
+        dbHardwareProfile = \
+            HardwareProfilesDbHandler().getHardwareProfile(
+                session, addHostRequest['hardwareProfile'])
 
         if not dbHardwareProfile.resourceadapter:
             errmsg = ('Resource adapter not defined for hardware'
@@ -69,16 +68,18 @@ class AddHostManager(TortugaObjectManager):
         softwareProfileName = addHostRequest['softwareProfile'] \
             if 'softwareProfile' in addHostRequest else None
 
-        dbSoftwareProfile = softwareProfilesDbHandler.\
-            getSoftwareProfile(session, softwareProfileName) \
+        dbSoftwareProfile = \
+            SoftwareProfilesDbHandler().getSoftwareProfile(
+                session, softwareProfileName) \
             if softwareProfileName else None
 
         # Look up and/or create tags as necessary
         tags = get_tags(session, addHostRequest['tags']) \
             if 'tags' in addHostRequest else []
 
-        ResourceAdapterClass = resourceAdapterFactory.get_resourceadapter_class(
-            dbHardwareProfile.resourceadapter.name)
+        ResourceAdapterClass = \
+            resourceAdapterFactory.get_resourceadapter_class(
+                dbHardwareProfile.resourceadapter.name)
 
         resourceAdapter = ResourceAdapterClass(
             addHostSession=addHostRequest['addHostSession'])
@@ -150,7 +151,7 @@ class AddHostManager(TortugaObjectManager):
         # Always go over the web service for this call.
         SyncWsApi().scheduleClusterUpdate(updateReason='Node(s) added')
 
-    def updateStatus(self, addHostSession, msg):
+    def updateStatus(self, addHostSession: str, msg: str) -> None:
         self._addHostLock.acquire()
 
         try:
@@ -215,10 +216,10 @@ class AddHostManager(TortugaObjectManager):
 
             return session_id
 
-    def delete_session(self, session_id):
+    def delete_session(self, session_id: str) -> None:
         """TODO: currently a no-op"""
 
-    def delete_sessions(self, session_ids):
+    def delete_sessions(self, session_ids: List[str]) -> None:
         """Bulk session deletion
 
         Currently only called when deleting nodes
@@ -234,7 +235,8 @@ class AddHostManager(TortugaObjectManager):
 
                     self._sessions.delete(session_id)
 
-    def update_session(self, session_id, running=None):
+    def update_session(
+            self, session_id: str, running: Optional[bool] = None):
         self.getLogger().debug(
             'Updating add host session [%s] (status: running=%s)' % (
                 session_id, str(running)))
@@ -246,10 +248,10 @@ class AddHostManager(TortugaObjectManager):
             self._sessions.set(session_id, session)
 
 
-def get_tags(session, tagdict):
+def get_tags(session: Session, tagdict: dict) -> List[Tag]:
     tags = []
 
-    for key, value in list(tagdict.items()):
+    for key, value in tagdict.items():
         tag = TagsDbHandler().get_tag(session, key, value=value)
         if not tag:
             tag = Tag(key, value)
