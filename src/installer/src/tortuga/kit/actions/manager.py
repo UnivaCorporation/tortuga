@@ -45,12 +45,18 @@ class KitActionsManager(TortugaObjectManager):
 
         return user_data
 
-    def pre_add_host(self, hardware_profile_name, software_profile_name,
-                     hostname, ip, *args, **kwargs):
+    def pre_add_host(
+            self, hardware_profile_name: str, software_profile_name: str,
+            hostname: str, ip: str) -> None:
+        """
+        This method is called from the resource adapter after a
+        node/instance has been created but before control is returned back
+        to add host workflow.
+        """
+
         self.getLogger().debug(
-            'pre_add_host: {}, {}, {}, {}, {}'.format(
-                hardware_profile_name, software_profile_name, hostname,
-                ip, args, kwargs
+            'pre_add_host: {}, {}, {}, {}'.format(
+                hardware_profile_name, software_profile_name, hostname, ip
             )
         )
 
@@ -61,9 +67,7 @@ class KitActionsManager(TortugaObjectManager):
                 hardware_profile_name,
                 software_profile_name,
                 hostname,
-                ip,
-                *args,
-                **kwargs
+                ip
             )
 
     def post_add_host(
