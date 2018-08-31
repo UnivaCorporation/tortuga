@@ -171,7 +171,6 @@ setup(
             'get-usable-nodes=tortuga.scripts.get_usable_nodes:main',
             'install-kit=tortuga.scripts.install_kit:main',
             'install-os-kit=tortuga.scripts.install_os_kit:main',
-            'pre-add-host=tortuga.scripts.pre_add_host:main',
             'run-post-install=tortuga.scripts.run_post_install:main',
             'set-installer-hostname=tortuga.scripts.set_installer_hostname:main',
             'set-private-dns-zone=tortuga.scripts.set_private_dns_zone:main',
