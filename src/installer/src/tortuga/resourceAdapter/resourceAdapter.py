@@ -517,9 +517,9 @@ class ResourceAdapter(UserDataMixin): \
         bhm.rmPXEFile(node)
         bhm.removeDhcpLease(node)
 
-    def _pre_add_host(self, name: str, hwprofilename: str, swprofilename: str,
-                      ip: str) -> None: \
-            # pylint: disable=unused-argument
+    def _pre_add_host(
+            self, name: str, hwprofilename: str, swprofilename: str,
+            ip: Optional[str]) -> None:
         # Perform "pre-add-host" operation
         command = ('sudo %s/pre-add-host'
                    ' --hardware-profile %s'
