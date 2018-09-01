@@ -14,14 +14,12 @@
 
 # pylint: disable=no-member
 
-import datetime
-import json
-
-import cherrypy
 from marshmallow import Schema, fields
 
+import cherrypy
 from tortuga.addhost.addHostManager import AddHostManager
 from tortuga.addhost.task import enqueue_addnodes_request
+from tortuga.addhost.utility import validate_addnodes_request
 from tortuga.db.nodeRequestsDbHandler import NodeRequestsDbHandler
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.notFound import NotFound
@@ -72,6 +70,10 @@ class AddHostController(TortugaController):
         try:
             if 'node' not in cherrypy.request.json:
                 raise InvalidArgument('Malformed request')
+
+            validate_addnodes_request(
+                cherrypy.request.db, cherrypy.request.json['node']
+            )
 
             addNodesRequest = {
                 'addNodesRequest': cherrypy.request.json['node'],
