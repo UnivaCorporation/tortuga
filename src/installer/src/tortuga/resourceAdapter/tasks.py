@@ -40,4 +40,4 @@ def delete_nodes(transaction_id: str, nodespec: str, force: bool = False) -> Non
             process_delete_host_request(
                 session, transaction_id, nodespec, force=force)
     except (OperationFailed, NodeNotFound) as exc:
-        logger.error('Add nodes operation failed: {}'.format(exc))
+        logger.error('Delete nodes operation failed: {}'.format(exc))
