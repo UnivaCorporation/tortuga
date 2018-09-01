@@ -34,8 +34,3 @@ class NodeRequest(ModelBase):
     action = Column(String(255), nullable=False)
 
     owner = relationship('Admin')
-
-    def __init__(self, node_request=None):
-        super().__init__()
-
-        self.request = node_request

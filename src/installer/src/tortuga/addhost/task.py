@@ -45,10 +45,12 @@ def enqueue_addnodes_request(session: Session, addNodesRequest: dict):
 
 
 def _init_node_add_request(addNodesRequest):
-    request = NodeRequest(json.dumps(addNodesRequest['addNodesRequest']))
-    request.timestamp = datetime.datetime.utcnow()
-    request.addHostSession = AddHostManager().createNewSession()
-    request.action = 'ADD'
+    request = NodeRequest(
+        request=json.dumps(addNodesRequest['addNodesRequest']),
+        timestamp=datetime.datetime.utcnow(),
+        addHostSession=AddHostManager().createNewSession(),
+        action='ADD'
+    )
 
     if 'metadata' in addNodesRequest and \
             'admin_id' in addNodesRequest['metadata']:
