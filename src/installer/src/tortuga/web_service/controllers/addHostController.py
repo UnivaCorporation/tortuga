@@ -75,19 +75,20 @@ class AddHostController(TortugaController):
                 cherrypy.request.db, cherrypy.request.json['node']
             )
 
-            addNodesRequest = {
+            request = {
                 'addNodesRequest': cherrypy.request.json['node'],
             }
 
+            # associate authenticated user id with request
             admin_id = cherrypy.session.get('admin_id')
             if admin_id:
-                addNodesRequest['metadata'] = {
+                request['metadata'] = {
                     'admin_id': admin_id,
                 }
 
             response = {
                 'addHostSession': enqueue_addnodes_request(
-                    cherrypy.request.db, addNodesRequest),
+                    cherrypy.request.db, request),
             }
         except Exception as ex:  # pylint: disable=broad-except
             if not isinstance(ex, TortugaException):

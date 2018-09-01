@@ -15,10 +15,10 @@
 # pylint: disable=no-member
 
 import datetime
-import json
 import logging
 
 from sqlalchemy.orm.session import Session
+
 from tortuga.db.nodeRequestsDbHandler import NodeRequestsDbHandler
 from tortuga.events.types import AddNodeRequestComplete
 from tortuga.exceptions.tortugaException import TortugaException
@@ -29,7 +29,8 @@ from .contextManager import AddHostSessionContextManager
 logger = logging.getLogger('tortuga.addhost')
 
 
-def process_addhost_request(session: Session, addHostSession):
+def process_addhost_request(session: Session, request: dict,
+                            addHostSession: str):
     req = NodeRequestsDbHandler().get_by_addHostSession(
         session, addHostSession)
 
@@ -37,7 +38,7 @@ def process_addhost_request(session: Session, addHostSession):
         # session was deleted prior to being processed; nothing to do...
         return
 
-    addHostRequest = json.loads(req.request)
+    addHostRequest = request['addNodesRequest']
 
     #
     # Save this data so that we have it for firing the event below
@@ -50,8 +51,7 @@ def process_addhost_request(session: Session, addHostSession):
     with AddHostSessionContextManager(req.addHostSession) as ahm:
         try:
             logger.debug(
-                'process_addhost_request(): Processing add host'
-                ' request [%s]' % (req.addHostSession))
+                'Processing add host request [%s]', req.addHostSession)
 
             ahm.addHosts(session, addHostRequest)
 
@@ -62,9 +62,10 @@ def process_addhost_request(session: Session, addHostSession):
             session.delete(req)
 
             logger.debug(
-                'Add host request [%s] processed successfully' % (
-                    req.addHostSession))
-        except Exception as exc:
+                'Add host request [%s] processed successfully',
+                req.addHostSession
+            )
+        except Exception as exc:  # noqa pylint: disable=broad-except
             if not isinstance(exc, TortugaException):
                 logger.exception(
                     'Exception occurred during add host workflow')

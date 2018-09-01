@@ -14,23 +14,20 @@
 
 # pylint: disable=no-member
 
-import datetime
-
-import cherrypy
 from marshmallow import Schema, ValidationError, fields, validates
 from sqlalchemy.orm.session import Session
 
+import cherrypy
 from tortuga.addhost.addHostManager import AddHostManager
-from tortuga.db.models.nodeRequest import NodeRequest
-from tortuga.events.types import DeleteNodeRequestQueued
+from tortuga.node.task import enqueue_delete_hosts_request
+
+
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.exceptions.nodeTransferNotValid import NodeTransferNotValid
 from tortuga.exceptions.operationFailed import OperationFailed
-from tortuga.node import state
-from tortuga.node.nodeManager import NodeManager
 from tortuga.objects.tortugaObject import TortugaObjectList
-from tortuga.resourceAdapter.tasks import delete_nodes
+
 from tortuga.schema import NodeSchema
 from tortuga.utility.helper import str2bool
 from tortuga.web_service.auth.decorators import authentication_required
@@ -547,60 +544,3 @@ class NodeController(TortugaController):
             response = self.errorResponse(str(ex))
 
         return self.formatResponse(response)
-
-
-def enqueue_delete_hosts_request(session: Session, nodespec: str,
-                                 force: bool):
-    """
-    Raises:
-        NodeNotFound
-    """
-
-    request = _init_node_delete_request(nodespec)
-    session.add(request)
-    session.commit()
-
-    #
-    # Fire the delete node request queued event
-    #
-    evt_request = {
-        'name': nodespec,
-        'force': force,
-    }
-    DeleteNodeRequestQueued.fire(request_id=request.id, request=evt_request)
-
-    #
-    # Prepend the node state with DELETING_PREFIX prior to actually
-    # attempting the delete operation. Make sure this isn't a second attempt
-    # first, as we don't want multiple prepends...
-    #
-    nm = NodeManager()
-
-    nodes = nm.getNodesByNameFilter(
-        session, nodespec, include_installer=False)
-    if not nodes:
-        raise NodeNotFound('No nodes matching nodespec [{}]'.format(nodespec))
-
-    for node in nodes:
-        if not node.getState().startswith(state.DELETING_PREFIX):
-            nm.updateNodeStatus(
-                session,
-                node.getName(),
-                '{}{}'.format(state.DELETING_PREFIX, node.getState())
-            )
-
-    #
-    # Run async task
-    #
-    delete_nodes.delay(request.addHostSession, nodespec, force=force)
-
-    return request.addHostSession
-
-
-def _init_node_delete_request(nodespec):
-    request = NodeRequest(nodespec)
-    request.timestamp = datetime.datetime.utcnow()
-    request.addHostSession = AddHostManager().createNewSession()
-    request.action = 'DELETE'
-
-    return request

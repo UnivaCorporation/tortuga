@@ -12,22 +12,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import datetime
-import json
-
 from sqlalchemy.orm.session import Session
 
-
-from tortuga.db.models.nodeRequest import NodeRequest
 from tortuga.events.types import AddNodeRequestQueued
 from tortuga.resourceAdapter.tasks import add_nodes
 
-from .addHostManager import AddHostManager
+from .addHostManager import _init_node_add_request
 
 
-def enqueue_addnodes_request(session: Session, addNodesRequest: dict):
-    request = _init_node_add_request(addNodesRequest)
+def enqueue_addnodes_request(session: Session, addNodesRequest: dict) -> str:
+    """
+    Enqueue add nodes request.
+
+    request = {
+        'addNodesRequest': { ... },
+        'metadata': {
+            'admin_id': ...
+        }
+    }
+    """
+
+    #
+    # Run async task
+    #
+    result = add_nodes.delay(addNodesRequest)
+
+    # use Celery task id as 'addHostSession' and persist request in database
+    request = _init_node_add_request(addNodesRequest, result.id)
+
     session.add(request)
+
     session.commit()
 
     #
@@ -36,24 +50,4 @@ def enqueue_addnodes_request(session: Session, addNodesRequest: dict):
     AddNodeRequestQueued.fire(request_id=request.id,
                               request=addNodesRequest['addNodesRequest'])
 
-    #
-    # Run async task
-    #
-    add_nodes.delay(request.addHostSession)
-
     return request.addHostSession
-
-
-def _init_node_add_request(addNodesRequest):
-    request = NodeRequest(
-        request=json.dumps(addNodesRequest['addNodesRequest']),
-        timestamp=datetime.datetime.utcnow(),
-        addHostSession=AddHostManager().createNewSession(),
-        action='ADD'
-    )
-
-    if 'metadata' in addNodesRequest and \
-            'admin_id' in addNodesRequest['metadata']:
-        request.admin_id = addNodesRequest['metadata']['admin_id']
-
-    return request

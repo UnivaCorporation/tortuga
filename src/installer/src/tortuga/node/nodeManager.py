@@ -14,6 +14,7 @@
 
 # pylint: disable=no-self-use,no-member,no-name-in-module
 
+import datetime
 import time
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -25,6 +26,7 @@ from tortuga.config.configManager import ConfigManager
 from tortuga.db.models.hardwareProfile import \
     HardwareProfile as HardwareProfileModel
 from tortuga.db.models.node import Node as NodeModel
+from tortuga.db.models.nodeRequest import NodeRequest
 from tortuga.db.models.softwareProfile import \
     SoftwareProfile as SoftwareProfileModel
 from tortuga.db.nodeDbApi import NodeDbApi
@@ -1620,3 +1622,14 @@ def get_default_relations(relations: Optional[OptionDict]):
     })
 
     return result
+
+
+def _init_node_delete_request(nodespec: str, addHostSession: str):
+    request = NodeRequest(
+        request=nodespec,
+        timestamp=datetime.datetime.utcnow(),
+        addHostSession=AddHostManager().createNewSession(addHostSession),
+        action='DELETE'
+    )
+
+    return request

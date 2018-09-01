@@ -14,12 +14,15 @@
 
 # pylint: disable=no-member,maybe-no-member
 
+import datetime
+import json
 import threading
-import uuid
 from typing import List, Optional
 
 from sqlalchemy.orm.session import Session
+
 from tortuga.db.hardwareProfilesDbHandler import HardwareProfilesDbHandler
+from tortuga.db.models.nodeRequest import NodeRequest
 from tortuga.db.models.tag import Tag
 from tortuga.db.nodeDbApi import NodeDbApi
 from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
@@ -202,19 +205,17 @@ class AddHostManager(TortugaObjectManager):
 
             return status_copy
 
-    def createNewSession(self) -> str:
+    def createNewSession(self, session_id: str) -> str:
         self.getLogger().debug('createNewSession()')
 
         with self._addHostLock:
             # Create new add nodes session
-            session_id = str(uuid.uuid4())
-
             self._sessions.set(
                 session_id,
                 {'status': AddHostStatus().getCleanDict()}
             )
 
-            return session_id
+        return session_id
 
     def delete_session(self, session_id: str) -> None:
         """TODO: currently a no-op"""
@@ -259,3 +260,18 @@ def get_tags(session: Session, tagdict: dict) -> List[Tag]:
         tags.append(tag)
 
     return tags
+
+
+def _init_node_add_request(addNodesRequest: dict, addHostSession: str):
+    request = NodeRequest(
+        request=json.dumps(addNodesRequest['addNodesRequest']),
+        timestamp=datetime.datetime.utcnow(),
+        action='ADD',
+        addHostSession=AddHostManager().createNewSession(addHostSession),
+    )
+
+    if 'metadata' in addNodesRequest and \
+            'admin_id' in addNodesRequest['metadata']:
+        request.admin_id = addNodesRequest['metadata']['admin_id']
+
+    return request
