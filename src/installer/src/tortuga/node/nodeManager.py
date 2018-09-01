@@ -71,6 +71,7 @@ class NodeManager(TortugaObjectManager): \
             self._cm)
         self._syncApi = SyncApi()
         self._nodesDbHandler = NodesDbHandler()
+        self._addHostManager = AddHostManager()
 
     def __validateHostName(self, hostname: str, name_format: str) -> None:
         """
@@ -484,7 +485,7 @@ class NodeManager(TortugaObjectManager): \
             )
 
             if addHostSessions:
-                AddHostManager().delete_sessions(addHostSessions)
+                self._addHostManager.delete_sessions(addHostSessions)
 
             for nodeName in result['NodesDeleted']:
                 # Remove the Puppet cert
@@ -1190,7 +1191,7 @@ class NodeManager(TortugaObjectManager): \
 
             # For each 'addHostSession', call postAddHost()
             for addHostSession, hwprofile in addHostSessions.items():
-                AddHostManager().postAddHost(
+                self._addHostManager.postAddHost(
                     session, hwprofile, dstswprofilename, addHostSession)
 
         return results
