@@ -15,9 +15,8 @@
 from sqlalchemy.orm.session import Session
 
 from tortuga.events.types import AddNodeRequestQueued
+from tortuga.node.nodeManager import init_async_node_request
 from tortuga.resourceAdapter.tasks import add_nodes
-
-from .addHostManager import _init_node_add_request
 
 
 def enqueue_addnodes_request(session: Session, addNodesRequest: dict) -> str:
@@ -37,8 +36,19 @@ def enqueue_addnodes_request(session: Session, addNodesRequest: dict) -> str:
     #
     result = add_nodes.delay(addNodesRequest)
 
+    if 'metadata' in addNodesRequest and \
+            'admin_id' in addNodesRequest['metadata']:
+        admin_id = addNodesRequest['metadata']['admin_id']
+    else:
+        admin_id = None
+
     # use Celery task id as 'addHostSession' and persist request in database
-    request = _init_node_add_request(addNodesRequest, result.id)
+    request = init_async_node_request(
+        'ADD',
+        addNodesRequest['addNodesRequest'],
+        result.id,
+        admin_id=admin_id
+    )
 
     session.add(request)
 

@@ -16,6 +16,7 @@
 
 import datetime
 import time
+import json
 from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy.orm.session import Session
@@ -1624,12 +1625,18 @@ def get_default_relations(relations: Optional[OptionDict]):
     return result
 
 
-def _init_node_delete_request(nodespec: str, addHostSession: str):
+def init_async_node_request(action: str, data: Any, addHostSession: str, *,
+                            admin_id: Optional[int] = None):
+    """
+    Serialize async node request to NodeRequest (db) object
+    """
+
     request = NodeRequest(
-        request=nodespec,
+        request=json.dumps(data),
         timestamp=datetime.datetime.utcnow(),
+        action=action,
         addHostSession=AddHostManager().createNewSession(addHostSession),
-        action='DELETE'
+        admin_id=admin_id,
     )
 
     return request

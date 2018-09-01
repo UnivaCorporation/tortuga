@@ -17,7 +17,7 @@ from sqlalchemy.orm.session import Session
 from tortuga.events.types import DeleteNodeRequestQueued
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.node import state
-from tortuga.node.nodeManager import NodeManager, _init_node_delete_request
+from tortuga.node.nodeManager import NodeManager, init_async_node_request
 from tortuga.resourceAdapter.tasks import delete_nodes
 
 
@@ -34,7 +34,7 @@ def enqueue_delete_hosts_request(session: Session, nodespec: str,
     result = delete_nodes.delay(nodespec, force=force)
 
     # use Celery task id as 'addHostSession' and persist request in database
-    request = _init_node_delete_request(nodespec, result.id)
+    request = init_async_node_request('DELETE', nodespec, result.id)
 
     session.add(request)
 

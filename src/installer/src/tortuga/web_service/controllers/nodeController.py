@@ -15,19 +15,14 @@
 # pylint: disable=no-member
 
 from marshmallow import Schema, ValidationError, fields, validates
-from sqlalchemy.orm.session import Session
 
 import cherrypy
-from tortuga.addhost.addHostManager import AddHostManager
-from tortuga.node.task import enqueue_delete_hosts_request
-
-
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.exceptions.nodeTransferNotValid import NodeTransferNotValid
 from tortuga.exceptions.operationFailed import OperationFailed
+from tortuga.node.task import enqueue_delete_hosts_request
 from tortuga.objects.tortugaObject import TortugaObjectList
-
 from tortuga.schema import NodeSchema
 from tortuga.utility.helper import str2bool
 from tortuga.web_service.auth.decorators import authentication_required
