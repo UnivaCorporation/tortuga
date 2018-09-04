@@ -34,7 +34,6 @@
 Defaults !requiretty
 
 apache ALL=(ALL) NOPASSWD: /opt/tortuga/bin/run_cluster_update.sh
-apache ALL=(ALL) NOPASSWD: /opt/tortuga/bin/pre-add-host
 puppet ALL=(ALL) NOPASSWD: /opt/tortuga/bin/get-tortuga-node
 puppet ALL=(ALL) NOPASSWD: /opt/tortuga/bin/get-provisioning-networks
 puppet ALL=(ALL) NOPASSWD: /opt/tortuga/bin/get-component-node-list

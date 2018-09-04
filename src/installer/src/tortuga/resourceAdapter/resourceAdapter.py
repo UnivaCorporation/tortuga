@@ -23,9 +23,9 @@ import sys
 import traceback
 from typing import Any, Dict, List, Optional
 
-import gevent
 from sqlalchemy.orm.session import Session
 
+import gevent
 from tortuga.addhost.addHostManager import AddHostManager
 from tortuga.config.configManager import ConfigManager
 from tortuga.db.models.hardwareProfile import HardwareProfile
@@ -41,6 +41,7 @@ from tortuga.exceptions.configurationError import ConfigurationError
 from tortuga.exceptions.nicNotFound import NicNotFound
 from tortuga.exceptions.resourceNotFound import ResourceNotFound
 from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
+from tortuga.kit.actions.manager import KitActionsManager
 from tortuga.objects.node import Node as TortugaNode
 from tortuga.os_utility.osUtility import getOsObjectFactory
 from tortuga.parameter.parameterApi import ParameterApi
@@ -520,28 +521,19 @@ class ResourceAdapter(UserDataMixin): \
     def _pre_add_host(
             self, name: str, hwprofilename: str, swprofilename: str,
             ip: Optional[str]) -> None:
-        # Perform "pre-add-host" operation
-        command = ('sudo %s/pre-add-host'
-                   ' --hardware-profile %s'
-                   ' --software-profile %s'
-                   ' --host-name %s' % (
-                       self._cm.getBinDir(),
-                       hwprofilename,
-                       swprofilename,
-                       name))
+        """
+        Call pre-add host component actions
+        """
 
-        if ip:
-            command += ' --ip %s' % (ip)
+        kitmgr = KitActionsManager()
+        kitmgr.session = self.session
 
-        self.getLogger().debug('calling command= [%s]' % (command))
-
-        p = subprocess.Popen(
-            command, shell=True, stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT, close_fds=True)
-
-        p.communicate()
-
-        p.wait()
+        kitmgr.pre_add_host(
+            hwprofilename,
+            swprofilename,
+            name,
+            ip
+        )
 
     @property
     def installer_public_hostname(self) -> str:
