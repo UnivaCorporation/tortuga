@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from tortuga.node import state
-from tortuga.tasks.celery import app
 from .base import BaseListener
 from ..types import NodeStateChanged
 
@@ -46,6 +45,7 @@ class NodeProvisioningListener(BaseListener):
             return
 
         from tortuga.node.nodeManager import NodeManager
+        from tortuga.tasks.celery import app
         from tortuga.exceptions.nodeNotFound import NodeNotFound
 
         with app.dbm.session() as session:
