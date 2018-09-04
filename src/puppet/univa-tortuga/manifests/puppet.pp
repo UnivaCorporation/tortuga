@@ -35,6 +35,11 @@ class tortuga::puppet::config (
       # 'set agent/report true',
     ],
   }
+
+  augeas { 'disable deprecation warnings':
+    context => '/files/etc/puppetlabs/puppet/puppet.conf',
+    changes => 'set main/disable_warnings deprecations',
+  }
 }
 
 class tortuga::puppet (
