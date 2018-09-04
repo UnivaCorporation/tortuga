@@ -24,20 +24,22 @@ from tortuga.tasks.celery import app
 logger = logging.getLogger(__name__)
 
 
-@app.task()
-def add_nodes(session_id: str) -> None:
+@app.task(bind=True)
+def add_nodes(self, request: dict) -> None:
     try:
         with app.dbm.session() as session:
-            process_addhost_request(session, session_id)
+            # use Celery task id as 'addHostSession'
+            process_addhost_request(session, request, self.request.id)
     except (OperationFailed, NodeNotFound) as exc:
         logger.error('Add nodes operation failed: {}'.format(exc))
 
 
-@app.task()
-def delete_nodes(transaction_id: str, nodespec: str, force: bool = False) -> None:
+@app.task(bind=True)
+def delete_nodes(self, nodespec: str, force: bool = False) -> None:
     try:
         with app.dbm.session() as session:
+            # use Celery task id as 'addHostSession'
             process_delete_host_request(
-                session, transaction_id, nodespec, force=force)
+                session, self.request.id, nodespec, force=force)
     except (OperationFailed, NodeNotFound) as exc:
-        logger.error('Add nodes operation failed: {}'.format(exc))
+        logger.error('Delete nodes operation failed: {}'.format(exc))

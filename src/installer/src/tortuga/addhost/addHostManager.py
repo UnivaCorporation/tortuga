@@ -15,10 +15,10 @@
 # pylint: disable=no-member,maybe-no-member
 
 import threading
-import uuid
 from typing import List, Optional
 
 from sqlalchemy.orm.session import Session
+
 from tortuga.db.hardwareProfilesDbHandler import HardwareProfilesDbHandler
 from tortuga.db.models.tag import Tag
 from tortuga.db.nodeDbApi import NodeDbApi
@@ -202,19 +202,17 @@ class AddHostManager(TortugaObjectManager):
 
             return status_copy
 
-    def createNewSession(self) -> str:
+    def createNewSession(self, session_id: str) -> str:
         self.getLogger().debug('createNewSession()')
 
         with self._addHostLock:
             # Create new add nodes session
-            session_id = str(uuid.uuid4())
-
             self._sessions.set(
                 session_id,
                 {'status': AddHostStatus().getCleanDict()}
             )
 
-            return session_id
+        return session_id
 
     def delete_session(self, session_id: str) -> None:
         """TODO: currently a no-op"""

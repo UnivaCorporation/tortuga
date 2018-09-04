@@ -14,14 +14,12 @@
 
 # pylint: disable=no-member
 
-import datetime
-import json
-
-import cherrypy
 from marshmallow import Schema, fields
 
+import cherrypy
 from tortuga.addhost.addHostManager import AddHostManager
 from tortuga.addhost.task import enqueue_addnodes_request
+from tortuga.addhost.utility import validate_addnodes_request
 from tortuga.db.nodeRequestsDbHandler import NodeRequestsDbHandler
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.notFound import NotFound
@@ -73,19 +71,24 @@ class AddHostController(TortugaController):
             if 'node' not in cherrypy.request.json:
                 raise InvalidArgument('Malformed request')
 
-            addNodesRequest = {
+            validate_addnodes_request(
+                cherrypy.request.db, cherrypy.request.json['node']
+            )
+
+            request = {
                 'addNodesRequest': cherrypy.request.json['node'],
             }
 
+            # associate authenticated user id with request
             admin_id = cherrypy.session.get('admin_id')
             if admin_id:
-                addNodesRequest['metadata'] = {
+                request['metadata'] = {
                     'admin_id': admin_id,
                 }
 
             response = {
                 'addHostSession': enqueue_addnodes_request(
-                    cherrypy.request.db, addNodesRequest),
+                    cherrypy.request.db, request),
             }
         except Exception as ex:  # pylint: disable=broad-except
             if not isinstance(ex, TortugaException):

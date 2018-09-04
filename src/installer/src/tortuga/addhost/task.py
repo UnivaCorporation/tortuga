@@ -12,23 +12,46 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import datetime
-import json
-
 from sqlalchemy.orm.session import Session
 
-from tortuga.addhost.utility import validate_addnodes_request
-from tortuga.db.models.nodeRequest import NodeRequest
 from tortuga.events.types import AddNodeRequestQueued
+from tortuga.node.nodeManager import init_async_node_request
 from tortuga.resourceAdapter.tasks import add_nodes
 
-from .addHostManager import AddHostManager
 
+def enqueue_addnodes_request(session: Session, addNodesRequest: dict) -> str:
+    """
+    Enqueue add nodes request.
 
-def enqueue_addnodes_request(session: Session, addNodesRequest: dict):
-    validate_addnodes_request(session, addNodesRequest['addNodesRequest'])
-    request = _init_node_add_request(addNodesRequest)
+    request = {
+        'addNodesRequest': { ... },
+        'metadata': {
+            'admin_id': ...
+        }
+    }
+    """
+
+    #
+    # Run async task
+    #
+    result = add_nodes.delay(addNodesRequest)
+
+    if 'metadata' in addNodesRequest and \
+            'admin_id' in addNodesRequest['metadata']:
+        admin_id = addNodesRequest['metadata']['admin_id']
+    else:
+        admin_id = None
+
+    # use Celery task id as 'addHostSession' and persist request in database
+    request = init_async_node_request(
+        'ADD',
+        addNodesRequest['addNodesRequest'],
+        result.id,
+        admin_id=admin_id
+    )
+
     session.add(request)
+
     session.commit()
 
     #
@@ -37,22 +60,4 @@ def enqueue_addnodes_request(session: Session, addNodesRequest: dict):
     AddNodeRequestQueued.fire(request_id=request.id,
                               request=addNodesRequest['addNodesRequest'])
 
-    #
-    # Run async task
-    #
-    add_nodes.delay(request.addHostSession)
-
     return request.addHostSession
-
-
-def _init_node_add_request(addNodesRequest):
-    request = NodeRequest(json.dumps(addNodesRequest['addNodesRequest']))
-    request.timestamp = datetime.datetime.utcnow()
-    request.addHostSession = AddHostManager().createNewSession()
-    request.action = 'ADD'
-
-    if 'metadata' in addNodesRequest and \
-            'admin_id' in addNodesRequest['metadata']:
-        request.admin_id = addNodesRequest['metadata']['admin_id']
-
-    return request

@@ -14,7 +14,9 @@
 
 # pylint: disable=no-self-use,no-member,no-name-in-module
 
+import datetime
 import time
+import json
 from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy.orm.session import Session
@@ -25,6 +27,7 @@ from tortuga.config.configManager import ConfigManager
 from tortuga.db.models.hardwareProfile import \
     HardwareProfile as HardwareProfileModel
 from tortuga.db.models.node import Node as NodeModel
+from tortuga.db.models.nodeRequest import NodeRequest
 from tortuga.db.models.softwareProfile import \
     SoftwareProfile as SoftwareProfileModel
 from tortuga.db.nodeDbApi import NodeDbApi
@@ -68,6 +71,7 @@ class NodeManager(TortugaObjectManager): \
             self._cm)
         self._syncApi = SyncApi()
         self._nodesDbHandler = NodesDbHandler()
+        self._addHostManager = AddHostManager()
 
     def __validateHostName(self, hostname: str, name_format: str) -> None:
         """
@@ -481,7 +485,7 @@ class NodeManager(TortugaObjectManager): \
             )
 
             if addHostSessions:
-                AddHostManager().delete_sessions(addHostSessions)
+                self._addHostManager.delete_sessions(addHostSessions)
 
             for nodeName in result['NodesDeleted']:
                 # Remove the Puppet cert
@@ -1187,7 +1191,7 @@ class NodeManager(TortugaObjectManager): \
 
             # For each 'addHostSession', call postAddHost()
             for addHostSession, hwprofile in addHostSessions.items():
-                AddHostManager().postAddHost(
+                self._addHostManager.postAddHost(
                     session, hwprofile, dstswprofilename, addHostSession)
 
         return results
@@ -1620,3 +1624,20 @@ def get_default_relations(relations: Optional[OptionDict]):
     })
 
     return result
+
+
+def init_async_node_request(action: str, data: Any, addHostSession: str, *,
+                            admin_id: Optional[int] = None):
+    """
+    Serialize async node request to NodeRequest (db) object
+    """
+
+    request = NodeRequest(
+        request=json.dumps(data),
+        timestamp=datetime.datetime.utcnow(),
+        action=action,
+        addHostSession=AddHostManager().createNewSession(addHostSession),
+        admin_id=admin_id,
+    )
+
+    return request
