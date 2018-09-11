@@ -1626,7 +1626,7 @@ def get_default_relations(relations: Optional[OptionDict]):
     return result
 
 
-def init_async_node_request(action: str, data: Any, addHostSession: str, *,
+def init_async_node_request(action: str, data: Any, *,
                             admin_id: Optional[int] = None):
     """
     Serialize async node request to NodeRequest (db) object
@@ -1636,7 +1636,7 @@ def init_async_node_request(action: str, data: Any, addHostSession: str, *,
         request=json.dumps(data),
         timestamp=datetime.datetime.utcnow(),
         action=action,
-        addHostSession=AddHostManager().createNewSession(addHostSession),
+        addHostSession=AddHostManager().createNewSession(),
         admin_id=admin_id,
     )
 

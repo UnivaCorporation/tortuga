@@ -31,28 +31,30 @@ def enqueue_addnodes_request(session: Session, addNodesRequest: dict) -> str:
     }
     """
 
-    #
-    # Run async task
-    #
-    result = add_nodes.delay(addNodesRequest)
-
+    # determine id of user making request
     if 'metadata' in addNodesRequest and \
             'admin_id' in addNodesRequest['metadata']:
         admin_id = addNodesRequest['metadata']['admin_id']
     else:
         admin_id = None
 
-    # use Celery task id as 'addHostSession' and persist request in database
+    # persist request in database
     request = init_async_node_request(
         'ADD',
         addNodesRequest['addNodesRequest'],
-        result.id,
         admin_id=admin_id
     )
 
     session.add(request)
 
     session.commit()
+
+    #
+    # Run async task
+    #
+    add_nodes.apply_async(
+        args=(addNodesRequest,), task_id=request.addHostSession
+    )
 
     #
     # Fire the add node request queued event
