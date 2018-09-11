@@ -38,7 +38,13 @@ def process_delete_host_request(session: Session, transaction_id: str,
         req = NodeRequestsDbHandler().get_by_addHostSession(
             session, transaction_id)
         if req is None:
-            # Session was deleted prior to being process. Nothing to do...
+            # Session was deleted prior to being processed. Nothing to do...
+
+            logger.warning(
+                'Delete host request [%s] not found; nothing to do...',
+                transaction_id
+            )
+
             return
 
         #
