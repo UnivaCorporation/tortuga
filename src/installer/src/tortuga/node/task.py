@@ -21,24 +21,28 @@ from tortuga.node.nodeManager import NodeManager, init_async_node_request
 from tortuga.resourceAdapter.tasks import delete_nodes
 
 
-def enqueue_delete_hosts_request(session: Session, nodespec: str,
-                                 force: bool):
+def enqueue_delete_hosts_request(session: Session, nodespec: str, force: bool):
     """
     Raises:
         NodeNotFound
     """
 
-    #
-    # Run async task
-    #
-    result = delete_nodes.delay(nodespec, force=force)
-
     # use Celery task id as 'addHostSession' and persist request in database
-    request = init_async_node_request('DELETE', nodespec, result.id)
+    request = init_async_node_request('DELETE', nodespec)
 
     session.add(request)
 
     session.commit()
+
+    #
+    # Run async task
+    #
+    delete_nodes.delay(nodespec, force=force)
+
+    delete_nodes.apply_async(
+        args=(nodespec,), kwargs=dict(force=force),
+        task_id=request.addHostSession,
+    )
 
     #
     # Fire the delete node request queued event

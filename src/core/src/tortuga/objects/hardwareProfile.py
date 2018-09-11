@@ -296,8 +296,9 @@ class HardwareProfile(TortugaObject): \
         hardwareProfile.setAdmins(
             tortuga.objects.admin.Admin.getListFromDbDict(_dict))
 
-        hardwareProfile.setNodes(
-            tortuga.objects.node.Node.getListFromDbDict(_dict))
+        if ignore and 'nodes' not in ignore:
+            hardwareProfile.setNodes(
+                tortuga.objects.node.Node.getListFromDbDict(_dict))
 
         hardwareProfile.setProvisioningNics(
             tortuga.objects.nic.Nic.getListFromDbDict(_dict))
