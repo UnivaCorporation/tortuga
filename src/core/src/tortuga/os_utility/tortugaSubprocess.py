@@ -46,7 +46,7 @@ class TortugaSubprocess(subprocess.Popen):
             self, input_)
 
         if self.returncode != 0 and self._useExceptions:
-            raise CommandFailed('%s' % (self._stderr.rstrip()))
+            raise CommandFailed(str(self._stderr.decode().rstrip()))
 
         return self._stdout, self._stderr
 
