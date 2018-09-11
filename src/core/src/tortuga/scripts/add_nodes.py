@@ -93,7 +93,6 @@ class AddNodes(TortugaCli): \
         self.addOptionToGroup(
             mainGroup, '--resource-adapter-configuration', '-A',
             metavar='NAME',
-            default='default',
             help=_('Specify resource adapter configuration for operation'))
 
         outputGroup = _('Output options')

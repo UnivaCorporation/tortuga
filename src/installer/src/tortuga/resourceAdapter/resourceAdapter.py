@@ -151,9 +151,22 @@ class ResourceAdapter(UserDataMixin): \
 
     def validate_start_arguments(self, addNodesRequest: dict,
                                  dbHardwareProfile: HardwareProfile,
-                                 dbSoftwareProfile: SoftwareProfile):
-        self.__trace(
-            addNodesRequest, dbHardwareProfile, dbSoftwareProfile)
+                                 dbSoftwareProfile: SoftwareProfile): \
+            # pylint: disable=unused-argument
+        """
+        Validate arguments (eventually) passed to start() API
+        """
+
+        cfgname = addNodesRequest.get('resource_adapter_configuration')
+        if cfgname is None:
+            # use default resource adapter configuration, if set
+            cfgname = dbHardwareProfile.default_resource_adapter_config.name \
+                if dbHardwareProfile.default_resource_adapter_config else \
+                'default'
+
+        # ensure addNodesRequest reflects resource adapter configuration
+        # profile being used
+        addNodesRequest['resource_adapter_configuration'] = cfgname
 
     def stop(self, hardwareProfileName: str, deviceName: str):
         self.__trace(hardwareProfileName, deviceName)
