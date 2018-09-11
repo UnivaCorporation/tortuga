@@ -22,8 +22,9 @@ from tortuga.db.hardwareProfilesDbHandler import HardwareProfilesDbHandler
 from tortuga.db.models.node import Node
 from tortuga.db.networksDbHandler import NetworksDbHandler
 from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
-from tortuga.exceptions.networkNotFound import NetworkNotFound
+from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.invalidMacAddress import InvalidMacAddress
+from tortuga.exceptions.networkNotFound import NetworkNotFound
 
 
 api = AddHostServerLocal()
@@ -125,3 +126,22 @@ def test_validate_mac_address(dbm, mac):
 
 def test_get_host_name():
     assert get_host_name('host.domain') == 'host'
+
+
+@pytest.mark.parametrize('s,replacement,expected', [
+    ('compute-#NNNN', 9999, 'compute-9999'),
+    ('another-#NN', 0, 'another-00'),
+    ('#NN', 10, '10'),
+    pytest.param('compute-#N', 10, None,
+                 marks=pytest.mark.xfail(raises=InvalidArgument)),
+    pytest.param('compute-#NNN', 1000, None,
+                 marks=pytest.mark.xfail(raises=InvalidArgument)),
+    pytest.param('compute-#NNN', None, None,
+                 marks=pytest.mark.xfail(raises=InvalidArgument)),
+    ('compute', 1234, 'compute'),
+    ('compute-#NN', '_', 'compute-__'),
+    ('compute#NNN', 101, 'compute101'),
+    ('pre#NNpost', 99, 'pre99post'),
+])
+def test_substituteHashSpecifier(s, replacement, expected):
+    assert api._substituteHashSpecifier(s, '#N', replacement) == expected
