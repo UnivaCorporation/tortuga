@@ -187,8 +187,9 @@ class Node(TortugaObject): \
 
         if hardwareProfileDict:
             node.setHardwareProfile(
-                tortuga.objects.hardwareProfile.HardwareProfile.
-                getFromDict(hardwareProfileDict))
+                tortuga.objects.hardwareProfile.HardwareProfile.getFromDict(
+                    hardwareProfileDict, ignore=('nodes',))
+            )
 
         softwareProfileDict = _dict.get(
             tortuga.objects.softwareProfile.SoftwareProfile.ROOT_TAG)
@@ -213,8 +214,10 @@ class Node(TortugaObject): \
 
         if hardwareProfileDict:
             node.setHardwareProfile(
-                tortuga.objects.hardwareProfile.HardwareProfile.
-                getFromDbDict(hardwareProfileDict.__dict__))
+                tortuga.objects.hardwareProfile.HardwareProfile.getFromDbDict(
+                    hardwareProfileDict.__dict__, ignore=('nodes',)
+                )
+            )
 
             if hardwareProfileDict.resourceadapter:
                 node.setResourceAdapter(
