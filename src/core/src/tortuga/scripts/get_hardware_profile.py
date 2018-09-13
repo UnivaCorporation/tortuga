@@ -16,6 +16,7 @@
 
 import argparse
 import json
+from typing import Optional
 
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.wsapi.hardwareProfileWsApi import HardwareProfileWsApi
@@ -26,14 +27,15 @@ class GetHardwareProfileCli(TortugaCli):
     Get hardware profile command line interface.
     """
 
-    def parseArgs(self, usage=None):
+    def parseArgs(self, usage: Optional[str] = None):
         hardwareProfileAttrGroup = _('Hardware Profile Attribute Options')
 
         self.addOptionGroup(hardwareProfileAttrGroup, None)
 
         self.addOptionToGroup(
-            hardwareProfileAttrGroup, '--name', required=True,
-            help=_('hardware profile name'))
+            hardwareProfileAttrGroup, '--name', dest='deprecated_name',
+            help=argparse.SUPPRESS
+        )
 
         self.addOptionToGroup(
             hardwareProfileAttrGroup, '--nodes', action='store_true',
@@ -64,10 +66,27 @@ class GetHardwareProfileCli(TortugaCli):
             help=argparse.SUPPRESS
         )
 
+        self.getParser().add_argument(
+            'name', metavar='NAME', nargs='?', help=_('hardware profile name')
+        )
+
         super().parseArgs(usage=usage)
 
     def runCommand(self):
         self.parseArgs(usage=_('Display hardware profile details'))
+
+        if not self.getArgs().name and not self.getArgs().deprecated_name:
+            self.getParser().error(
+                'the following arguments are required: NAME'
+            )
+
+        if self.getArgs().name and self.getArgs().deprecated_name:
+            self.getParser().error(
+                'argument name: not allowed with argument --name'
+            )
+
+        name = self.getArgs().name \
+            if self.getArgs().name else self.getArgs().deprecated_name
 
         api = HardwareProfileWsApi(username=self.getUsername(),
                                    password=self.getPassword(),
@@ -90,8 +109,7 @@ class GetHardwareProfileCli(TortugaCli):
 
         optionDict['resourceadapter'] = True
 
-        hardwareProfile = api.getHardwareProfile(
-            self.getArgs().name, optionDict)
+        hardwareProfile = api.getHardwareProfile(name, optionDict)
 
         if self.getArgs().xml:
             print(hardwareProfile.getXmlRep())

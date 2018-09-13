@@ -17,6 +17,7 @@
 import argparse
 import json
 import os.path
+from typing import Optional
 
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.cli.utils import ParseOperatingSystemArgAction
@@ -28,7 +29,7 @@ from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
 
 
 class CreateSoftwareProfileCli(TortugaCli):
-    def parseArgs(self, usage=None):
+    def parseArgs(self, usage: Optional[str] = None):
         # Add options group and options specific to creation of a software
         # profile
         option_group_name = _('Create Software Profile Options')
@@ -44,8 +45,10 @@ class CreateSoftwareProfileCli(TortugaCli):
                               help=_('Path to JSON-formatted software profile'
                                      ' creation template'))
 
-        self.addOptionToGroup(option_group_name, '--name',
-                              help=_('Software profile name'))
+        self.addOptionToGroup(
+            option_group_name, '--name', dest='deprecated_name',
+            help=argparse.SUPPRESS
+        )
 
         self.addOptionToGroup(option_group_name, '--description',
                               dest='description',
@@ -80,10 +83,23 @@ class CreateSoftwareProfileCli(TortugaCli):
             dest='unmanaged',
             help=_('Create an unmanaged software profile'))
 
+        self.getParser().add_argument(
+            'name', metavar='NAME', nargs='?',
+            help=_('Software profile name')
+        )
+
         super().parseArgs(usage=usage)
 
     def runCommand(self):
         self.parseArgs(_('Create software profile'))
+
+        if self.getArgs().name and self.getArgs().deprecated_name:
+            self.getParser().error(
+                'argument name: not allowed with argument --name'
+            )
+
+        name = self.getArgs().name \
+            if self.getArgs().name else self.getArgs().deprecated_name
 
         # load template if specified with '--template', otherwise build
         # template
@@ -91,8 +107,8 @@ class CreateSoftwareProfileCli(TortugaCli):
             self.load_software_profile_template(
                 self.getArgs().jsonTemplatePath)
 
-        if self.getArgs().name:
-            tmpl_dict['name'] = self.getArgs().name
+        if name:
+            tmpl_dict['name'] = name
 
         if self.getArgs().description:
             tmpl_dict['description'] = self.getArgs().description

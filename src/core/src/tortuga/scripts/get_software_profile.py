@@ -16,6 +16,7 @@
 
 import argparse
 import json
+from typing import Optional
 
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.wsapi.hardwareProfileWsApi import HardwareProfileWsApi
@@ -28,19 +29,19 @@ class GetSoftwareProfileCli(TortugaCli):
     """
 
     def __init__(self):
-        super(GetSoftwareProfileCli, self).__init__()
+        super().__init__()
 
         self.swprofileapi = None
         self.hwprofileapi = None
 
-    def parseArgs(self, usage=None):
+    def parseArgs(self, usage: Optional[str] = None):
         softwareProfileAttrGroup = _('Software Profile Attribute Options')
 
         self.addOptionGroup(softwareProfileAttrGroup, None)
 
         self.addOptionToGroup(
-            softwareProfileAttrGroup, '--name', dest='name', required=True,
-            help=_('software profile name'))
+            softwareProfileAttrGroup, '--name', dest='deprecated_name',
+            help=argparse.SUPPRESS)
 
         self.addOptionToGroup(
             softwareProfileAttrGroup, '--nodes', action='store_true',
@@ -86,10 +87,28 @@ class GetSoftwareProfileCli(TortugaCli):
             help=argparse.SUPPRESS
         )
 
-        super(GetSoftwareProfileCli, self).parseArgs(usage=usage)
+        self.getParser().add_argument(
+            'name', metavar='NAME', nargs='?',
+            help=_('software profile name')
+        )
+
+        super().parseArgs(usage=usage)
 
     def runCommand(self):
         self.parseArgs(usage=_('Displays software profile details'))
+
+        if not self.getArgs().name and not self.getArgs().deprecated_name:
+            self.getParser().error(
+                'the following arguments are required: NAME'
+            )
+
+        if self.getArgs().name and self.getArgs().deprecated_name:
+            self.getParser().error(
+                'argument name: not allowed with argument --name'
+            )
+
+        name = self.getArgs().name \
+            if self.getArgs().name else self.getArgs().deprecated_name
 
         self.swprofileapi = SoftwareProfileWsApi(
             username=self.getUsername(),
@@ -117,8 +136,7 @@ class GetSoftwareProfileCli(TortugaCli):
         if self.getArgs().getAdmins:
             optionDict['admins'] = True
 
-        swprofile = self.swprofileapi.getSoftwareProfile(
-            self.getArgs().name, optionDict)
+        swprofile = self.swprofileapi.getSoftwareProfile(name, optionDict)
 
         if self.getArgs().json:
             print(json.dumps({
