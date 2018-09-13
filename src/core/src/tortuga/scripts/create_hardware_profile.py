@@ -12,23 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=no-member
 
 import argparse
 import json
-
 import os.path
+from typing import Optional
+
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.cli.utils import ParseOperatingSystemArgAction
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
-from tortuga.exceptions.invalidProfileCreationTemplate \
-    import InvalidProfileCreationTemplate
+from tortuga.exceptions.invalidProfileCreationTemplate import \
+    InvalidProfileCreationTemplate
 from tortuga.objects.hardwareProfile import HardwareProfile
 from tortuga.wsapi.hardwareProfileWsApi import HardwareProfileWsApi
 
 
 class CreateHardwareProfileCli(TortugaCli):
-    def parseArgs(self, usage=None):
+    def parseArgs(self, usage: Optional[str] = None):
         option_group_name = _('Create Hardware Profile Options')
 
         self.addOptionGroup(option_group_name, '')
@@ -41,8 +41,10 @@ class CreateHardwareProfileCli(TortugaCli):
                               help=_('Path to JSON-formatted hardware profile'
                                      ' creation template'))
 
-        self.addOptionToGroup(option_group_name, '--name',
-                              help=_('Hardware profile name'))
+        self.addOptionToGroup(
+            option_group_name, '--name', dest='deprecated_name',
+            help=argparse.SUPPRESS
+        )
 
         self.addOptionToGroup(option_group_name, '--description',
                               dest='description',
@@ -68,10 +70,22 @@ class CreateHardwareProfileCli(TortugaCli):
                               help=_('Do not use any defaults when'
                                      ' creating the hardware profile'))
 
+        self.getParser().add_argument(
+            'name', metavar='NAME', nargs='?', help=_('Hardware profile name')
+        )
+
         super().parseArgs(usage=usage)
 
     def runCommand(self):
         self.parseArgs()
+
+        if self.getArgs().name and self.getArgs().deprecated_name:
+            self.getParser().error(
+                'argument name: not allowed with argument --name'
+            )
+
+        name = self.getArgs().name \
+            if self.getArgs().name else self.getArgs().deprecated_name
 
         if self.getArgs().jsonTemplatePath:
             # load from template
@@ -93,8 +107,8 @@ class CreateHardwareProfileCli(TortugaCli):
             tmpl_dict = {}
 
         # build up dict from scratch
-        if self.getArgs().name:
-            tmpl_dict['name'] = self.getArgs().name
+        if name:
+            tmpl_dict['name'] = name
 
         if self.getArgs().description:
             tmpl_dict['description'] = self.getArgs().description
@@ -118,8 +132,8 @@ class CreateHardwareProfileCli(TortugaCli):
 
         settings_dict = {
             'defaults': self.getArgs().bUseDefaults,
-            'osInfo': getattr(self.getArgs(), 'osInfo') \
-                if hasattr(self.getArgs(), 'osInfo') else None,
+            'osInfo': getattr(self.getArgs(), 'osInfo')
+            if hasattr(self.getArgs(), 'osInfo') else None,
         }
 
         hw_profile_spec = HardwareProfile.getFromDict(tmpl_dict)

@@ -12,36 +12,52 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=no-member
+import argparse
+from typing import Optional
 
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
 from tortuga.wsapi.hardwareProfileWsApi import HardwareProfileWsApi
 
 
 class DeleteHardwareProfileCli(TortugaCli):
-    def __init__(self):
-        super().__init__()
-
-    def parseArgs(self, usage=None):
+    def parseArgs(self, usage: Optional[str] = None):
         option_group_name = _('Delete Hardware Profile Options')
         self.addOptionGroup(option_group_name, '')
-        self.addOptionToGroup(option_group_name, '--name', required=True,
+        self.addOptionToGroup(option_group_name, '--name',
                               dest='hardwareProfileName',
-                              help=_('Name of hardware profile to delete'))
+                              help=argparse.SUPPRESS)
+
+        self.getParser().add_argument(
+            'name', metavar='NAME',
+            help=_('Name of hardtware profile to delete'),
+            nargs='?',
+        )
 
         super().parseArgs(usage=usage)
 
     def runCommand(self):
-        self.parseArgs(_('Removes hardware profile from the'))
+        self.parseArgs(_('Removes hardware profile from system.'))
+
+        if not self.getArgs().name and \
+                not self.getArgs().hardwareProfileName:
+            self.getParser().error(
+                'the following arguments are required: NAME'
+            )
+
+        if self.getArgs().name and self.getArgs().hardwareProfileName:
+            self.getParser().error(
+                'argument name: not allowed with argument --name'
+            )
+
+        name = self.getArgs().name \
+            if self.getArgs().name else self.getArgs().hardwareProfileName
 
         api = HardwareProfileWsApi(username=self.getUsername(),
                                    password=self.getPassword(),
                                    baseurl=self.getUrl(),
                                    verify=self._verify)
 
-        api.deleteHardwareProfile(
-            self.getArgs().hardwareProfileName)
+        api.deleteHardwareProfile(name)
 
 
 def main():
