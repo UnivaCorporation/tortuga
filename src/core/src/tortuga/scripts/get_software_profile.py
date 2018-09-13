@@ -28,12 +28,6 @@ class GetSoftwareProfileCli(TortugaCli):
     Get software profile command line interface.
     """
 
-    def __init__(self):
-        super().__init__()
-
-        self.swprofileapi = None
-        self.hwprofileapi = None
-
     def parseArgs(self, usage: Optional[str] = None):
         softwareProfileAttrGroup = _('Software Profile Attribute Options')
 
@@ -110,13 +104,7 @@ class GetSoftwareProfileCli(TortugaCli):
         name = self.getArgs().name \
             if self.getArgs().name else self.getArgs().deprecated_name
 
-        self.swprofileapi = SoftwareProfileWsApi(
-            username=self.getUsername(),
-            password=self.getPassword(),
-            baseurl=self.getUrl(),
-            verify=self._verify)
-
-        self.hwprofileapi = HardwareProfileWsApi(
+        swprofileapi = SoftwareProfileWsApi(
             username=self.getUsername(),
             password=self.getPassword(),
             baseurl=self.getUrl(),
@@ -136,7 +124,7 @@ class GetSoftwareProfileCli(TortugaCli):
         if self.getArgs().getAdmins:
             optionDict['admins'] = True
 
-        swprofile = self.swprofileapi.getSoftwareProfile(name, optionDict)
+        swprofile = swprofileapi.getSoftwareProfile(name, optionDict)
 
         if self.getArgs().json:
             print(json.dumps({
@@ -150,11 +138,17 @@ class GetSoftwareProfileCli(TortugaCli):
     def __console_output(self, swprofile):
         hwprofiles = []
 
+        hwprofileapi = HardwareProfileWsApi(
+            username=self.getUsername(),
+            password=self.getPassword(),
+            baseurl=self.getUrl(),
+            verify=self._verify)
+
         for hwprofilename in \
                 [hwprofile_.getName()
                  for hwprofile_ in
                  swprofile.getUsableHardwareProfiles()]:
-            hwprofile = self.hwprofileapi.getHardwareProfile(
+            hwprofile = hwprofileapi.getHardwareProfile(
                 hwprofilename, {'resourceadapter': True})
 
             hwprofiles.append(hwprofile)
