@@ -162,7 +162,7 @@ class ResourceAdapter(UserDataMixin): \
             # use default resource adapter configuration, if set
             cfgname = dbHardwareProfile.default_resource_adapter_config.name \
                 if dbHardwareProfile.default_resource_adapter_config else \
-                'default'
+                'Default'
 
         # ensure addNodesRequest reflects resource adapter configuration
         # profile being used
@@ -276,7 +276,7 @@ class ResourceAdapter(UserDataMixin): \
     def getLogger(self):
         return self._logger
 
-    def validate_config(self, profile: str = 'default') -> ConfigurationValidator:
+    def validate_config(self, profile: str = 'Default') -> ConfigurationValidator:
         """
         Validates the configuration profile.
 
@@ -304,7 +304,7 @@ class ResourceAdapter(UserDataMixin): \
         #
         # Load settings from a specific profile, if one was specified
         #
-        if profile and profile != 'default':
+        if profile and profile != 'Default':
             validator.load(self._load_config_from_database(profile))
 
         #
@@ -315,7 +315,7 @@ class ResourceAdapter(UserDataMixin): \
         return validator
 
     def getResourceAdapterConfig(self,
-                                 sectionName: str = 'default'
+                                 sectionName: str = 'Default'
                                  ) -> Dict[str, Any]:
         """
         Gets the resource adatper configuration for the specified profile.
@@ -366,7 +366,7 @@ class ResourceAdapter(UserDataMixin): \
         return config
 
     def _load_config_from_database(self,
-                                   profile: str = 'default'
+                                   profile: str = 'Default'
                                    ) -> Dict[str, str]:
         """
         Loads a configuration profile from the database.
@@ -683,7 +683,7 @@ class ResourceAdapter(UserDataMixin): \
         override_config: Dict[str, Any] = {}
         if node.instance and \
                 node.instance.resource_adapter_configuration and \
-                node.instance.resource_adapter_configuration.name != 'default':
+                node.instance.resource_adapter_configuration.name != 'Default':
             for c in node.instance.resource_adapter_configuration.configuration:
                 override_config[c.key] = c.value
 
@@ -721,5 +721,5 @@ class ResourceAdapter(UserDataMixin): \
         return ResourceAdapterConfigDbHandler().get(
             session,
             self.__adaptername__,
-            name if name else 'default',
+            name if name else 'Default',
         )
