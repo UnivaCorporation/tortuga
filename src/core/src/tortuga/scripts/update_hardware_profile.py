@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=no-member
+import argparse
 
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
@@ -39,9 +39,9 @@ class UpdateHardwareProfileCli(TortugaCli):
 
     def parseArgs(self, usage=None):
         # Simple Options
-        self.addOption('--name',
-                       dest='name', required=True,
-                       help=_('Name of hardware profile.'))
+        self.addOption(
+            '--name', dest='hardwareProfileName', help=argparse.SUPPRESS
+        )
 
         self.addOption('--new-name',
                        dest='newName',
@@ -127,10 +127,29 @@ class UpdateHardwareProfileCli(TortugaCli):
             '--cost', dest='cost', type=int,
             help=_('Set relative \'cost\' of hardware profile'))
 
+        self.getParser().add_argument(
+            'name', metavar='NAME', nargs='?',
+            help=_('Name of hardware profile.')
+        )
+
         super().parseArgs(usage=usage)
 
     def runCommand(self):
         self.parseArgs()
+
+        if not self.getArgs().name and \
+                not self.getArgs().hardwareProfileName:
+            self.getParser().error(
+                'the following arguments are required: NAME'
+            )
+
+        if self.getArgs().name and self.getArgs().hardwareProfileName:
+            self.getParser().error(
+                'argument name: not allowed with argument --name'
+            )
+
+        name = self.getArgs().name \
+            if self.getArgs().name else self.getArgs().hardwareProfileName
 
         api = HardwareProfileWsApi(username=self.getUsername(),
                                    password=self.getPassword(),
@@ -147,8 +166,8 @@ class UpdateHardwareProfileCli(TortugaCli):
                             baseurl=self.getUrl(),
                             verify=self._verify)
 
-        hp = api.getHardwareProfile(self.getArgs().name,
-                                    UpdateHardwareProfileCli.optionDict)
+        hp = api.getHardwareProfile(
+            name, UpdateHardwareProfileCli.optionDict)
 
         if self.getArgs().newName is not None:
             hp.setName(self.getArgs().newName)
