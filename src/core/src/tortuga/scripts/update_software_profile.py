@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import argparse
+
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
 from tortuga.objects.tortugaObject import TortugaObjectList
@@ -31,8 +33,8 @@ class UpdateSoftwareProfileCli(TortugaCli):
 
     def parseArgs(self, usage=None):
         # Simple Options
-        self.addOption('--name', required=True,
-                       help=_('Name of software profile'))
+        self.addOption(
+            '--name', dest='softwareProfileName', help=argparse.SUPPRESS)
 
         self.addOption('--new-name',
                        help=_('New name for software profile'))
@@ -153,6 +155,12 @@ class UpdateSoftwareProfileCli(TortugaCli):
             help=_('The maximum size in megabytes when the partition'
                    ' is set to grow.'))
 
+        self.getParser().add_argument(
+            'name', metavar='NAME',
+            help=_('Name of software profile'),
+            nargs='?'
+        )
+
         super().parseArgs(usage=usage)
 
     def runCommand(self):
@@ -160,13 +168,26 @@ class UpdateSoftwareProfileCli(TortugaCli):
 Updates software profile in the Tortuga system.
 """))
 
+        if not self.getArgs().name and \
+                not self.getArgs().softwareProfileName:
+            self.getParser().error(
+                'the following arguments are required: NAME'
+            )
+
+        if self.getArgs().name and self.getArgs().softwareProfileName:
+            self.getParser().error(
+                'argument name: not allowed with argument --name'
+            )
+
+        name = self.getArgs().name \
+            if self.getArgs().name else self.getArgs().softwareProfileName
+
         api = SoftwareProfileWsApi(username=self.getUsername(),
                                    password=self.getPassword(),
                                    baseurl=self.getUrl(),
                                    verify=self._verify)
 
-        sp = api.getSoftwareProfile(self.getArgs().name,
-                                    UpdateSoftwareProfileCli.optionDict)
+        sp = api.getSoftwareProfile(name, UpdateSoftwareProfileCli.optionDict)
 
         if self.getArgs().new_name is not None:
             sp.setName(self.getArgs().new_name)
@@ -334,7 +355,8 @@ Updates software profile in the Tortuga system.
                     _('--direct-attachment option only allowed with'
                       ' --update-partition or --add-partition'))
 
-            partitionObject.setDirectAttachment(self.getArgs().directAttachment)
+            partitionObject.setDirectAttachment(
+                self.getArgs().directAttachment)
 
         if self.getArgs().indirectAttachment is not None:
             if partitionObject is None:
