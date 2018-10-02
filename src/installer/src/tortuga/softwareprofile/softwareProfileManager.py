@@ -490,24 +490,16 @@ class SoftwareProfileManager(TortugaObjectManager): \
         software_profile = self.getSoftwareProfile(
             session, software_profile_name, {'os': True})
 
-        try:
-            if kit.getIsOs():
-                best_match_component = self._enable_os_kit_component(
-                    session, kit, comp_name, comp_version, software_profile)
-
-            else:
-                best_match_component = self._enable_kit_component(
-                    session, kit, comp_name, comp_version, software_profile)
-
-        except Exception as ex:
-            self.getLogger().error(
-                "Error encountered while enabling component: {}".format(ex))
-            return
+        if kit.getIsOs():
+            best_match_component = self._enable_os_kit_component(
+                session, kit, comp_name, comp_version, software_profile)
+        else:
+            best_match_component = self._enable_kit_component(
+                session, kit, comp_name, comp_version, software_profile)
 
         if not best_match_component:
             self.getLogger().info(
                 'Component not enabled: {}'.format(comp_name))
-
         else:
             self.getLogger().info(
                 'Enabled component on software profile: {} -> {}'.format(

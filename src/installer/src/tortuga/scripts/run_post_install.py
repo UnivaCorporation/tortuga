@@ -52,8 +52,7 @@ def main():
             sys.stderr.write(
                 'post-install component action for [%s] already run\n' % (
                     compName))
-
-            sys.exit(1)
+            sys.exit(0)
 
         # Remove the existing flag file, we're forcing a run
         os.unlink(flagFile)
