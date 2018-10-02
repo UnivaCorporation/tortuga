@@ -83,7 +83,7 @@ def main():
 
         # touch flagFile
         open(flagFile, 'w').close()
-    except Exception as exc:  # noqa pylint: disable=broad-except
-        print('Error: %s' % (exc), file=sys.stderr)
 
-        sys.exit(1)
+    except Exception as exc:  # noqa pylint: disable=broad-except
+        print('Error: {}'.format(exc), file=sys.stderr)
+        sys.exit(0)
