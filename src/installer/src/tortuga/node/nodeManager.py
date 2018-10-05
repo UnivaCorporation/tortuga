@@ -201,9 +201,7 @@ class NodeManager(TortugaObjectManager): \
                 optionDict=get_default_relations(optionDict))])[0]
 
     def getNodeList(self, session, tags=None,
-                    optionDict: OptionDict = None,
-                    deleting: bool = False) \
-            -> List[Node]:
+                    optionDict: Optional[OptionDict] = None) -> List[Node]:
         """
         Return all nodes
 
@@ -213,8 +211,7 @@ class NodeManager(TortugaObjectManager): \
             self._nodeDbApi.getNodeList(
                 session,
                 tags=tags,
-                optionDict=get_default_relations(optionDict),
-                deleting=deleting
+                optionDict=get_default_relations(optionDict)
             )
         )
 
