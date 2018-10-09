@@ -146,29 +146,31 @@ def dbm():
 
         session.add(admin)
 
+        eth0_network_device = NetworkDevice(name='eth0')
+
         eth1_network_device = NetworkDevice(name='eth1')
 
         # Add dummy provisioning network
-        network = Network()
-        network.address = '10.2.0.0'
-        network.netmask = '255.255.255.0'
-        network.name = 'Provisioning network on eth1'
-        network.type = 'provision'
+        network = Network(
+            address='10.2.0.0',
+            netmask='255.255.255.0',
+            name='Provisioning network on eth1',
+            type='provision'
+        )
 
-        session.add(network)
-
-        # create 'hardwareprofilenetwork' entry
-        hwpn1 = HardwareProfileNetwork(
-            hardwareprofile=installer_node.hardwareprofile,
-            network=network,
-            networkdevice=eth1_network_device
+        installer_node.hardwareprofile.hardwareprofilenetworks.append(
+            HardwareProfileNetwork(
+                network=network,
+                networkdevice=eth1_network_device,
+            )
         )
 
         # create nic on installer
-        installer_nic = Nic()
-        installer_nic.ip = '10.2.0.1'
-        installer_nic.network = network
-        installer_nic.networkdevice = eth1_network_device
+        installer_nic = Nic(
+            ip='10.2.0.1',
+            network=network,
+            networkdevice=eth1_network_device,
+        )
 
         installer_node.nics = [installer_nic]
 
@@ -196,6 +198,15 @@ def dbm():
         pdsh_component.family = [rhel7_os_family]
         pdsh_component.kit = kit
 
+        # add fake dhcp component
+        dhcpd_component = Component(
+            name='dhcpd',
+            version='6.3',
+            description='Mock dhcpd component'
+        )
+        dhcpd_component.family = [rhel7_os_family]
+        dhcpd_component.kit = kit
+
         session.add(kit)
 
         # create OS kit
@@ -216,6 +227,7 @@ def dbm():
 
         installer_node.softwareprofile.components.append(ra_component)
         installer_node.softwareprofile.components.append(installer_component)
+        installer_node.softwareprofile.components.append(dhcpd_component)
 
         # create 'default' resource adapter
         default_adapter = ResourceAdapter(name='default', kit=kit)
@@ -289,7 +301,8 @@ def dbm():
         # create 'localiron' hardware profile
         localiron_hwprofile = HardwareProfile(
             name='localiron',
-            nameFormat='compute-#NN'
+            nameFormat='compute-#NN',
+            location='local',
         )
         localiron_hwprofile.resourceadapter = default_adapter
         localiron_hwprofile.mappedsoftwareprofiles = [
@@ -297,14 +310,38 @@ def dbm():
             compute2_swprofile
         ]
 
-        localiron_hwprofile.hardwareprofilenetworks.append(hwpn1)
+        localiron_hwprofile.hardwareprofilenetworks.append(
+            HardwareProfileNetwork(
+                network=network,
+                networkdevice=eth0_network_device,
+            )
+        )
+
+        session.add(localiron_hwprofile)
+
+        # create "localironalt" hardware profile with nameFormat set to '*'
+        localironalt_hwprofile = HardwareProfile(
+            name='localironalt',
+            nameFormat='*',
+            location='local',
+        )
+        localironalt_hwprofile.resourceadapter = default_adapter
+        localironalt_hwprofile.mappedsoftwareprofiles = [
+            compute_swprofile,
+            compute2_swprofile
+        ]
+
+        localironalt_hwprofile.hardwareprofilenetworks.append(
+            HardwareProfileNetwork(
+                network=network,
+                networkdevice=eth0_network_device,
+            )
+        )
 
         # create 'nonetwork' hardware profile
         nonetwork_hwprofile = HardwareProfile(name='nonetwork')
         nonetwork_hwprofile.resourceadapter = default_adapter
         nonetwork_hwprofile.mappedsoftwareprofiles.append(compute_swprofile)
-
-        eth0_networkdevice = NetworkDevice(name='eth0')
 
         # create compute (compute-01, compute-02, ...) nodes
         for n in range(1, 11):
@@ -322,7 +359,7 @@ def dbm():
                     mac='FF:00:00:00:00:00:{:02x}'.format(100 + n),
                     boot=True,
                     network=network,
-                    networkdevice=eth0_networkdevice
+                    networkdevice=eth0_network_device
                 )
             )
 

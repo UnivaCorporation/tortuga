@@ -102,15 +102,6 @@ def validate_addnodes_request(session: Session, addNodesRequest: Dict[str, Any])
 
         sp = hp.mappedsoftwareprofiles[0]
 
-    # Ensure user does not make a request for DHCP discovery mode.
-    # Currently, this is determined by the presence of the item
-    # 'nodeDetails' in addNodesRequest. Ultimately, this should be
-    # shared code between here and the default resource adapter.
-    if hp.resourceadapter and \
-            hp.resourceadapter.name == 'default' and not nodeDetails:
-        raise InvalidArgument(
-            'DHCP discovery is not available through WS API.')
-
     if sp and 'softwareProfile' not in addNodesRequest:
         addNodesRequest['softwareProfile'] = sp.name
 
@@ -133,24 +124,11 @@ def validate_addnodes_request(session: Session, addNodesRequest: Dict[str, Any])
             raise InvalidArgument(
                 'Hardware profile does not allow setting'
                 ' host names of imported nodes')
-        elif not hostname and bWildcardNameFormat:
-            # Host name not specified but hardware profile expects it
-            raise InvalidArgument(
-                'Hardware profile requires imported node'
-                ' name to be set')
 
         if nodeCount > 0 and nodeCount != len(nodeDetails):
             raise InvalidArgument(
                 'Node count must be equal to number'
                 ' of MAC/IP/node names provided')
-
-        if hostname:
-            # Ensure host does not already exist
-            existing_node = session.query(Node).filter(
-                Node.name == hostname).first()
-            if existing_node:
-                raise NodeAlreadyExists(
-                    'Node [%s] already exists' % (hostname))
 
     # check if software profile is locked
     if sp.lockedState:
