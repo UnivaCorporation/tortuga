@@ -137,10 +137,9 @@ class NodeDbApi(TortugaDbApi):
             self.getLogger().exception('%s' % ex)
             raise
 
-    def __convert_nodes_to_TortugaObjectList(self, nodes: List[NodeModel],
-                                             optionDict: OptionsDict = None,
-                                             deleting: bool = True
-                                             ) -> TortugaObjectList:
+    def __convert_nodes_to_TortugaObjectList(
+            self, nodes: List[NodeModel],
+            optionDict: Optional[OptionsDict] = None) -> TortugaObjectList:
         """
         Return TortugaObjectList of nodes with relations populated
 
@@ -155,12 +154,6 @@ class NodeDbApi(TortugaDbApi):
         nodeList = TortugaObjectList()
 
         for node in nodes:
-            #
-            # Don't include nodes in the deleting state if deleting=False
-            #
-            if not deleting and node.state.startswith(state.DELETING_PREFIX):
-                continue
-
             self.loadRelations(node, optionDict)
 
             # ensure 'resourceadapter' relation is always loaded. This one
@@ -173,8 +166,7 @@ class NodeDbApi(TortugaDbApi):
         return nodeList
 
     def getNodeList(self, session, tags: Optional[dict] = None,
-                    optionDict: OptionsDict = None,
-                    deleting: bool = False) \
+                    optionDict: Optional[OptionsDict] = None) \
             -> TortugaObjectList:
         """
         Get list of all available nodes from the db.
@@ -188,8 +180,7 @@ class NodeDbApi(TortugaDbApi):
         try:
             return self.__convert_nodes_to_TortugaObjectList(
                 self._nodesDbHandler.getNodeList(session, tags=tags),
-                optionDict=optionDict,
-                deleting=deleting
+                optionDict=optionDict
             )
         except TortugaException:
             raise
