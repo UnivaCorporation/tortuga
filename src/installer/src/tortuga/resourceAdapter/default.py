@@ -277,8 +277,8 @@ class Default(ResourceAdapter):
                                  dbSoftwareProfile): \
             # pylint: disable=unused-argument,no-self-use
         '''
-        Raises:
-            CommandFailed
+        :raises CommandFailed:
+        :raises NodeAlreadyExists:
         '''
 
         if dbSoftwareProfile is None:
@@ -306,6 +306,47 @@ class Default(ResourceAdapter):
             raise CommandFailed(
                 'dhcpd component must be enabled on the'
                 ' installer in order to provision local nodes')
+
+        name_expected = dbHardwareProfile.nameFormat == '*'
+
+        nodeDetails = addNodesRequest['nodeDetails'] \
+            if 'nodeDetails' in addNodesRequest and \
+            addNodesRequest['nodeDetails'] else None
+
+        # extract host name from addNodesRequest
+        name = nodeDetails[0]['name'] \
+            if nodeDetails and 'name' in nodeDetails[0] else None
+
+        mac_addr = None
+
+        if nodeDetails and 'nics' in nodeDetails[0]:
+            for nic in nodeDetails[0]['nics']:
+                if 'mac' in nic:
+                    mac_addr = nic['mac']
+                    break
+
+        # check if name is expected in nodeDetails
+        if not nodeDetails and name_expected and not name:
+            raise CommandFailed(
+                'Name and MAC address must be specified for nodes'
+                ' in hardware profile [%s]' % dbHardwareProfile.name
+            )
+
+        if not nodeDetails and not mac_addr:
+            raise CommandFailed(
+                'MAC address must be specified for nodes in'
+                ' hardware profile [%s]' % dbHardwareProfile.name
+            )
+
+        # if host name specified, ensure host does not already exist
+        if name:
+            try:
+                NodesDbHandler().getNode(self.session, name)
+
+                raise NodeAlreadyExists('Node [%s] already exists' % name)
+            except NodeNotFound:
+                # node does not already exist
+                pass
 
     def __add_predefined_nodes(self, addNodesRequest: dict, dbSession,
                                dbHardwareProfile, dbSoftwareProfile,
