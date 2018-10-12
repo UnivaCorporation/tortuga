@@ -25,17 +25,22 @@ from tortuga.objects.tortugaObject import TortugaObjectList
 
 from .globalParameterDbApi import GlobalParameterDbApi
 from .models.node import Node as NodeModel
+from .models.nodeTag import NodeTag
 from .nodesDbHandler import NodesDbHandler
 from .tortugaDbApi import TortugaDbApi
+from .tagsDbApiMixin import TagsDbApiMixin
 
 
 OptionsDict = Dict[str, bool]
+Tags = Dict[str, Optional[str]]
 
 
-class NodeDbApi(TortugaDbApi):
+class NodeDbApi(TagsDbApiMixin, TortugaDbApi):
     """
     Nodes DB API class.
+
     """
+    tag_model = NodeTag
 
     def __init__(self):
         super().__init__()
@@ -104,6 +109,33 @@ class NodeDbApi(TortugaDbApi):
 
             raise
 
+    def set_tags(self, session: Session, tags: Dict[str, str],
+                node_name: Optional[str] = None,
+                node_id: Optional[int] = None):
+        """
+        Sets the tags for a specified node, by name OR id.
+
+        :param session:   an SQLAlchemy database session
+        :param tags:      a dict of tags
+        :param node_name: the name of the node to set the tags on
+        :param node_id:   the id of the node to set the tags on
+
+        """
+        if not node_name and not node_id:
+            raise Exception('You must provide either a node name or id')
+        if node_name and node_id:
+            raise Exception('You mush provide either a name or id, not both')
+
+        if node_name:
+            node = self._nodesDbHandler.getNode(session, node_name)
+
+        else:
+            node = self._nodesDbHandler.getNodeById(session, node_id)
+
+        self._set_tags(node, tags)
+
+        session.commit()
+
     def getNodeById(self, session, nodeId: int,
                     optionDict: OptionsDict = None) \
             -> Node:
@@ -165,9 +197,8 @@ class NodeDbApi(TortugaDbApi):
 
         return nodeList
 
-    def getNodeList(self, session, tags: Optional[dict] = None,
-                    optionDict: Optional[OptionsDict] = None) \
-            -> TortugaObjectList:
+    def getNodeList(self, session, tags: Optional[Tags] = None,
+                    optionDict: OptionsDict = None) -> TortugaObjectList:
         """
         Get list of all available nodes from the db.
 

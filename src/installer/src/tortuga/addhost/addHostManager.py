@@ -21,10 +21,10 @@ from typing import List, Optional
 from sqlalchemy.orm.session import Session
 
 from tortuga.db.hardwareProfilesDbHandler import HardwareProfilesDbHandler
-from tortuga.db.models.tag import Tag
+from tortuga.db.models.nodeTag import NodeTag
 from tortuga.db.nodeDbApi import NodeDbApi
+from tortuga.db.tagsDbApiMixin import TagsDbApiMixin
 from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
-from tortuga.db.tagsDbHandler import TagsDbHandler
 from tortuga.exceptions.notFound import NotFound
 from tortuga.exceptions.resourceAdapterNotFound import ResourceAdapterNotFound
 from tortuga.kit.actions import KitActionsManager
@@ -36,7 +36,9 @@ from tortuga.resourceAdapter import resourceAdapterFactory
 from tortuga.wsapi.syncWsApi import SyncWsApi
 
 
-class AddHostManager(TortugaObjectManager):
+class AddHostManager(TagsDbApiMixin, TortugaObjectManager):
+    tag_model = NodeTag
+
     def __init__(self):
         super(AddHostManager, self).__init__()
 
@@ -74,10 +76,6 @@ class AddHostManager(TortugaObjectManager):
                 session, softwareProfileName) \
             if softwareProfileName else None
 
-        # Look up and/or create tags as necessary
-        tags = get_tags(session, addHostRequest['tags']) \
-            if 'tags' in addHostRequest else []
-
         ResourceAdapterClass = \
             resourceAdapterFactory.get_resourceadapter_class(
                 dbHardwareProfile.resourceadapter.name)
@@ -92,11 +90,12 @@ class AddHostManager(TortugaObjectManager):
             addHostRequest, session, dbHardwareProfile,
             dbSoftwareProfile=dbSoftwareProfile)
 
-        # Apply tags to new nodes
-        for node in newNodes:
-            node.tags = tags
-
         session.add_all(newNodes)
+        session.flush()
+
+        if 'tags' in addHostRequest and addHostRequest['tags']:
+            for node in newNodes:
+                self._set_tags(node, addHostRequest['tags'])
 
         # Commit new node(s) to database
         session.commit()
@@ -247,16 +246,3 @@ class AddHostManager(TortugaObjectManager):
             status = AddHostStatus.getFromDict(session['status'])
             session['status'] = status.getCleanDict()
             self._sessions.set(session_id, session)
-
-
-def get_tags(session: Session, tagdict: dict) -> List[Tag]:
-    tags = []
-
-    for key, value in tagdict.items():
-        tag = TagsDbHandler().get_tag(session, key, value=value)
-        if not tag:
-            tag = Tag(key, value)
-
-        tags.append(tag)
-
-    return tags

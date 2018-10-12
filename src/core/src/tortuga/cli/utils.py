@@ -14,7 +14,7 @@
 
 import argparse
 import json
-from typing import Any, Optional
+from typing import Any, Dict, List, Optional
 
 import yaml
 
@@ -41,21 +41,47 @@ class ParseOperatingSystemArgAction(argparse.Action):
 
 class FilterTagsAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
-        tags = []
-
+        tags = {}
         vals = values.split('=', 1)
 
         if len(vals) == 2:
-            tags.append((vals[0], vals[1]))
+            tags[vals[0]] = vals[1]
+
         else:
-            tags.append((vals[0],))
+            tags[vals[0]] = None
 
         current_tags = getattr(namespace, self.dest) \
             if hasattr(namespace, self.dest) else None
+
         if current_tags is None:
             setattr(namespace, self.dest, tags)
+
         else:
-            current_tags.extend(tags)
+            current_tags.update(tags)
+
+
+def parse_tags(string_list: List[str]) -> Dict[str, str]:
+    """
+    Parses a list of strings into a dict of tags.
+
+    :param string_list: a list of strings, each in the form of
+                        key=value[,key=value...]
+
+    :return: a dictionary of tags
+
+    """
+    result = {}
+
+    for string in string_list:
+        for tag_list in string.split(','):
+            try:
+                key, value = tag_list.split('=', 1)
+                result[key] = value
+
+            except ValueError:
+                raise Exception('Malformed tags')
+
+    return result
 
 
 def pretty_print(data: Any, fmt: Optional[str] = None) -> None:

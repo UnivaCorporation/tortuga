@@ -79,11 +79,8 @@ class SoftwareProfile(ModelBase):
         backref='softwareprofiles'
     )
 
-    tags = relationship(
-        'Tag',
-        secondary='softwareprofile_tags',
-        backref='softwareprofiles'
-    )
+    tags = relationship('SoftwareProfileTag', lazy=False,
+                        cascade="all, delete-orphan")
 
     def __repr__(self):
-        return '<SoftwareProfile(name=%s)>' % (self.name)
+        return '<SoftwareProfile(name={})>'.format(self.name)

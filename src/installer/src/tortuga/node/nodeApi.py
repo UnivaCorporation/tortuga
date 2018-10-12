@@ -28,7 +28,7 @@ from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.utility.tortugaApi import TortugaApi
 
 
-Tags = List[Union[Tuple[str, str], Tuple[str]]]
+Tags = Dict[str, Optional[str]]
 OptionDict = Dict[str, bool]
 
 
@@ -59,8 +59,8 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def getNodeList(self, session, tags: Optional[Tags] = None) \
-            -> TortugaObjectList:
+    def getNodeList(self, session,
+                    tags: Optional[Tags] = None) -> TortugaObjectList:
         """
         Get node list..
 

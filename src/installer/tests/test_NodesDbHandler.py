@@ -65,50 +65,49 @@ class TestNodesDbHandler(unittest.TestCase):
 
     def test_getNodesByTags(self):
         result = NodesDbHandler().getNodesByTags(
-            self.session, [('tag1',)])
+            self.session, {'tag1': None})
 
         assert match_all_nodes(result)
 
     def test_getNodesByTags_match_multiple(self):
         result = NodesDbHandler().getNodesByTags(
-            self.session, [('tag1',), ('key2',)])
+            self.session, {'tag1': None, 'key2': None})
 
         assert match_all_nodes(result)
 
     def test_getNodesByTags_match_multiple_with_values(self):
         result = NodesDbHandler().getNodesByTags(
-            self.session, [('tag1', 'value1'),
-                           ('tag2', 'value2')])
+            self.session, {'tag1': 'value1', 'tag2': 'value2'})
 
         assert match_all_nodes(result)
 
     def test_getNodesByTags_nonexistent(self):
         result = NodesDbHandler().getNodesByTags(
-            self.session, [('invalid_tag',)])
+            self.session, {'invalid_tag': None})
 
         assert not result
 
     def test_getNodesByTags_value_match(self):
         result = NodesDbHandler().getNodesByTags(
-            self.session, [('tag1', 'value1')])
+            self.session, {'tag1': 'value1'})
 
         assert match_all_nodes(result)
 
     def test_getNodesByTags_value_mismatch(self):
         result = NodesDbHandler().getNodesByTags(
-            self.session, [('tag1', 'invalid_value',)])
+            self.session, {'tag1': 'invalid_value'})
 
         assert not result
 
     def test_getNodesByTags_one_match_one_nomatch(self):
         result = NodesDbHandler().getNodesByTags(
-            self.session, [('tag1', 'value1'), ('nomatch',)])
+            self.session, {'tag1': 'value1', 'nomatch': None})
 
         assert match_all_nodes(result)
 
     def test_getNodesByTag_non_contiguous(self):
         result = NodesDbHandler().getNodesByTags(
-            self.session, [('tag5',)])
+            self.session, {'tag5': None})
 
         assert not set(['compute-01.private',
                         'compute-02.private',

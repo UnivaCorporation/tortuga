@@ -35,8 +35,34 @@ def test_getSoftwareProfile(dbm):
 
         assert not swprofile.getNodes()
 
-        assert SoftwareProfileDbApi().getSoftwareProfileById(session,
-                                                             swprofile.getId())
+        assert SoftwareProfileDbApi().getSoftwareProfileById(
+            session, swprofile.getId())
+
+
+def test_updateSoftwareProfileTags(dbm):
+    api = SoftwareProfileDbApi()
+    tags = {'tag1': 'tag1 value', 'tag2': 'tag2 value'}
+
+    with dbm.session() as session:
+        swprofile = api.getSoftwareProfile(session, 'notags')
+
+        #
+        # Set tags
+        #
+        swprofile.setTags({'tag1': 'tag1 value', 'tag2': 'tag2 value'})
+        api.updateSoftwareProfile(session, swprofile)
+        session.commit()
+        swprofile = api.getSoftwareProfile(session, 'notags')
+        assert swprofile.getTags() == tags
+
+        #
+        # Remove tags
+        #
+        swprofile.setTags({})
+        api.updateSoftwareProfile(session, swprofile)
+        session.commit()
+        swprofile = api.getSoftwareProfile(session, 'notags')
+        assert swprofile.getTags() == {}
 
 
 def test_getSoftwareProfile_with_options(dbm):

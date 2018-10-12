@@ -14,14 +14,15 @@
 
 # pylint: disable=too-few-public-methods
 
-from sqlalchemy import Column, ForeignKey, Integer
+from sqlalchemy import Column, ForeignKey, Integer, UniqueConstraint
+
 
 from .base import ModelBase
+from .tagMixin import TagMixin
 
 
-class SoftwareProfileTag(ModelBase):
+class SoftwareProfileTag(TagMixin, ModelBase):
     __tablename__ = 'softwareprofile_tags'
+    __table_args__ = (UniqueConstraint('softwareprofile_id', 'name'),)
 
-    id = Column(Integer, primary_key=True)
     softwareprofile_id = Column(Integer, ForeignKey('softwareprofiles.id'))
-    tag_id = Column(Integer, ForeignKey('tags.id'))

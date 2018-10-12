@@ -34,6 +34,9 @@ from tortuga.utility import validation
 from tortuga.utility.network import fixNetworkDeviceName
 
 
+Tags = Dict[str, Optional[str]]
+
+
 class HardwareProfileManager(TortugaObjectManager):
     def __init__(self):
         super(HardwareProfileManager, self).__init__()
@@ -47,7 +50,7 @@ class HardwareProfileManager(TortugaObjectManager):
     def getHardwareProfileList(self,
                                session: Session,
                                optionDict: Optional[Union[Dict[str, str], None]] = None,
-                               tags: Optional[Union[Dict[str, str], None]] = None):
+                               tags: Optional[Tags] = None):
         """
         Return all of the hardwareprofiles with referenced components
         in this hardwareprofile

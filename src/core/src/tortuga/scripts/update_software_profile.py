@@ -15,6 +15,7 @@
 import argparse
 
 from tortuga.cli.tortugaCli import TortugaCli
+from tortuga.cli.utils import parse_tags
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
 from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
@@ -155,11 +156,14 @@ class UpdateSoftwareProfileCli(TortugaCli):
             help=_('The maximum size in megabytes when the partition'
                    ' is set to grow.'))
 
-        self.getParser().add_argument(
-            'name', metavar='NAME',
-            help=_('Name of software profile'),
-            nargs='?'
-        )
+        self.addOption('--tags',  dest='tags',
+                       metavar='key=value[,key=value]', action='append',
+                       help='Key-value pairs associated with the '
+                            'software profile')
+
+        self.addOption('--remove-tags',  dest='remove_tags',
+                       metavar='key[,key...]', action='append',
+                       help='Name of tags to remove')
 
         super().parseArgs(usage=usage)
 
@@ -412,6 +416,21 @@ Updates software profile in the Tortuga system.
                       ' allowed with --update-partition or --add-partition'))
 
             partitionObject.setBootLoader(self.getArgs().bootLoader)
+
+        if self.getArgs().tags:
+            tags = sp.getTags()
+            tags.update(parse_tags(self.getArgs().tags))
+            sp.setTags(tags)
+            print(tags)  # DEBUG
+
+        if self.getArgs().remove_tags:
+            tags = sp.getTags()
+            for string in self.getArgs().remove_tags:
+                for tag_name in string.split(','):
+                    if tag_name in tags.keys():
+                        tags.pop(tag_name)
+            sp.setTags(tags)
+            print(tags)  # DEBUG
 
         api.updateSoftwareProfile(sp)
 
