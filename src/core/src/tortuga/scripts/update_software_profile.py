@@ -165,6 +165,12 @@ class UpdateSoftwareProfileCli(TortugaCli):
                        metavar='key[,key...]', action='append',
                        help='Name of tags to remove')
 
+        self.getParser().add_argument(
+            'name', metavar='NAME',
+            help=_('Name of software profile'),
+            nargs='?'
+        )
+
         super().parseArgs(usage=usage)
 
     def runCommand(self):

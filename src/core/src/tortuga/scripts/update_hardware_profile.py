@@ -137,6 +137,11 @@ class UpdateHardwareProfileCli(TortugaCli):
                        metavar='key[,key...]', action='append',
                        help='Name of tags to remove')
 
+        self.getParser().add_argument(
+            'name', metavar='NAME', nargs='?',
+            help=_('Name of hardware profile.')
+        )
+
         super().parseArgs(usage=usage)
 
     def runCommand(self):
