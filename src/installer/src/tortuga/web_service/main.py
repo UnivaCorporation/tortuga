@@ -45,10 +45,14 @@ if log_conf_file.exists():
 # Log everything 'tortuga.*'
 root_logger = logging.getLogger('tortuga')
 
+# and everything 'tortuga_kits.*'
+tortuga_kits_logger = logging.getLogger('tortuga_kits')
+
 if not log_conf_file.exists():
     # in the absence of a `tortugawsd` logging configuration, use
     # sane defaults
     root_logger.setLevel(logging.DEBUG)
+    tortuga_kits_logger.setLevel(logging.DEBUG)
 
     # create console handler and set level to debug
     ch = logging.handlers.TimedRotatingFileHandler(
@@ -64,6 +68,8 @@ if not log_conf_file.exists():
 
     # add ch to logger
     root_logger.addHandler(ch)
+
+    tortuga_kits_logger.addHandler(ch)
 
 
 logger = logging.getLogger(__name__)
