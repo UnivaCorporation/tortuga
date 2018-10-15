@@ -28,7 +28,7 @@ def get_git_revision():
 
     return result.decode().rstrip()
 
-version = '6.3.1a1+rev{}'.format(get_git_revision())
+version = '7.0.0+rev{}'.format(get_git_revision())
 
 build_number = os.getenv('CI_PIPELINE_ID')
 if build_number:

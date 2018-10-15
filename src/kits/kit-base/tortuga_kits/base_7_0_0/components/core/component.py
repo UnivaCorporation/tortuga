@@ -17,7 +17,7 @@ from tortuga.kit.installer import ComponentInstallerBase
 
 class ComponentInstaller(ComponentInstallerBase):
     name = 'core'
-    version = '6.3.1'
+    version = '7.0.0'
     os_list = [
         {'family': 'rhel', 'version': '6', 'arch': 'x86_64'},
         {'family': 'rhel', 'version': '7', 'arch': 'x86_64'},

@@ -25,7 +25,7 @@ import setuptools.command.build_py
 import setuptools.command.sdist
 
 module_name = 'tortuga-installer'
-version = '6.3.1a1'
+version = '7.0.0'
 
 
 def get_git_revision():
