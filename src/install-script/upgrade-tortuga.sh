@@ -4,7 +4,7 @@ set -x
 
 systemctl stop tortugawsd
 
-pip install -I --force-reinstall tortuga_core-6.3.1-py3-none-any.whl tortuga_installer-6.3.1-py3-none-any.whl
+pip install -I --force-reinstall tortuga_core-7.0.0-py3-none-any.whl tortuga_installer-7.0.0-none-any.whl
 
 ( cd /opt/tortuga/alembic; alembic upgrade head )
 

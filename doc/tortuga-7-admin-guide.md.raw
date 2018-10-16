@@ -1,4 +1,4 @@
-% Tortuga 6.3.0 Installation and Administration Guide
+% Tortuga 7.0.0 Installation and Administration Guide
 % Univa Corporation &lt;support@univa.com&gt;
 % June 2018 -- Version 1.27
 
@@ -6,7 +6,7 @@
 
 # About This Guide
 
-This guide contains information for IT staff and end-users who will be installing, configuring, and managing Tortuga 6.3. Information about specific software kits is provided in the associated kit guides.
+This guide contains information for IT staff and end-users who will be installing, configuring, and managing Tortuga 7.0. Information about specific software kits is provided in the associated kit guides.
 
 For detailed information on any Tortuga command, consult the standard manual pages using `man <command>`. Manual pages are automatically installed as part of the Tortuga software installation.
 
@@ -345,7 +345,7 @@ Commands listed in this "Quickstart" section are intended to be run as the
     on Amazon EC2.
 
         install-kit --i-accept-the-eula kit-awsadapter-*.tar.bz2
-        enable-component -p awsadapter-6.3.0-0 management-6.3
+        enable-component -p awsadapter-7.0.0-0 management-7.0.0
 
     1. Configure AWS resource adapter
 
@@ -1260,13 +1260,13 @@ The `get-kit-list` command will display all installed kits (application + operat
 
 ```shell
 [root@tortuga ~]# get-kit-list
-awsadapter-6.3.0-0
-base-6.3.0-0
+awsadapter-7.0.0-0
+base-7.0.0-0
 centos-7.0-0
 ganglia-3.7.2-1
-gceadapter-6.3.0-0
-simple_policy_engine-6.3.0-0
-snmp-6.3.0-0
+gceadapter-7.0.0-0
+simple_policy_engine-7.0.0-0
+snmp-7.0.0-0
 uge-8.5.4-0
 ```
 
@@ -1303,19 +1303,19 @@ Use `get-component-list` to display all available components.
 
 ```shell
 [root@tortuga ~]# get-component-list
-snmp-6.3.0-0 snmpd-6.3
-base-6.3.0-0 core-6.3
-base-6.3.0-0 installer-6.3
-base-6.3.0-0 dhcpd-6.3
-base-6.3.0-0 dns-6.3
-awsadapter-6.3.0-0 management-6.3
-gceadapter-6.3.0-0 management-6.3
+snmp-7.0.0-0 snmpd-7.0.0
+base-7.0.0-0 core-7.0.0
+base-7.0.0-0 installer-7.0.0
+base-7.0.0-0 dhcpd-7.0.0
+base-7.0.0-0 dns-7.0.0
+awsadapter-7.0.0-0 management-7.0.0
+gceadapter-7.0.0-0 management-7.0.0
 uge-8.5.4-0 qmaster-8.5.4
 uge-8.5.4-0 execd-8.5.4
-simple_policy_engine-6.3.0-0 engine-6.3
+simple_policy_engine-7.0.0-0 engine-7.0.0
 ganglia-3.7.2-1 gmetad-3.7.2
 ganglia-3.7.2-1 gmond-3.7.2
-centos-7.0-0 centos-7.0-x86_64-7.0
+centos-7.0-0 centos-7.0-x86_64-7.0.0
 ```
 
 ### Display list of enabled components
@@ -1326,10 +1326,10 @@ For example, to display the components enabled on the Tortuga installer:
 
 ```shell
 [root@tortuga ~]# get-component-list --software-profile Installer
-base-6.3.0-0 installer-6.3
-base-6.3.0-0 dns-6.3
+base-7.0.0-0 installer-7.0.0
+base-7.0.0-0 dns-7.0.0
 uge-8.5.4-0 qmaster-8.5.4
-simple_policy_engine-6.3.0-0 engine-6.3
+simple_policy_engine-7.0.0-0 engine-7.0.0
 ```
 
 or using the shortcut:
@@ -1350,7 +1350,7 @@ Components are enabled per software profile using the `enable-component`
 command. For example, to enable the `pdsh` component on the Tortuga installer:
 
 ```shell
-enable-component -p base-6.3.0-0 pdsh-6.3
+enable-component -p base-7.0.0-0 pdsh-7.0.0
 ```
 
 **Hint:** Since it is unlikely to be another component named "pdsh", use
@@ -1377,7 +1377,7 @@ of its components are enabled on a software profile. The 'base' and 'clonezilla'
 kits may not be deleted at all.
 
 ```shell
-delete-kit --name badkit --version 6.3 --iteration 0
+delete-kit --name badkit --version 7.0 --iteration 0
 ```
 
 **Never** attempt to delete a kit if a component was enabled or disabled, and the cluster is currently being synchronized. Doing so will lead to unpredictable results.
@@ -1424,7 +1424,7 @@ This component must be enabled to provision *local* (non-cloud) nodes.
 Enable the `dhcpd` component with the command:
 
 ```
-enable-component -p base-6.3.0-0 dhcpd-6.3
+enable-component -p base-7.0.0-0 dhcpd-7.0.0
 ```
 
 `/opt/puppetlabs/bin/puppet agent --onetime --no-daemonize` is used to synchronize only the Tortuga installer. `schedule-update` could also be used (as described above), however since this component is only applicable to the installer node, it is unnecessary to schedule an entire cluster update.
@@ -1440,7 +1440,7 @@ When enabled, the Tortuga installer node will automatically set up and configure
 Enable the `dns` component with the command:
 
 ```shell
-enable-component -p base-6.3.0-0 dns-6.3
+enable-component -p base-7.0.0-0 dns-7.0.0
 ```
 
 ##### Configuring Tortuga private DNS domain
@@ -1450,7 +1450,7 @@ compute node host name when provisioning on-premise physical or virtual
 machines or when *optionally* enabled in resource adapter(s) using the
 `override_dns_domain` resource adapter configuration setting.
 
-On Tortuga 6.3.0 (and later), the `set-private-dns-zone` command-line is
+On Tortuga 7.0.0 (and later), the `set-private-dns-zone` command-line is
 used to display the current "private" DNS zone by calling it without an
 argument:
 
@@ -1459,7 +1459,7 @@ argument:
 cloud.univa.com
 ```
 
-On Tortuga versions prior to 6.3.0, use `ucparam` to get the current
+On Tortuga versions prior to 7.0.0, use `ucparam` to get the current
 (private) DNS domain. The Tortuga default private DNS domain is `private`.
 
 ```shell
@@ -1614,8 +1614,8 @@ Enable the following base components on the installer for provisioning:
 These components are enabled using `enable-component`. For example:
 
 ```shell
-enable-component -p base-6.3.0-0 dhcpd-6.3
-enable-component -p base-6.3.0-0 dns-6.3
+enable-component -p base-7.0.0-0 dhcpd-7.0.0
+enable-component -p base-7.0.0-0 dns-7.0.0
 ```
 
 Use `get-component-list` to see the exact name of the components and versions.
@@ -1788,7 +1788,7 @@ The `add-nodes` command has the basic syntax:
 where `XXXX` is the name of an existing hardware profile and `YYYY` is the name
 of an existing software profile.
 
-As of Tortuga 6.3.0, the `add-nodes` command now operates asynchronously. When `add-nodes` is run, it will return immediately after validating the request. Use the CLI `get-node-requests` to check on status of node requests.
+As of Tortuga 7.0.0, the `add-nodes` command now operates asynchronously. When `add-nodes` is run, it will return immediately after validating the request. Use the CLI `get-node-requests` to check on status of node requests.
 
 ### Adding physical nodes or virtual machines by MAC address
 
@@ -1846,7 +1846,7 @@ Delete all nodes matching the wildcard "compute*":
 
 **Note:** wildcard spec must be escaped (or quoted) for use in `bash`.
 
-As of Tortuga 6.3.0, `delete-node` runs asynchronously and will now return immediately after it is run. Use the CLI `get-node-requests` to check the status of a `delete-node` request.
+As of Tortuga 7.0.0, `delete-node` runs asynchronously and will now return immediately after it is run. Use the CLI `get-node-requests` to check the status of a `delete-node` request.
 
 ## Idling and activating nodes
 
@@ -2050,11 +2050,11 @@ There are three viable solutions or workarounds for this issue:
 
 The Tortuga installer is fixed at the patchlevel of the OS media used to provision compute nodes.
 
-For example, if the installer is running CentOS 6.3, it stays at CentOS 6.3 for its lifetime. In other words, the 'updates' repository (defined in '/etc/yum.repos.d/CentOS-Base.repo') must be disabled.
+For example, if the installer is running CentOS 7.4, it stays at CentOS 7.4 for its lifetime. In other words, the 'updates' repository (defined in '/etc/yum.repos.d/CentOS-Base.repo') must be disabled.
 
 **Note: No patched packages can be installed on the installer prior to installation of Tortuga!**
 
-All compute nodes will be provisioned from the CentOS 6.3 OS media as supplied by the administrator.
+All compute nodes will be provisioned from the CentOS 7.4 OS media as supplied by the administrator.
 
 Pros:
 
@@ -2083,11 +2083,11 @@ Cons:
 
 #### Scenario 3: Manually managed patches
 
-When a compute node is provisioned by Tortuga, it installs the base operating system from the OS media as provided by 'install-os-kit'. Packages which constitute the Tortuga "base" kit are installed from '/opt/tortuga/depot/kits/base/6.3.0-0/noarch'.
+When a compute node is provisioned by Tortuga, it installs the base operating system from the OS media as provided by 'install-os-kit'. Packages which constitute the Tortuga "base" kit are installed from '/opt/tortuga/depot/kits/base/7.0.0-0/noarch'.
 
 Updated packages can be dropped into this directory and will be automatically available to Tortuga provisioned compute nodes.
 
-**Note: after updating packages in `/opt/tortuga/depot/kits/base/6.3.0-0/noarch`, it is required to run `createrepo` to update the Tortuga **base** kit YUM repository metadata.**
+**Note: after updating packages in `/opt/tortuga/depot/kits/base/7.0.0-0/noarch`, it is required to run `createrepo` to update the Tortuga **base** kit YUM repository metadata.**
 
 The key packages are `puppet-*`, `mcollective-*`, and the `ruby` dependencies.
 
@@ -2556,7 +2556,7 @@ and cloud platforms.
 
 ## Resource adapter configuration profiles
 
-Starting with Tortuga 6.3.0, resource adapter configuration is managed
+Starting with Tortuga 7.0.0, resource adapter configuration is managed
 using the `adapter-mgmt` command-line interface. This functionality
 obsoletes the need for resource adapter configuration files previously
 found in `$TORTUGA_ROOT/config/adapter-defaults-*.conf`.
@@ -2618,7 +2618,7 @@ adapter configuration profile set on the hardware profile.
 
 #### Importing an existing resource adapter configuration
 
-For users of Tortuga versions prior to 6.3.0, the resource adapter
+For users of Tortuga versions prior to 7.0.0, the resource adapter
 configuration was contained within a file. These existing resource adapter
 configurations may be imported as follows:
 
@@ -2851,7 +2851,7 @@ are configuration and support files elsewhere within the filesystem.
 
 **Note**: make a backup of of the entire filesystem prior to performing these uninstallation steps!
 
-If you are installing Tortuga 6.3 on top of an existing Tortuga 6.1.x installation, the following operations should be performed on RHEL/CentOS 7:
+If you are installing Tortuga 7.0 on top of an existing Tortuga 6.1.x installation, the following operations should be performed on RHEL/CentOS 7:
 
 ~~~bash
 service sgemaster.tortuga stop

@@ -26,7 +26,7 @@ logger = getLogger(__name__)
 
 class ComponentInstaller(ComponentInstallerBase):
     name = 'installer'
-    version = '6.3.1'
+    version = '7.0.0'
     os_list = [
         {'family': 'rhel', 'version': '6', 'arch': 'x86_64'},
         {'family': 'rhel', 'version': '7', 'arch': 'x86_64'},

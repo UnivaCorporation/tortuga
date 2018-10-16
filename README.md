@@ -77,7 +77,7 @@ yum install pandoc texlive-xetex texlive-collection-xetex \
 After installing `pandoc` and XeLaTeX packages, the PDF file can be generated as follows:
 
 ```shell
-pandoc -f markdown -o tortuga-6-admin-guide.pdf \
+pandoc -f markdown -o tortuga-7-admin-guide.pdf \
     -V margin-left=0.5in -V margin-right=0.5in \
     -V margin-top=1in -V margin-bottom=1in \
     --toc \
@@ -85,7 +85,7 @@ pandoc -f markdown -o tortuga-6-admin-guide.pdf \
     --template tortuga-template.tex \
     --smart --listings \
     --variable papersize=letter \
-    doc/tortuga-6-admin-guide.md.raw
+    doc/tortuga-7-admin-guide.md.raw
 ```
 
 ## Developer information

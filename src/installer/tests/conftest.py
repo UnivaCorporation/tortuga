@@ -177,23 +177,23 @@ def dbm():
         # create 'base' kit
         kit = Kit()
         kit.name = 'base'
-        kit.version = '6.3.1'
+        kit.version = '7.0.0'
         kit.iteration = '0'
         kit.description = 'Sample base kit'
 
-        installer_component = Component(name='installer', version='6.3')
+        installer_component = Component(name='installer', version='7.0')
         installer_component.family = [rhel7_os_family]
         installer_component.kit = kit
 
         core_component = Component(name='core',
-                                   version='6.3',
+                                   version='7.0',
                                    description='Compute component')
         core_component.family = [rhel7_os_family]
         core_component.kit = kit
 
         # add component not enabled by default
         pdsh_component = Component(name='pdsh',
-                                   version='6.3',
+                                   version='7.0',
                                    description='pdsh component')
         pdsh_component.family = [rhel7_os_family]
         pdsh_component.kit = kit
@@ -201,7 +201,7 @@ def dbm():
         # add fake dhcp component
         dhcpd_component = Component(
             name='dhcpd',
-            version='6.3',
+            version='7.0',
             description='Mock dhcpd component'
         )
         dhcpd_component.family = [rhel7_os_family]
