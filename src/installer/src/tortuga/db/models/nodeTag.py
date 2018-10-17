@@ -17,14 +17,11 @@
 from sqlalchemy import Column, ForeignKey, Integer, UniqueConstraint
 
 from .base import ModelBase
+from .tagMixin import TagMixin
 
 
-class NodeTag(ModelBase):
+class NodeTag(TagMixin, ModelBase):
     __tablename__ = 'node_tags'
-    __table_args__ = (
-        UniqueConstraint('node_id', 'tag_id'),
-    )
+    __table_args__ = (UniqueConstraint('node_id', 'name'),)
 
-    id = Column(Integer, primary_key=True)
-    node_id = Column(Integer, ForeignKey('nodes.id'), nullable=False)
-    tag_id = Column(Integer, ForeignKey('tags.id'), nullable=False)
+    node_id = Column(Integer, ForeignKey('nodes.id'))

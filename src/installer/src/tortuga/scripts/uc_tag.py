@@ -18,15 +18,20 @@ from typing import Optional
 from sqlalchemy.orm.session import Session
 
 from tortuga.cli.tortugaCli import TortugaCli
+from tortuga.cli.utils import parse_tags
 from tortuga.db.dbManager import DbManager
-from tortuga.db.hardwareProfilesDbHandler import HardwareProfilesDbHandler
-from tortuga.db.models.tag import Tag
-from tortuga.db.nodesDbHandler import NodesDbHandler
-from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
-from tortuga.db.tagsDbHandler import TagsDbHandler
+from tortuga.db.hardwareProfileDbApi import HardwareProfileDbApi
+from tortuga.db.nodeDbApi import NodeDbApi
+from tortuga.db.softwareProfileDbApi import SoftwareProfileDbApi
 
 
 class UctagCli(TortugaCli):
+    def __init__(self, *args, **kwargs):
+        self._hwp_api = HardwareProfileDbApi()
+        self._node_api = NodeDbApi()
+        self._swp_api = SoftwareProfileDbApi()
+        super().__init__(*args, **kwargs)
+
     def parseArgs(self, usage: Optional[str] = None):
         subparsers = self.getParser().add_subparsers(help='sub-command help',
                                                      dest='subparser_name')
@@ -35,28 +40,25 @@ class UctagCli(TortugaCli):
         add_subparser.add_argument('--node', dest='nodespec')
         add_subparser.add_argument('--software-profile', metavar='NAME')
         add_subparser.add_argument('--hardware-profile', metavar='NAME')
-        add_subparser.add_argument('--tag', action='append', dest='tags',
-                                   type=key_value_pair)
+        add_subparser.add_argument('--tags', action='append', dest='tags',
+                                   metavar='key=value[,key=value]')
         add_subparser.set_defaults(func=self.add_tag)
 
         remove_subparser = subparsers.add_parser('remove')
         remove_subparser.add_argument('--node', dest='nodespec')
-        remove_subparser.add_argument('--tag', action='append', dest='tags',
-                                      type=key_value_pair)
+        remove_subparser.add_argument('--software-profile', metavar='NAME')
+        remove_subparser.add_argument('--hardware-profile', metavar='NAME')
+        remove_subparser.add_argument('--tags', action='append', dest='tags',
+                                      metavar='key[,key]')
         remove_subparser.set_defaults(func=self.remove_tag)
 
-        delete_subparser = subparsers.add_parser('delete')
-        delete_subparser.add_argument('--force', action='store_true',
-                                      default=False)
-        delete_subparser.add_argument('--tag', action='append', dest='tags')
-        delete_subparser.set_defaults(func=self.delete_tag)
-
-        # 'list' action
         list_subparser = subparsers.add_parser('list')
         list_subparser.add_argument('--all-resources', action='store_true')
         list_subparser.add_argument('--nodes', action='store_true')
-        list_subparser.add_argument('--software-profiles', action='store_true')
-        list_subparser.add_argument('--hardware-profiles', action='store_true')
+        list_subparser.add_argument('--software-profiles',
+                                    action='store_true')
+        list_subparser.add_argument('--hardware-profiles',
+                                    action='store_true')
         list_subparser.set_defaults(func=self.list_tag)
 
         return super().parseArgs(usage=usage)
@@ -68,10 +70,6 @@ class UctagCli(TortugaCli):
             args.func(session, args)
 
     def add_tag(self, session: Session, args):
-        """
-        Handle 'add' action - associate tag(s) with resources
-        """
-
         if not args.nodespec and not args.software_profile and \
                 not args.hardware_profile:
             sys.stderr.write('Error: must specify --nodes'
@@ -79,172 +77,132 @@ class UctagCli(TortugaCli):
             sys.stderr.flush()
             sys.exit(1)
 
-        nodes = []
-        softwareprofiles = []
-        hardwareprofiles = []
+        tags = parse_tags(args.tags)
 
         if args.nodespec:
-            node_api = NodesDbHandler()
-            nodes = node_api.expand_nodespec(session, args.nodespec)
-            if not nodes:
-                sys.stderr.write(
-                    'No nodes matching nodespec [{0}]\n'.format(
-                        args.nodespec))
-
-                sys.stderr.flush()
-                sys.exit(1)
+            nodes = self._node_api.getNodesByNameFilter(session,
+                                                        args.nodespec)
+            for node in nodes:
+                node_tags = node.getTags()
+                node_tags.update(tags)
+                self._node_api.set_tags(session, node_id=node.getId(),
+                                        tags=node_tags)
+                print(node.getName(), node.getTags())
 
         if args.software_profile:
-            sw_profile_api = SoftwareProfilesDbHandler()
-
-            for softwareprofile_name in args.software_profile.split(','):
-                softwareprofile = sw_profile_api.getSoftwareProfile(
-                    session, softwareprofile_name)
-                softwareprofiles.append(softwareprofile)
+            for name in args.software_profile.split(','):
+                swp = self._swp_api.getSoftwareProfile(session, name)
+                swp_tags = swp.getTags()
+                swp_tags.update(tags)
+                swp.setTags(swp_tags)
+                self._swp_api.updateSoftwareProfile(session, swp)
 
         if args.hardware_profile:
-            hw_profile_api = HardwareProfilesDbHandler()
-
-            for hardwareprofile_name in args.hardware_profile.split(','):
-                hardwareprofile = hw_profile_api.getHardwareProfile(
-                    session, hardwareprofile_name)
-                hardwareprofiles.append(hardwareprofile)
-
-        # Create list of 'Tags' database objects
-        tag_objs = self.get_tag_objects(session, args.tags)
-
-        # Associate with nodes
-        for node in nodes or []:
-            for tag_obj in tag_objs:
-                if tag_obj in node.tags:
-                    # Tag already exists
-                    continue
-
-                node.tags.append(tag_obj)
-
-            print(node.name, node.tags)
-
-        # Associate with software profiles
-        for softwareprofile in softwareprofiles:
-            for tag_obj in tag_objs:
-                if tag_obj in softwareprofile.tags:
-                    continue
-
-                softwareprofile.tags.append(tag_obj)
-
-        # Associate with hardware profiles
-        for hardwareprofile in hardwareprofiles:
-            for tag_obj in tag_objs:
-                if tag_obj in hardwareprofile.tags:
-                    continue
-
-                hardwareprofile.tags.append(tag_obj)
+            for name in args.hardware_profile.split(','):
+                hwp = self._hwp_api.getHardwareProfile(session, name)
+                hwp_tags = hwp.getTags()
+                hwp_tags.update(tags)
+                hwp.setTags(hwp_tags)
+                self._hwp_api.updateHardwareProfile(session, hwp)
 
         session.commit()
-
-    def get_tag_objects(self, session, tags): \
-            # pylint: disable=no-self-use
-        """Given a list of (key, value) tuples, query database objects.
-
-        Any tags that do not exist will be added to the session
-        """
-
-        tag_objs = []
-
-        for key, value in tags:
-            tag = TagsDbHandler().get_tag(session, key)
-            if tag:
-                tag_objs.append(tag)
-
-                continue
-
-            new_tag = Tag(name=key, value=value)
-            tag_objs.append(new_tag)
-
-            session.add(new_tag)
-
-        return tag_objs
 
     def remove_tag(self, session: Session, args):
-        """Remove tags from specified resources"""
+        if not args.nodespec and not args.software_profile and \
+                not args.hardware_profile:
+            sys.stderr.write('Error: must specify --nodes'
+                             '/--software-profile/--hardware-profile\n')
+            sys.stderr.flush()
+            sys.exit(1)
 
-    def delete_tag(self, session: Session, args):
-        """Delete specific tags"""
+        tag_keys = []
+        for tag_string in args.tags:
+            tag_keys.extend(tag_string.split(','))
 
-        for key in args.tags:
-            tag_obj = session.query(Tag).filter(Tag.name == key).first()
+        if args.nodespec:
+            nodes = self._node_api.getNodesByNameFilter(session,
+                                                        args.nodespec)
+            for node in nodes:
+                node_tags = node.getTags()
+                for key in tag_keys:
+                    if key in node_tags.keys():
+                        node_tags.pop(key)
+                self._node_api.set_tags(session, node_id=node.getId(),
+                                        tags=node_tags)
+                print(node.getName(), node.getTags())
 
-            if tag_obj is None:
-                sys.stderr.write('Tag [{0}] not found\n'.format(key))
-                sys.stderr.flush()
+        if args.software_profile:
+            for name in args.software_profile.split(','):
+                swp = self._swp_api.getSoftwareProfile(session, name)
+                swp_tags = swp.getTags()
+                for key in tag_keys:
+                    if key in swp_tags.keys():
+                        swp_tags.pop(key)
+                swp.setTags(swp_tags)
+                self._swp_api.updateSoftwareProfile(session, swp)
 
-                continue
-
-            if not args.force and \
-                    (tag_obj.nodes or
-                     tag_obj.softwareprofiles or
-                     tag_obj.hardwareprofiles):
-                # Warn user if tag is associated with any resources
-
-                print('Tag [{0}] is in use by the following'
-                      ' resources:'.format(key))
-                print()
-
-                if tag_obj.nodes:
-                    print('Nodes: ' + ' '.join(
-                        [node.name for node in tag_obj.nodes]))
-
-                if tag_obj.softwareprofiles:
-                    print('Software profiles: ' + ' '.join(
-                        [softwareprofile
-                         for softwareprofile in tag_obj.softwareprofiles]))
-
-                if tag_obj.hardwareprofiles:
-                    print('Hardware profiles: ' + ' '.join(
-                        [hardwareprofile
-                         for hardwareprofile in tag_obj.hardwareprofiles]))
-
-                print('Do you wish to delete this tag [N/y/a/?]? ')
-                input_ = input('')
-
-                if not input_ or input_.lower().startswith('n'):
-                    continue
-
-                if input_.lower().startswith('a'):
-                    sys.stderr.write('Operation aborted by user.\n')
-                    sys.stderr.flush()
-
-                    break
-
-                # TODO: display help on '?'
-
-                print('Deleting tag [{0}]'.format(key))
-
-            session.delete(tag_obj)
+        if args.hardware_profile:
+            for name in args.hardware_profile.split(','):
+                hwp = self._hwp_api.getHardwareProfile(session, name)
+                hwp_tags = hwp.getTags()
+                for key in tag_keys:
+                    if key in hwp_tags.keys():
+                        hwp_tags.pop(key)
+                hwp.setTags(hwp_tags)
+                self._hwp_api.updateHardwareProfile(session, hwp)
 
         session.commit()
 
-    def list_tag(self, session: Session, args): \
-            # pylint: disable=no-self-use
-        tags = TagsDbHandler().get_tags(session)
+    def list_tag(self, session: Session, args):
+        report = TagReport()
 
-        if not tags:
-            sys.exit(0)
+        if args.all_resources or args.nodes:
+            for node in self._node_api.getNodeList(session):
+                for key, value in node.getTags().items():
+                    report.add_node(key, value, node)
+        
+        if args.all_resources or args.software_profiles:
+            for swp in self._swp_api.getSoftwareProfileList(session):
+                for key, value in swp.getTags().items():
+                    report.add_swp(key, value, swp)
+        
+        if args.all_resources or args.hardware_profiles:
+            for hwp in self._hwp_api.getHardwareProfileList(session):
+                for key, value in hwp.getTags().items():
+                    report.add_hwp(key, value, hwp)
 
-        for tag in tags:
-            print('{0}: {1}'.format(tag.name, tag.value))
+        for key, values in report.keys.items():
+            for value, types in values.items():
+                print('{} = {}:'.format(key, value))
+                for type_, names in types.items():
+                    print('  {}:'.format(type_))
+                    for name in names:
+                        print('    - {}'.format(name))
 
-            if args.all_resources or args.nodes:
-                print('    ' + 'Node(s): ' + ' '.join([node.name for node in tag.nodes]))
 
-            if args.all_resources or args.software_profiles:
-                print('    ' + 'Software profile(s): ' + ' '.join([softwareprofile.name for softwareprofile in tag.softwareprofiles]))
-
-
-def key_value_pair(arg):
-    key, value = arg.split('=', 1)
-
-    return key, value
+class TagReport:
+    def __init__(self):
+        self.keys = {}
+    
+    def _make_hier(self, key, value, type_):
+        if key not in self.keys.keys():
+            self.keys[key] = {}
+        if value not in self.keys[key]:
+            self.keys[key][value] = {}
+        if type_ not in self.keys[key][value]:
+            self.keys[key][value][type_] = []
+    
+    def add_node(self, key, value, node):
+        self._make_hier(key, value, 'nodes')
+        self.keys[key][value]['nodes'].append(node.getName())
+    
+    def add_swp(self, key, value, swp):
+        self._make_hier(key, value, 'software profiles')
+        self.keys[key][value]['software profiles'].append(swp.getName())
+    
+    def add_hwp(self, key: str, value: str, hwp):
+        self._make_hier(key, value, 'hardware profiles')
+        self.keys[key][value]['hardware profiles'].append(hwp.getName())
 
 
 def main():

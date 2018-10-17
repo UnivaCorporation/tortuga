@@ -48,15 +48,11 @@ class Node(ModelBase):
     nics = relationship('Nic', backref='node', lazy=False,
                         cascade='all, delete-orphan')
 
-    tags = relationship(
-        'Tag',
-        secondary='node_tags',
-        backref='nodes'
-    )
+    tags = relationship('NodeTag', lazy=False, cascade="all, delete-orphan")
 
     instance = relationship(
         'InstanceMapping', uselist=False, back_populates='node',
         cascade='all,delete-orphan')
 
     def __repr__(self):
-        return 'Node(name=%s)' % (self.name)
+        return 'Node(name={})'.format(self.name)

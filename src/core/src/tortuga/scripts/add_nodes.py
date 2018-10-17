@@ -22,6 +22,7 @@ import os.path
 import sys
 
 from tortuga.cli.tortugaCli import TortugaCli
+from tortuga.cli.utils import parse_tags
 from tortuga.exceptions.httpErrorException import HttpErrorException
 from tortuga.exceptions.urlErrorException import UrlErrorException
 from tortuga.wsapi.addHostWsApi import AddHostWsApi
@@ -58,7 +59,7 @@ class AddNodes(TortugaCli): \
             mainGroup, '--tags',
             dest='tags', metavar='key=value[,key=value]',
             action='append',
-            help=_('Key-value pairs associated with new node(s)'))
+            help='Key-value pairs associated with new node(s)')
 
         self.addOptionToGroup(
             mainGroup, '--rack',
@@ -192,8 +193,7 @@ class AddNodes(TortugaCli): \
             )
 
         if self.getArgs().tags:
-            addNodesRequest['tags'] = _split_key_value_pairs(
-                self.getArgs().tags)
+            addNodesRequest['tags'] = parse_tags(self.getArgs().tags)
 
         nodeDetails = []
 
@@ -329,22 +329,6 @@ class AddNodes(TortugaCli): \
             nics.append(nic_def)
 
         return nics
-
-
-def _split_key_value_pairs(kvpairs):
-    result = {}
-
-    for kvpairitem in kvpairs:
-        for kvpairlist in kvpairitem.split(','):
-            try:
-                key, value = kvpairlist.split('=', 1)
-
-                result[key] = value
-            except ValueError:
-                sys.stderr.write('Error: malformed --tags\n')
-                sys.exit(1)
-
-    return result
 
 
 def main():
