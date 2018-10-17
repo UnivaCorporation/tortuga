@@ -13,6 +13,7 @@
 # limitations under the License.
 
 # pylint: disable=not-callable,multiple-statements,no-member
+from typing import Dict, Optional
 
 from sqlalchemy import and_, or_
 from sqlalchemy.orm.exc import NoResultFound
@@ -23,6 +24,9 @@ from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.softwareProfileNotIdle import SoftwareProfileNotIdle
 
 from .models.hardwareProfile import HardwareProfile
+
+
+Tags = Dict[str, Optional[str]]
 
 
 class HardwareProfilesDbHandler(TortugaDbObjectHandler):
@@ -60,7 +64,8 @@ class HardwareProfilesDbHandler(TortugaDbObjectHandler):
 
         return dbHardwareProfile
 
-    def getHardwareProfileList(self, session, tags=None):
+    def getHardwareProfileList(self, session,
+                               tags: Optional[Tags] = None):
         """
         Get list of hardwareProfiles from the db.
         """
@@ -69,14 +74,21 @@ class HardwareProfilesDbHandler(TortugaDbObjectHandler):
 
         searchspec = []
 
-        # Build searchspec from specified tags
-        for tag in tags or []:
-            if len(tag) == 2:
-                searchspec.append(
-                    and_(HardwareProfile.tags.any(name=tag[0]),
-                         HardwareProfile.tags.any(value=tag[1])))
-            else:
-                searchspec.append(HardwareProfile.tags.any(name=tag[0]))
+        if tags:
+            for name, value in tags.items():
+                if value:
+                    #
+                    # Match both name and value
+                    #
+                    searchspec.append(and_(
+                        HardwareProfile.tags.any(name=name),
+                        HardwareProfile.tags.any(value=value)
+                    ))
+                else:
+                    #
+                    # Match name only
+                    #
+                    searchspec.append(HardwareProfile.tags.any(name=name))
 
         return session.query(HardwareProfile).filter(
             or_(*searchspec)).order_by(HardwareProfile.name).all()

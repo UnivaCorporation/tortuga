@@ -26,7 +26,6 @@ from . import kitSource  # noqa
 from . import softwareProfileKitSource  # noqa
 from . import networkDevice  # noqa
 from . import nodeTag  # noqa
-from . import tag  # noqa
 from . import softwareProfileTag  # noqa
 from . import hardwareProfileTag  # noqa
 from . import hardwareProfileNetwork  # noqa

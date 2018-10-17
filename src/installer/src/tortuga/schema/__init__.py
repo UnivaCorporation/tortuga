@@ -20,12 +20,15 @@ from marshmallow_sqlalchemy import ModelSchema
 from tortuga.db.models.component import Component as ComponentModel
 from tortuga.db.models.hardwareProfile import \
     HardwareProfile as HardwareProfileModel
+from tortuga.db.models.hardwareProfileTag import \
+    HardwareProfileTag as HardwareProfileTagModel
 from tortuga.db.models.kit import Kit as KitModel
 from tortuga.db.models.network import Network as NetworkModel
 from tortuga.db.models.networkDevice \
     import NetworkDevice as NetworkDeviceModel
 from tortuga.db.models.nic import Nic as NicModel
 from tortuga.db.models.node import Node as NodeModel
+from tortuga.db.models.nodeTag import NodeTag as NodeTagModel
 from tortuga.db.models.operatingSystem import \
     OperatingSystem as OperatingSystemModel
 from tortuga.db.models.operatingSystemFamily import \
@@ -39,7 +42,8 @@ from tortuga.db.models.resourceAdapterConfig import \
     ResourceAdapterConfig as ResourceAdapterConfigModel
 from tortuga.db.models.softwareProfile import \
     SoftwareProfile as SoftwareProfileModel
-from tortuga.db.models.tag import Tag as TagModel
+from tortuga.db.models.softwareProfileTag import \
+    SoftwareProfileTag as SoftwareProfileTagModel
 from tortuga.db.models.admin import Admin as AdminModel
 from tortuga.db.models.resourceAdapterSetting import \
     ResourceAdapterSetting as ResourceAdapterSettingModel
@@ -52,11 +56,6 @@ from tortuga.db.models.instanceMetadata import \
 class AdminSchema(ModelSchema):
     class Meta:
         model = AdminModel
-
-
-class TagSchema(ModelSchema):
-    class Meta:
-        model = TagModel
 
 
 class OperatingSystemSchema(ModelSchema):
@@ -165,6 +164,11 @@ class InstanceMappingSchema(ModelSchema):
         model = InstanceMappingModel
 
 
+class NodeTagSchema(ModelSchema):
+    class Meta:
+        model = NodeTagModel
+        
+
 class NodeSchema(ModelSchema):
     softwareprofile = fields.Nested('SoftwareProfileSchema',
                                     only=('id', 'name', 'metadata'))
@@ -180,13 +184,18 @@ class NodeSchema(ModelSchema):
 
     vcpus = fields.Integer(default=1)
 
-    tags = fields.Nested('TagSchema',
+    tags = fields.Nested('NodeTagSchema',
                          only=('id', 'name', 'value'), many=True)
 
     instance = fields.Nested('InstanceMappingSchema')
 
     class Meta:
         model = NodeModel
+
+
+class SoftwareProfileTagSchema(ModelSchema):
+    class Meta:
+        model = SoftwareProfileTagModel
 
 
 class SoftwareProfileSchema(ModelSchema):
@@ -202,13 +211,18 @@ class SoftwareProfileSchema(ModelSchema):
 
     os = fields.Nested('OperatingSystemSchema')
 
-    tags = fields.Nested('TagSchema',
+    tags = fields.Nested('SoftwareProfileTagSchema',
                          only=('id', 'name', 'value'), many=True)
 
     metadata = fields.Dict()
 
     class Meta:
         model = SoftwareProfileModel
+
+
+class HardwareProfileTagSchema(ModelSchema):
+    class Meta:
+        model = HardwareProfileTagModel
 
 
 class HardwareProfileSchema(ModelSchema):
@@ -218,7 +232,7 @@ class HardwareProfileSchema(ModelSchema):
     mappedsoftwareprofiles = fields.Nested('SoftwareProfileSchema',
                                            only=('id', 'name'), many=True)
 
-    tags = fields.Nested('TagSchema',
+    tags = fields.Nested('HardwareProfileTagSchema',
                          only=('id', 'name', 'value'), many=True)
 
     resourceadapter = fields.Nested('ResourceAdapterSchema',

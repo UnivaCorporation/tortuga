@@ -195,6 +195,10 @@ class SoftwareProfileWsApi(TortugaWsApi):
         url = 'softwareprofiles/%s' % (softwareProfileObject.getId())
 
         postdata = softwareProfileObject.getCleanDict()
+        print(postdata)  # DEBUG
+
+        test = SoftwareProfile.getFromDict(postdata)
+        print(test.getTags())
 
         try:
             self.put(url, postdata)

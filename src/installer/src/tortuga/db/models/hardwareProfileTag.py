@@ -14,14 +14,14 @@
 
 # pylint: disable=too-few-public-methods
 
-from sqlalchemy import Column, ForeignKey, Integer
+from sqlalchemy import Column, ForeignKey, Integer, UniqueConstraint
 
 from .base import ModelBase
+from .tagMixin import TagMixin
 
 
-class HardwareProfileTag(ModelBase):
+class HardwareProfileTag(TagMixin, ModelBase):
     __tablename__ = 'hardwareprofile_tags'
+    __table_args__ = (UniqueConstraint('hardwareprofile_id', 'name'),)
 
-    id = Column(Integer, primary_key=True)
     hardwareprofile_id = Column(Integer, ForeignKey('hardwareprofiles.id'))
-    tag_id = Column(Integer, ForeignKey('tags.id'), nullable=False)

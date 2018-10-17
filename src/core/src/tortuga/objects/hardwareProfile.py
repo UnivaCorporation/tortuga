@@ -14,7 +14,7 @@
 
 # pylint: disable=no-member
 
-from typing import Iterable, Optional
+from typing import Dict, Iterable, Optional
 
 import tortuga.objects.admin
 import tortuga.objects.module
@@ -230,11 +230,23 @@ class HardwareProfile(TortugaObject): \
         """ Get Provisioning Nics """
         return self.get('nics')
 
-    def getTags(self):
+    def getTags(self) -> Dict[str, str]:
+        """
+        Gets all the tags for this hardware profile.
+
+        :return Dict[str, str]: the tags
+
+        """
         return self.get('tags')
 
-    def setTags(self, value):
-        self['tags'] = value
+    def setTags(self, tags: Dict[str, str]):
+        """
+        Sets the tags for this hardware profile.
+
+        :param Dict[str, str] tags: the tags to set for this hardware profile
+
+        """
+        self['tags'] = tags
 
     @staticmethod
     def getKeys():
@@ -347,12 +359,7 @@ class HardwareProfile(TortugaObject): \
 
             hardwareProfile.setNetworks(networkList)
 
-        if 'tags' in _dict:
-            tags = {}
-
-            for tag in _dict['tags']:
-                tags[tag.name] = tag.value
-
-            hardwareProfile.setTags(tags)
+        tags = {tag.name: tag.value for tag in _dict.get('tags', [])}
+        hardwareProfile.setTags(tags)
 
         return hardwareProfile
