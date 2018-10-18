@@ -15,8 +15,9 @@
 # pylint: disable=no-self-use,no-member,no-name-in-module
 
 import datetime
-import time
 import json
+import time
+from collections import defaultdict
 from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy.orm.session import Session
@@ -220,51 +221,27 @@ class NodeManager(TortugaObjectManager): \
         Expand non-database fields in Node objects
 
         """
-        swprofile_map: Dict[str, Any] = {}
 
-        # dict keyed on resource adapter name, value is resource adapter class
-        adapter_map: Dict[str, Any] = {}
+        class SoftwareProfileMetadataCache(defaultdict):
+            def __missing__(self, key):
+                return SoftwareProfileManager().get_software_profile_metadata(
+                    session, key
+                )
+
+        swprofile_map = SoftwareProfileMetadataCache()
 
         for node in nodes:
-            adapter_name = \
-                node.getHardwareProfile().getResourceAdapter().getName() \
-                if node.getHardwareProfile().getResourceAdapter() else \
-                'default'
-
-            ResourceAdapterClass = adapter_map.get(adapter_name)
-            if ResourceAdapterClass is None:
-                # Query vcpus from resource adapter
-                ResourceAdapterClass = \
-                    resourceAdapterFactory.get_resourceadapter_class(
-                        adapter_name)
-
-                adapter_map[adapter_name] = ResourceAdapterClass
-
-            adapter = ResourceAdapterClass()
-            adapter.session = session
-
-            # Update Node object
-            node.setVcpus(adapter.get_node_vcpus(node.getName()))
-
             if not node.getSoftwareProfile():
                 continue
 
-            swprofile_name = node.getSoftwareProfile().getName()
-
-            metadata = swprofile_map.get(swprofile_name)
-            if metadata is None:
-                metadata = \
-                    SoftwareProfileManager().get_software_profile_metadata(
-                        session, node.getSoftwareProfile().getName())
-
-                swprofile_map[swprofile_name] = metadata
-
-            node.getSoftwareProfile().setMetadata(metadata)
+            node.getSoftwareProfile().setMetadata(
+                swprofile_map[node.getSoftwareProfile().getName()]
+            )
 
         return nodes
 
     def updateNode(self, session: Session, nodeName: str,
-            updateNodeRequest: dict) -> None:
+                   updateNodeRequest: dict) -> None:
         """
         Calls updateNode() method of resource adapter
         """

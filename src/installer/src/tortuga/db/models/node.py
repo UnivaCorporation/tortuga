@@ -37,6 +37,7 @@ class Node(ModelBase):
     lockedState = Column(String(20), nullable=False, default='Unlocked')
     isIdle = Column(Boolean, nullable=False, default=True)
     addHostSession = Column(String(36))
+    vcpus = Column(Integer)
 
     nodes_softwareProfileId = index_property(
         'softwareProfilesId', 'Nodes_softwareProfileId')
