@@ -224,9 +224,14 @@ class NodeManager(TortugaObjectManager): \
 
         class SoftwareProfileMetadataCache(defaultdict):
             def __missing__(self, key):
-                return SoftwareProfileManager().get_software_profile_metadata(
-                    session, key
-                )
+                metadata = \
+                    SoftwareProfileManager().get_software_profile_metadata(
+                        session, key
+                    )
+
+                self[key] = metadata
+
+                return metadata
 
         swprofile_map = SoftwareProfileMetadataCache()
 
