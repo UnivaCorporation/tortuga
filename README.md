@@ -2,7 +2,6 @@
 
 [![Build Status](https://travis-ci.org/UnivaCorporation/tortuga.svg?branch=master)](https://travis-ci.org/UnivaCorporation/tortuga)
 
-
 ## Tortuga Slack Channel
 
 [Join the discussion on Slack!](https://join.slack.com/t/tortugaproject/shared_invite/enQtMzM1MDU3ODk0MjI2LThjYTNkNzFiMDc1NzdjYmJhMGZhZGI5ZDIzMzUwODBkNzU3ZDBmMGY3NzE3ZmVlNDVhMmRiY2UxNGVjZmFiNzk)
