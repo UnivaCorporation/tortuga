@@ -83,6 +83,10 @@ class CreateSoftwareProfileCli(TortugaCli):
             dest='unmanaged',
             help=_('Create an unmanaged software profile'))
 
+        self.addOptionToGroup(option_group_name, '--data-root',
+                              dest='dataRoot',
+                              help=_('Root directory for user data'))
+
         self.getParser().add_argument(
             'name', metavar='NAME', nargs='?',
             help=_('Software profile name')
@@ -124,6 +128,9 @@ class CreateSoftwareProfileCli(TortugaCli):
                 'version': getattr(self.getArgs(), 'osInfo').getVersion(),
                 'arch': getattr(self.getArgs(), 'osInfo').getArch(),
             }
+
+        if self.getArgs().dataRoot:
+            tmpl_dict['dataRoot'] = self.getArgs().dataRoot
 
         sw_profile_spec = SoftwareProfile.getFromDict(tmpl_dict)
 

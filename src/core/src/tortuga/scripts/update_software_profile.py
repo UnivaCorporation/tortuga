@@ -155,6 +155,9 @@ class UpdateSoftwareProfileCli(TortugaCli):
             help=_('The maximum size in megabytes when the partition'
                    ' is set to grow.'))
 
+        self.addOption('--data-root', dest='dataRoot',
+                       help=_('(optional) Root directory for user data.'))
+
         self.getParser().add_argument(
             'name', metavar='NAME',
             help=_('Name of software profile'),
@@ -412,6 +415,9 @@ Updates software profile in the Tortuga system.
                       ' allowed with --update-partition or --add-partition'))
 
             partitionObject.setBootLoader(self.getArgs().bootLoader)
+
+        if self.getArgs().dataRoot is not None:
+            sp.setDataRoot(self.getArgs().dataRoot)
 
         api.updateSoftwareProfile(sp)
 
