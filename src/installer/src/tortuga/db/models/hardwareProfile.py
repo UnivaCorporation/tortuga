@@ -68,11 +68,8 @@ class HardwareProfile(ModelBase):
         'ResourceAdapterConfig', backref='hardwarprofiles'
     )
 
-    tags = relationship(
-        'Tag',
-        secondary='hardwareprofile_tags',
-        backref='hardwareprofiles'
-    )
+    tags = relationship('HardwareProfileTag', lazy=False,
+                        cascade="all, delete-orphan")
 
     def __repr__(self):
-        return '<HardwareProfile(name=[{}])>'.format(self.name)
+        return '<HardwareProfile(name={})>'.format(self.name)

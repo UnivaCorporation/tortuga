@@ -10,5 +10,5 @@ type -P pandoc &>/dev/null || {
 pandoc \
     -t gfm \
     --self-contained \
-    tortuga-6-admin-guide.md.raw | \
-sed "s/^\\\\newpage//" | cat doc-header.md - > tortuga-6-admin-guide.md
+    tortuga-7-admin-guide.md.raw | \
+sed "s/^\\\\newpage//" | cat doc-header.md - > tortuga-7-admin-guide.md

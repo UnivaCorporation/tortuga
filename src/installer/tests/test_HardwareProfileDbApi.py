@@ -145,3 +145,29 @@ def test_addHardwareProfile(dbm):
         assert stored_hwprofile.getName() == hwprofile.getName()
 
         hardwareProfileDbApi.updateHardwareProfile(session, stored_hwprofile)
+
+
+def test_updateHardwareProfileTags(dbm):
+    api = HardwareProfileDbApi()
+    tags = {'tag1': 'tag1 value', 'tag2': 'tag2 value'}
+
+    with dbm.session() as session:
+        hwprofile = api.getHardwareProfile(session, 'notags')
+
+        #
+        # Set tags
+        #
+        hwprofile.setTags({'tag1': 'tag1 value', 'tag2': 'tag2 value'})
+        api.updateHardwareProfile(session, hwprofile)
+        session.commit()
+        hwprofile = api.getHardwareProfile(session, 'notags')
+        assert hwprofile.getTags() == tags
+
+        #
+        # Remove tags
+        #
+        hwprofile.setTags({})
+        api.updateHardwareProfile(session, hwprofile)
+        session.commit()
+        hwprofile = api.getHardwareProfile(session, 'notags')
+        assert hwprofile.getTags() == {}

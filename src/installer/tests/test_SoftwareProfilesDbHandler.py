@@ -66,7 +66,7 @@ class TestSoftwareProfilesDbHandler(unittest.TestCase):
     def test_getSoftwareProfileList_tags(self):
         # 'tag1' returns software profile 'profile1' only
         result = SoftwareProfilesDbHandler().getSoftwareProfileList(
-            self.session, tags=[('tag1',)])
+            self.session, tags={'tag1': None})
 
         assert result and \
             len(result) == 1 and \
@@ -75,14 +75,14 @@ class TestSoftwareProfilesDbHandler(unittest.TestCase):
     def test_no_matching_tags(self):
         # Ensure invalid tag returns no result
         result = SoftwareProfilesDbHandler().getSoftwareProfileList(
-            self.session, tags=[('invalid',)])
+            self.session, tags={'invalid': None})
 
         assert not result
 
     def test_getSoftwareProfileList_tag2(self):
         # 'tag2' returns software profile 'profile2' only
         result = SoftwareProfilesDbHandler().getSoftwareProfileList(
-            self.session, tags=[('tag2',)])
+            self.session, tags={'tag2': None})
 
         assert result and \
             len(result) == 1 and \
@@ -91,8 +91,7 @@ class TestSoftwareProfilesDbHandler(unittest.TestCase):
     def test_getSoftwareProfileList_tag1_and_tag2(self):
         # 'tag1' and 'tag2' returns both profiles
         result = SoftwareProfilesDbHandler().getSoftwareProfileList(
-            self.session, tags=[('tag1',),
-                                ('tag2',)])
+            self.session, tags={'tag1': None, 'tag2': None})
 
         assert result and \
             len(result) == 2 and \
@@ -129,7 +128,7 @@ class TestSoftwareProfilesDbHandler(unittest.TestCase):
         assert result1
 
         result2 = SoftwareProfilesDbHandler().get_software_profiles_with_component(
-            self.session, 'base', 'core', kit_version='6.3.1'
+            self.session, 'base', 'core', kit_version='7.0.0'
         )
 
         assert result2

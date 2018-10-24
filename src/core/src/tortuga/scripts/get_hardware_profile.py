@@ -180,7 +180,7 @@ class GetHardwareProfileCli(TortugaCli):
         if hwprofile.getTags():
             print(' ' * 2 + '- Tags:')
 
-            for tag_key, tag_value in list(hwprofile.getTags().items()):
+            for tag_key, tag_value in hwprofile.getTags().items():
                 print(' ' * 4 + '- {0}={1}'.format(tag_key, tag_value))
         else:
             print(' ' * 2 + '- Tags: (none)')

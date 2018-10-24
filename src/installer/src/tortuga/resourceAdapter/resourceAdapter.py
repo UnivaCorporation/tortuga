@@ -17,8 +17,6 @@
 import csv
 import logging
 import os.path
-import socket
-import subprocess
 import sys
 import traceback
 from typing import Any, Dict, List, Optional
@@ -53,6 +51,9 @@ from tortuga.schema import ResourceAdapterConfigSchema
 from .userDataMixin import UserDataMixin
 
 
+cm = ConfigManager()
+
+
 class ResourceAdapter(UserDataMixin): \
         # pylint: disable=too-many-public-methods
     """
@@ -84,7 +85,7 @@ class ResourceAdapter(UserDataMixin): \
         self.__osObject = None
         self.__sanApi = None
 
-        self._cm: ConfigManager = ConfigManager()
+        self._cm = cm
 
         self._addHostSession = addHostSession
 
@@ -550,48 +551,11 @@ class ResourceAdapter(UserDataMixin): \
 
     @property
     def installer_public_hostname(self) -> str:
-        if self.__installer_public_hostname is None:
-
-            cmd = '/opt/puppetlabs/bin/facter fqdn'
-
-            with open(os.devnull, 'w') as devnull:
-                p = subprocess.Popen(cmd,
-                                     shell=True,
-                                     stdout=subprocess.PIPE,
-                                     stderr=devnull)
-
-                stdout, _ = p.communicate()
-
-                retval = p.wait()
-
-            if retval == 0:
-                self.__installer_public_hostname = stdout.decode().rstrip()
-
-                self.getLogger().debug(
-                    'using installerName [%s] from Facter' % (
-                        self.__installer_public_hostname))
-            else:
-                self.__installer_public_hostname = self._cm.getHost()
-
-                self.getLogger().debug(
-                    'using installerName [%s] from system' % (
-                        self.__installer_public_hostname))
-
-        return self.__installer_public_hostname
+        return cm.getHost()
 
     @property
     def installer_public_ipaddress(self) -> str:
-        # Get installer IP
-        if self.__installer_public_ipaddress is None:
-            self.getLogger().debug('Looking up installer IP using DNS')
-
-            aiInfo = socket.getaddrinfo(
-                self.installer_public_hostname, None, socket.AF_INET,
-                socket.SOCK_STREAM)
-
-            self.__installer_public_ipaddress = aiInfo[0][4][0]
-
-        return self.__installer_public_ipaddress
+        return cm.getIpAddress()
 
     @property
     def private_dns_zone(self) -> str:

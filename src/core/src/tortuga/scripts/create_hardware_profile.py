@@ -19,7 +19,7 @@ import os.path
 from typing import Optional
 
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.cli.utils import ParseOperatingSystemArgAction
+from tortuga.cli.utils import ParseOperatingSystemArgAction, parse_tags
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
 from tortuga.exceptions.invalidProfileCreationTemplate import \
     InvalidProfileCreationTemplate
@@ -63,6 +63,12 @@ class CreateHardwareProfileCli(TortugaCli):
         self.addOptionToGroup(option_group_name, '--name-format',
                               dest='nameFormat',
                               help=_('Host name format'))
+
+        self.addOptionToGroup(option_group_name, '--tags',
+                              dest='tags', metavar='key=value[,key=value]',
+                              action='append',
+                              help='Key-value pairs associated with the '
+                                   'hardware profile')
 
         self.addOptionToGroup(option_group_name, '--defaults',
                               dest='bUseDefaults', default=False,
@@ -127,8 +133,12 @@ class CreateHardwareProfileCli(TortugaCli):
 
         if self.getArgs().nameFormat:
             tmpl_dict['nameFormat'] = self.getArgs().nameFormat
+
         elif 'nameFormat' not in tmpl_dict:
             tmpl_dict['nameFormat'] = 'compute-#NN'
+
+        if self.getArgs().tags:
+            tmpl_dict['tags'] = parse_tags(self.getArgs().tags)
 
         settings_dict = {
             'defaults': self.getArgs().bUseDefaults,

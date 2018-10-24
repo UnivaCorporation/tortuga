@@ -12,18 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
+# pylint: disable=too-few-public-methods
 
-from tortuga.db.models.tag import Tag
-
-
-class TestTagsTable(unittest.TestCase):
-    def test_simple(self):
-        t = Tag(name='mike', value='value')
-
-        assert t.name == 'mike'
-        assert t.value == 'value'
+from sqlalchemy import Column, Integer, String
 
 
-if __name__ == '__main__':
-    unittest.main()
+class TagMixin:
+    id = Column(Integer, primary_key=True)
+    name = Column(String(255), nullable=False)
+    value = Column(String(255))

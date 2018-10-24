@@ -27,7 +27,6 @@ from .registry import register_ws_controller, get_all_ws_controllers
 from .resourceAdapterConfigurationController import \
     ResourceAdapterConfigurationController
 from .softwareProfileController import SoftwareProfileController
-from .tagController import TagController
 from .updateController import UpdateController
 from ..app import app
 
@@ -44,7 +43,6 @@ register_ws_controller(NodeController)
 register_ws_controller(ParameterController)
 register_ws_controller(ResourceAdapterConfigurationController)
 register_ws_controller(SoftwareProfileController)
-register_ws_controller(TagController)
 register_ws_controller(UpdateController)
 
 

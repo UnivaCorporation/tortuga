@@ -20,7 +20,7 @@ import os.path
 from typing import Optional
 
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.cli.utils import ParseOperatingSystemArgAction
+from tortuga.cli.utils import ParseOperatingSystemArgAction, parse_tags
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
 from tortuga.exceptions.invalidProfileCreationTemplate import \
     InvalidProfileCreationTemplate
@@ -53,6 +53,12 @@ class CreateSoftwareProfileCli(TortugaCli):
         self.addOptionToGroup(option_group_name, '--description',
                               dest='description',
                               help=_('Description for software profile'))
+
+        self.addOptionToGroup(option_group_name, '--tags',
+                              dest='tags', metavar='key=value[,key=value]',
+                              action='append',
+                              help='Key-value pairs associated with the '
+                                   'software profile')
 
         self.addOptionToGroup(option_group_name, '--type',
                               dest='profileType',
@@ -117,6 +123,9 @@ class CreateSoftwareProfileCli(TortugaCli):
             tmpl_dict['type'] = self.getArgs().profileType
         elif 'type' not in tmpl_dict:
             tmpl_dict['type'] = 'compute'
+
+        if self.getArgs().tags:
+            tmpl_dict['tags'] = parse_tags(self.getArgs().tags)
 
         if hasattr(self.getArgs(), 'osInfo'):
             tmpl_dict['os'] = {

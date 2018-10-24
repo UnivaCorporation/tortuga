@@ -46,8 +46,8 @@ class TortugaDbApi:
 
         return o
 
-    def loadRelations(self, dbObject, optionDict: Dict[str, bool] = None) \
-            -> None:
+    def loadRelations(self, dbObject,
+                      optionDict: Dict[str, bool] = None) -> None:
         if optionDict:
             for k in list(optionDict.keys()):
                 # The optionDict contains key-value pairs of relation name

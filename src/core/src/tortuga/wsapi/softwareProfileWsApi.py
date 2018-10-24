@@ -196,6 +196,8 @@ class SoftwareProfileWsApi(TortugaWsApi):
 
         postdata = softwareProfileObject.getCleanDict()
 
+        test = SoftwareProfile.getFromDict(postdata)
+
         try:
             self.put(url, postdata)
 
