@@ -15,7 +15,6 @@
 import logging
 import os.path
 import sys
-
 import yaml
 
 from tortuga.config.configManager import ConfigManager
@@ -79,6 +78,16 @@ def get_puppet_node_yaml(session, nodeName):
     except NodeNotFound:
         sys.exit(1)
 
+    data = None
+    try:
+        from tortuga.db.dataRequestsDbHandler import DataRequestsDbHandler
+        dbDataRequest = DataRequestsDbHandler().get_by_addHostSession(session, dbNode.addHostSession)
+#        print('dbDataRequest: %s' % dbDataRequest)
+        if dbDataRequest:
+            data = dbDataRequest.request
+    except Exception as e:
+        pass
+
     if dbNode.hardwareprofile.nics:
         privateInstallerFQDN = '%s%s%s' % (
             primaryInstallerHostName,
@@ -134,7 +143,8 @@ def get_puppet_node_yaml(session, nodeName):
                     puppet_class_args = _component.run_action(
                         'get_puppet_args',
                         dbNode.softwareprofile,
-                        dbNode.hardwareprofile
+                        dbNode.hardwareprofile,
+                        data = data
                     )
                     if puppet_class_args is not None:
                         puppet_classes[_component.puppet_class] = \

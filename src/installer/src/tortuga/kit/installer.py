@@ -738,7 +738,8 @@ class ComponentInstallerBase(ConfigurableMixin):
         pass
 
     def action_get_puppet_args(self, db_software_profile,
-                               db_hardware_profile):
+                               db_hardware_profile,
+                               *args, **kwargs):
         return {}
 
     def action_pre_add_host(self, hardware_profile, software_profile,

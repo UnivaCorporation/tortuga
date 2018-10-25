@@ -14,6 +14,7 @@
 
 from sqlalchemy.orm.session import Session
 
+from tortuga.db.models.dataRequest import DataRequest
 from tortuga.events.types import AddNodeRequestQueued
 from tortuga.node.nodeManager import init_async_node_request
 from tortuga.resourceAdapter.tasks import add_nodes
@@ -47,6 +48,9 @@ def enqueue_addnodes_request(session: Session, addNodesRequest: dict) -> str:
 
     session.add(request)
 
+    if 'data' in addNodesRequest['addNodesRequest']:
+        data_request = _init_data_request(addNodesRequest['addNodesRequest']['data'], request.addHostSession)
+        session.add(data_request)
     session.commit()
 
     #
@@ -63,3 +67,12 @@ def enqueue_addnodes_request(session: Session, addNodesRequest: dict) -> str:
                               request=addNodesRequest['addNodesRequest'])
 
     return request.addHostSession
+
+
+    return request
+
+def _init_data_request(data, addHostSession):
+    request = DataRequest()
+    request.request = data
+    request.timestamp = datetime.datetime.utcnow()
+    request.addHostSession = addHostSession
