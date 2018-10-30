@@ -18,13 +18,6 @@ class bootstrap::packages {
   include tortuga::config
 
   if $::osfamily == 'RedHat' {
-    $commonpkgs = [
-        'sudo',
-        'openssl',
-    ]
-
-    ensure_packages($commonpkgs, {'ensure' => 'installed'})
-
     # RHEL/CentOS >= 6
     if $bootstrap::database_engine == 'mysql' {
       package { 'MySQL-python':

@@ -22,4 +22,5 @@ class bootstrap::installer {
   contain tortuga::installer
 
   contain tortuga::installer::apache
+  contain tortuga::installer::sudo
 }

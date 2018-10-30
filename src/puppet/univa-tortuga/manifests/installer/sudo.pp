@@ -12,18 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-class tortuga::installer (
-  $puppet_server = $::puppet_server,
-) {
-  contain tortuga::installer::puppetmaster
-  contain tortuga::envscript
-  contain tortuga::installer::ssh
-  contain tortuga::installer::redis
-  contain tortuga::installer::activemq
+class tortuga::installer::sudo {
+  require tortuga::installer::apache
 
-  class { 'tortuga::installer::mcollective':
-    puppet_server => $puppet_server,
+  include tortuga::config
+
+  ensure_packages(['sudo'], {'ensure' => 'installed'})
+
+  $bin_dir = $tortuga::config::bin_dir
+  $www_user = 'apache'
+
+  file { '/etc/sudoers.d/tortuga':
+    content => template('tortuga/tortuga-sudoers.erb'),
+    mode    => '0440',
+    require => Package['sudo'],
   }
-  contain tortuga::installer::mcollective
-  contain tortuga::installer::sudo
 }

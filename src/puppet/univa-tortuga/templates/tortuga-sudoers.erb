@@ -1,0 +1,11 @@
+# TODO: this must be fixed to only disable 'requiretty' for the Tortuga
+# users.
+
+Defaults !requiretty
+
+<%= @www_user -%> ALL=(ALL) NOPASSWD: <%= @bin_dir -%>/run_cluster_update.sh
+puppet ALL=(ALL) NOPASSWD: <%= @bin_dir -%>/get-tortuga-node
+puppet ALL=(ALL) NOPASSWD: <%= @bin_dir -%>/get-provisioning-networks
+puppet ALL=(ALL) NOPASSWD: <%= @bin_dir -%>/get-component-node-list
+puppet ALL=(ALL) NOPASSWD: <%= @bin_dir -%>/get-nodes-with-component
+puppet ALL=(ALL) NOPASSWD: <%= @bin_dir -%>/get-provisioning-nics

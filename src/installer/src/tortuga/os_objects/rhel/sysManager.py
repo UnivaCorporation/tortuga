@@ -114,9 +114,6 @@ class SysManager(OsObjectManager):
             # pylint: disable=no-self-use
         return "/usr/bin/sudo"
 
-    def getSudoInitScript(self):
-        return self._cm.getRoot() + '/bin/modify_sudo.sh'
-
     def getTarCommand(self): \
             # pylint: disable=no-self-use
         """
