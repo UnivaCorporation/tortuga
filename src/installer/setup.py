@@ -71,7 +71,6 @@ def list_files(srcdir: Path) -> List[str]:
 def get_files():
     result = []
 
-    result += list_files(Path('alembic'))
     result += list_files(Path('etc'))
     result += list_files(Path('share'))
     result += list_files(Path('config'))
@@ -150,7 +149,6 @@ setup(
         'redis',
         'gevent<1.3.2',
         'marshmallow-sqlalchemy',
-        'alembic',
         'websockets',
     ],
     namespace_packages=['tortuga'],

@@ -22,7 +22,6 @@ import os
 import pwd
 import random
 import shutil
-
 import subprocess
 import sys
 import time
@@ -30,8 +29,8 @@ from typing import Any, Tuple
 
 import yaml
 from six import print_
-
 from sqlalchemy.orm.session import Session
+
 from tortuga.admin.api import AdminApi
 from tortuga.config.configManager import ConfigManager, getfqdn
 from tortuga.deployer import dbUtility
@@ -52,7 +51,7 @@ from tortuga.os_utility.osUtility import getOsObjectFactory
 from tortuga.softwareprofile.softwareProfileApi import SoftwareProfileApi
 
 
-class TortugaDeployer(object): \
+class TortugaDeployer: \
         # pylint: disable=too-many-public-methods
     def __init__(self, logger, cmdline_options=None):
         self._cm = ConfigManager()
@@ -93,7 +92,7 @@ class TortugaDeployer(object): \
         self.gettext = gettext.gettext
         self._ = self.gettext
 
-        self._logger.info('Detected OS: [{}]' % (self._settings['osInfo']))
+        self._logger.info('Detected OS: [%s]', self._settings['osInfo'])
 
     def __load_settings(self, cmdline_options):
         settings = dict(list(cmdline_options.items()))
@@ -870,7 +869,7 @@ class TortugaDeployer(object): \
             print_(_('failed.'))
 
             print_(_('Exception raised initializing database:') +
-                    ' {0}'.format(exc), file=sys.stderr)
+                   ' {0}'.format(exc), file=sys.stderr)
 
         self._logger.debug('Done initializing database')
 
