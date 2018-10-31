@@ -13,6 +13,9 @@
 # limitations under the License.
 
 class tortuga::installer::cfm {
+  require tortuga::installer::apache
+  require tortuga::installer::puppetmaster
+
   include tortuga::config
 
   file { '/etc/cfm':
@@ -35,6 +38,8 @@ class tortuga::installer::cfm {
     mode    => '0600',
     require => Exec['create_cfmsecret'],
   }
+
+  # 'private' directory created in tortuga::installer::puppetmaster
 
   file { "${tortuga::config::instroot}/private/.cfmsecret":
     ensure => present,

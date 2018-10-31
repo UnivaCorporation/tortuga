@@ -30,13 +30,13 @@ class tortuga::installer (
 
   contain tortuga::installer::packages
   contain tortuga::installer::pre_conf
-  contain tortuga::installer::cfm
   contain tortuga::installer::puppetmaster
   contain tortuga::envscript
   contain tortuga::installer::ssh
   contain tortuga::installer::redis
   contain tortuga::installer::activemq
   contain tortuga::installer::apache
+  contain tortuga::installer::cfm
   contain tortuga::installer::sudo
 
   class { 'tortuga::installer::database':
