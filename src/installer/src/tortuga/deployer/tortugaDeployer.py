@@ -51,7 +51,7 @@ from tortuga.os_utility.osUtility import getOsObjectFactory
 from tortuga.softwareprofile.softwareProfileApi import SoftwareProfileApi
 
 
-class TortugaDeployer(object): \
+class TortugaDeployer: \
         # pylint: disable=too-many-public-methods
     def __init__(self, logger, cmdline_options=None):
         self._cm = ConfigManager()
@@ -869,7 +869,7 @@ class TortugaDeployer(object): \
             print_(_('failed.'))
 
             print_(_('Exception raised initializing database:') +
-                    ' {0}'.format(exc), file=sys.stderr)
+                   ' {0}'.format(exc), file=sys.stderr)
 
         self._logger.debug('Done initializing database')
 
