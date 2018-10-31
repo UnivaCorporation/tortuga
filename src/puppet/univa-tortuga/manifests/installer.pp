@@ -30,7 +30,7 @@ class tortuga::installer (
 
   contain tortuga::installer::packages
   contain tortuga::installer::pre_conf
-
+  contain tortuga::installer::cfm
   contain tortuga::installer::puppetmaster
   contain tortuga::envscript
   contain tortuga::installer::ssh
