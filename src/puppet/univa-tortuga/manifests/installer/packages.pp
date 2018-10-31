@@ -12,20 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-class bootstrap::basic {
+
+class tortuga::installer::packages {
+  require tortuga::packages
+
   include tortuga::config
 
-  file { '/etc/tortuga-release':
-    ensure => symlink,
-    target => "${tortuga::config::instroot}/etc/tortuga-release",
+  if $::osfamily == 'RedHat' {
+    ensure_packages(['sysvinit-tools'], {'ensure' => 'installed'})
   }
-
-  file { '/etc/logrotate.d/tortugawsd':
-    source => "file://${tortuga::config::instroot}/etc/tortugawsd.logrotate",
-  }
-
-  file { '/etc/logrotate.d/celery':
-    source => "file://${tortuga::config::instroot}/etc/celery.logrotate",
-  }
-
 }

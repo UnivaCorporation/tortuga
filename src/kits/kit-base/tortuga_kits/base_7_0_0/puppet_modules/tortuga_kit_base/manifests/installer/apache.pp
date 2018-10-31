@@ -49,10 +49,10 @@ class tortuga_kit_base::installer::apache::certs {
   }
 
   file { "${tortuga::config::instroot}/www_int/ca.pem":
-    ensure => symlink,
-    target => "${tortuga::config::instroot}/etc/CA/ca.pem",
-    owner => apache,
-    group => apache,
+    ensure  => symlink,
+    target  => "${tortuga::config::instroot}/etc/CA/ca.pem",
+    owner   => apache,
+    group   => apache,
     require => Exec['create_apache_x509_certificate'],
   }
 }
@@ -83,16 +83,15 @@ class tortuga_kit_base::installer::apache::config {
 }
 
 class tortuga_kit_base::installer::apache (
-  $cache_enabled = true,
-  $cache_dir = '/var/cache/mod_proxy',
-  $max_file_size = 1000000000,
-  $proxy_hash = {},
+  Boolean $cache_enabled = true,
+  String $cache_dir = '/var/cache/mod_proxy',
+  Integer $max_file_size = 1000000000,
+  Hash $proxy_hash = {},
 ) {
-  contain tortuga::installer::apache::package
   contain tortuga_kit_base::installer::apache::certs
   contain tortuga_kit_base::installer::apache::config
-  contain tortuga::installer::apache::server
+  contain tortuga::installer::apache
 
-  Class['tortuga_kit_base::installer::apache::config'] ~>
-    Class['tortuga::installer::apache::server']
+  Class['tortuga_kit_base::installer::apache::config']
+    ~> Class['tortuga::installer::apache::server']
 }

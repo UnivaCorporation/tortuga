@@ -791,17 +791,11 @@ class TortugaDeployer: \
 
         # Bootstrap using Puppet
         cmd = ('/opt/puppetlabs/bin/puppet apply --verbose'
-               ' --config %s/bootstrap.puppet.conf'
-               ' --modulepath'
-               ' %s/modules:'
-               '/etc/puppetlabs/code/environments/production/modules'
                ' --detailed-exitcodes'
-               ' --execute "class { \'bootstrap\':'
-               ' database_engine => \'%s\','
+               ' --execute "class { \'tortuga::installer\':'
                ' puppet_server => \'%s\','
-               ' }"' % (localPuppetRoot, localPuppetRoot,
-                        self._settings['database']['engine'],
-                        puppet_server))
+               '}"' % (puppet_server)
+               )
 
         retval = self._runCommandWithSpinner(
             cmd, '\nPerforming pre-configuration... Please wait...',

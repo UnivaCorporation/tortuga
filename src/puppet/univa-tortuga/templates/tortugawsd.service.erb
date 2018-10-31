@@ -19,7 +19,7 @@ After=syslog.target network.target auditd.service
 [Service]
 Type=simple
 PIDFile=/var/run/tortugawsd.pid
-ExecStart=/opt/tortuga/bin/tortugawsd --pidfile /var/run/tortugawsd.pid --ssl-cert /opt/tortuga/etc/certs/apache/server.crt --ssl-key /opt/tortuga/etc/certs/apache/server.key
+ExecStart=<%= @instroot -%>/bin/tortugawsd --pidfile /var/run/tortugawsd.pid --ssl-cert <%= @instroot -%>/etc/certs/apache/server.crt --ssl-key <%= @instroot -%>/etc/certs/apache/server.key
 KillMode=process
 Restart=always
 RestartSec=30

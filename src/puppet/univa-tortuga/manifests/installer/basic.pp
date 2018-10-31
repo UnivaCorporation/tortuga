@@ -12,14 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-class bootstrap::puppet {
-  require bootstrap::installer
-
+class tortuga::installer::basic {
   include tortuga::config
 
-  class { 'tortuga::puppet':
-    installer => $tortuga::config::installer_fqdn,
+  file { '/etc/tortuga-release':
+    ensure => symlink,
+    target => "${tortuga::config::instroot}/etc/tortuga-release",
   }
-  contain tortuga::puppet
+
+  file { '/etc/logrotate.d/tortugawsd':
+    source => "file://${tortuga::config::instroot}/etc/tortugawsd.logrotate",
+  }
+
+  file { '/etc/logrotate.d/celery':
+    source => "file://${tortuga::config::instroot}/etc/celery.logrotate",
+  }
+
 }

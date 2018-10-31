@@ -16,6 +16,8 @@
 # the puppetmaster starts, the certificates are generated and there's no
 # turning back...
 class tortuga::installer::puppetmaster::config {
+  require tortuga::installer::packages
+
   include tortuga::config
 
   file { "${tortuga::config::instroot}/etc/puppet/get_tortuga_node.sh":
