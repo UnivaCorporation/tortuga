@@ -18,7 +18,7 @@ After=network.target
 
 [Service]
 Type=oneshot
-ExecStart=/opt/tortuga/bin/tortuga-bootstrap.sh
+ExecStart=<%= @instroot -%>/bin/tortuga-bootstrap.sh
 RemainAfterExit=yes
 
 [Install]

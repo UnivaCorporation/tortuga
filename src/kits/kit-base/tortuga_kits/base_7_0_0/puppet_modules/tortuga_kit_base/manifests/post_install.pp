@@ -23,6 +23,8 @@ class tortuga_kit_base::post_install {
 class tortuga_kit_base::post_install::setup {
   include tortuga::config
 
+  $instroot = $tortuga::config::instroot
+
   if $::osfamily == 'RedHat' {
     $svcname = $tortuga_kit_base::post_install::svcname
 
@@ -30,9 +32,9 @@ class tortuga_kit_base::post_install::setup {
       # RHEL/CentOS 6
 
       file { "/etc/rc.d/init.d/${svcname}":
-        source => "puppet:///modules/tortuga_kit_base/${svcname}.sysvinit",
-        notify => Exec['register sysvinit bootstrap service'],
-        mode   => '0755',
+        content => template('tortuga_kit_base/tortuga-bootstrap.sysvinit.erb'),
+        notify  => Exec['register sysvinit bootstrap service'],
+        mode    => '0755',
       }
 
       exec { 'register sysvinit bootstrap service':
@@ -44,8 +46,8 @@ class tortuga_kit_base::post_install::setup {
     } else {
       # RHEL/CentOS 7
       file { '/etc/systemd/system/tortuga-bootstrap.service':
-        source => 'puppet:///modules/tortuga_kit_base/tortuga-bootstrap.service',
-        notify => Exec['register bootstrap service'],
+        content => template('tortuga_kit_base/tortuga-bootstrap.service.erb'),
+        notify  => Exec['register bootstrap service'],
       }
 
       exec { 'register bootstrap service':
@@ -53,8 +55,6 @@ class tortuga_kit_base::post_install::setup {
         refreshonly => true,
       }
     }
-
-    $instroot = $tortuga::config::instroot
 
     file { "${instroot}/bin/tortuga-bootstrap.sh":
       source => 'puppet:///modules/tortuga_kit_base/tortuga-bootstrap.sh',
