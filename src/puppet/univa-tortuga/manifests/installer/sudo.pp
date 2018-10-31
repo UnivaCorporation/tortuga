@@ -12,14 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-class bootstrap::puppet {
-  require bootstrap::installer
+class tortuga::installer::sudo {
+  require tortuga::installer::apache
 
   include tortuga::config
 
-  class { 'tortuga::puppet':
-    installer => $tortuga::config::installer_fqdn,
+  ensure_packages(['sudo'], {'ensure' => 'installed'})
+
+  $bin_dir = $tortuga::config::bin_dir
+  $www_user = 'apache'
+
+  file { '/etc/sudoers.d/tortuga':
+    content => template('tortuga/tortuga-sudoers.erb'),
+    mode    => '0440',
+    require => Package['sudo'],
   }
-  contain tortuga::puppet
 }

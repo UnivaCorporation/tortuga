@@ -20,7 +20,7 @@ class tortuga::installer::apache::package {
     'mod_ssl',
   ]
 
-  ensure_resource('package', $pkgs, {'ensure' => 'installed'})
+  ensure_packages($pkgs, {'ensure' =>  'installed'})
 }
 
 class tortuga::installer::apache::config {
@@ -46,12 +46,10 @@ class tortuga::installer::apache::server {
 }
 
 class tortuga::installer::apache {
-  require tortuga::installer
-
   contain tortuga::installer::apache::package
   contain tortuga::installer::apache::config
   contain tortuga::installer::apache::server
 
-  Class['tortuga::installer::apache::config'] ~>
-    Class['tortuga::installer::apache::server']
+  Class['tortuga::installer::apache::config']
+    ~> Class['tortuga::installer::apache::server']
 }

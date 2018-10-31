@@ -13,9 +13,7 @@
 # limitations under the License.
 
 
-class bootstrap::cfm {
-  require bootstrap::installer
-
+class tortuga::installer::cfm {
   include tortuga::config
 
   file { '/etc/cfm':

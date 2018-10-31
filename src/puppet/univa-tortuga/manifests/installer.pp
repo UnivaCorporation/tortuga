@@ -13,16 +13,43 @@
 # limitations under the License.
 
 class tortuga::installer (
-  $puppet_server = $::puppet_server,
+  Variant[String, Undef] $puppet_server = undef,
+  Variant[String, Undef] $database_engine = undef
 ) {
+  if $puppet_server == undef {
+    $puppet_server_arg = $::puppet_server
+  } else {
+    $puppet_server_arg = $puppet_server
+  }
+
+  if $database_engine == undef {
+    $database_engine_arg = 'sqlite'
+  } else {
+    $database_engine_arg = $database_engine
+  }
+
+  contain tortuga::installer::packages
+  contain tortuga::installer::pre_conf
+
   contain tortuga::installer::puppetmaster
   contain tortuga::envscript
   contain tortuga::installer::ssh
   contain tortuga::installer::redis
   contain tortuga::installer::activemq
+  contain tortuga::installer::apache
+  contain tortuga::installer::sudo
+
+  class { 'tortuga::installer::database':
+    database_engine => $database_engine,
+  }
+  contain tortuga::installer::database
+
+  class { 'tortuga::puppet':
+    installer => $tortuga::config::installer_fqdn
+  }
 
   class { 'tortuga::installer::mcollective':
-    puppet_server => $puppet_server,
+    puppet_server => $puppet_server_arg,
   }
   contain tortuga::installer::mcollective
 }
