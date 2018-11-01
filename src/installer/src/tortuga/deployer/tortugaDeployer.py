@@ -308,17 +308,6 @@ class TortugaDeployer: \
         if osUtility.haveBackupFile('/etc/resolv.conf'):
             osUtility.restoreFile('/etc/resolv.conf')
 
-    def prepSudo(self):
-        """ Setup sudo. """
-
-        self._logger.info('Setting up \'sudo\'')
-
-        # TODO: these scripts have 'apache' hardcoded right now
-        sysManager = self._osObjectFactory.getOsSysManager()
-        sudoInitScript = sysManager.getSudoInitScript()
-        p = tortugaSubprocess.executeCommandAndIgnoreFailure(sudoInitScript)
-        self._logger.debug('sudo init output:\n%s' % p.getStdOut())
-
     def _runCommandWithSpinner(self, cmd, statusMsg, logFileName):
         self._logger.debug(
             '_runCommandWithSpinner(cmd=[%s], logFileName=[%s])' % (
@@ -700,8 +689,6 @@ class TortugaDeployer: \
             finally:
                 dbm.closeSession()
 
-                self.prepSudo()
-
                 self.puppetApply()
 
             self.out('\nTortuga installation completed successfully!\n\n')
@@ -804,17 +791,11 @@ class TortugaDeployer: \
 
         # Bootstrap using Puppet
         cmd = ('/opt/puppetlabs/bin/puppet apply --verbose'
-               ' --config %s/bootstrap.puppet.conf'
-               ' --modulepath'
-               ' %s/modules:'
-               '/etc/puppetlabs/code/environments/production/modules'
                ' --detailed-exitcodes'
-               ' --execute "class { \'bootstrap\':'
-               ' database_engine => \'%s\','
+               ' --execute "class { \'tortuga::installer\':'
                ' puppet_server => \'%s\','
-               ' }"' % (localPuppetRoot, localPuppetRoot,
-                        self._settings['database']['engine'],
-                        puppet_server))
+               '}"' % (puppet_server)
+               )
 
         retval = self._runCommandWithSpinner(
             cmd, '\nPerforming pre-configuration... Please wait...',

@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-class bootstrap::cfm {
-  require bootstrap::installer
+class tortuga::installer::cfm {
+  require tortuga::installer::apache
+  require tortuga::installer::puppetmaster
 
   include tortuga::config
 
@@ -38,6 +38,8 @@ class bootstrap::cfm {
     mode    => '0600',
     require => Exec['create_cfmsecret'],
   }
+
+  # 'private' directory created in tortuga::installer::puppetmaster
 
   file { "${tortuga::config::instroot}/private/.cfmsecret":
     ensure => present,

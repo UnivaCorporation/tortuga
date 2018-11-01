@@ -12,24 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-class bootstrap::pre_conf {
-  require bootstrap::packages
+class tortuga::installer::pre_conf {
+  require tortuga::installer::packages
 
   include tortuga::config
 
-  file { [
-    "${tortuga::config::instroot}/var",
-    "${tortuga::config::instroot}/var/lib",
-    "${tortuga::config::instroot}/var/run",
-    "${tortuga::config::instroot}/var/action-log",
-    "${tortuga::config::instroot}/var/lock",
-    "${tortuga::config::instroot}/var/tmp",
-    "${tortuga::config::instroot}/var/lib/puppet",
-  ]:
-    ensure => directory,
-  }
+  $instroot = $tortuga::config::instroot
 
-  file { "${tortuga::config::instroot}/config/base":
+  file { [
+    "${instroot}/var",
+    "${instroot}/var/lib",
+    "${instroot}/var/run",
+    "${instroot}/var/action-log",
+    "${instroot}/var/lock",
+    "${instroot}/var/tmp",
+    "${instroot}/var/lib/puppet",
+    "${instroot}/www_int",
+    "${instroot}/config",
+    "${instroot}/config/base",
+  ]:
     ensure => directory,
   }
 
@@ -39,17 +40,13 @@ class bootstrap::pre_conf {
     ensure => directory
   }
 
-  file { "${tortuga::config::instroot}/www_int":
-    ensure => directory,
-  }
-
-  file { "${tortuga::config::instroot}/www_int/repos":
+  file { "${instroot}/www_int/repos":
     ensure  => symlink,
     target  => "${tortuga::config::depot}/kits",
-    require => File["${tortuga::config::instroot}/www_int"],
+    require => File["${instroot}/www_int"],
   }
 
-  file { "${tortuga::config::instroot}/www_int/kickstarts":
+  file { "${instroot}/www_int/kickstarts":
     ensure => symlink,
     target => "${tortuga::config::depot}/kickstarts",
   }
@@ -58,30 +55,35 @@ class bootstrap::pre_conf {
   # symlinking into depot kits directory.
   file { "${tortuga::config::depot}/kits/3rdparty":
     ensure => symlink,
-    target => "${tortuga::config::instroot}/repos/3rdparty",
+    target => "${instroot}/repos/3rdparty",
   }
 
   if versioncmp($::operatingsystemmajrelease, '7') < 0 {
     file { '/etc/rc.d/init.d/tortugawsd':
-      source => "${tortuga::config::instroot}/etc/tortugawsd.sysvinit",
-      mode   => '0755',
+      content => template('tortuga/tortugawsd.sysvinit.erb'),
+      mode    => '0755',
     }
 
     exec { 'install_tortugawsd':
       path    => ['/sbin', '/usr/sbin'],
       command => 'chkconfig --add tortugawsd',
-      unless  => 'chkconfig --list tortugawsd >/dev/null 2>&1',
+      unless  => 'chkconfig --list tortugawsd',
       require => File['/etc/rc.d/init.d/tortugawsd'],
     }
   } else {
     file { '/usr/lib/systemd/system/tortugawsd.service':
-      source => "${tortuga::config::instroot}/etc/tortugawsd.service",
-      mode   => '0644',
+      content => template('tortuga/tortugawsd.service.erb'),
+      mode    => '0644',
+    }
+
+    file { "${instroot}/etc/celery":
+      content => template('tortuga/celery.erb'),
     }
 
     file { '/usr/lib/systemd/system/celery.service':
-      source => "${tortuga::config::instroot}/etc/celery.service",
-      mode   => '0644',
+      content => template('tortuga/celery.service.erb'),
+      mode    => '0644',
+      require => File["${instroot}/etc/celery"],
     }
   }
 }
