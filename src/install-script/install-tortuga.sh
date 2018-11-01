@@ -695,16 +695,8 @@ if [[ $distro_family == rhel ]]; then
     # Packages common to all RHEL versions
     pkgs="\
 puppetserver \
-which \
-openssh-clients \
-diffutils \
 rsync \
-unzip \
-patch \
-zeromq3 \
-activemq \
 rh-python36 \
-rh-python36-python-PyMySQL \
 "
 
     # Packages cached for all RHEL versions

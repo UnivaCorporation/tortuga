@@ -32,7 +32,10 @@ class tortuga::installer::activemq::package::redhat {
     unless  => "rpm -qq puppetlabs-release",
   }
 
-  ensure_packages(['activemq'], {'ensure' => 'installed', 'require' => Exec['install-puppetlabs-release']})
+  ensure_packages(['activemq'], {
+    'ensure'  => 'installed',
+    'require' => Exec['install-puppetlabs-release'],
+  })
 }
 
 class tortuga::installer::activemq::package {
@@ -137,6 +140,6 @@ class tortuga::installer::activemq {
   contain tortuga::installer::activemq::config
   contain tortuga::installer::activemq::service
 
-  Class['tortuga::installer::activemq::config'] ~>
-    Class['tortuga::installer::activemq::service']
+  Class['tortuga::installer::activemq::config']
+    ~> Class['tortuga::installer::activemq::service']
 }
