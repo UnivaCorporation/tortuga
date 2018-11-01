@@ -13,9 +13,11 @@
 # limitations under the License.
 
 class tortuga::installer::mysqld::packages {
-  require tortuga::packages
+  $pkgs = [
+    'rh-python36-python-PyMySQL'
+  ]
 
-  ensure_packages(['MySQL-python'], {'ensure' => 'installed'})
+  ensure_packages($pkgs, {'ensure' => 'installed'})
 }
 
 class tortuga::installer::mysqld::preinstall {
@@ -41,6 +43,8 @@ class tortuga::installer::mysqld::createdb {
 }
 
 class tortuga::installer::mysqld {
+  require tortuga::packages
+
   contain tortuga::installer::mysqld::packages
   contain tortuga::installer::mysqld::preinstall
   contain tortuga::installer::mysqld::createdb
