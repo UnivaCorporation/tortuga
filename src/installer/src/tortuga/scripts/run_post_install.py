@@ -17,6 +17,7 @@ import logging
 import os
 import sys
 
+from tortuga.config.configManager import ConfigManager
 from tortuga.db.dbManager import DbManager
 from tortuga.exceptions.componentNotFound import ComponentNotFound
 from tortuga.kit.loader import load_kits
@@ -27,6 +28,8 @@ logger = logging.getLogger(__name__)
 
 
 def main():
+    cm = ConfigManager()
+
     p = argparse.ArgumentParser()
 
     p.add_argument('-f', '--force', dest='force', action='store_true',
@@ -43,9 +46,11 @@ def main():
 
     compName, _ = args.component.split('-', 2)
 
-    flagFile = ('/opt/tortuga/var/run/actions/%s'
-                '/component_%s_%s_post_install') % (
-                    args.name, args.kit, args.component)
+    flagFile = os.path.join(
+        cm.getRoot(),
+        'var/run/actions/%s/component_%s_%s_post_install' % (
+            args.name, args.kit, args.component)
+    )
 
     if os.path.exists(flagFile):
         if not args.force:

@@ -42,8 +42,8 @@ start() {
 	# Check that we're a privileged user
 	[ `id -u` = 0 ] || exit 4
 
-        [[ -x /opt/tortuga/bin/tortuga-bootstrap.sh ]] && \
-		/opt/tortuga/bin/tortuga-bootstrap.sh
+        [[ -x <%= @instroot -%>/bin/tortuga-bootstrap.sh ]] && \
+		<%= @instroot -%>/bin/tortuga-bootstrap.sh
 
 	return 0
 }

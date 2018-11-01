@@ -37,7 +37,7 @@
 . /etc/rc.d/init.d/functions
 
 # Source tortuga environment
-TORTUGA_ROOT=/opt/tortuga
+TORTUGA_ROOT=<%= @instroot -%>
 
 . $TORTUGA_ROOT/etc/tortuga.sh
 
