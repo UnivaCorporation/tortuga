@@ -127,12 +127,13 @@ class Command:
 
     def execute(self, args: argparse.Namespace):
         """
-        Executes the command.
+        Executes the command.  If not overloaded,
+        print parser help.
 
         :param argparse.Namespace args: the command arguments
 
         """
-        pass
+        self.parser.print_help()
 
 
 class Argument:
