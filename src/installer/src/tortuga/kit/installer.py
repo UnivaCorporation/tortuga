@@ -36,9 +36,7 @@ from tortuga.os_utility.tortugaSubprocess import executeCommand
 from .registry import register_kit_installer
 from .utils import pip_install_requirements
 
-
 logger = getLogger(__name__)
-
 
 EULA_FILE = 'docs/EULA.txt'
 
@@ -133,6 +131,7 @@ class KitInstallerMeta(type):
     KIT_METADATA_FILE file.
 
     """
+
     def __init__(cls: Type['KitInstallerBase'], name, bases, attrs):
         super().__init__(name, bases, attrs)
 
@@ -194,6 +193,12 @@ class KitInstallerBase(ConfigurableMixin, metaclass=KitInstallerMeta):
     meta = {}
 
     #
+    # Loader state
+    #
+    ws_controllers_loaded = False
+    db_tables_loaded = False
+
+    #
     # Attributes, provided by instances of this class
     #
     puppet_modules = []
@@ -230,12 +235,6 @@ class KitInstallerBase(ConfigurableMixin, metaclass=KitInstallerMeta):
         # Web service controller classes
         #
         self._ws_controller_classes = []
-        self.ws_controllers_loaded = False
-        
-        #
-        # Database tables
-        #
-        self.db_tables_loaded = False
 
         self.session = None
 
@@ -421,9 +420,9 @@ class KitInstallerBase(ConfigurableMixin, metaclass=KitInstallerMeta):
         #
         for ki in get_all_kit_installers():
             if ki.spec[0] == self.spec[0] and ki.db_tables_loaded:
-                self.db_tables_loaded = True
+                self.__class__.db_tables_loaded = True
                 return
-                
+
         kit_pkg_name = inspect.getmodule(self).__package__
         db_table_pkg_name = '{}.db.models'.format(kit_pkg_name)
         logger.debug(
@@ -433,8 +432,8 @@ class KitInstallerBase(ConfigurableMixin, metaclass=KitInstallerMeta):
 
         try:
             importlib.import_module(db_table_pkg_name)
-            self.db_tables_loaded = True
-            
+            self.__class__.db_tables_loaded = True
+
         except ModuleNotFoundError:
             logger.debug(
                 'No database table mappers found for kit: %s', self.spec
@@ -451,9 +450,9 @@ class KitInstallerBase(ConfigurableMixin, metaclass=KitInstallerMeta):
         #
         for ki in get_all_kit_installers():
             if ki.spec[0] == self.spec[0] and ki.ws_controllers_loaded:
-                self.ws_controllers_loaded = True
+                self.__class__.ws_controllers_loaded = True
                 return
-            
+
         kit_pkg_name = inspect.getmodule(self).__package__
         ws_pkg_name = '{}.web_service.controllers'.format(kit_pkg_name)
         logger.debug(
@@ -463,7 +462,8 @@ class KitInstallerBase(ConfigurableMixin, metaclass=KitInstallerMeta):
 
         try:
             importlib.import_module(ws_pkg_name)
-            self.ws_controllers_loaded = True
+            self.__class__.ws_controllers_loaded = True
+
         except ModuleNotFoundError:
             logger.debug(
                 'No web service controllers found for kit: %s',
