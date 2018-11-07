@@ -124,7 +124,7 @@ class ComponentInstaller(ComponentInstallerBase):
         )
 
     def action_get_puppet_args(self, db_software_profile,
-                               db_hardware_profile):
+                               db_hardware_profile, *args, **kwargs):
         return GetPuppetArgsAction(self.kit_installer, self)(
             db_software_profile, db_software_profile
         )
