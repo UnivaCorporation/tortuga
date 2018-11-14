@@ -26,7 +26,7 @@ import setuptools.command.sdist
 srcRoot = 'tortuga'
 module_name = 'tortuga-core'
 
-version = '7.0.0'
+version = '7.0.1'
 
 
 def get_git_revision():

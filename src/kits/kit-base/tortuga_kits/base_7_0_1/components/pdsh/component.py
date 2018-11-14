@@ -23,7 +23,7 @@ CONFIG_FILE = '/etc/hosts.pdsh'
 
 class ComponentInstaller(ComponentInstallerBase):
     name = 'pdsh'
-    version = '7.0.0'
+    version = '7.0.1'
     os_list = [
         {'family': 'rhel', 'version': '6', 'arch': 'x86_64'},
         {'family': 'rhel', 'version': '7', 'arch': 'x86_64'},

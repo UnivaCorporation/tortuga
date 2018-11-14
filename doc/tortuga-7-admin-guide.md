@@ -1,4 +1,4 @@
-# Tortuga 7.0.0 Installation and Administration Guide
+# Tortuga 7.0 Installation and Administration Guide
 ### Univa Corporation &lt;support@univa.com&gt;
 ### June 2018 -- Version 1.27
 
@@ -270,7 +270,7 @@ Commands listed in this "Quickstart" section are intended to be run as the `root
     Installing the AWS resource adapter allows provisioning of compute nodes on Amazon EC2.
 
         install-kit --i-accept-the-eula kit-awsadapter-*.tar.bz2
-        enable-component -p awsadapter-7.0.0-0 management-7.0.0
+        enable-component -p awsadapter-7.0.1-0 management-7.0.1
 
     1.  Configure AWS resource adapter
 
@@ -1028,13 +1028,13 @@ The `get-kit-list` command will display all installed kits (application + operat
 
 ``` shell
 [root@tortuga ~]# get-kit-list
-awsadapter-7.0.0-0
-base-7.0.0-0
+awsadapter-7.0.1-0
+base-7.0.1-0
 centos-7.0-0
 ganglia-3.7.2-1
-gceadapter-7.0.0-0
-simple_policy_engine-7.0.0-0
-snmp-7.0.0-0
+gceadapter-7.0.1-0
+simple_policy_engine-7.0.1-0
+snmp-7.0.1-0
 uge-8.5.4-0
 ```
 
@@ -1066,19 +1066,19 @@ Use `get-component-list` to display all available components.
 
 ``` shell
 [root@tortuga ~]# get-component-list
-snmp-7.0.0-0 snmpd-7.0.0
-base-7.0.0-0 core-7.0.0
-base-7.0.0-0 installer-7.0.0
-base-7.0.0-0 dhcpd-7.0.0
-base-7.0.0-0 dns-7.0.0
-awsadapter-7.0.0-0 management-7.0.0
-gceadapter-7.0.0-0 management-7.0.0
+snmp-7.0.1-0 snmpd-7.0.1
+base-7.0.1-0 core-7.0.1
+base-7.0.1-0 installer-7.0.1
+base-7.0.1-0 dhcpd-7.0.1
+base-7.0.1-0 dns-7.0.1
+awsadapter-7.0.1-0 management-7.0.1
+gceadapter-7.0.1-0 management-7.0.1
 uge-8.5.4-0 qmaster-8.5.4
 uge-8.5.4-0 execd-8.5.4
-simple_policy_engine-7.0.0-0 engine-7.0.0
+simple_policy_engine-7.0.1-0 engine-7.0.1
 ganglia-3.7.2-1 gmetad-3.7.2
 ganglia-3.7.2-1 gmond-3.7.2
-centos-7.0-0 centos-7.0-x86_64-7.0.0
+centos-7.0-0 centos-7.0-x86_64-7.0.1
 ```
 
 ### Display list of enabled components
@@ -1089,10 +1089,10 @@ For example, to display the components enabled on the Tortuga installer:
 
 ``` shell
 [root@tortuga ~]# get-component-list --software-profile Installer
-base-7.0.0-0 installer-7.0.0
-base-7.0.0-0 dns-7.0.0
+base-7.0.1-0 installer-7.0.1
+base-7.0.1-0 dns-7.0.1
 uge-8.5.4-0 qmaster-8.5.4.0
-simple_policy_engine-7.0.0-0 engine-7.0.0
+simple_policy_engine-7.0.1-0 engine-7.0.1
 ```
 
 or using the shortcut:
@@ -1112,7 +1112,7 @@ get-component-list --software-profile Compute
 Components are enabled per software profile using the `enable-component` command. For example, to enable the `pdsh` component on the Tortuga installer:
 
 ``` shell
-enable-component -p base-7.0.0-0 pdsh-7.0.0
+enable-component -p base-7.0.1-0 pdsh-7.0.1
 ```
 
 **Hint:** Since it is unlikely to be another component named "pdsh", use the command-line shortcut:
@@ -1166,7 +1166,7 @@ This component must be enabled to provision *local* (non-cloud) nodes.
 
 Enable the `dhcpd` component with the command:
 
-    enable-component -p base-7.0.0-0 dhcpd-7.0.0
+    enable-component -p base-7.0.1-0 dhcpd-7.0.1
 
 `/opt/puppetlabs/bin/puppet agent --onetime --no-daemonize` is used to synchronize only the Tortuga installer. `schedule-update` could also be used (as described above), however since this component is only applicable to the installer node, it is unnecessary to schedule an entire cluster update.
 
@@ -1181,21 +1181,21 @@ When enabled, the Tortuga installer node will automatically set up and configure
 Enable the `dns` component with the command:
 
 ``` shell
-enable-component -p base-7.0.0-0 dns-7.0.0
+enable-component -p base-7.0.1-0 dns-7.0.1
 ```
 
 ##### Configuring Tortuga private DNS domain
 
 The global Tortuga private DNS domain is used when Tortuga generates a compute node host name when provisioning on-premise physical or virtual machines or when *optionally* enabled in resource adapter(s) using the `override_dns_domain` resource adapter configuration setting.
 
-On Tortuga 7.0.0 (and later), the `set-private-dns-zone` command-line is used to display the current "private" DNS zone by calling it without an argument:
+On Tortuga 7.0 (and later), the `set-private-dns-zone` command-line is used to display the current "private" DNS zone by calling it without an argument:
 
 ``` shell
 [root@tortuga ~]# set-private-dns-zone
 cloud.univa.com
 ```
 
-On Tortuga versions prior to 7.0.0, use `ucparam` to get the current (private) DNS domain. The Tortuga default private DNS domain is `private`.
+On Tortuga versions prior to 7.0, use `ucparam` to get the current (private) DNS domain. The Tortuga default private DNS domain is `private`.
 
 ``` shell
 [root@tortuga ~]# ucparam get DNSZone
@@ -1343,8 +1343,8 @@ Enable the following base components on the installer for provisioning:
 These components are enabled using `enable-component`. For example:
 
 ``` shell
-enable-component -p base-7.0.0-0 dhcpd-7.0.0
-enable-component -p base-7.0.0-0 dns-7.0.0
+enable-component -p base-7.0.1-0 dhcpd-7.0.1
+enable-component -p base-7.0.1-0 dns-7.0.1
 ```
 
 Use `get-component-list` to see the exact name of the components and versions.
@@ -1509,7 +1509,7 @@ The `add-nodes` command has the basic syntax:
 
 where `XXXX` is the name of an existing hardware profile and `YYYY` is the name of an existing software profile.
 
-As of Tortuga 7.0.0, the `add-nodes` command now operates asynchronously. When `add-nodes` is run, it will return immediately after validating the request. Use the CLI `get-node-requests` to check on status of node requests.
+As of Tortuga 7.0.1, the `add-nodes` command now operates asynchronously. When `add-nodes` is run, it will return immediately after validating the request. Use the CLI `get-node-requests` to check on status of node requests.
 
 ### Adding physical nodes or virtual machines by MAC address
 
@@ -1566,7 +1566,7 @@ Delete all nodes matching the wildcard "compute\*":
 
 **Note:** wildcard spec must be escaped (or quoted) for use in `bash`.
 
-As of Tortuga 7.0.0, `delete-node` runs asynchronously and will now return immediately after it is run. Use the CLI `get-node-requests` to check the status of a `delete-node` request.
+As of Tortuga 7.0, `delete-node` runs asynchronously and will now return immediately after it is run. Use the CLI `get-node-requests` to check the status of a `delete-node` request.
 
 Idling and activating nodes
 ---------------------------
@@ -1798,11 +1798,11 @@ Cons:
 
 #### Scenario 3: Manually managed patches
 
-When a compute node is provisioned by Tortuga, it installs the base operating system from the OS media as provided by 'install-os-kit'. Packages which constitute the Tortuga "base" kit are installed from '/opt/tortuga/depot/kits/base/7.0.0-0/noarch'.
+When a compute node is provisioned by Tortuga, it installs the base operating system from the OS media as provided by 'install-os-kit'. Packages which constitute the Tortuga "base" kit are installed from '/opt/tortuga/depot/kits/base/7.0.1-0/noarch'.
 
 Updated packages can be dropped into this directory and will be automatically available to Tortuga provisioned compute nodes.
 
-**Note: after updating packages in `/opt/tortuga/depot/kits/base/7.0.0-0/noarch`, it is required to run `createrepo` to update the Tortuga **base\*\* kit YUM repository metadata.\*\*
+**Note: after updating packages in `/opt/tortuga/depot/kits/base/7.0.1-0/noarch`, it is required to run `createrepo` to update the Tortuga **base\*\* kit YUM repository metadata.\*\*
 
 The key packages are `puppet-*`, `mcollective-*`, and the `ruby` dependencies.
 
@@ -2186,7 +2186,7 @@ Resource adapters are the "connectors" between Tortuga and virtualization and cl
 Resource adapter configuration profiles
 ---------------------------------------
 
-Starting with Tortuga 7.0.0, resource adapter configuration is managed using the `adapter-mgmt` command-line interface. This functionality obsoletes the need for resource adapter configuration files previously found in `$TORTUGA_ROOT/config/adapter-defaults-*.conf`.
+Starting with Tortuga 7.0.1, resource adapter configuration is managed using the `adapter-mgmt` command-line interface. This functionality obsoletes the need for resource adapter configuration files previously found in `$TORTUGA_ROOT/config/adapter-defaults-*.conf`.
 
 It is also no longer necessary to create resource adapter configuration profile names matching hardware profile names.
 
@@ -2230,7 +2230,7 @@ Nodes added to the `aws` hardware profile will use the `otherprofile` resource a
 
 #### Importing an existing resource adapter configuration
 
-For users of Tortuga versions prior to 7.0.0, the resource adapter configuration was contained within a file. These existing resource adapter configurations may be imported as follows:
+For users of Tortuga versions prior to 7.0, the resource adapter configuration was contained within a file. These existing resource adapter configurations may be imported as follows:
 
 ``` shell
 adapter-mgmt import --resource-adapter aws --adapter-config <filename>
