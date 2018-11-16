@@ -29,7 +29,7 @@ DEBUG=0
 enable_package_caching=1
 download_only=0
 force_hostname=0
-readonly tortuga_version="7.0.0"
+readonly tortuga_version="7.0.1"
 
 TEMP=$( getopt -o v,f --long force,verbose,debug,help,\
 disable-package-caching,\
