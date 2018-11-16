@@ -1,0 +1,7 @@
+PyYAML
+marshmallow
+passlib
+pip2pi
+python-dateutil
+requests
+websockets

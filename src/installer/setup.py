@@ -29,6 +29,15 @@ from setuptools import find_packages, setup
 module_name = 'tortuga-installer'
 version = '7.0.1'
 
+if os.getenv('RELEASE'):
+    requirements_file = 'requirements.txt'
+else:
+    requirements_file = 'requirements-dev.txt'
+
+
+with open(requirements_file) as fp:
+    requirements = [buf.rstrip() for buf in fp.readlines()]
+
 
 def get_git_revision():
     cmd = 'git rev-parse --short HEAD'
@@ -131,28 +140,7 @@ setup(
     zip_safe=False,
     scripts=[str(fn) for fn in walkfiles(Path('bin'))],
     data_files=get_files(),
-    install_requires=[
-        'celery==4.1.0',
-        'cryptography',
-        #
-        # Normally, kombu is installed as a dependency of celery, however
-        # we need to pin it to 4.1.0 as we are seeing problems with 4.2.0
-        #
-        'kombu==4.1.0',
-        'tortuga-core',
-        'Jinja2',
-        'CherryPy==15.0.0',
-        'PyYAML',
-        'SQLAlchemy',
-        'Routes',
-        'oic',
-        'six',
-        'pyzmq<17.1.1',
-        'redis',
-        'gevent<1.3.2',
-        'marshmallow-sqlalchemy',
-        'websockets',
-    ],
+    install_requires=requirements,
     namespace_packages=['tortuga'],
     entry_points={
         'console_scripts': [
