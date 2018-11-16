@@ -17,12 +17,14 @@
 # pylint: skip-file
 
 import os
-from typing import List
 import subprocess
 from pathlib import Path
-from setuptools import setup, find_packages
+from typing import List
+
 import setuptools.command.build_py
 import setuptools.command.sdist
+from setuptools import find_packages, setup
+
 
 module_name = 'tortuga-installer'
 version = '7.0.1'
@@ -156,7 +158,6 @@ setup(
         'console_scripts': [
             'tortugawsd=tortuga.web_service.main:main',
             'add-nic=tortuga.scripts.add_nic:main',
-            'create-ssh-keys=tortuga.scripts.create_ssh_keys:main',
             'delete-nic=tortuga.scripts.delete_nic:main',
             'genconfig=tortuga.scripts.genconfig:main',
             'get-nodes-with-component=tortuga.scripts.get_nodes_with_component:main',
