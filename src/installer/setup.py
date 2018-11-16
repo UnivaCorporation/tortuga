@@ -146,7 +146,7 @@ setup(
         'oic',
         'six',
         'pyzmq<17.1.1',
-        'redis<3.0.0',
+        'redis',
         'gevent<1.3.2',
         'marshmallow-sqlalchemy',
         'websockets',
