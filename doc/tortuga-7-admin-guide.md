@@ -257,8 +257,6 @@ Commands listed in this "Quickstart" section are intended to be run as the `root
 
     Prior to adding compute nodes, it is recommended to configure the root password in the Kickstart file template (`$TORTUGA_ROOT/config/kickstart.tmpl`).
 
-    This is to potentially allow connecting to compute node(s) that failed to provision successfully using SSH. The root password setting is found under `rootpw` in the Anaconda Kickstart template file.
-
     Kickstart Syntax Reference can be found in the Red Hat Enterprise Linux Installation Guide. Several configuration options can be set in the Kickstart file template which will affect all Tortuga provisioned physical/virtual compute nodes.
 
 11. (*optional*) Install AWS resource adapter
@@ -434,9 +432,6 @@ Commands listed in this "Quickstart" section are intended to be run as the `root
     Once the node has reached **Installed** state, it is available to be used.
 
     Nodes will be created momentarily and automatically added to the UGE cluster. Use `qhost` to display UGE cluster host list. It can take a few minutes until load values show up for newly added nodes.
-
-    Tortuga automatically configures key-based authentication for managed nodes using the `root` user SSH credentials.
-
 
 About Tortuga
 =============
@@ -1264,7 +1259,8 @@ The OS installer runs in unattended mode, reboots the machine once the OS is ins
 
 Before this can happen, however, Tortuga needs to copy the necessary files to boot and install the OS.
 
-Tortuga also sets up SSH key-based authentication on compute nodes to allow connecting from the Tortuga installer to managed compute nodes as the `root` user using SSH without a password. By default, the default Kickstart file tempate assigns a random `root` password to all compute nodes for security purposes.
+By default, the default Kickstart file tempate assigns a random `root` password
+to all compute nodes for security purposes.
 
 Networking Requirements
 -----------------------

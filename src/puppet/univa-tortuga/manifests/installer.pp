@@ -32,7 +32,6 @@ class tortuga::installer (
   contain tortuga::installer::pre_conf
   contain tortuga::installer::puppetmaster
   contain tortuga::envscript
-  contain tortuga::installer::ssh
   contain tortuga::installer::redis
   contain tortuga::installer::activemq
   contain tortuga::installer::apache
