@@ -36,7 +36,7 @@ from tortuga.db.models.nic import Nic
 from tortuga.db.nodesDbHandler import NodesDbHandler
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
 from tortuga.exceptions.tortugaException import TortugaException
-from tortuga.node import nodeApiFactory
+from tortuga.node.nodeApi import NodeApi
 from tortuga.os_utility import tortugaSubprocess
 
 
@@ -142,8 +142,7 @@ class AddNicCli(TortugaCli):
         systemNics = set(self._getSystemNics())
 
         # Get provisioning NICs on installer
-        node_api = nodeApiFactory.getNodeApi()
-        nics = node_api.getInstallerNode(session).getNics()
+        nics = NodeApi().getInstallerNode(session).getNics()
 
         # Filter out the NIC names
         primaryInstallerNics = set(

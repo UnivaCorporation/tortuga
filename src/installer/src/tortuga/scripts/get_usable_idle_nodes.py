@@ -15,7 +15,7 @@
 # pylint: disable=no-member
 
 from tortuga.cli.tortugaCli import TortugaCli
-from tortuga.node.nodeApiFactory import getNodeApi
+from tortuga.node.nodeApi import NodeApi
 from tortuga.db.softwareUsesHardwareDbApi import SoftwareUsesHardwareDbApi
 from tortuga.db.dbManager import DbManager
 
@@ -46,7 +46,7 @@ Display list of nodes that are able to use the specified software profile.
 """))
         softwareProfileName = self.getArgs().softwareProfile
 
-        nodeApi = getNodeApi(self.getUsername(), self.getPassword())
+        nodeApi = NodeApi()
 
         softwareUsesHardwareDbApi = SoftwareUsesHardwareDbApi()
 
