@@ -110,10 +110,6 @@ class SysManager(OsObjectManager):
         return 'initrd-%s-%s-%s.img' % (
             osInfo.getName(), osInfo.getVersion(), osInfo.getArch())
 
-    def getSudoCommand(self): \
-            # pylint: disable=no-self-use
-        return "/usr/bin/sudo"
-
     def getTarCommand(self): \
             # pylint: disable=no-self-use
         """
