@@ -16,32 +16,11 @@
 class tortuga_kit_base::installer::ssh::package {
   require tortuga::packages
 
-  ensure_resource('package', 'openssh-server', { ensure => installed })
-}
-
-class tortuga_kit_base::installer::ssh::config {
-  require tortuga_kit_base::installer::ssh::package
-
-  include tortuga::config
-  include tortuga_kit_base::config
-
-  tortuga::run_post_install { 'ssh_post_install':
-    kitdescr  => $tortuga_kit_base::config::kitdescr,
-    compdescr => $tortuga_kit_base::installer::ssh::compdescr,
-  }
-
-  $public_keys = "${tortuga::config::instroot}/www_int/public_keys"
-
-  exec { 'copy_ssh_public_keys':
-    path    => ['/bin', '/usr/bin'],
-    command => "cat /root/.ssh/id_rsa.pub >${public_keys}",
-    onlyif  => 'test -f /root/.ssh/id_rsa.pub',
-    creates => $public_keys,
-  }
+  ensure_packages(['openssh-server'], {'ensure' => 'installed'})
 }
 
 class tortuga_kit_base::installer::ssh::server {
-  require tortuga_kit_base::installer::ssh::config
+  require tortuga_kit_base::installer::ssh::package
 
   service { 'sshd':
     ensure => running,
@@ -50,11 +29,6 @@ class tortuga_kit_base::installer::ssh::server {
 }
 
 class tortuga_kit_base::installer::ssh {
-  include tortuga_kit_base::config
-
-  $compdescr = "ssh-${tortuga_kit_base::config::major_version}"
-
   contain tortuga_kit_base::installer::ssh::package
-  contain tortuga_kit_base::installer::ssh::config
   contain tortuga_kit_base::installer::ssh::server
 }

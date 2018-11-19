@@ -16,9 +16,9 @@
 
 class tortuga::compute {
   contain tortuga::puppet
+
   class { 'tortuga::mcollective':
     puppet_server => $::puppet_server,
   }
   contain tortuga::mcollective
-  contain tortuga::compute::install_ssh_keys
 }
