@@ -47,7 +47,7 @@ from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.os_utility import osUtility
 from tortuga.os_utility.osUtility import getOsObjectFactory, mapOsName
 from tortuga.repo import repoManager
-from tortuga.softwareprofile import softwareProfileFactory
+from tortuga.softwareprofile.softwareProfileApi import SoftwareProfileApi
 from tortuga.utility.actionManager import ActionManager
 
 from .eula import BaseEulaValidator
@@ -603,7 +603,6 @@ class KitManager(TortugaObjectManager):
         existing software profile.  This is possible when OS media is
         not available during installation/creation of software profiles
         """
-        swProfileApi = softwareProfileFactory.getSoftwareProfileApi()
 
         osComponents = kit.getComponentList()
         kitOsInfo = osComponents[0].getOsComponentList()[0].getOsInfo()
@@ -617,7 +616,8 @@ class KitManager(TortugaObjectManager):
         )
 
         # Iterate over all software profiles looking for matching OS
-        for swProfile in swProfileApi.getSoftwareProfileList(session):
+        for swProfile in \
+                SoftwareProfileApi().getSoftwareProfileList(session):
             if swProfile.getOsInfo() != kitOsInfo:
                 continue
 
