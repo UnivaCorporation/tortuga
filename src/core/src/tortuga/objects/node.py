@@ -14,7 +14,7 @@
 
 # pylint: disable=no-member
 
-from typing import Iterable, Optional
+from typing import Dict, Iterable, Optional
 
 import tortuga.objects.hardwareProfile
 import tortuga.objects.nic
@@ -146,10 +146,22 @@ class Node(TortugaObject): \
     def getResourceAdapter(self):
         return self.get('resource_adapter')
 
-    def getTags(self):
-        return self.get('tags') or {}
+    def getTags(self) -> Dict[str, str]:
+        """
+        Gets all the tags for this node.
 
-    def setTags(self, tags):
+        :return Dict[str, str]: the tags
+
+        """
+        return self.get('tags')
+
+    def setTags(self, tags: Dict[str, str]):
+        """
+        Sets the tags for this node.
+
+        :param Dict[str, str] tags: the tags to set for this hardware profile
+
+        """
         self['tags'] = tags
 
     def getVcpus(self):
@@ -234,12 +246,7 @@ class Node(TortugaObject): \
                     getFromDbDict(
                         softwareProfileDict.__dict__, ignore=('nodes',)))
 
-        tags = dict()
-
-        if 'tags' in _dict and _dict['tags']:
-            for tag in _dict['tags']:
-                tags[tag.name] = tag.value
-
+        tags = {tag.name: tag.value for tag in _dict.get('tags', [])}
         node.setTags(tags)
 
         # instance mapping

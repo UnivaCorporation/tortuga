@@ -848,27 +848,31 @@ class SoftwareProfileManager(TortugaObjectManager): \
     def getUsableNodes(self, session: Session, softwareProfileName):
         return self._sp_db_api.getUsableNodes(session, softwareProfileName)
 
-    def get_software_profile_metadata(self, session: Session, name: str) \
-            -> Dict[str, str]:
+    def get_software_profile_metadata(
+            self, session: Session, name: str) -> Dict[str, str]:
         """
         Call action_get_metadata() method for all kits
         """
 
-        metadata = {}
+        self.getLogger().debug(
+            'Retrieving metadata for software profile [%s]', name)
 
-        kits = self._kit_db_api.getKitList(session)
+        metadata: Dict[str, str] = {}
 
-        for kit in kits:
+        for kit in self._kit_db_api.getKitList(session):
             if kit.getIsOs():
                 # ignore OS kits
                 continue
 
-            installer_ = get_kit_installer(
-                (kit.getName(), kit.getVersion(), kit.getIteration()))()
-            installer_.session = session
+            kit_installer = get_kit_installer(
+                (kit.getName(), kit.getVersion(), kit.getIteration())
+            )()
+            kit_installer.session = session
 
             # we are only interested in software profile metadata
-            item = installer_.action_get_metadata(software_profile_name=name)
+            item = kit_installer.action_get_metadata(
+                software_profile_name=name)
+
             if item:
                 metadata.update(item)
 

@@ -22,7 +22,6 @@ import os
 import pwd
 import random
 import shutil
-
 import subprocess
 import sys
 import time
@@ -30,8 +29,8 @@ from typing import Any, Tuple
 
 import yaml
 from six import print_
-
 from sqlalchemy.orm.session import Session
+
 from tortuga.admin.api import AdminApi
 from tortuga.config.configManager import ConfigManager, getfqdn
 from tortuga.deployer import dbUtility
@@ -52,7 +51,7 @@ from tortuga.os_utility.osUtility import getOsObjectFactory
 from tortuga.softwareprofile.softwareProfileApi import SoftwareProfileApi
 
 
-class TortugaDeployer(object): \
+class TortugaDeployer: \
         # pylint: disable=too-many-public-methods
     def __init__(self, logger, cmdline_options=None):
         self._cm = ConfigManager()
@@ -93,7 +92,7 @@ class TortugaDeployer(object): \
         self.gettext = gettext.gettext
         self._ = self.gettext
 
-        self._logger.info('Detected OS: [{}]' % (self._settings['osInfo']))
+        self._logger.info('Detected OS: [%s]', self._settings['osInfo'])
 
     def __load_settings(self, cmdline_options):
         settings = dict(list(cmdline_options.items()))
@@ -308,17 +307,6 @@ class TortugaDeployer(object): \
         # Restore resolv.conf if we have a backup
         if osUtility.haveBackupFile('/etc/resolv.conf'):
             osUtility.restoreFile('/etc/resolv.conf')
-
-    def prepSudo(self):
-        """ Setup sudo. """
-
-        self._logger.info('Setting up \'sudo\'')
-
-        # TODO: these scripts have 'apache' hardcoded right now
-        sysManager = self._osObjectFactory.getOsSysManager()
-        sudoInitScript = sysManager.getSudoInitScript()
-        p = tortugaSubprocess.executeCommandAndIgnoreFailure(sudoInitScript)
-        self._logger.debug('sudo init output:\n%s' % p.getStdOut())
 
     def _runCommandWithSpinner(self, cmd, statusMsg, logFileName):
         self._logger.debug(
@@ -701,8 +689,6 @@ class TortugaDeployer(object): \
             finally:
                 dbm.closeSession()
 
-                self.prepSudo()
-
                 self.puppetApply()
 
             self.out('\nTortuga installation completed successfully!\n\n')
@@ -805,17 +791,11 @@ class TortugaDeployer(object): \
 
         # Bootstrap using Puppet
         cmd = ('/opt/puppetlabs/bin/puppet apply --verbose'
-               ' --config %s/bootstrap.puppet.conf'
-               ' --modulepath'
-               ' %s/modules:'
-               '/etc/puppetlabs/code/environments/production/modules'
                ' --detailed-exitcodes'
-               ' --execute "class { \'bootstrap\':'
-               ' database_engine => \'%s\','
+               ' --execute "class { \'tortuga::installer\':'
                ' puppet_server => \'%s\','
-               ' }"' % (localPuppetRoot, localPuppetRoot,
-                        self._settings['database']['engine'],
-                        puppet_server))
+               '}"' % (puppet_server)
+               )
 
         retval = self._runCommandWithSpinner(
             cmd, '\nPerforming pre-configuration... Please wait...',
@@ -870,7 +850,7 @@ class TortugaDeployer(object): \
             print_(_('failed.'))
 
             print_(_('Exception raised initializing database:') +
-                    ' {0}'.format(exc), file=sys.stderr)
+                   ' {0}'.format(exc), file=sys.stderr)
 
         self._logger.debug('Done initializing database')
 

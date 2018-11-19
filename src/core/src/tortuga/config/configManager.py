@@ -114,6 +114,12 @@ def getfqdn():
     return fqdn
 
 
+def lookup_ipaddress(fqdn: str) -> str:
+    aiInfo = socket.getaddrinfo(fqdn, None, socket.AF_INET, socket.SOCK_STREAM)
+
+    return aiInfo[0][4][0]
+
+
 class ConfigManager(dict): \
         # pylint: disable=too-many-public-methods
     """
@@ -316,6 +322,9 @@ class ConfigManager(dict): \
     def getHost(self):
         """ Get machine hostname. """
         return self['host']
+
+    def getIpAddress(self):
+        return lookup_ipaddress(self.getHost())
 
     def getUser(self):
         """ Get user. """

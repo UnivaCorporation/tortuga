@@ -1,0 +1,14 @@
+CherryPy
+Jinja2
+PyYAML
+Routes
+SQLAlchemy
+celery
+cryptography
+gevent
+kombu
+marshmallow-sqlalchemy
+oic
+redis<3.0.0
+tortuga-core>=7.0.0
+websockets

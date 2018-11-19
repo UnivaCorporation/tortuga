@@ -37,6 +37,7 @@ class Node(ModelBase):
     lockedState = Column(String(20), nullable=False, default='Unlocked')
     isIdle = Column(Boolean, nullable=False, default=True)
     addHostSession = Column(String(36))
+    vcpus = Column(Integer)
 
     nodes_softwareProfileId = index_property(
         'softwareProfilesId', 'Nodes_softwareProfileId')
@@ -48,15 +49,11 @@ class Node(ModelBase):
     nics = relationship('Nic', backref='node', lazy=False,
                         cascade='all, delete-orphan')
 
-    tags = relationship(
-        'Tag',
-        secondary='node_tags',
-        backref='nodes'
-    )
+    tags = relationship('NodeTag', lazy=False, cascade="all, delete-orphan")
 
     instance = relationship(
         'InstanceMapping', uselist=False, back_populates='node',
         cascade='all,delete-orphan')
 
     def __repr__(self):
-        return 'Node(name=%s)' % (self.name)
+        return 'Node(name={})'.format(self.name)

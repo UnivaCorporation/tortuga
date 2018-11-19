@@ -14,7 +14,7 @@
 
 # pylint: disable=not-callable,multiple-statements,no-member
 
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional
 
 from sqlalchemy import and_, or_
 from sqlalchemy.orm.exc import NoResultFound
@@ -42,6 +42,9 @@ from .models.hardwareProfile import HardwareProfile
 from .models.kit import Kit
 from .models.partition import Partition
 from .models.softwareProfile import SoftwareProfile
+
+
+Tags = Dict[str, Optional[str]]
 
 
 class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
@@ -93,12 +96,12 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
         return dbSoftwareProfile
 
     def getSoftwareProfileList(
-            self, session, tags: List[Tuple[str, str]] = None,
+            self, session, tags: Optional[Tags] = None,
             profile_type: Optional[str] = None) -> List[SoftwareProfile]:
         """
         Get list of softwareProfiles from the db.
-        """
 
+        """
         self.getLogger().debug('Retrieving software profile list')
 
         q = session.query(SoftwareProfile)
@@ -107,22 +110,25 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
             # filter by profile type
             q = q.filter(SoftwareProfile.type == profile_type)
 
+        searchspec = []
+
         if tags:
-            searchspec = []
-
-            # Build searchspec from specified tags
-            for tag in tags:
-                if len(tag) == 2:
-                    searchspec.append(
-                        and_(SoftwareProfile.tags.any(name=tag[0]),
-                             SoftwareProfile.tags.any(value=tag[1])))
+            for name, value in tags.items():
+                if value:
+                    #
+                    # Match both name and value
+                    #
+                    searchspec.append(and_(
+                        SoftwareProfile.tags.any(name=name),
+                        SoftwareProfile.tags.any(value=value)
+                    ))
                 else:
-                    searchspec.append(SoftwareProfile.tags.any(name=tag[0]))
+                    #
+                    # Match name only
+                    #
+                    searchspec.append(SoftwareProfile.tags.any(name=name))
 
-            # AND the tag search spec into existing filter
-            q = q.filter(or_(*searchspec))
-
-        return q.order_by(SoftwareProfile.name).all()
+        return q.filter(or_(*searchspec)).order_by(SoftwareProfile.name).all()
 
     def getIdleSoftwareProfileList(self, session: Session) \
             -> List[SoftwareProfile]:

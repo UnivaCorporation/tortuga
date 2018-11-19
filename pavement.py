@@ -28,7 +28,7 @@ def get_git_revision():
 
     return result.decode().rstrip()
 
-version = '6.3.1a1+rev{}'.format(get_git_revision())
+version = '7.0.1+rev{}'.format(get_git_revision())
 
 build_number = os.getenv('CI_PIPELINE_ID')
 if build_number:
@@ -165,12 +165,6 @@ def install(options):
     newPath = installDir.joinpath(instScript.basename())
     if not newPath.exists():
         instScript.link(newPath)
-
-    # copy upgrade script
-    upgrade_script = path('src/install-script/upgrade-tortuga.sh')
-    upgrade_script_install = installDir.joinpath(upgrade_script.basename())
-    if not upgrade_script_install.exists():
-        upgrade_script.link(upgrade_script_install)
 
 
 @task

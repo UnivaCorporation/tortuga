@@ -15,6 +15,7 @@
 import argparse
 
 from tortuga.cli.tortugaCli import TortugaCli
+from tortuga.cli.utils import parse_tags
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
 from tortuga.objects.network import Network
 from tortuga.objects.networkDevice import NetworkDevice
@@ -126,6 +127,15 @@ class UpdateHardwareProfileCli(TortugaCli):
         self.addOption(
             '--cost', dest='cost', type=int,
             help=_('Set relative \'cost\' of hardware profile'))
+
+        self.addOption('--tags',  dest='tags',
+                       metavar='key=value[,key=value]', action='append',
+                       help='Key-value pairs associated with the '
+                            'hardware profile')
+
+        self.addOption('--remove-tags',  dest='remove_tags',
+                       metavar='key[,key...]', action='append',
+                       help='Name of tags to remove')
 
         self.getParser().add_argument(
             'name', metavar='NAME', nargs='?',
@@ -300,6 +310,19 @@ class UpdateHardwareProfileCli(TortugaCli):
                 network.setNetmask(amask)
                 network.setNetworkDevice(networkDevice)
                 hp.getNetworks().append(network)
+
+        if self.getArgs().tags:
+            tags = hp.getTags()
+            tags.update(parse_tags(self.getArgs().tags))
+            hp.setTags(tags)
+
+        if self.getArgs().remove_tags:
+            tags = hp.getTags()
+            for string in self.getArgs().remove_tags:
+                for tag_name in string.split(','):
+                    if tag_name in tags.keys():
+                        tags.pop(tag_name)
+            hp.setTags(tags)
 
         api.updateHardwareProfile(hp)
 

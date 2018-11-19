@@ -29,7 +29,7 @@ DEBUG=0
 enable_package_caching=1
 download_only=0
 force_hostname=0
-readonly tortuga_version="6.3.1"
+readonly tortuga_version="7.0.1"
 
 TEMP=$( getopt -o v,f --long force,verbose,debug,help,\
 disable-package-caching,\
@@ -695,16 +695,8 @@ if [[ $distro_family == rhel ]]; then
     # Packages common to all RHEL versions
     pkgs="\
 puppetserver \
-which \
-openssh-clients \
-diffutils \
 rsync \
-unzip \
-patch \
-zeromq3 \
-activemq \
 rh-python36 \
-rh-python36-python-PyMySQL \
 "
 
     # Packages cached for all RHEL versions

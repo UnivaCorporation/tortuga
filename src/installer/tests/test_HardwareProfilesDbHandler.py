@@ -38,29 +38,28 @@ class TestHardwareProfilesDbHandler(unittest.TestCase):
     def test_getHardwareProfileList_tags(self):
         # 'tag1' returns hardware profile 'profile1' only
         result = HardwareProfilesDbHandler().getHardwareProfileList(
-            self.session, tags=[('tag1',)])
+            self.session, tags={'tag1': None})
 
         assert result and len(result) == 1 and result[0].name == 'profile1'
 
     def test_no_matching_tags(self):
         # Ensure invalid tag returns no result
         result = HardwareProfilesDbHandler().getHardwareProfileList(
-            self.session, tags=[('invalid',)])
+            self.session, tags={'invalid': None})
 
         assert not result
 
     def test_getHardwareProfileList_tag2(self):
         # 'tag2' returns hardware profile 'profile2' only
         result = HardwareProfilesDbHandler().getHardwareProfileList(
-            self.session, tags=[('tag2',)])
+            self.session, tags={'tag2': None})
 
         assert result and len(result) == 1 and result[0].name == 'profile2'
 
     def test_getHardwareProfileList_tag1_and_tag2(self):
         # 'tag1' and 'tag2' returns both profiles
         result = HardwareProfilesDbHandler().getHardwareProfileList(
-            self.session, tags=[('tag1',),
-                                ('tag2',)])
+            self.session, tags={'tag1': None, 'tag2': None})
 
         assert result and len(result) == 2 and \
             result[0].name == 'profile1' and result[1].name == 'profile2'

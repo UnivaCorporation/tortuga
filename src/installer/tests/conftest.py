@@ -18,31 +18,28 @@ from sqlalchemy import create_engine
 
 import tortuga.db.dbManager
 from tortuga.config.configManager import ConfigManager, getfqdn
-from tortuga.db import (adminDbApi, globalParameterDbApi, hardwareProfileDbApi,
-                        kitDbApi, networkDbApi, nodeDbApi,
-                        softwareProfileDbApi)
 from tortuga.db.dbManager import DbManager
 from tortuga.db.models.admin import Admin
 from tortuga.db.models.component import Component
 from tortuga.db.models.hardwareProfile import HardwareProfile
 from tortuga.db.models.hardwareProfileNetwork import HardwareProfileNetwork
+from tortuga.db.models.hardwareProfileTag import HardwareProfileTag
 from tortuga.db.models.kit import Kit
 from tortuga.db.models.network import Network
 from tortuga.db.models.networkDevice import NetworkDevice
 from tortuga.db.models.nic import Nic
 from tortuga.db.models.node import Node
+from tortuga.db.models.nodeTag import NodeTag
 from tortuga.db.models.operatingSystem import OperatingSystem
 from tortuga.db.models.operatingSystemFamily import OperatingSystemFamily
 from tortuga.db.models.resourceAdapter import ResourceAdapter
 from tortuga.db.models.resourceAdapterConfig import ResourceAdapterConfig
 from tortuga.db.models.resourceAdapterSetting import ResourceAdapterSetting
 from tortuga.db.models.softwareProfile import SoftwareProfile
-from tortuga.db.models.tag import Tag
+from tortuga.db.models.softwareProfileTag import SoftwareProfileTag
 from tortuga.deployer.dbUtility import init_global_parameters, primeDb
-from tortuga.node import nodeManager
 from tortuga.objects import osFamilyInfo, osInfo
 from tortuga.objectstore import manager as objectstore_manager
-
 from .mocks.redis import MockRedis
 
 
@@ -117,11 +114,11 @@ def dbm():
 
         # create sample tags
         all_tags = []
-
         for idx in range(1, 5 + 1):
-            tag = Tag(name='tag{:d}'.format(idx),
-                      value='value{:d}'.format(idx))
-
+            tag = dict(
+                name='tag{:d}'.format(idx),
+                value='value{:d}'.format(idx),
+            )
             all_tags.append(tag)
 
         installer_node = session.query(Node).filter(
@@ -177,23 +174,23 @@ def dbm():
         # create 'base' kit
         kit = Kit()
         kit.name = 'base'
-        kit.version = '6.3.1'
+        kit.version = '7.0.1'
         kit.iteration = '0'
         kit.description = 'Sample base kit'
 
-        installer_component = Component(name='installer', version='6.3')
+        installer_component = Component(name='installer', version='7.0')
         installer_component.family = [rhel7_os_family]
         installer_component.kit = kit
 
         core_component = Component(name='core',
-                                   version='6.3',
+                                   version='7.0',
                                    description='Compute component')
         core_component.family = [rhel7_os_family]
         core_component.kit = kit
 
         # add component not enabled by default
         pdsh_component = Component(name='pdsh',
-                                   version='6.3',
+                                   version='7.0',
                                    description='pdsh component')
         pdsh_component.family = [rhel7_os_family]
         pdsh_component.kit = kit
@@ -201,7 +198,7 @@ def dbm():
         # add fake dhcp component
         dhcpd_component = Component(
             name='dhcpd',
-            version='6.3',
+            version='7.0',
             description='Mock dhcpd component'
         )
         dhcpd_component.family = [rhel7_os_family]
@@ -365,45 +362,88 @@ def dbm():
 
             if n in (1, 2):
                 # compute-01 and compute-02 have all tags
-                compute_node.tags.extend(all_tags)
+                for tag in all_tags:
+                    compute_node.tags.append(
+                        NodeTag(name=tag['name'], value=tag['value'])
+                    )
             elif n in (3, 4):
                 # compute-03 and compute-04 have 'tag1' and 'tag2'
-                compute_node.tags.append(all_tags[0])
-                compute_node.tags.append(all_tags[1])
+                compute_node.tags.append(
+                    NodeTag(name=all_tags[0]['name'],
+                            value=all_tags[0]['value'])
+                )
+                compute_node.tags.append(
+                    NodeTag(name=all_tags[1]['name'],
+                            value=all_tags[1]['value'])
+                )
             elif n in (5, 6):
                 # compute-05 and compute-06 have 'tag2' and 'tag3'
-                compute_node.tags.append(all_tags[1])
-                compute_node.tags.append(all_tags[2])
+                compute_node.tags.append(
+                    NodeTag(name=all_tags[1]['name'],
+                            value=all_tags[1]['value'])
+                )
+                compute_node.tags.append(
+                    NodeTag(name=all_tags[2]['name'],
+                            value=all_tags[2]['value'])
+                )
             elif n == 7:
                 # compute-07 has 'tag4'
-                compute_node.tags.append(all_tags[3])
+                compute_node.tags.append(
+                    NodeTag(name=all_tags[3]['name'],
+                            value=all_tags[3]['value'])
+                )
             elif n == 8:
                 # compute-08 has 'tag5'
-                compute_node.tags.append(all_tags[4])
+                compute_node.tags.append(
+                    NodeTag(name=all_tags[4]['name'],
+                            value=all_tags[4]['value'])
+                )
 
             session.add(compute_node)
 
         # create arbitrary hardware profiles
-        hwprofile1 = HardwareProfile(name='profile1', tags=[all_tags[0]])
-        hwprofile2 = HardwareProfile(name='profile2', tags=[all_tags[1]])
+        hwprofile1 = HardwareProfile(
+            name='profile1',
+            nameFormat='*',
+            tags=[HardwareProfileTag(name=all_tags[0]['name'],
+                                     value=all_tags[0]['value'])]
+        )
+        hwprofile2 = HardwareProfile(
+            name='profile2',
+            nameFormat='*',
+            tags=[HardwareProfileTag(name=all_tags[1]['name'],
+                                     value=all_tags[1]['value'])]
+        )
+        hwprofile_notags = HardwareProfile(name='notags', nameFormat='*')
 
         session.add(hwprofile1)
         session.add(hwprofile2)
+        session.add(hwprofile_notags)
 
         # create arbitrary software profiles
-        swprofile1 = SoftwareProfile(name='swprofile1',
-                                     os=os_,
-                                     type='compute',
-                                     tags=[all_tags[0]])
+        swprofile1 = SoftwareProfile(
+            name='swprofile1',
+            os=os_,
+            type='compute',
+            tags=[SoftwareProfileTag(name=all_tags[0]['name'],
+                                     value=all_tags[0]['value'])]
+        )
+        swprofile2 = SoftwareProfile(
+            name='swprofile2',
+            os=os_,
+            type='compute',
+            tags=[SoftwareProfileTag(name=all_tags[1]['name'],
+                                     value=all_tags[1]['value'])]
+        )
+        swprofile_notags = SoftwareProfile(
+            name='notags',
+            os=os_,
+            type='compute'
+        )
 
         session.add(swprofile1)
-
-        swprofile2 = SoftwareProfile(name='swprofile2',
-                                     os=os_,
-                                     type='compute',
-                                     tags=[all_tags[1]])
-
         session.add(swprofile2)
+        session.add(swprofile_notags)
 
         session.commit()
 

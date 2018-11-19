@@ -1,0 +1,20 @@
+{
+  "name": "univa-tortuga_kit_base",
+  "version": "7.0.1",
+  "author": "Univa Corporation",
+  "summary": "Tortuga Base kit integration module",
+  "license": "Apache 2.0",
+  "source": "Univa Corporation",
+  "project_page": "http://univa.com",
+  "issues_url": "http://suppport.univa.com",
+  "description": "Tortuga Base kit integration module",
+  "dependencies": [
+    {
+      "version_requirement": ">= 1.0.0",
+      "name": "puppetlabs/stdlib"
+    },
+    {
+      "name": "puppetlabs/apt"
+    }
+  ]
+}

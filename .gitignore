@@ -2,9 +2,7 @@ build/
 dist/
 install/
 src/core/tortuga/etc/tortuga-release
-src/*/*.egg-info
-src/kits/*/*.egg-info
-src/installer/tortuga/etc/tortuga-release
+**/*.egg-info
 .kit-deps.mk
 src/kits/*/BUILDROOT/
 .DS_Store

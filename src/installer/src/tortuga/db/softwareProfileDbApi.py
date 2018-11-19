@@ -42,12 +42,16 @@ from tortuga.objects.tortugaObject import TortugaObjectList
 
 from .models.partition import Partition as PartitionModel
 from .models.softwareProfile import SoftwareProfile as SoftwareProfileModel
+from .models.softwareProfileTag import SoftwareProfileTag
+from .tagsDbApiMixin import TagsDbApiMixin
 
 
-class SoftwareProfileDbApi(TortugaDbApi):
+class SoftwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
     """
     SoftwareProfile DB API class.
+
     """
+    tag_model = SoftwareProfileTag
 
     def __init__(self):
         super().__init__()
@@ -746,9 +750,9 @@ class SoftwareProfileDbApi(TortugaDbApi):
         session.flush()
 
         dbSoftwareProfile.partitions = list(partitions.values())
+        self._set_tags(dbSoftwareProfile, softwareProfile.getTags())
 
         session.add(dbSoftwareProfile)
-
         session.flush()
 
         return dbSoftwareProfile

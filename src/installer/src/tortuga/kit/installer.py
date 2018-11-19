@@ -22,21 +22,21 @@ import pkgutil
 from logging import getLogger
 from typing import Optional, Type
 
-from tortuga.config import version_is_compatible, VERSION
+from tortuga.config import VERSION, version_is_compatible
 from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.configurationError import ConfigurationError
 from tortuga.kit.metadata import KIT_METADATA_FILE, KitMetadataSchema
+from tortuga.kit.registry import get_all_kit_installers
 from tortuga.objects.component import Component
 from tortuga.objects.eula import Eula
 from tortuga.objects.kit import Kit
 from tortuga.objects.osFamilyInfo import OsFamilyInfo
 from tortuga.os_utility.tortugaSubprocess import executeCommand
+
 from .registry import register_kit_installer
 from .utils import pip_install_requirements
 
-
 logger = getLogger(__name__)
-
 
 EULA_FILE = 'docs/EULA.txt'
 
@@ -70,8 +70,9 @@ class ConfigurableMixin:
                 self._config_parser.read(self.config_file)
             except:
                 logger.debug(
-                    'No valid configuration for {}: {}'.format(
-                        self.config_type, self.name))
+                    'No valid configuration for %s: %s',
+                    self.config_type, self.name
+                )
         return self._config_parser
 
     def set_defaults(self, config_parser):
@@ -130,6 +131,7 @@ class KitInstallerMeta(type):
     KIT_METADATA_FILE file.
 
     """
+
     def __init__(cls: Type['KitInstallerBase'], name, bases, attrs):
         super().__init__(name, bases, attrs)
 
@@ -191,6 +193,12 @@ class KitInstallerBase(ConfigurableMixin, metaclass=KitInstallerMeta):
     meta = {}
 
     #
+    # Loader state
+    #
+    ws_controllers_loaded = False
+    db_tables_loaded = False
+
+    #
     # Attributes, provided by instances of this class
     #
     puppet_modules = []
@@ -227,7 +235,6 @@ class KitInstallerBase(ConfigurableMixin, metaclass=KitInstallerMeta):
         # Web service controller classes
         #
         self._ws_controller_classes = []
-        self._ws_controller_classes_loaded = False
 
         self.session = None
 
@@ -270,10 +277,12 @@ class KitInstallerBase(ConfigurableMixin, metaclass=KitInstallerMeta):
             return
 
         kit_pkg_name = inspect.getmodule(self).__package__
+
         comp_pkg_name = '{}.components'.format(kit_pkg_name)
+
         logger.debug(
-            'Searching for component installers in package: {}'.format(
-                comp_pkg_name)
+            'Searching for component installers in package: %s',
+            comp_pkg_name
         )
 
         #
@@ -283,8 +292,8 @@ class KitInstallerBase(ConfigurableMixin, metaclass=KitInstallerMeta):
             comp_pkg = importlib.import_module(comp_pkg_name)
         except ModuleNotFoundError:
             logger.warning(
-                'No component installers found for kit: {}'.format(
-                    kit_pkg_name)
+                'No component installers found for kit: %s',
+                kit_pkg_name
             )
             return
 
@@ -308,8 +317,8 @@ class KitInstallerBase(ConfigurableMixin, metaclass=KitInstallerMeta):
                 #
                 if not hasattr(comp_inst_mod, 'ComponentInstaller'):
                     logger.warning(
-                        'ComponentInstaller class not found: {}'.format(
-                            full_pkg_path)
+                        'ComponentInstaller class not found: %s',
+                        full_pkg_path
                     )
 
                 #
@@ -321,14 +330,13 @@ class KitInstallerBase(ConfigurableMixin, metaclass=KitInstallerMeta):
                 comp_inst.session = self.session
                 self._component_installers[comp_inst_class.name] = \
                     comp_inst
+
                 logger.debug(
-                    'Component installer registered: {}'.format(
-                        comp_inst.spec)
+                    'Component installer registered: %s', comp_inst.spec
                 )
 
             except ModuleNotFoundError:
-                logger.debug('Package not a component: {}'.format(
-                    full_pkg_path))
+                logger.debug('Package not a component: %s', full_pkg_path)
 
             self._component_installers_loaded = True
 
@@ -351,11 +359,8 @@ class KitInstallerBase(ConfigurableMixin, metaclass=KitInstallerMeta):
 
         """
         try:
-            logger.debug(
-                'Calling kit action: {} with arguments {}, {}'.format(
-                action_name, args, kwargs)
-            )
             action = getattr(self, 'action_{}'.format(action_name))
+
             return action(*args, **kwargs)
         except KeyError:
             raise Exception('Unknown action: {}'.format(action_name))
@@ -392,7 +397,8 @@ class KitInstallerBase(ConfigurableMixin, metaclass=KitInstallerMeta):
             eula_fp.close()
             eula = Eula(text=text)
         else:
-            logger.debug('EULA not found: {}'.format(eula_path))
+            logger.debug('EULA not found: %s', eula_path)
+
         return eula
 
     def get_component_installer(self, component_name: str):
@@ -403,23 +409,34 @@ class KitInstallerBase(ConfigurableMixin, metaclass=KitInstallerMeta):
         self._load_component_installers()
         return [ci for ci in self._component_installers.values()]
 
-    def register_database_table_mappers(self):
+    def register_database_tables(self):
         """
         Register database table mappers for this kit.
 
         """
+        #
+        # If another kit of the same name already exists, and has loaded
+        # the database tables, then we don't need to do it a second time
+        #
+        for ki in get_all_kit_installers():
+            if ki.spec[0] == self.spec[0] and ki.db_tables_loaded:
+                self.__class__.db_tables_loaded = True
+                return
+
         kit_pkg_name = inspect.getmodule(self).__package__
         db_table_pkg_name = '{}.db.models'.format(kit_pkg_name)
         logger.debug(
-            'Searching for database table mappers in package: {}'.format(
-                db_table_pkg_name)
+            'Searching for database table mappers in package: %s',
+            db_table_pkg_name
         )
+
         try:
-           importlib.import_module(db_table_pkg_name)
+            importlib.import_module(db_table_pkg_name)
+            self.__class__.db_tables_loaded = True
+
         except ModuleNotFoundError:
             logger.debug(
-                'No database table mappers found for kit: {}'.format(
-                   self.spec)
+                'No database table mappers found for kit: %s', self.spec
             )
 
     def register_web_service_controllers(self):
@@ -427,18 +444,30 @@ class KitInstallerBase(ConfigurableMixin, metaclass=KitInstallerMeta):
         Register web service controllers for this kit.
 
         """
+        #
+        # If another kit of the same name already exists, and has loaded
+        # the ws controllers, then we don't need to do it a second time
+        #
+        for ki in get_all_kit_installers():
+            if ki.spec[0] == self.spec[0] and ki.ws_controllers_loaded:
+                self.__class__.ws_controllers_loaded = True
+                return
+
         kit_pkg_name = inspect.getmodule(self).__package__
         ws_pkg_name = '{}.web_service.controllers'.format(kit_pkg_name)
         logger.debug(
-            'Searching for web service controllers in package: {}'.format(
-                ws_pkg_name)
+            'Searching for web service controllers in package: %s',
+            ws_pkg_name
         )
+
         try:
             importlib.import_module(ws_pkg_name)
+            self.__class__.ws_controllers_loaded = True
+
         except ModuleNotFoundError:
             logger.debug(
-                'No web service controllers found for kit: {}'.format(
-                    self.spec)
+                'No web service controllers found for kit: %s',
+                self.spec
             )
 
     def register_event_listeners(self):
@@ -446,17 +475,21 @@ class KitInstallerBase(ConfigurableMixin, metaclass=KitInstallerMeta):
         Register event listeners for this kit.
 
         """
+
         kit_pkg_name = inspect.getmodule(self).__package__
+
         listener_pkg_name = '{}.events.listeners'.format(kit_pkg_name)
+
         logger.debug(
-            'Searching for event listeners in package: {}'.format(
-                listener_pkg_name)
+            'Searching for event listeners in package: %s',
+            listener_pkg_name
         )
+
         try:
             importlib.import_module(listener_pkg_name)
         except ModuleNotFoundError:
             logger.debug(
-                'No event listeners found for kit: {}'.format(self.spec))
+                'No event listeners found for kit: %s', self.spec)
 
     def action_install_puppet_modules(self, *args, **kwargs):
         #
@@ -507,8 +540,11 @@ class KitInstallerBase(ConfigurableMixin, metaclass=KitInstallerMeta):
             self.config_manager.getTortugaIntWebRoot(),
             'python-tortuga'
         )
+
         cmd = 'rsync -a {} {}'.format(whl_path, repo_path)
+
         logger.debug(cmd)
+
         executeCommand(cmd)
 
         #
@@ -518,8 +554,11 @@ class KitInstallerBase(ConfigurableMixin, metaclass=KitInstallerMeta):
             self.config_manager.getBinDir(),
             'dir2pi'
         )
+
         cmd = '{} {}'.format(dir2pi, repo_path)
+
         logger.debug(cmd)
+
         executeCommand(cmd)
 
     def action_post_uninstall(self):
@@ -606,11 +645,8 @@ class ComponentInstallerBase(ConfigurableMixin):
 
         """
         try:
-            logger.debug(
-                'Calling component action: {} with arguments {}, {}'.format(
-                action_name, args, kwargs)
-            )
             action = getattr(self, 'action_{}'.format(action_name))
+
             return action(*args, **kwargs)
         except KeyError:
             raise Exception('Unknown action: {}'.format(action_name))

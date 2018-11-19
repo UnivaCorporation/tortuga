@@ -22,6 +22,7 @@ from tortuga.config.configManager import ConfigManager
 from tortuga.db.adminsDbHandler import AdminsDbHandler
 from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
 from tortuga.db.hardwareProfilesDbHandler import HardwareProfilesDbHandler
+from tortuga.db.models.hardwareProfileTag import HardwareProfileTag
 from tortuga.db.models.network import Network
 from tortuga.db.models.nic import Nic
 from tortuga.db.models.node import Node
@@ -47,16 +48,19 @@ from tortuga.objects.tortugaObject import TortugaObjectList
 
 from .models.hardwareProfile import HardwareProfile as HardwareProfileModel
 from .models.hardwareProfileNetwork import HardwareProfileNetwork
+from .tagsDbApiMixin import TagsDbApiMixin
 
 
 OptionDict = Dict[str, bool]
-Tags = Dict[str, str]
+Tags = Dict[str, Optional[str]]
 
 
-class HardwareProfileDbApi(TortugaDbApi):
+class HardwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
     """
     HardwareProfile DB API class.
+
     """
+    tag_model = HardwareProfileTag
 
     def __init__(self):
         super().__init__()
@@ -224,7 +228,8 @@ class HardwareProfileDbApi(TortugaDbApi):
                 session, hardwareProfile)
 
             session.add(dbHardwareProfile)
-
+            session.flush()
+            self._set_tags(dbHardwareProfile, hardwareProfile.getTags())
             session.commit()
 
             self.getLogger().info(
@@ -305,9 +310,9 @@ class HardwareProfileDbApi(TortugaDbApi):
         dstHardwareProfile.setResourceAdapter(
             srcHardwareProfile.getResourceAdapter())
 
-        self.addHardwareProfile(session, dstHardwareProfile)
+        dstHardwareProfile.setTags(srcHardwareProfile.getTags())
 
-        session.commit()
+        self.addHardwareProfile(session, dstHardwareProfile)
 
     def addAdmin(
             self, session: Session, hardwareProfileName,
@@ -388,11 +393,13 @@ class HardwareProfileDbApi(TortugaDbApi):
 
             self.__populateHardwareProfile(
                 session, hardwareProfileObject, dbHardwareProfile)
-
+            self._set_tags(dbHardwareProfile, hardwareProfileObject.getTags())
             session.commit()
+
         except TortugaException:
             session.rollback()
             raise
+
         except Exception as ex:
             session.rollback()
             self.getLogger().exception('%s' % ex)
@@ -422,8 +429,8 @@ class HardwareProfileDbApi(TortugaDbApi):
             ResourceAdapterNotFound
             InvalidArgument
             ConfigurationError
-        """
 
+        """
         # Preload provisioning nics and networks
         prov_nics = self.__get_provisioning_nics(session)
         all_networks = self.__get_all_networks(session)

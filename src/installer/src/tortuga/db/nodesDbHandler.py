@@ -14,7 +14,7 @@
 
 # pylint: disable=not-callable,no-member,multiple-statements,no-self-use
 
-from typing import List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 from sqlalchemy import and_, func, or_
 from sqlalchemy.orm.exc import NoResultFound
@@ -29,7 +29,7 @@ from .models.node import Node
 from .models.softwareProfile import SoftwareProfile
 
 
-Tags = List[Union[Tuple[str, str], Tuple[str]]]
+Tags = Dict[str, Optional[str]]
 
 
 class NodesDbHandler(TortugaDbObjectHandler):
@@ -96,23 +96,35 @@ class NodesDbHandler(TortugaDbObjectHandler):
 
     def getNodesByTags(self, session: Session,
                        tags: Optional[Tags] = None):
-        """'tags' is a list of (key, value) tuples representing tags.
-        tuple may also contain only one element (key,)
         """
+        Gets nodes by tag(s). Tags is a dictionary of key/value pairs to
+        match against.
 
+        :param session: a SQLAlchemy database session
+        :param tags:    a dictionary of key/value tag pairs
+
+        :return: a list of nodes
+
+        """
         searchspec = []
 
         # iterate over list of tag tuples making SQLAlchemy search
         # specification
         if tags:
-            for tag in tags:
-                if len(tag) == 2:
-                    # Match tag 'name' and 'value'
-                    searchspec.append(and_(Node.tags.any(name=tag[0]),
-                                           Node.tags.any(value=tag[1])))
+            for name, value in tags.items():
+                if value:
+                    #
+                    # Match both name and value
+                    #
+                    searchspec.append(and_(
+                        Node.tags.any(name=name),
+                        Node.tags.any(value=value)
+                    ))
                 else:
-                    # Match tag 'name' only
-                    searchspec.append(Node.tags.any(name=tag[0]))
+                    #
+                    # Match name only
+                    #
+                    searchspec.append(Node.tags.any(name=name))
 
         return session.query(Node).filter(or_(*searchspec)).all()
 
@@ -227,14 +239,20 @@ class NodesDbHandler(TortugaDbObjectHandler):
         searchspec = []
 
         if tags:
-            # Build searchspec from specified tags
-            for tag in tags:
-                if len(tag) == 2:
-                    searchspec.append(
-                        and_(Node.tags.any(name=tag[0]),
-                             Node.tags.any(value=tag[1])))
+            for name, value in tags.items():
+                if value:
+                    #
+                    # Match both name and value
+                    #
+                    searchspec.append(and_(
+                        Node.tags.any(name=name),
+                        Node.tags.any(value=value)
+                    ))
                 else:
-                    searchspec.append(Node.tags.any(name=tag[0]))
+                    #
+                    # Match name only
+                    #
+                    searchspec.append(Node.tags.any(name=name))
 
         return session.query(Node).filter(
             or_(*searchspec)).order_by(Node.name).all()

@@ -28,11 +28,19 @@ define add_package_source($baseurl, $cost=1000, $type='yum') {
   }
 }
 
-class tortuga::packages {
+class tortuga::packages (
+  $repos = undef,
+) {
   # This is necessary because this module is referenced as part of the
   # bootstrap before the ENC is available, so $::repos is undefined.
 
-  if $::repos != undef {
-    create_resources('add_package_source', $::repos)
+  if $repos == undef {
+    $repos_arg = $::repos
+  } else {
+    $repos_arg = $repos
+  }
+
+  if $repos_arg != undef {
+    create_resources('add_package_source', $repos_arg)
   }
 }

@@ -19,14 +19,25 @@
 import os
 import subprocess
 from pathlib import Path
-from setuptools import setup, find_packages
+
 import setuptools.command.build_py
 import setuptools.command.sdist
+from setuptools import find_packages, setup
+
 
 srcRoot = 'tortuga'
 module_name = 'tortuga-core'
 
-version = '6.3.1a1'
+version = '7.0.1'
+
+if os.getenv('RELEASE'):
+    requirements_file = 'requirements.txt'
+else:
+    requirements_file = 'requirements-dev.txt'
+
+
+with open(requirements_file) as fp:
+    requirements = [buf.rstrip() for buf in fp.readlines()]
 
 
 def get_git_revision():
@@ -102,14 +113,7 @@ setup(
         ('man/man8', [
             str(fn) for fn in Path(Path('man') / Path('man8')).iterdir()]),
     ],
-    install_requires=[
-        'marshmallow',
-        'passlib',
-        'pip2pi',
-        'PyYAML',
-        'requests',
-        'websockets',
-    ],
+    install_requires=requirements,
     dependency_links=[
         "git+ssh://git@github.com/EmmEff/pip2pi.git@pip-10-fix#egg=pip2pi-0.7.0"
     ],

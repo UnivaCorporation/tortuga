@@ -15,7 +15,7 @@
 # pylint: disable=no-member
 
 from functools import cmp_to_key
-from typing import Iterable, Optional
+from typing import Dict, Iterable, Optional
 
 import tortuga.objects.admin
 import tortuga.objects.component
@@ -189,10 +189,22 @@ class SoftwareProfile(TortugaObject): \
     def setKitSources(self, kitsources):
         self['kitsources'] = kitsources
 
-    def getTags(self):
+    def getTags(self) -> Dict[str, str]:
+        """
+        Gets all the tags for this software profile.
+
+        :return Dict[str, str]: the tags
+
+        """
         return self.get('tags')
 
-    def setTags(self, tags):
+    def setTags(self, tags: Dict[str, str]):
+        """
+        Sets the tags for this hardware profile.
+
+        :param Dict[str, str] tags: the tags to set for this hardware profile
+
+        """
         self['tags'] = tags
 
     def getMetadata(self):
@@ -288,13 +300,8 @@ class SoftwareProfile(TortugaObject): \
             tortuga.objects.hardwareProfile.HardwareProfile.
             getListFromDbDict(_dict))
 
-        if 'tags' in _dict:
-            tags = {}
-
-            for tag in _dict['tags']:
-                tags[tag.name] = tag.value
-
-            softwareProfile.setTags(tags)
+        tags = {tag.name: tag.value for tag in _dict.get('tags', [])}
+        softwareProfile.setTags(tags)
 
         return softwareProfile
 
