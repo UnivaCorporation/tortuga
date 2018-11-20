@@ -53,6 +53,8 @@ from .userDataMixin import UserDataMixin
 
 cm = ConfigManager()
 
+DEFAULT_CONFIGURATION_PROFILE_NAME = 'Default'
+
 
 class ResourceAdapter(UserDataMixin): \
         # pylint: disable=too-many-public-methods
