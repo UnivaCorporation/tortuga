@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import socket
 from typing import Optional
 
 import yaml
@@ -73,6 +74,7 @@ class SetInstallerHostNameCLI(TortugaCli):
                 hiera_vars = yaml.load(fp)
 
         hiera_vars['installer_public_hostname'] = hostname
+        hiera_vars['installer_public_ip'] = socket.gethostbyname(hostname)
 
         with open(self.HIERA_PATH, 'w') as fp:
             fp.write('---\n')
