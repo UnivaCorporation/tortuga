@@ -26,8 +26,5 @@ class DataRequest(ModelBase):
     id = Column(Integer, primary_key=True)
     request = Column(Text, nullable=False)
     timestamp = Column(DateTime)
-#    last_update = Column(DateTime)
     state = Column(String(255), nullable=False, default='pending')
     addHostSession = Column(String(36))
-#    message = Column(Text)
-#    action = Column(String(255), nullable=False)
