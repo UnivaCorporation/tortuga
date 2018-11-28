@@ -665,7 +665,6 @@ class SoftwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
         dbSoftwareProfile.lockedState = softwareProfile.getLockedState()
         dbSoftwareProfile.isIdle = softwareProfile.getIsIdle()
         dbSoftwareProfile.dataRoot = softwareProfile.getDataRoot()
-        #self.getLogger().debug('dbSoftwareProfile.dataRoot=%s'%dbSoftwareProfile.dataRoot)
 
         # Add partitions
         partitions: Dict[Tuple[str, str], Partition] = {}
