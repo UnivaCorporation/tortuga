@@ -467,12 +467,6 @@ class ConfigManager(dict): \
             return True
         return False
 
-    def isDbAvailable(self):
-        ''' Returns true if this user can access the db '''
-
-        return self.isInstaller() and \
-            os.access(self.getDbPasswordFile(), os.R_OK)
-
     def getInstallerUrl(self, hostname=None, path=None):
         '''
         Get the URL of the Primary Install Node,

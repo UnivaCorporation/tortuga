@@ -20,7 +20,6 @@ class tortuga::installer::sudo {
   ensure_packages(['sudo'], {'ensure' => 'installed'})
 
   $bin_dir = $tortuga::config::bin_dir
-  $www_user = 'apache'
 
   file { '/etc/sudoers.d/tortuga':
     content => template('tortuga/tortuga-sudoers.erb'),

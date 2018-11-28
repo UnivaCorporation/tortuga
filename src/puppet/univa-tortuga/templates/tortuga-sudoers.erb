@@ -3,7 +3,6 @@
 
 Defaults !requiretty
 
-<%= @www_user -%> ALL=(ALL) NOPASSWD: <%= @bin_dir -%>/run_cluster_update.sh
 puppet ALL=(ALL) NOPASSWD: <%= @bin_dir -%>/get-tortuga-node
 puppet ALL=(ALL) NOPASSWD: <%= @bin_dir -%>/get-provisioning-networks
 puppet ALL=(ALL) NOPASSWD: <%= @bin_dir -%>/get-component-node-list
