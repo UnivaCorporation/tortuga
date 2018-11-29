@@ -730,13 +730,23 @@ class TortugaDeployer: \
         #
         puppet_user = pwd.getpwnam('puppet')
         gid = puppet_user[3]
-        self._generate_password_file(self._cm.getRedisPasswordFile(),
-                                     password_length=32, gid=gid)
+        self._generate_password_file(self._cm.getRedisPasswordFile(), gid=gid)
 
     def _generate_password_file(self, file_name: str,
-                                password_length: int = 8,
+                                password_length: int = 32,
                                 uid: int = 0, gid: int = 0,
                                 mode: int = 0o440):
+        """
+        Generate a password in a file.
+
+        :param file_name:       the name of the file in which the password
+                                will be stored
+        :param password_length: the length of the password, default = 32
+        :param uid:             the uid (owner) of the file, default = 0
+        :param gid:             the gid (group) of the file, default = 0
+        :param mode:            the file perms, default 0440
+
+        """
         password = self._generate_password(password_length)
 
         with open(file_name, 'w') as fp:
@@ -746,10 +756,17 @@ class TortugaDeployer: \
         os.chmod(file_name, mode)
 
     def _generate_password(self, length: int = 8) -> str:
-        chars = string.ascii_letters + string.digits
-        r = random.Random(time.time())
+        """
+        Generate a password.
 
-        return ''.join([r.choice(chars) for _ in range(length)])
+        :param length: the length of the password
+
+        :return:       the generated password
+
+        """
+        chars = string.ascii_letters + string.digits
+
+        return ''.join([random.choice(chars) for _ in range(length)])
 
     def preConfig(self):
         # Create default hieradata directory
