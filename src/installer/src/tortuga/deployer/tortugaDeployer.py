@@ -22,6 +22,7 @@ import os
 import pwd
 import random
 import shutil
+import string
 import subprocess
 import sys
 import time
@@ -699,41 +700,56 @@ class TortugaDeployer: \
 
             self.out('\nInstallation failed...\n')
 
-    def _generateDbPassword(self):
-        '''
-        Because Apache httpd server is not installed at the time this
-        runs, we cannot set the ownership of this file to be 'apache'
-        (which is necessary for the Tortuga webservice).
+    def _generate_db_password(self):
+        """
+        Generate a database password.
 
-        Set ownership of file to root:puppet.
+        """
+        #
+        # Because Apache httpd server is not installed at the time this
+        # runs, we cannot set the ownership of this file to be 'apache'
+        # (which is necessary for the Tortuga webservice).
+        #
+        # Set ownership of file to root:puppet.
+        #
+        # When the Puppet bootstrap runs, it changes the ownership to
+        # 'apache:puppet' and everybody is happy!
+        #
+        puppet_user = pwd.getpwnam('puppet')
+        gid = puppet_user[3]
+        self._generate_password_file(self._cm.getDbPasswordFile(), gid=gid)
 
-        When the Puppet bootstrap runs, it changes the ownership to
-        'apache:puppet' and everybody is happy!
-        '''
+    def _generate_redis_password(self):
+        """
+        Generate a password for Redis.
 
-        dbPasswordFile = self._cm.getDbPasswordFile()
+        """
+        #
+        # Puppet needs read access to this file so that it can use it for
+        # writing the redis config file.
+        #
+        puppet_user = pwd.getpwnam('puppet')
+        gid = puppet_user[3]
+        self._generate_password_file(self._cm.getRedisPasswordFile(),
+                                     password_length=32, gid=gid)
 
-        puppetUser = pwd.getpwnam('puppet')
-        gid = puppetUser[3]
+    def _generate_password_file(self, file_name: str,
+                                password_length: int = 8,
+                                uid: int = 0, gid: int = 0,
+                                mode: int = 0o440):
+        password = self._generate_password(password_length)
 
+        with open(file_name, 'w') as fp:
+            fp.write(password)
+
+        os.chown(file_name, uid, gid)
+        os.chmod(file_name, mode)
+
+    def _generate_password(self, length: int = 8) -> str:
+        chars = string.ascii_letters + string.digits
         r = random.Random(time.time())
 
-        # Generate random DB password
-        chars = ('0123456789abcdefghijklmnopqrstuvwxyz'
-                 'ABCDEFGHIJKLMNOPQRSTUVWXYZ')
-
-        password = ''.join([r.choice(chars) for _ in range(8)])
-
-        if os.path.exists(dbPasswordFile):
-            os.unlink(dbPasswordFile)
-
-        # Write new db.passwd. Ownership would normally be 'root:puppet'
-        # to allow Puppet master to use the password to configure mysqld.
-        fp = os.open(dbPasswordFile, os.O_CREAT | os.O_WRONLY, 0o440)
-        os.write(fp, password.encode())
-        os.close(fp)
-
-        os.chown(dbPasswordFile, 0, gid)
+        return ''.join([r.choice(chars) for _ in range(length)])
 
     def preConfig(self):
         # Create default hieradata directory
@@ -758,7 +774,8 @@ class TortugaDeployer: \
                     configDict, explicit_start=True,
                     default_flow_style=False).encode())
 
-        self._generateDbPassword()
+        self._generate_db_password()
+        self._generate_redis_password()
 
     def pre_init_db(self):
         # If using 'mysql' as the database backend, we need to install the
