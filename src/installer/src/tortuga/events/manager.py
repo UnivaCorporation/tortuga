@@ -14,7 +14,7 @@
 
 from redis import Redis
 
-
+from tortuga.config.configManager import ConfigManager
 from tortuga.objectstore.manager import ObjectStoreManager
 from .pubsub import EventPubSub, RedisEventPubSub
 from .store import EventStore, ObjectStoreEventStore
@@ -47,6 +47,7 @@ class PubSubManager:
 
     """
     _redis_client: Redis = None
+    _config_manager: ConfigManager = ConfigManager()
 
     @classmethod
     def get(cls) -> EventPubSub:
@@ -57,7 +58,8 @@ class PubSubManager:
 
         """
         if not cls._redis_client:
-            cls._redis_client = Redis()
+            cls._redis_client = Redis(
+                password=cls._config_manager.getRedisPassword())
         return RedisEventPubSub(
             redis_client=cls._redis_client,
             event_store=EventStoreManager.get()
