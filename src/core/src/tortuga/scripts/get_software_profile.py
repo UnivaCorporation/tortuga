@@ -65,6 +65,10 @@ class GetSoftwareProfileCli(TortugaCli):
             softwareProfileAttrGroup, '--admins', action='store_true',
             dest='getAdmins', default=False, help=_('get list of admins'))
 
+        self.addOptionToGroup(
+            softwareProfileAttrGroup, '--data-root', action='store_true',
+            dest='getDataRoot', default=False, help=_('get root directory for user data'))
+
         outputAttrGroup = _('Output formatting options')
 
         self.addOptionGroup(outputAttrGroup, None)
@@ -123,6 +127,9 @@ class GetSoftwareProfileCli(TortugaCli):
 
         if self.getArgs().getAdmins:
             optionDict['admins'] = True
+
+        if self.getArgs().getDataRoot:
+            optionDict['dataRoot'] = True
 
         swprofile = swprofileapi.getSoftwareProfile(name, optionDict)
 
@@ -278,6 +285,12 @@ class GetSoftwareProfileCli(TortugaCli):
                 print('    - {0}={1}'.format(tag_key, tag_value))
         else:
             print('  - Tags: (none)')
+
+        if self.getArgs().getDataRoot:
+            if swprofile.getDataRoot():
+                print('  - Data Root: {0}'.format(swprofile.getDataRoot()))
+            else:
+                print('  - Data Root: (none)')
 
 
 def main():

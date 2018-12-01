@@ -19,6 +19,7 @@ from typing import List
 from celery import Celery
 from celery.contrib.testing.app import TestApp
 
+from tortuga.config.configManager import ConfigManager
 from tortuga.db.dbManager import DbManager
 from tortuga.kit.loader import load_kits
 from tortuga.kit.registry import get_all_kit_installers
@@ -70,10 +71,13 @@ else:
         kit_installer.register_event_listeners()
         kits_task_modules += kit_installer.task_modules
 
+    config_manager = ConfigManager()
+    redis_password = config_manager.getRedisPassword()
+
     app = TortugaCeleryApp(
         'tortuga.tasks.queue',
-        broker='redis://localhost:6379/0',
-        backend='redis://localhost:6379/0',
+        broker='redis://:{}@localhost:6379/0'.format(redis_password),
+        backend='redis://:{}@localhost:6379/0'.format(redis_password),
         include=[
             'tortuga.events.tasks',
             'tortuga.resourceAdapter.tasks',
