@@ -175,10 +175,19 @@ class tortuga_kit_base::core::install::bootstrap {
 
   include tortuga::config
 
+  if $tortuga::config::proxy_uri {
+    $env = [
+      "https_proxy=${tortuga::config::proxy_uri}",
+    ]
+  } else {
+    $env = undef
+  }
+
   exec { 'generate_nii_profile':
-    path    => ['/bin', '/usr/bin'],
-    command => "${tortuga::config::instroot}/bin/generate-nii-profile --installer ${::primary_installer_hostname} --node ${::fqdn}",
-    unless  => 'test -f /etc/profile.nii',
+    path        => ['/bin', '/usr/bin'],
+    command     => "${tortuga::config::instroot}/bin/generate-nii-profile --installer ${::primary_installer_hostname} --node ${::fqdn}",
+    environment => $env,
+    unless      => 'test -f /etc/profile.nii',
   }
 }
 
@@ -187,12 +196,21 @@ class tortuga_kit_base::core::install::final {
 
   include tortuga::config
 
+  if $tortuga::config::proxy_uri {
+    $env = [
+      "https_proxy=${tortuga::config::proxy_uri}",
+    ]
+  } else {
+    $env = undef
+  }
+
   exec { 'update_node_status':
-    path      => ['/bin', '/usr/bin'],
-    command   => "${tortuga::config::instroot}/bin/update-node-status --status Installed",
-    unless    => "test -f ${tortuga::config::instroot}/var/run/CONFIGURED",
-    tries     => 10,
-    try_sleep => 10,
+    path        => ['/bin', '/usr/bin'],
+    command     => "${tortuga::config::instroot}/bin/update-node-status --status Installed",
+    environment => $env,
+    tries       => 10,
+    try_sleep   => 10,
+    unless      => "test -f ${tortuga::config::instroot}/var/run/CONFIGURED",
   } ~>
   exec { 'drop_configured_marker':
     path        => ['/bin', '/usr/bin'],

@@ -13,9 +13,37 @@
 # limitations under the License.
 
 
-class tortuga_kit_base::core {
+class tortuga_kit_base::core (
+  Variant[String, Undef] $proxy_uri = undef,
+  Variant[String, Undef] $proxy_user = undef,
+  Variant[String, Undef] $proxy_password = undef,
+  Variant[String, Undef] $puppet_proxy_http_host = undef,
+  Variant[Integer, Undef] $puppet_proxy_http_port = undef,
+  Variant[String, Undef] $puppet_proxy_http_user = undef,
+  Variant[String, Undef] $puppet_proxy_http_password = undef,
+) {
+  contain tortuga_kit_base::core::config
   contain tortuga_kit_base::core::actions
   contain tortuga_kit_base::core::done
+}
+
+class tortuga_kit_base::core::config {
+  class { 'tortuga::config':
+    proxy_uri                  => $tortuga_kit_base::core::proxy_uri,
+    proxy_user                 => $tortuga_kit_base::core::proxy_user,
+    proxy_password             => $tortuga_kit_base::core::proxy_password,
+    puppet_proxy_http_host     => $tortuga_kit_base::core::puppet_proxy_http_host,
+    puppet_proxy_http_port     => $tortuga_kit_base::core::puppet_proxy_http_port,
+    puppet_proxy_http_user     => $tortuga_kit_base::core::puppet_proxy_http_user,
+    puppet_proxy_http_password => $tortuga_kit_base::core::puppet_proxy_http_password,
+  }
+  contain tortuga::config
+
+  class { 'tortuga::packages':
+    require => Class['tortuga::config'],
+  }
+
+  contain tortuga::packages
 }
 
 class tortuga_kit_base::core::actions {
@@ -25,7 +53,6 @@ class tortuga_kit_base::core::actions {
     include($classes)
   }
 
-  contain tortuga::packages
   contain tortuga::compute
   contain tortuga_kit_base::core::cfmsecret
   contain tortuga_kit_base::core::ssh_server
@@ -37,9 +64,9 @@ class tortuga_kit_base::core::actions {
 
   contain tortuga_kit_base::core::post_install
 
-  Class['tortuga_kit_base::core::install'] ->
-    Class['tortuga::envscript'] ->
-    Class['tortuga_kit_base::core::links']
+  Class['tortuga_kit_base::core::install']
+    -> Class['tortuga::envscript']
+    -> Class['tortuga_kit_base::core::links']
 }
 
 class tortuga_kit_base::core::done {

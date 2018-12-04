@@ -17,6 +17,14 @@ define tortuga::pip_install {
 
   # Use 'pip' in virtualenv (instead of system pip) to install packages
 
+  if $tortuga::config::proxy_uri {
+    $env = [
+      "http_proxy=${tortuga::config::proxy_uri}"
+    ]
+  } else {
+    $env = undef
+  }
+
   exec { "pip_install_${name}":
     command => "${tortuga::config::instroot}/bin/pip install ${name}",
     unless  => "${tortuga::config::instroot}/bin/pip freeze | grep -qx \"^${name}==.*\"",

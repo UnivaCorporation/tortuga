@@ -16,8 +16,31 @@ class tortuga::config (
   $instroot = $tortuga::params::instroot,
   $installer_fqdn = $tortuga::params::installer_fqdn,
   Integer $int_web_port = $tortuga::params::int_web_port,
+  String $instroot = $tortuga::params::instroot,
+  String $installer_fqdn = $tortuga::params::installer_fqdn,
+  Variant[String, Undef] $proxy_uri = undef,
+  Variant[String, Undef] $proxy_user = undef,
+  Variant[String, Undef] $proxy_password = undef,
+  Variant[String, Undef] $puppet_proxy_http_host = undef,
+  Variant[Integer, Undef] $puppet_proxy_http_port = undef,
+  Variant[String, Undef] $puppet_proxy_http_user = undef,
+  Variant[String, Undef] $puppet_proxy_http_password = undef,
 ) inherits tortuga::params {
   $config_dir = "${instroot}/config"
 
   $bin_dir = "${instroot}/bin"
+
+  $curl_base_cmd = 'curl --remote-name --fail'
+
+  if $proxy_uri {
+    if $proxy_user and $proxy_password {
+      $curl_cmd = "${curl_base_cmd} --proxy-user ${proxy_user}:${proxy_password} --proxy ${proxy_uri}"
+    } elsif $proxy_user {
+      $curl_cmd = "${curl_base_cmd} --proxy-user ${proxy_user} --proxy ${proxy_uri}"
+    } else {
+      $curl_cmd = "${curl_base_cmd} --proxy ${proxy_uri}"
+    }
+  } else {
+    $curl_cmd = $curl_base_cmd
+  }
 }
