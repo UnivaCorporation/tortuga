@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from redis import Redis
+from tortuga.config.configManager import ConfigManager
 
 from .base import ObjectStore
 from .redis import RedisObjectStore
@@ -24,6 +25,7 @@ class ObjectStoreManager:
 
     """
     _redis_client: Redis = None
+    _config_manager: ConfigManager = ConfigManager()
 
     @classmethod
     def get(cls, namespace: str) -> ObjectStore:
@@ -35,6 +37,7 @@ class ObjectStoreManager:
 
         """
         if not cls._redis_client:
-            cls._redis_client = Redis()
+            cls._redis_client = Redis(
+                password=cls._config_manager.getRedisPassword())
         return RedisObjectStore(namespace=namespace,
                                 redis_client=cls._redis_client)

@@ -12,13 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-class tortuga::config (
-  $instroot = $tortuga::params::instroot,
-  $installer_fqdn = $tortuga::params::installer_fqdn,
-  Integer $int_web_port = $tortuga::params::int_web_port,
-) inherits tortuga::params {
+# pylint: disable=too-few-public-methods
 
-  $config_dir = "${instroot}/config"
-  $etc_dir = "${instroot}/etc"
-  $bin_dir = "${instroot}/bin"
-}
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy.orm import relationship
+
+from .base import ModelBase
+
+
+class DataRequest(ModelBase):
+    __tablename__ = 'data_requests'
+
+    id = Column(Integer, primary_key=True)
+    request = Column(Text, nullable=False)
+    timestamp = Column(DateTime)
+    state = Column(String(255), nullable=False, default='pending')
+    addHostSession = Column(String(36))
