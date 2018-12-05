@@ -13,8 +13,6 @@
 # limitations under the License.
 
 class tortuga::config (
-  $instroot = $tortuga::params::instroot,
-  $installer_fqdn = $tortuga::params::installer_fqdn,
   Integer $int_web_port = $tortuga::params::int_web_port,
   String $instroot = $tortuga::params::instroot,
   String $installer_fqdn = $tortuga::params::installer_fqdn,

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-define tortuga::add_package_source(
+define tortuga::packages::add_package_source(
   String $baseurl,
   Integer $cost=1000,
   String $type='yum',
@@ -35,14 +35,17 @@ define tortuga::add_package_source(
   }
 }
 
-class tortuga::packages {
+class tortuga::packages (
+  $repos = undef,
+) {
+
   # This is necessary because this module is referenced as part of the
   # bootstrap before the ENC is available, so $::repos is undefined.
 
-  if $::repos != undef {
-    create_resources('add_package_source', $::repos)
-    $::repos.each |String $repo_name, Hash $repo_spec| {
-      tortuga::add_package_source { $repo_name:
+  if $repos != undef {
+    create_resources('add_package_source', $repos)
+    $repos.each |String $repo_name, Hash $repo_spec| {
+      tortuga::packages::add_package_source { $repo_name:
         baseurl        => $repo_spec['baseurl'],
         proxy          => $tortuga::config::proxy_uri,
         proxy_username => $tortuga::config::proxy_user,
