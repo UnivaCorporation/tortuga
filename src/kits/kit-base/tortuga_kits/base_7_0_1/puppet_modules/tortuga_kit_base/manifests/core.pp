@@ -34,7 +34,6 @@ class tortuga_kit_base::core::worker {
 
   contain tortuga::compute
   contain tortuga_kit_base::core::cfmsecret
-  contain tortuga_kit_base::core::ntpd
   contain tortuga_kit_base::core::ssh_server
   contain tortuga_kit_base::core::links
   contain tortuga_kit_base::common::nfs
