@@ -140,8 +140,6 @@ function get_distro() {
             dist="rhel"
         elif `rpm --quiet -q redhat-release-workstation`; then
             dist="rhel"
-        elif `rpm --quiet -q fedora-release`; then
-            dist="fedora"
         else
             dist="unknown"
         fi
@@ -181,9 +179,6 @@ function get_dist_major_version() {
                 relpkgname="redhat-release-workstation"
             fi
             ;;
-        fedora)
-            relpkgname="fedora-release"
-            ;;
         *)
             # Unable to determine Linux distribution
             return 1
@@ -191,9 +186,7 @@ function get_dist_major_version() {
      esac
 
      # Attempt to extract the major version number
-     if [ "$1" == "fedora" ]; then
-         rpm -qi $relpkgname | awk '/^Version/ {print substr($3,0,2)}'
-     elif [[ $1 == centos ]]; then
+     if [[ $1 == centos ]]; then
          rpm --query --queryformat "%{VERSION}" $relpkgname
      else
          rpm -qi $relpkgname | awk '/^Version/ {print substr($3,0,1)}'
@@ -216,9 +209,6 @@ function get_dist_minor_version() {
                 relpkgname="redhat-release-workstation"
             fi
             ;;
-        fedora)
-            relpkgname="fedora-release"
-            ;;
         *)
             # Unable to determine Linux distribution
             return 1
@@ -237,7 +227,7 @@ function get_dist_minor_version() {
 
 function pkgexists() {
     # Check if package is installed
-    if [[ $distro_family == rhel ]] || [[ $distro_family == fedora ]]; then
+    if [[ $distro_family == rhel ]]; then
         rpm --query --quiet $1
     else
         if [ $DEBUG -eq 1 ]; then
@@ -307,12 +297,6 @@ function install_puppetlabs_repo {
         fi
 
         puppetlabs_release_url="http://yum.puppetlabs.com/puppet5/${puppetlabspkgname}-el-${distmajversion}.noarch.rpm"
-    elif [ "$dist" == "fedora" ]; then
-        if [[ $distmajversion -lt 19 ]] || [[ $distmajversion -gt 20 ]]; then
-            echo "Error: unsupported Fedora version (${distmajversion})" | tee -a /tmp/install-tortuga.log
-            exit 1
-        fi
-    else
         echo "Error: unsupported Linux distribution (${dist})" | tee -a /tmp/install-tortuga.log
         exit 1
     fi
@@ -630,7 +614,7 @@ if $(type -P getenforce >/dev/null 2>&1); then
 fi
 
 # Check for 'yum-plugin-downloadonly'
-if [[ $distro_family == rhel ]] || [[ $distro_family == fedora ]]; then
+if [[ $distro_family == rhel ]]; then
     install_yum_plugins
 fi
 
