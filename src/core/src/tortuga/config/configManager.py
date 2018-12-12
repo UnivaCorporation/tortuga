@@ -12,12 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import configparser
 import os
 import shlex
 import socket
 from typing import Union
 
 from tortuga.objects.provisioningInfo import ProvisioningInfo
+from tortuga.utility.helper import str2bool
 
 
 # Defaults.
@@ -248,6 +250,9 @@ class ConfigManager(dict): \
             self['host'] = self.getProvisioningInfo().getNode().getName()
 
     def __setRootSubdirectories(self):
+        etc_dir = os.path.join(self.getRoot(), 'etc')
+        cfg_dir = os.path.join(self.getRoot(), 'config')
+
         self['reposDir'] = os.path.join(
             self.getRoot(), DEFAULT_TORTUGA_RELATIVE_REPOS_DIR)
         self['tortugaDepotDir'] = os.path.join(self.getRoot(), 'depot')
@@ -258,17 +263,17 @@ class ConfigManager(dict): \
         self['intWebRoot'] = os.path.join(
             self.getRoot(), DEFAULT_TORTUGA_WWW_INTERNAL)
         self['binDir'] = os.path.join(self.getRoot(), 'bin')
-        self['etcDir'] = os.path.join(self.getRoot(), 'etc')
-        self['kitConfigBase'] = os.path.join(self.getRoot(), 'config')
-        self['logConfigFile'] = os.path.join(
-            self.getKitConfigBase(), 'log.conf')
+        self['etcDir'] = etc_dir
+        self['kitConfigBase'] = cfg_dir
+        self['logConfigFile'] = os.path.join(cfg_dir, 'log.conf')
 
         self['tortugaRulesDir'] = os.path.join(
             self.getRoot(), DEFAULT_TORTUGA_RULES_SUBDIRECTORY)
 
-        self['dbPasswordFile'] = os.path.join(self.getEtcDir(), 'db.passwd')
-        self['redisPasswordFile'] = os.path.join(self.getEtcDir(),
-                                                 'redis.passwd')
+        self['dbPasswordFile'] = os.path.join(etc_dir, 'db.passwd')
+        self['redisPasswordFile'] = os.path.join(etc_dir, 'redis.passwd')
+
+        self['inifile'] = os.path.join(cfg_dir, 'tortuga.ini')
 
     def __initializeProvisioningInfo(self, envFile):
         if not os.path.exists(envFile):
@@ -739,3 +744,28 @@ class ConfigManager(dict): \
 
     def getYumKitUrl(self, host, name, vers, arch):
         return '%s/%s/%s/%s' % (self.getYumRootUrl(host), name, vers, arch)
+
+    def getIniFile(self):
+        return self['inifile']
+
+    def _get_cfg(self):
+        cfg = configparser.ConfigParser()
+        cfg.read(self.getIniFile())
+
+        return cfg
+
+    def get_database_engine(self) -> str:
+        cfg = self._get_cfg()
+
+        if not cfg.has_option('database', 'engine'):
+            return 'sqlite'
+
+        return cfg.get('database', 'engine')
+
+    def is_offline_installation(self) -> bool:
+        cfg = self._get_cfg()
+
+        if not cfg.has_option('installer', 'offline_installation'):
+            return False
+
+        return str2bool(cfg.get('installer', 'offline_installation'))

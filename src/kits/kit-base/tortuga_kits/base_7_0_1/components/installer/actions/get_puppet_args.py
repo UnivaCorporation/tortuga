@@ -21,9 +21,11 @@ from tortuga.kit.actions import ComponentActionBase
 class GetPuppetArgsAction(ComponentActionBase):
     def do_action(self, db_software_profile, db_hardware_profile,
                   *args, **kwargs):
+        db_engine = self.kit_installer.config_manager.get_database_engine()
+
         return {
             'proxy_hash': self._get_proxy_hash(),
-            'database_engine': self._get_db_engine()
+            'database_engine': db_engine,
         }
 
     def _get_proxy_hash(self):
@@ -65,19 +67,3 @@ class GetPuppetArgsAction(ComponentActionBase):
             }
 
         return proxy_dict
-
-    def _get_db_engine(self):
-        config_parser = configparser.ConfigParser()
-        config_parser.read(
-            os.path.join(
-                self.kit_installer.config_manager.getRoot(),
-                'config',
-                'tortuga.ini'
-            )
-        )
-
-        db_engine = 'sqlite'
-        if config_parser.has_option('database', 'engine'):
-            db_engine = config_parser.get('database', 'engine')
-
-        return db_engine
