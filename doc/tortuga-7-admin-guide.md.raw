@@ -325,9 +325,8 @@ Commands listed in this "Quickstart" section are intended to be run as the
     password in the Kickstart file template
     (`$TORTUGA_ROOT/config/kickstart.tmpl`).
 
-    This is to potentially allow connecting to compute node(s) that failed to
-    provision successfully using SSH.  The root password setting is found under
-    `rootpw` in the Anaconda Kickstart template file.
+    The root password setting is found under `rootpw` in the Anaconda Kickstart
+    template file.
 
     Kickstart Syntax Reference can be found in the Red Hat Enterprise Linux
     Installation Guide. Several configuration options can be set in the Kickstart
@@ -537,9 +536,6 @@ Commands listed in this "Quickstart" section are intended to be run as the
     Nodes will be created momentarily and automatically added to the UGE
     cluster.  Use `qhost` to display UGE cluster host list. It can take a few
     minutes until load values show up for newly added nodes.
-
-    Tortuga automatically configures key-based authentication for managed nodes
-    using the `root` user SSH credentials.
 
 \newpage
 
@@ -1536,7 +1532,8 @@ The OS installer runs in unattended mode, reboots the machine once the OS is ins
 
 Before this can happen, however, Tortuga needs to copy the necessary files to boot and install the OS.
 
-Tortuga also sets up SSH key-based authentication on compute nodes to allow connecting from the Tortuga installer to managed compute nodes as the `root` user using SSH without a password.  By default, the default Kickstart file tempate assigns a random `root` password to all compute nodes for security purposes.
+By default, the default Kickstart file tempate assigns a random `root` password
+to all compute nodes for security purposes.
 
 ## Networking Requirements
 
@@ -2548,6 +2545,45 @@ Ordering](http://docs.puppet.com/puppet/latest/reference/lang_relationships.html
 section of the Puppet documentation.
 
 \newpage
+
+## Using Custom SSL Certificates
+
+Tortuga uses a self-signed SSL certificate for securing web services. This section explains how you can replace that self-signed certificate with a custom third-party signed certificate.
+
+It is assumed that you already have a SSL key, signed certificate, and a CA certificate. If you need help using `openssl` for generating a CSR (certificate signing request) to have signed by a CA (certificate authority), there are many excellent resources online with detailed explanations of the process.
+
+The process of changing the SSL certificate is relatively simple. All it involves is putting the correct files in the correct locations, and restarting the affected services.
+
+### Files to Update
+
+Place the certificate (or certificate chain) for your CA here:
+
+    /opt/tortuga/etc/CA/ca.pem
+
+Put the key for your certificate here. Please note that it is important than your key *not* be password protected:
+
+    /opt/tortuga/etc/certs/apache/server.key
+
+Put your signed certificate here:
+
+    /opt/tortuga/etc/certs/apache/server.crt
+
+Some services require the CA certificate chain and signed certificate to be combined into a single file. It is important that the server certificate come before the CA certificate chain in the file:
+
+    /opt/tortuga/etc/certs/apache/server-bundle.crt
+
+The combined file described above can be created using the following command:
+
+    cat /opt/tortuga/etc/certs/apache/server.crt \
+        /opt/tortuga/etc/CA/ca.pem > /opt/tortuga/etc/certs/apache/server-bundle.crt
+
+### Restarting Services
+
+Assuming the files in the previous section are in place, the following services need to be restarted:
+
+    systemctl restart tortugawsd
+    systemctl restart celery
+    systemctl restart apache
 
 # Resource Adapters
 

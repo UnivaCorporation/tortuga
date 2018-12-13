@@ -21,7 +21,6 @@ import time
 from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.commandFailed import CommandFailed
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
-from tortuga.os_utility import osUtility
 from tortuga.os_utility.tortugaSubprocess import TortugaSubprocess
 from tortuga.utility import tortugaStatus
 from tortuga.utility.runManager import RunManager
@@ -43,17 +42,14 @@ class SyncManager(TortugaObjectManager):
 
         self._isUpdateScheduled = False
         self._isUpdateRunning = False
-        self._sudoCmd = \
-            osUtility.getOsObjectFactory().getOsSysManager().getSudoCommand()
         self._cm = ConfigManager()
 
     def __runClusterUpdate(self):
         """ Run cluster update. """
         self.getLogger().debug('Update timer running')
 
-        updateCmd = '%s %s' % (
-            self._sudoCmd,
-            os.path.join(self._cm.getRoot(), 'bin/run_cluster_update.sh'))
+        updateCmd = os.path.join(self._cm.getBinDir(),
+                                 'run_cluster_update.sh')
 
         delay = 0
         updateCnt = 0

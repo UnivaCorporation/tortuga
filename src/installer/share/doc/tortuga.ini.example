@@ -77,5 +77,5 @@
 ;
 ; Space-separated list of services from 'tortuga_kit_base' to be disabled.
 ;
-; disable_services = nfs ssh ntpd
+; disable_services = nfs ntpd
 ;

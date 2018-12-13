@@ -49,8 +49,8 @@ def disable_DbManager(monkeypatch, dbm):
 
 
 @pytest.fixture(autouse=True)
-def mock_redis(monkeypatch, redis):
-    monkeypatch.setattr(objectstore_manager, 'Redis', lambda: redis)
+def mock_redis(monkeypatch):
+    monkeypatch.setattr(objectstore_manager, 'Redis', MockRedis)
 
 
 @pytest.fixture()

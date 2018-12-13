@@ -40,6 +40,9 @@ DEFAULT_TORTUGA_TIME_ZONE = 'GMT'
 DEFAULT_TORTUGA_DB_PASSWORD = ''
 DEFAULT_TORTUGA_DB_PASSWORD_FILE = os.path.join(
     DEFAULT_TORTUGA_ETC, 'db.passwd')
+DEFAULT_TORTUGA_REDIS_PASSWORD = ''
+DEFAULT_TORTUGA_REDIS_PASSWORD_FILE = os.path.join(
+    DEFAULT_TORTUGA_ETC, 'redis.passwd')
 DEFAULT_TORTUGA_DB_USER = 'apache'
 DEFAULT_TORTUGA_DB_SCHEMA = 'tortugadb'
 DEFAULT_TORTUGA_CFM_ROOT_DIR = '/etc/cfm'
@@ -162,6 +165,8 @@ class ConfigManager(dict): \
         self['defaultIntWebPort'] = DEFAULT_TORTUGA_INT_WEB_PORT
         self['defaultDbPassword'] = DEFAULT_TORTUGA_DB_PASSWORD
         self['defaultDbPasswordFile'] = DEFAULT_TORTUGA_DB_PASSWORD_FILE
+        self['defaultRedisPassword'] = DEFAULT_TORTUGA_REDIS_PASSWORD
+        self['defaultRedisPasswordFile'] = DEFAULT_TORTUGA_REDIS_PASSWORD_FILE
         self['defaultDbUser'] = DEFAULT_TORTUGA_DB_USER
         self['defaultDbSchema'] = DEFAULT_TORTUGA_DB_SCHEMA
         self['defaultCfmSecretFile'] = DEFAULT_TORTUGA_CFM_SECRET_FILE
@@ -206,6 +211,9 @@ class ConfigManager(dict): \
     def __init_from_varfile(self):
         self.__setFromVarFile(
             'dbPassword', DEFAULT_TORTUGA_DB_PASSWORD_FILE)
+
+        self.__setFromVarFile(
+            'redisPassword', DEFAULT_TORTUGA_REDIS_PASSWORD_FILE)
 
         self.__setFromVarFile(
             'tortugaRelease', DEFAULT_TORTUGA_RELEASE_FILE)
@@ -259,6 +267,8 @@ class ConfigManager(dict): \
             self.getRoot(), DEFAULT_TORTUGA_RULES_SUBDIRECTORY)
 
         self['dbPasswordFile'] = os.path.join(self.getEtcDir(), 'db.passwd')
+        self['redisPasswordFile'] = os.path.join(self.getEtcDir(),
+                                                 'redis.passwd')
 
     def __initializeProvisioningInfo(self, envFile):
         if not os.path.exists(envFile):
@@ -467,12 +477,6 @@ class ConfigManager(dict): \
             return True
         return False
 
-    def isDbAvailable(self):
-        ''' Returns true if this user can access the db '''
-
-        return self.isInstaller() and \
-            os.access(self.getDbPasswordFile(), os.R_OK)
-
     def getInstallerUrl(self, hostname=None, path=None):
         '''
         Get the URL of the Primary Install Node,
@@ -582,6 +586,16 @@ class ConfigManager(dict): \
         """
         return self.__getKeyValue('dbPassword', default)
 
+    def getRedisPassword(self, default='__internal__'):
+        """
+        Get Redis password. If Redis password has not
+        been set, the function will return the specified default value.
+        If the default value is not specified, internal (predefined)
+        default will be returned.
+
+        """
+        return self.__getKeyValue('redisPassword', default)
+
     def getCfmSecretFile(self, default='__internal__'):
         """ return cfm root dir...use default if not defined """
         return self.__getKeyValue('cfmSecretFile', default)
@@ -641,6 +655,13 @@ class ConfigManager(dict): \
     def getDbPasswordFile(self, default='__internal__'):
         """ return db password file...use default if not defined """
         return self.__getKeyValue('dbPasswordFile', default)
+
+    def getRedisPasswordFile(self, default='__internal__'):
+        """
+        Return Redis password file, or use default if not defined.
+
+        """
+        return self.__getKeyValue('redisPasswordFile', default)
 
     def getDbUser(self, default='__internal__'):
         """ return db user ...use default if not defined """
