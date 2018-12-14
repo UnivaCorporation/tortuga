@@ -16,7 +16,7 @@ import configparser
 import os
 import shlex
 import socket
-from typing import Union
+from typing import Optional, Union
 
 from tortuga.objects.provisioningInfo import ProvisioningInfo
 from tortuga.utility.helper import str2bool
@@ -736,8 +736,12 @@ class ConfigManager(dict): \
     def getIntWebPort(self, default='__internal__'):
         return int(self.__getKeyValue('intWebPort', default))
 
-    def getIntWebRootUrl(self, host):
-        return 'http://%s:%d' % (host, self.getIntWebPort())
+    def getIntWebRootUrl(self, host: Optional[str] = None):
+        installer_fqdn = host if host is not None else self.getInstaller()
+
+        return '{}://{}:{}'.format(
+            self.getIntWebScheme(), installer_fqdn, self.getIntWebPort()
+        )
 
     def getYumRoot(self):
         return os.path.join(self.getTortugaIntWebRoot(), 'repos')
