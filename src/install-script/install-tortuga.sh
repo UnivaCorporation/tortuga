@@ -327,7 +327,7 @@ function install_epel() {
     # Attempt to install 'epel-release' using default URL
     for ((i=0; i<5; i++)); do
         # Attempt to install 'epel-release'
-        rpm --install --quiet ${epel_release_url} 2>&1 | tee -a /tmp/install-tortuga.log
+        rpm --install --quiet ${epel_release_url} >>/tmp/install-tortuga.log 2>&1
 
         if [ $? -ne 0 ]; then continue; fi
 
