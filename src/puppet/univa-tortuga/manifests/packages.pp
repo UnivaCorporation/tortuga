@@ -43,7 +43,6 @@ class tortuga::packages (
   # bootstrap before the ENC is available, so $::repos is undefined.
 
   if $repos != undef {
-    create_resources('add_package_source', $repos)
     $repos.each |String $repo_name, Hash $repo_spec| {
       tortuga::packages::add_package_source { $repo_name:
         baseurl        => $repo_spec['baseurl'],
