@@ -128,9 +128,10 @@ puppet_args=""
 local_tortuga_pip_repository=$(cd python-tortuga; pwd -P)
 
 # ensure Tortuga Python package repository is included
-pip_install_opts="--extra-index-url file://${local_tortuga_pip_repository}/simple"
+pip_install_opts="--no-cache-dir \
+--extra-index-url file://${local_tortuga_pip_repository}/simple"
 
-[[ ${DEBUG} -eq 0 ]] && pip_install_opts="${pip_install_opts} --quiet"
+[[ ${DEBUG} -eq 0 ]] && pip_install_opts+=" --quiet"
 
 readonly INTWEBROOT="${TORTUGA_ROOT}/www_int"
 readonly OFFLINEDEPS="${INTWEBROOT}/offline-deps"
