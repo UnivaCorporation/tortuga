@@ -38,11 +38,15 @@ define tortuga::packages::add_package_source(
 class tortuga::packages (
   $repos = undef,
 ) {
-
   # This is necessary because this module is referenced as part of the
   # bootstrap before the ENC is available, so $::repos is undefined.
+  if $repos == undef {
+    $repos_arg = $::repos
+  } else {
+    $repos_arg = $repos
+  }
 
-  if $repos != undef {
+  if $repos_arg != undef {
     $repos.each |String $repo_name, Hash $repo_spec| {
       tortuga::packages::add_package_source { $repo_name:
         baseurl        => $repo_spec['baseurl'],
