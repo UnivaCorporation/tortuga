@@ -128,9 +128,10 @@ puppet_args=""
 local_tortuga_pip_repository=$(cd python-tortuga; pwd -P)
 
 # ensure Tortuga Python package repository is included
-pip_install_opts="--extra-index-url file://${local_tortuga_pip_repository}/simple"
+pip_install_opts="--no-cache-dir \
+--extra-index-url file://${local_tortuga_pip_repository}/simple"
 
-[[ ${DEBUG} -eq 0 ]] && pip_install_opts="${pip_install_opts} --quiet"
+[[ ${DEBUG} -eq 0 ]] && pip_install_opts+=" --quiet"
 
 readonly INTWEBROOT="${TORTUGA_ROOT}/www_int"
 readonly OFFLINEDEPS="${INTWEBROOT}/offline-deps"
@@ -326,7 +327,7 @@ function install_epel() {
     # Attempt to install 'epel-release' using default URL
     for ((i=0; i<5; i++)); do
         # Attempt to install 'epel-release'
-        rpm --install --quiet ${epel_release_url} 2>&1 | tee -a /tmp/install-tortuga.log
+        rpm --install --quiet ${epel_release_url} >>/tmp/install-tortuga.log 2>&1
 
         if [ $? -ne 0 ]; then continue; fi
 
