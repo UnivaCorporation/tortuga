@@ -105,16 +105,16 @@ while true; do
     esac
 done
 
-# expect to find 'python-tortuga' in the UniCloud distribution tarball
+# expect to find 'python-tortuga' in the Tortuga distribution tarball
 [[ -d python-tortuga/simple ]] || {
-    echo "Error: UniCloud distribution tarball is missing files" >&2
+    echo "Error: Tortuga distribution tarball is missing files" >&2
     exit 1
 }
 
-# get expanded path to UniCloud Python packages
+# get expanded path to Tortuga Python packages
 local_tortuga_pip_repository=$(cd python-tortuga; pwd -P)
 
-# ensure UniCloud Python package repository is included
+# ensure Tortuga Python package repository is included
 pip_install_opts="--extra-index-url file://${local_tortuga_pip_repository}/simple"
 
 [[ ${DEBUG} -eq 0 ]] && pip_install_opts="${pip_install_opts} --quiet"
