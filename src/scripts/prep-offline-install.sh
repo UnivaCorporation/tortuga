@@ -4,7 +4,9 @@
 # dependencies to facilitate installations where there is no
 # internet access.
 
-set -u
+# set -u
+
+readonly distmajversion=7
 
 force=0
 quiet=0
@@ -38,7 +40,7 @@ while true; do
     esac
 done
 
-readonly dstdir="`pwd`/unicloud-deps"
+readonly dstdir="`pwd`/tortuga-deps"
 
 # detect distribution
 distver=$(rpm --query centos-release --queryformat "%{VERSION}")
@@ -54,9 +56,10 @@ distver=$(rpm --query centos-release --queryformat "%{VERSION}")
 # master package list
 readonly pkgs="puppet-agent \
 puppetserver \
-puppet-agent \
 activemq \
-openpgm \
+rh-python36 \
+redis \
+zeromq3 \
 "
 
 required_pkgs="${pkgs}"
@@ -97,7 +100,7 @@ download_rpms() {
     } || {
         echo "not found"
 
-        yum install -y "http://yum.puppetlabs.com/puppet5/${puppetlabspkgname}-el-${distmajversion}.noarch.rpm"
+        yum install -y "http://yum.puppetlabs.com/puppet5/puppet5-release-el-${distmajversion}.noarch.rpm"
         retval=$?
 
         echo "yum returned: ${retval}"
@@ -118,7 +121,9 @@ download_rpms() {
 
     echo "Downloading packages..."
 
-    local yumopts="--downloadonly --downloaddir=${rpmdstdir}"
+    # disable 'updates' repo; this may not be the desired behaviour for some
+    # installations
+    local yumopts="--disablerepo=updates --downloadonly --downloaddir=${rpmdstdir}"
 
     [[ -n "${_pkgs}" ]] && {
         tmpdir=$(mktemp -d)
@@ -137,22 +142,25 @@ download_rpms() {
 
     echo "Creating Yum repository"
 
-    ( cd ${rpmdstdir}; createrepo . )
+    ( cd "${rpmdstdir}"; createrepo . )
 }
 
 download_puppet_modules() {
     [[ -n ${1} ]] || return
 
     local puppet_dstdir=${dstdir}/puppet
+    local localfile
+    local curl_args
 
-    mkdir -p ${puppet_dstdir}
+    mkdir -p "${puppet_dstdir}"
 
-    cd ${puppet_dstdir}
     for url in ${1}; do
-        ( cd ${puppet_dstdir}; curl --time-cond `pwd`/$(basename ${url}) -LO ${url} )
-    done
+        localfile="$(pwd)/$(basename "${url}")"
 
-    cd ../..
+	[[ -f "${localfile}" ]] && curl_args="--time-cond ${localfile}"
+
+        ( cd "${puppet_dstdir}"; curl --remote-name ${curl_args} ${url} )
+    done
 }
 
 download_python_packages() {
@@ -220,7 +228,14 @@ virtualenv==15.1.0
 websockets==7.0
 ENDL
 
-    pip2pi ${dstdir}/python -r requirements.txt
+    # create virtualenv
+    . /opt/rh/rh-python36/enable
+
+    python3 -m venv tmp-venv
+
+    tmp-venv/bin/pip install --pre pip2pi
+
+    tmp-venv/bin/pip2pi ${dstdir}/python -r requirements.txt
 }
 
 # create destination directory
@@ -243,6 +258,8 @@ ENDL
         echo "This script will install the following packages on *this* host:"
         echo
         echo "  - createrepo"
+        echo "  - centos-release-scl"
+        echo "  - rh-python36"
         echo
 
         read -p "Do you wish to continue [N/y]? " response
@@ -255,7 +272,11 @@ ENDL
     }
 }
 
+rpm --query --quiet centos-release-scl || yum install -y centos-release-scl
+
 mkdir -p ${dstdir}
+
+yum install -y rh-python36
 
 # check for createrepo
 rpm --query --quiet createrepo || {
@@ -275,9 +296,9 @@ download_puppet_modules ${puppet_module_urls}
 download_python_packages
 
 # other packages
-mkdir -p ${dstdir}/other
+mkdir -p ${dstdir}/other/3rdparty/mcollective-puppet-agent
 
-( cd ${dstdir}/other; curl -s -LO https://github.com/puppetlabs/mcollective-puppet-agent/archive/1.13.1.tar.gz )
+( cd ${dstdir}/other/3rdparty/mcollective-puppet-agent; curl -s -LO https://github.com/puppetlabs/mcollective-puppet-agent/archive/1.13.1.tar.gz )
 
 echo
 echo "Dependencies download complete."
