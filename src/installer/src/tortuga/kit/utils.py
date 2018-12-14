@@ -69,20 +69,27 @@ def pip_install_requirements(requirements_path):
         logger.debug('Requirements empty: {}'.format(requirements_path))
         return
 
+    pip_cmd = [
+        '{}/pip'.format(cm.getBinDir()),
+        'install',
+    ]
+
     installer = cm.getInstaller()
     int_webroot = cm.getIntWebRootUrl(installer)
     installer_repo = '{}/python-tortuga/simple/'.format(int_webroot)
 
-    pip_cmd = [
-        '{}/pip'.format(cm.getBinDir()), 'install',
-    ]
-
     if cm.is_offline_installation():
+        # add tortuga distribution repo
         pip_cmd.append('--index-url')
+        pip_cmd.append(installer_repo)
+
+        # add offline dependencies repo
+        pip_cmd.append('--extra-index-url')
+        pip_cmd.append('{}/offline-deps/python/simple/'.format(int_webroot))
     else:
         pip_cmd.append('--extra-index-url')
 
-    pip_cmd.append(installer_repo)
+        pip_cmd.append(installer_repo)
 
     pip_cmd.extend([
         '--trusted-host', installer,
