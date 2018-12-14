@@ -36,6 +36,7 @@ DEFAULT_TORTUGA_WEBSOCKET_PORT = 9443
 DEFAULT_TORTUGA_WEBSOCKET_SCHEME = 'wss'
 DEFAULT_TORTUGA_INT_WEBSERVICE_PORT = 8444
 DEFAULT_TORTUGA_ADMIN_SCHEME = 'https'
+DEFAULT_TORTUGA_INT_WEB_SCHEME = 'http'
 DEFAULT_TORTUGA_INT_WEB_PORT = 8008
 DEFAULT_TORTUGA_DNS_ZONE = 'localdomain'
 DEFAULT_TORTUGA_TIME_ZONE = 'GMT'
@@ -164,6 +165,7 @@ class ConfigManager(dict): \
         self['defaultWebsocketScheme'] = DEFAULT_TORTUGA_WEBSOCKET_SCHEME
         self['defaultWebsocketPort'] = DEFAULT_TORTUGA_WEBSOCKET_PORT
         self['defaultAdminScheme'] = DEFAULT_TORTUGA_ADMIN_SCHEME
+        self['defaultIntWebScheme'] = DEFAULT_TORTUGA_INT_WEB_SCHEME
         self['defaultIntWebPort'] = DEFAULT_TORTUGA_INT_WEB_PORT
         self['defaultDbPassword'] = DEFAULT_TORTUGA_DB_PASSWORD
         self['defaultDbPasswordFile'] = DEFAULT_TORTUGA_DB_PASSWORD_FILE
@@ -500,6 +502,10 @@ class ConfigManager(dict): \
             url += path
 
         return url
+
+    def getIntWebScheme(self, default='__internal__'):
+        """Return scheme for internal web server."""
+        return self.__getKeyValue('intWebScheme', default)
 
     def setAdminScheme(self, adminScheme):
         """ Set admin scheme. """
