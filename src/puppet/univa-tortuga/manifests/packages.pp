@@ -12,29 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-define tortuga::packages::add_package_source(
-  String $baseurl,
-  Integer $cost=1000,
-  String $type='yum',
-  Variant[String, Undef] $proxy = undef,
-  Variant[String, Undef] $proxy_username = undef,
-  Variant[String, Undef] $proxy_password = undef,
-) {
-  # Currently, we only support writing a YUM repository configuration.
-  if $::facts['os']['family'] == 'RedHat' and $type == 'yum' {
-    yumrepo { $name:
-      baseurl        => $baseurl,
-      descr          => "Repository for ${name}",
-      enabled        => 1,
-      gpgcheck       => 0,
-      cost           => $cost,
-      proxy          => $proxy,
-      proxy_username => $proxy_username,
-      proxy_password => $proxy_password,
-    }
-  }
-}
-
 class tortuga::packages (
   $repos = undef,
 ) {
@@ -48,11 +25,8 @@ class tortuga::packages (
 
   if $repos_arg != undef {
     $repos.each |String $repo_name, Hash $repo_spec| {
-      tortuga::packages::add_package_source { $repo_name:
-        baseurl        => $repo_spec['baseurl'],
-        proxy          => $tortuga::config::proxy_uri,
-        proxy_username => $tortuga::config::proxy_user,
-        proxy_password => $tortuga::config::proxy_password,
+      tortuga::add_package_source { $repo_name:
+        baseurl => $repo_spec['baseurl'],
       }
     }
   }
