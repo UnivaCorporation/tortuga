@@ -24,7 +24,7 @@ class tortuga::packages (
   }
 
   if $repos_arg != undef {
-    $repos.each |String $repo_name, Hash $repo_spec| {
+    $repos_arg.each |String $repo_name, Hash $repo_spec| {
       tortuga::add_package_source { $repo_name:
         baseurl => $repo_spec['baseurl'],
       }
