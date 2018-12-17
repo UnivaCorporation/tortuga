@@ -57,14 +57,16 @@ support options, services and integrated products.
 
 ## Documentation
 
-The Tortuga Installation and Administration Guide (in Markdown format) is available in the [doc](doc) subdirectory.
+The Tortuga Installation and Administration Guide (in Markdown format) is
+available in the [doc](doc) subdirectory.
 
-See the [Building documentation](#building-documentation) section below for instructions on creating a PDF file.
+See the [Building documentation](#building-documentation) section below for
+instructions on creating a PDF file.
 
 ### Building documentation
 
-Tortuga documentation is provided in Markdown format which can be easily converted to
-PDF using [Pandoc](https://pandoc.org).
+Tortuga documentation is provided in Markdown format which can be easily
+converted to PDF using [Pandoc](https://pandoc.org).
 
 On RHEL/CentOS 7, `pandoc` can be installed as follows:
 
@@ -73,17 +75,26 @@ yum install pandoc texlive-xetex texlive-collection-xetex \
     texlive-collection-latexrecommended
 ```
 
-After installing `pandoc` and XeLaTeX packages, the PDF file can be generated as follows:
+After installing `pandoc` and XeLaTeX packages, the PDF file can be generated
+as follows:
 
 ```shell
-pandoc -f markdown -o tortuga-7-admin-guide.pdf \
-    -V margin-left=0.5in -V margin-right=0.5in \
-    -V margin-top=1in -V margin-bottom=1in \
-    --toc \
-    --latex-engine xelatex \
-    --template tortuga-template.tex \
-    --smart --listings \
-    --variable papersize=letter \
+pandoc -f markdown+smart \
+    -o doc/tortuga-7-admin-guide.pdf \
+    --pdf-engine xelatex \
+    --table-of-contents \
+    --variable geometry:margin=0.5in \
+    doc/tortuga-7-admin-guide.md.raw \
+    doc/metadata.yaml
+```
+
+To (re)generate the GitHub-formatted Markdown document, use the following:
+
+```shell
+pandoc -f markdown+smart \
+    -o doc/tortuga-7-admin-guide.md \
+    -t gfm \
+    doc/header.md \
     doc/tortuga-7-admin-guide.md.raw
 ```
 
