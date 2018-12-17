@@ -18,7 +18,7 @@ import sys
 
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.db.dbManager import DbManager
-from tortuga.kit.kitApiFactory import getKitApi
+from tortuga.kit.kitApi import KitApi
 
 
 class InstallKitCli(TortugaCli):
@@ -63,7 +63,7 @@ class InstallKitCli(TortugaCli):
     def runCommand(self):
         self.parseArgs(_('Adds new application kit to Tortuga'))
 
-        api = getKitApi(self.getUsername(), self.getPassword())
+        api = KitApi()
 
         self.installKitHelper(api, accept_eula=self.getArgs().acceptEula)
 

@@ -72,30 +72,17 @@ class DbManager(TortugaObjectManager):
         self.Session = sqlalchemy.orm.scoped_session(
             sqlalchemy.orm.sessionmaker(bind=self.engine))
 
-    def _map_db_tables(self):
-        #
-        # Make sure all kit table mappers have been registered
-        #
+    def _register_database_tables(self):
         for kit_installer_class in get_all_kit_installers():
             kit_installer = kit_installer_class()
-            kit_installer.register_database_table_mappers()
-        #
-        # Map all tables that haven't yet been mapped
-        #
-        # for table_mapper in get_all_table_mappers():
-        #     key = table_mapper.__name__
-        #     if key not in self._mapped_tables.keys():
-        #         logger.debug('Mapping table: {}'.format(key))
-        #         self._mapped_tables[key] = table_mapper()
-        #         self._mapped_tables[key].map(self)
-        pass
+            kit_installer.register_database_tables()
 
     @property
     def engine(self):
         """
         SQLAlchemy Engine object property
         """
-        self._map_db_tables()
+        self._register_database_tables()
         return self._engine
 
     def session(self):
@@ -108,7 +95,7 @@ class DbManager(TortugaObjectManager):
         #
         # Create tables
         #
-        self._map_db_tables()
+        self._register_database_tables()
         try:
             ModelBase.metadata.create_all(self.engine)
         except Exception:

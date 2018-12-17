@@ -12,24 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pytest
+
 from tortuga.config.configManager import ConfigManager
 
 
-def getSanApi(username=None, password=None):
-    """
-    Creates an object that derives from SanApiInterface
-    """
-
-    cm = ConfigManager()
-
-    if username and password or not cm.isDbAvailable():
-
-        from tortuga.wsapi import sanWsApi
-        api = sanWsApi.SanWsApi(username, password)
-
-    else:
-
-        from tortuga.san import sanApi
-        api = sanApi.SanApi()
-
-    return api
+@pytest.fixture(scope='session')
+def config_manager():
+    return ConfigManager()

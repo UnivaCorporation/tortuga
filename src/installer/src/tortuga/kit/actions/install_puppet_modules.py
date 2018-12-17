@@ -21,6 +21,7 @@ from tortuga.os_utility import tortugaSubprocess
 
 from .base import KitActionBase
 
+
 logger = getLogger(__name__)
 
 
@@ -49,9 +50,14 @@ class InstallPuppetModulesAction(KitActionBase):
 
             raise ConfigurationError(errmsg)
 
-        logger.info('Installing Puppet module {}'.format(module_name))
+        puppet_args = '--color false'
 
-        cmd = ('/opt/puppetlabs/bin/puppet module install --color false'
-               ' {}'.format(files[0]))
+        if self.kit_installer.config_manager.is_offline_installation():
+            puppet_args = ' --force'
+
+        logger.info('Installing Puppet module %s', module_name)
+
+        cmd = '/opt/puppetlabs/bin/puppet module install {} {}'.format(
+            puppet_args, files[0])
 
         tortugaSubprocess.executeCommand(cmd)

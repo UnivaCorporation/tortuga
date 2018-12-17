@@ -94,7 +94,7 @@ class AdapterMgmtCLI(TortugaCli):
             help='Display specified setting only')
         subparsers.add_parser('show',
                               parents=[show_args, show_list_common_args])
-        
+
         validate_args = argparse.ArgumentParser(add_help=False)
         validate_args.add_argument(
             '--resource-adapter', '-r', metavar='NAME', required=True,
@@ -561,7 +561,7 @@ class AdapterMgmtCLI(TortugaCli):
         delete_profiles = []
 
         profile_names = [name
-                         if name != 'resource-adapter' else 'default'
+                         if name != 'resource-adapter' else 'Default'
                          for name in cfg.sections()]
 
         # Ensure profile name(s) do not already exist
@@ -604,7 +604,7 @@ class AdapterMgmtCLI(TortugaCli):
 
         for section_name in cfg.sections():
             profile_name = section_name \
-                if section_name != 'resource-adapter' else 'default'
+                if section_name != 'resource-adapter' else 'Default'
 
             configuration = []
 
@@ -648,7 +648,7 @@ class AdapterMgmtCLI(TortugaCli):
         for profile_name in \
                 self.api.get_profile_names(args.resource_adapter):
             section = profile_name \
-                if profile_name != 'default' else 'resource-adapter'
+                if profile_name != 'Default' else 'resource-adapter'
 
             output.add_section(section)
 

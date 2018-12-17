@@ -21,8 +21,8 @@ from tortuga.db.resourceAdapterDbApi import ResourceAdapterDbApi
 from tortuga.exceptions.invalidActionRequest import InvalidActionRequest
 from tortuga.exceptions.resourceAdapterAlreadyExists import \
     ResourceAdapterAlreadyExists
-from tortuga.hardwareprofile.hardwareProfileFactory import \
-    getHardwareProfileApi
+from tortuga.hardwareprofile.hardwareProfileApi import \
+    HardwareProfileApi
 from tortuga.kit.installer import ComponentInstallerBase
 from ..utils import pip_install_requirements
 
@@ -130,7 +130,7 @@ class ResourceAdapterManagementComponentInstaller(ComponentInstallerBase):
         self._unregister_resource_adapter(self.kit_installer.session)
 
     def _unregister_resource_adapter(self, session):
-        hardware_profile_api = getHardwareProfileApi()
+        hardware_profile_api = HardwareProfileApi()
 
         adapter_hwp_list = []
 

@@ -19,16 +19,17 @@ import os
 import os.path
 import shutil
 import subprocess
-from typing import Tuple
 import urllib.error
 import urllib.request
 from logging import getLogger
+from typing import Tuple
 
 from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.fileNotFound import FileNotFound
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.kit.metadata import KitMetadataSchema
 from tortuga.os_utility.tortugaSubprocess import TortugaSubprocess
+
 
 logger = getLogger(__name__)
 
@@ -68,16 +69,32 @@ def pip_install_requirements(requirements_path):
         logger.debug('Requirements empty: {}'.format(requirements_path))
         return
 
+    pip_cmd = [
+        '{}/pip'.format(cm.getBinDir()),
+        'install',
+    ]
+
     installer = cm.getInstaller()
     int_webroot = cm.getIntWebRootUrl(installer)
     installer_repo = '{}/python-tortuga/simple/'.format(int_webroot)
 
-    pip_cmd = [
-        '{}/pip'.format(cm.getBinDir()), 'install',
-        '--extra-index-url', installer_repo,
+    if cm.is_offline_installation():
+        # add tortuga distribution repo
+        pip_cmd.append('--index-url')
+        pip_cmd.append(installer_repo)
+
+        # add offline dependencies repo
+        pip_cmd.append('--extra-index-url')
+        pip_cmd.append('{}/offline-deps/python/simple/'.format(int_webroot))
+    else:
+        pip_cmd.append('--extra-index-url')
+
+        pip_cmd.append(installer_repo)
+
+    pip_cmd.extend([
         '--trusted-host', installer,
         '-r', requirements_path
-    ]
+    ])
 
     logger.debug(' '.join(pip_cmd))
     subprocess.Popen(pip_cmd).wait()

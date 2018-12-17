@@ -29,11 +29,12 @@ DEBUG=0
 enable_package_caching=1
 download_only=0
 force_hostname=0
-readonly tortuga_version="7.0.1"
+readonly ucpkgcachedir="/tmp/tortuga_package_cache"
+
 
 TEMP=$( getopt -o v,f --long force,verbose,debug,help,\
 disable-package-caching,\
-download-only,force-hostname -n $(basename $0) -- "$@" )
+download-only,force-hostname,dependencies-dir: -n $(basename $0) -- "$@" )
 
 if [ $? != 0 ]; then echo "Terminating..." >&2; exit 1; fi
 
@@ -59,6 +60,9 @@ function usage() {
     echo
     echo "  --force-hostname"
     echo "      Ignore host name/FQDN sanity checks"
+    echo
+    echo "  --dependencies-dir=PATH"
+    echo "      Path containing Tortuga installation dependencies"
     echo
 
     exit 0
@@ -94,6 +98,10 @@ while true; do
             force_hostname=1
             shift;
             ;;
+        --dependencies-dir)
+            local_deps="$2"
+            shift 2
+            ;;
         --)
             shift
             break
@@ -105,48 +113,108 @@ while true; do
     esac
 done
 
-# expect to find 'python-tortuga' in the UniCloud distribution tarball
+puppet_args=""
+
+# ensure color output is disabled if stdout is redirected
+[[ -t 1 ]] || puppet_args="--color false"
+
+# expect to find 'python-tortuga' in the Tortuga distribution tarball
 [[ -d python-tortuga/simple ]] || {
-    echo "Error: UniCloud distribution tarball is missing files" >&2
+    echo "Error: Tortuga distribution tarball is missing files" >&2
     exit 1
 }
 
-# get expanded path to UniCloud Python packages
+# get expanded path to Tortuga Python packages
 local_tortuga_pip_repository=$(cd python-tortuga; pwd -P)
 
-# ensure UniCloud Python package repository is included
-pip_install_opts="--extra-index-url file://${local_tortuga_pip_repository}/simple"
+# ensure Tortuga Python package repository is included
+pip_install_opts="--no-cache-dir \
+--extra-index-url file://${local_tortuga_pip_repository}/simple"
 
-[[ ${DEBUG} -eq 0 ]] && pip_install_opts="${pip_install_opts} --quiet"
+[[ ${DEBUG} -eq 0 ]] && pip_install_opts+=" --quiet"
 
-if [ $DEBUG -eq 1 ]; then
-    YUMCMD="yum"
-else
-    YUMCMD="yum -e 0 -d 0 --quiet"
-fi
+readonly INTWEBROOT="${TORTUGA_ROOT}/www_int"
+readonly OFFLINEDEPS="${INTWEBROOT}/offline-deps"
+
+# check if local dependencies directory was provided on command-line
+[[ -n ${local_deps} ]] && {
+    # Copy the offline dependencies to a standard location
+    echo "* Copying installation dependencies from ${local_deps}"
+
+    mkdir -p ${OFFLINEDEPS}
+
+    readonly rsync_cmd="rsync --archive"
+
+    ${rsync_cmd} ${local_deps}/ ${OFFLINEDEPS}
+
+    mkdir -p ${INTWEBROOT}/3rdparty
+
+    # copy 'mcollective-puppet-agent' tarball into expected location
+    ${rsync_cmd} ${local_deps}/other/3rdparty/mcollective-puppet-agent/ \
+        ${INTWEBROOT}/3rdparty/mcollective-puppet-agent/
+
+    # Change the local_deps variable to point to the standard location
+    local_deps="${OFFLINEDEPS}"
+
+    # set directories to local dependencies
+    local_pip_repository="${local_deps}/python"
+
+    if [[ ! -d ${local_pip_repository} ]] || \
+            [[ ! -d ${local_deps}/rpms ]]; then
+        echo "Error: directory ${local_deps} does not contain required \
+Tortuga dependencies" >&2
+        exit 1
+    fi
+
+    echo "* Using Tortuga installation dependencies from ${local_deps}"
+
+    pip_install_opts="--index-url file://${local_pip_repository}/simple \
+${pip_install_opts}"
+
+    # disable local package caching if dependencies available locally
+    [[ -n ${local_deps} ]] && {
+        enable_package_caching=0
+        enable_epel=0
+        enable_puppetlabs=0
+    }
+
+    # set up dependenices YUM repository
+    cat >/etc/yum.repos.d/tortuga-deps.repo <<ENDL
+[tortuga-deps]
+name=Tortuga third-party dependencies
+baseurl=file://${local_deps}/rpms
+gpgcheck=0
+enabled=1
+ENDL
+} || {
+    enable_package_caching=1
+    enable_epel=1
+    enable_puppetlabs=1
+}
+
+[[ ${DEBUG} -eq 1 ]] || yum_common_args="--errorlevel 0 --debuglevel 0 --quiet"
 
 pkgs=""
 
-readonly basearch=`arch`
+readonly basearch=$(arch)
 
 function get_distro() {
-    if $(type -P rpm &>/dev/null); then
+    if type -P rpm &>/dev/null; then
         # rpm is installed, attempt to determine version
-        if `rpm --quiet -q centos-release`; then
+        if rpm --quiet -q centos-release; then
             dist="centos"
-        elif `rpm --quiet -q oraclelinux-release`; then
+        elif rpm --quiet -q oraclelinux-release; then
             dist="oracle"
-        elif `rpm --quiet -q redhat-release-server`; then
+        elif rpm --quiet -q redhat-release-server; then
             dist="rhel"
-        elif `rpm --quiet -q redhat-release-workstation`; then
+        elif rpm --quiet -q redhat-release-workstation; then
             dist="rhel"
-        elif `rpm --quiet -q fedora-release`; then
-            dist="fedora"
         else
             dist="unknown"
         fi
     else
-        echo "Error: this system does not appear to be using RPM."
+        echo "Error: this system does not appear to be using RPM." >&2
+
         exit 1
     fi
 
@@ -181,9 +249,6 @@ function get_dist_major_version() {
                 relpkgname="redhat-release-workstation"
             fi
             ;;
-        fedora)
-            relpkgname="fedora-release"
-            ;;
         *)
             # Unable to determine Linux distribution
             return 1
@@ -191,9 +256,7 @@ function get_dist_major_version() {
      esac
 
      # Attempt to extract the major version number
-     if [ "$1" == "fedora" ]; then
-         rpm -qi $relpkgname | awk '/^Version/ {print substr($3,0,2)}'
-     elif [[ $1 == centos ]]; then
+     if [[ $1 == centos ]]; then
          rpm --query --queryformat "%{VERSION}" $relpkgname
      else
          rpm -qi $relpkgname | awk '/^Version/ {print substr($3,0,1)}'
@@ -211,13 +274,10 @@ function get_dist_minor_version() {
         rhel)
             relpkgname="redhat-release-server"
 
-            if ! `pkgexists $relpkgname`; then
+            if ! pkgexists $relpkgname; then
                 # Check for "Workstation" installation
                 relpkgname="redhat-release-workstation"
             fi
-            ;;
-        fedora)
-            relpkgname="fedora-release"
             ;;
         *)
             # Unable to determine Linux distribution
@@ -237,8 +297,8 @@ function get_dist_minor_version() {
 
 function pkgexists() {
     # Check if package is installed
-    if [[ $distro_family == rhel ]] || [[ $distro_family == fedora ]]; then
-        rpm --query --quiet $1
+    if [[ $distro_family == rhel ]]; then
+        rpm --query --quiet "${1}"
     else
         if [ $DEBUG -eq 1 ]; then
             echo "[debug] pkgexists(): unsupported distro \"${distro_family}\""
@@ -249,12 +309,9 @@ function pkgexists() {
 }
 
 function installpkg() {
-    local pkg="$1"
-
-    if `pkgexists $pkg`; then return 0; fi
-
     # Install the package
-    $YUMCMD -y install $pkg >>/tmp/install-tortuga.log 2>&1
+    pkgexists ${1} || yum install ${yum_common_args} \
+--assumeyes ${1} >>/tmp/install-tortuga.log 2>&1
 }
 
 function install_epel() {
@@ -263,28 +320,30 @@ function install_epel() {
     local epel_release_url="http://dl.fedoraproject.org/pub/epel/${epelpkgname}-latest-${distmajversion}.noarch.rpm"
 
     # Check if 'epel-release' package is already installed
-    if `pkgexists $epelpkgname`; then return; fi
+    if pkgexists $epelpkgname; then return; fi
 
     echo "Installing ${epelpkgname}... " | tee -a /tmp/install-tortuga.log
 
     # Attempt to install 'epel-release' using default URL
     for ((i=0; i<5; i++)); do
         # Attempt to install 'epel-release'
-        rpm --install --quiet ${epel_release_url} | tee -a /tmp/install-tortuga.log
+        rpm --install --quiet ${epel_release_url} >>/tmp/install-tortuga.log 2>&1
 
         if [ $? -ne 0 ]; then continue; fi
 
         break
     done
 
-    if ! `pkgexists $epelpkgname`; then
+    if ! pkgexists $epelpkgname; then
         echo "Error installing ${epelpkgname} (${epel_release_url}). Unable to proceed." | tee -a /tmp/install-tortuga.log
         exit 1
     fi
 }
 
 function check_puppet_memory() {
-    local total_memory=$(free -g | grep "Mem:" | awk '{ print $2 }')
+    local total_memory
+    
+    total_memory=$(free -g | grep "Mem:" | awk '{ print $2 }')
 
     if [ "$total_memory" -lt "2" ] && [ "$1" -lt "1" ]; then
         echo "Error: Puppet requires at least 2GB of memory" | tee -a /tmp/install-tortuga.log
@@ -293,43 +352,36 @@ function check_puppet_memory() {
     fi
 }
 
+function rpm_install() {
+    for ((i=0; i < 5; i++)); do
+        rpm --install --quiet ${1} 2>&1 | tee -a /tmp/install-tortuga.log
+        [[ $? -ne 0 ]] && continue || break
+    done
+}
+
 function install_puppetlabs_repo {
     local puppetlabspkgname="puppet5-release"
 
-    if `pkgexists $puppetlabspkgname`; then return; fi
+    # do not attempt to install 'puppet5-release' if already installed
+    pkgexists ${puppetlabspkgname} || {
+        rpm_install http://yum.puppetlabs.com/puppet5/puppet5-release-el-${distmajversion}.noarch.rpm
 
-    echo "Installing ${puppetlabspkgname}... " | tee -a /tmp/install-tortuga.log
+        pkgexists ${puppetlabspkgname} || {
+            echo "Error installing \"${puppetlabspkgname}\". Unable to proceed." >&2
 
-    if [ $distro_family = "rhel" ]; then
-        if [[ $distmajversion -lt 6 ]] || [[ $distmajversion -gt 7 ]]; then
-            echo "Error: unsupported RHEL version (${distmajversion})" | tee -a /tmp/install-tortuga.log
             exit 1
-        fi
+        }
+    }
 
-        puppetlabs_release_url="http://yum.puppetlabs.com/puppet5/${puppetlabspkgname}-el-${distmajversion}.noarch.rpm"
-    elif [ "$dist" == "fedora" ]; then
-        if [[ $distmajversion -lt 19 ]] || [[ $distmajversion -gt 20 ]]; then
-            echo "Error: unsupported Fedora version (${distmajversion})" | tee -a /tmp/install-tortuga.log
+    # install puppetlabs-release
+    pkgexists puppetlabs-release || {
+        rpm_install http://yum.puppetlabs.com/puppetlabs-release-el-${distmajversion}.noarch.rpm
+
+        pkgexists puppetlabs-release || {
+            echo "Error installing \"puppetlabs-release\". Unable to proceed." >&2
             exit 1
-        fi
-    else
-        echo "Error: unsupported Linux distribution (${dist})" | tee -a /tmp/install-tortuga.log
-        exit 1
-    fi
-
-    for ((i=0; i < 5; i++)); do
-        rpm --install --quiet $puppetlabs_release_url 2>/dev/null | \
-            tee -a /tmp/install-tortuga.log
-
-        if [ $? -ne 0 ]; then continue; fi
-
-        break
-    done
-
-    if ! `pkgexists $puppetlabspkgname`; then
-        echo "Error installing ${puppetlabspkgname} ($puppetlabs_release_url). Unable to proceed." | tee -a /tmp/install-tortuga.log
-        exit 1
-    fi
+    }
+    }
 }
 
 function cachepkgs {
@@ -338,8 +390,8 @@ function cachepkgs {
     local inst_pkgs=""
     local reinst_pkgs=""
 
-    for pkg in $*; do
-        if ! `pkgexists $pkg`; then
+    for pkg in $@; do
+        if ! pkgexists $pkg; then
             # Package is not installed
             inst_pkgs="$inst_pkgs $pkg"
         else
@@ -348,80 +400,78 @@ function cachepkgs {
         fi
     done
 
-    local yumcmd="${YUMCMD} --downloadonly --downloaddir=${ucpkgcachedir}"
+    echo -n "Please wait... "
 
-    if [ $download_only -ne 1 ]; then
-        echo -n "Please wait... caching installation package dependencies... "
-    else
-        echo -n "Please wait... "
-    fi
+    [[ $download_only -ne 1 ]] && \
+        echo -n "caching installation package dependencies... "
 
-    if [[ -n $inst_pkgs ]]; then
-        # Packages that aren't already installed on this host
-        $yumcmd -y install $inst_pkgs 2>&1 >>/tmp/install-tortuga.log
-    fi
+    local yum_dl_args
 
-    if [[ -n $reinst_pkgs ]]; then
-        $yumcmd -y reinstall $reinst_pkgs 2>&1 >>/tmp/install-tortuga.log
-    fi
+    yum_dl_args="${yum_common_args} --downloadonly --downloaddir=${ucpkgcachedir} --assumeyes"
+
+    # packages that are not already installed on this host
+    (
+        [[ -n ${inst_pkgs} ]] && yum install ${yum_dl_args} ${inst_pkgs}
+
+        # packages that are already installed
+        [[ -n ${reinst_pkgs} ]] && yum reinstall ${yum_dl_args} ${reinst_pkgs}
+    ) >>/tmp/install-tortuga.log 2>&1
 
     echo "done."
 
-    update_pkg_cache $ucpkgcachedir
+    update_pkg_cache "${ucpkgcachedir}"
 }
 
 function update_pkg_cache {
-    local cachedir="$1"
+    {
+        echo "--- createrepo BEGIN ---"
 
-    echo "--- createrepo BEGIN ---" >>/tmp/install-tortuga.log
+        createrepo "$1"
 
-    createrepo $cachedir 2>&1 >>/tmp/install-tortuga.log
-
-    echo "--- createrepo END ---" >>/tmp/install-tortuga.log
+        echo "--- createrepo END ---"
+    } >>/tmp/install-tortuga.log 2>&1
 }
 
 function installpkgs {
-    if [ -z "$*" ]; then return; fi
+    [[ -n $@ ]] || return
 
     # Filter out list of packages that are already installed
     local tmppkg
     local pkglist=()
 
-    for tmppkg in $*; do
-        if `pkgexists $tmppkg`; then continue; fi
+    for tmppkg in "$@"; do
+        # ignore packages already installed
+        pkgexists "${tmppkg}" && continue
 
         pkglist[${#pkglist[*]}]=$tmppkg
     done
 
-    if [ ${#pkglist[@]} -eq 0 ]; then return; fi
+    [ ${#pkglist[@]} -gt 0 ] || return
 
-    echo "Installing packages: ${pkglist[@]}" | tee -a /tmp/install-tortuga.log
+    local buf
+    buf="${pkglist[*]}"
 
-    local tmpyumcmd="${YUMCMD}"
+    echo "Installing packages: ${buf//  / }" | tee -a /tmp/install-tortuga.log
 
-    if [[ $enable_package_caching -eq 1 ]]; then
-        # Create temporary yum.conf which includes local package cache
-        cp /etc/yum.conf /tmp/yum.tortuga.conf
+    local yum_install_opts
 
-        cat >>/tmp/yum.tortuga.conf <<ENDL
-[tortuga-local-cache]
-name=tortuga-local-cache
-baseurl=file://${ucpkgcachedir}
-enabled=1
-ENDL
+    # use local repository if package caching is enabled or local
+    # dependencies repo has been specified
+    [[ ${enable_package_caching} -ne 0 ]] && \
+        yum_install_opts="--config /tmp/yum.tortuga.conf"
 
-        tmpyumcmd="${tmpyumcmd} -c /tmp/yum.tortuga.conf"
-    fi
+    local cmd="yum install ${yum_common_args} ${yum_install_opts} \
+--assumeyes ${pkglist[*]}"
 
-    local cmd="$tmpyumcmd -y install ${pkglist[@]}"
+    {
+        echo "yum command: ${cmd}"
 
-    echo "yum command: ${cmd}" >>/tmp/install-tortuga.log
+        echo "--- yum BEGIN ---"
 
-    echo "--- yum BEGIN ---" >>/tmp/install-tortuga.log
+        $cmd
 
-    $cmd >>/tmp/install-tortuga.log 2>&1
-
-    echo "--- yum END ---" >>/tmp/install-tortuga.log
+        echo "--- yum END ---"
+    } >>/tmp/install-tortuga.log 2>&1
 }
 
 function install_yum_plugins() {
@@ -429,12 +479,12 @@ function install_yum_plugins() {
 
     plugin_pkgname="yum-plugin-downloadonly"
 
-    if $(yum --help 2>&1 | grep -q "downloadonly"); then
+    if yum --help 2>&1 | grep --quiet "downloadonly"; then
         # Plugin is present; do not attempt to install package
         return
     fi
 
-    if ! `pkgexists $plugin_pkgname`; then
+    if ! pkgexists $plugin_pkgname; then
         installpkg $plugin_pkgname
         if [[ $? -ne 0 ]]; then
             echo "Error installing ${plugin_pkgname}. Check repository configuration and try again." | tee -a /tmp/install-tortuga.log
@@ -452,6 +502,22 @@ function disto_patches() {
             YUMCMD="$YUMCMD --skip-broken"
             ;;
     esac
+}
+
+is_puppet_module_installed() {
+    /opt/puppetlabs/bin/puppet module list ${puppet_args} | grep --quiet "${1} "
+}
+
+install_puppet_module() {
+    local install_args
+
+    install_args="${puppet_args}"
+
+    if [[ ${FORCE} -eq 1 ]] || [[ -n "${local_deps}" ]]; then
+        install_args+=" --force"
+    fi
+
+    /opt/puppetlabs/bin/puppet module install ${install_args} $1
 }
 
 # Main script execution starts here
@@ -529,16 +595,14 @@ fi
 
 echo ">>>>> $intromsg ($(date))" >>/tmp/install-tortuga.log
 
-if [ $FORCE -eq 1 ]; then
-    intromsg="$intromsg --force argument specified."
-
-    echo "--force argument specified on command-line" >>/tmp/install-tortuga.log
-fi
+[[ ${FORCE} -eq 1 ]] && {
+    echo "--force argument specified." | tee -a /tmp/install-tortuga.log
+}
 
 # This is the first output to the console (and log file)
 echo $intromsg
 
-if [[ $download_only -ne 1 ]] && [[ -d $TORTUGA_ROOT ]] && [[ $FORCE -ne 1 ]]; then
+if [[ $download_only -ne 1 ]] && [[ -d $TORTUGA_ROOT ]] && [[ $FORCE -ne 1 ]] && [[ -z "${local_deps}" ]]; then
     echo "Installation directory $TORTUGA_ROOT exists" | tee -a /tmp/install-tortuga.log
     echo
     echo "Use --force to force (re)installation"
@@ -548,23 +612,24 @@ if [[ $download_only -ne 1 ]] && [[ -d $TORTUGA_ROOT ]] && [[ $FORCE -ne 1 ]]; t
     exit 1
 fi
 
-dist=`get_distro`
+dist=$(get_distro)
 if [ $? -ne 0 ]; then
     exit 1
 fi
 
-distro_family=`get_distro_family $dist`
+distro_family=$(get_distro_family "${dist}")
 if [ $? -ne 0 ]; then
     echo "Error: unsupported distribution \"${dist}\"" | tee -a /tmp/install-tortuga.log
     exit 1
 fi
 
 # Check for RHEL major version
-distmajversion=`get_dist_major_version $dist`
-if [ $? -ne 0 ]; then
+distmajversion=$(get_dist_major_version "${dist}")
+[[ $? -eq 0 ]] || {
     echo "Error: unable to determine Linux distribution" | tee -a /tmp/install-tortuga.log
+
     exit 1
-fi
+}
 
 # Get minor version
 distminversion=$(get_dist_minor_version $dist)
@@ -574,51 +639,54 @@ if [ $? -ne 0 ]; then
 fi
 
 # Output debug information to the log only
-echo "Detected distribution: $dist" >>/tmp/install-tortuga.log
-echo "Detected distribution family: $distro_family" >>/tmp/install-tortuga.log
-echo "Detected distribution major version: $distmajversion" >>/tmp/install-tortuga.log
-echo "Detected distribution minor version: $distminversion" >>/tmp/install-tortuga.log
-
-ucpkgcachedir="/tmp/tortuga_package_cache"
+{
+    echo "Detected distribution: ${dist}"
+    echo "Detected distribution family: ${distro_family}"
+    echo "Detected distribution major version: ${distmajversion}"
+    echo "Detected distribution minor version: ${distminversion}"
+} >>/tmp/install-tortuga.log
 
 # Install 'createrepo', if necessary
-if ! `pkgexists createrepo`; then
+pkgexists createrepo || {
     installpkg createrepo
     if [ $? -ne 0 ]; then
         echo "Error installing createrepo. Check repository configuration and try again." | tee -a /tmp/install-tortuga.log
         echo "Unable to proceed!" | tee -a /tmp/install-tortuga.log
         exit 1
     fi
-fi
+}
 
 # Create temporary package cache dir
 if [[ $enable_package_caching -eq 1 ]]; then
     echo "Using temporary directory $ucpkgcachedir for package cache" >> /tmp/install-tortuga.log
 
-    # Prepare for cache packages; without having to jump through hoops, this
-    # creates the package cache directory regardless of whether caching is
-    # enabled or not. This prevents having to do something funky in Puppet to
-    # detect this.
-    #
-    # TODO: use Hiera to store package cache setting
-
-    if [[ $FORCE -eq 1 ]]; then
+    [[ ${FORCE} -eq 1 ]] && {
         echo "Removing directory \"${ucpkgcachedir}\"" | tee -a /tmp/install-tortuga.log
 
         rm -rf $ucpkgcachedir
-    fi
+    }
 
     [[ -d $ucpkgcachedir ]] || mkdir -p $ucpkgcachedir
 
     # Initialize the newly created (empty) directory as a valid repository
     update_pkg_cache $ucpkgcachedir
+
+    # Create temporary yum.conf which includes local package cache
+    cp /etc/yum.conf /tmp/yum.tortuga.conf
+
+    cat >>/tmp/yum.tortuga.conf <<ENDL
+[tortuga-local-cache]
+name=tortuga-local-cache
+baseurl=file://${ucpkgcachedir}
+enabled=1
+ENDL
 fi
 
 # Apply any patches needed for specific distribution
 disto_patches $dist
 
 # Check for SELinux
-if $(type -P getenforce >/dev/null 2>&1); then
+if type -P getenforce >/dev/null 2>&1; then
     sestatus=$(getenforce)
     if [[ $sestatus != Disabled ]] && [[ $sestatus != Permissive ]]; then
         echo
@@ -630,12 +698,10 @@ if $(type -P getenforce >/dev/null 2>&1); then
 fi
 
 # Check for 'yum-plugin-downloadonly'
-if [[ $distro_family == rhel ]] || [[ $distro_family == fedora ]]; then
-    install_yum_plugins
-fi
+[[ $distro_family == rhel ]] && install_yum_plugins
 
 # Check for curl
-if ! `type -P curl >/dev/null 2>&1`; then
+if ! type -P curl >/dev/null 2>&1; then
     echo "Installing curl..."
     installpkg curl
     if [ $? -ne 0 ]; then
@@ -645,67 +711,46 @@ if ! `type -P curl >/dev/null 2>&1`; then
     fi
 fi
 
-# Check if 'epel-release' is installed, if not install it.
-# NOTE: epel-release gets installed regardless, as it is a required source
-# for dependent packages, not just puppet.
-if [[ $distro_family == rhel ]]; then
-    install_epel
-fi
-
 # Check there's enough memory for Puppet
 check_puppet_memory $FORCE
 
+# install epel repository
+[[ ${distro_family} == rhel ]] && [[ $enable_epel -ne 0 ]] && install_epel
+
 # Install puppetlabs repo
-install_puppetlabs_repo
-
-# Check for puppet binary in system path
-if ! `type -P puppet >/dev/null 2>&1`; then
-    # Install 'puppet-agent' indepdendently of the other packages
-    # in order to properly warn of possible missing dependent packages.
-    pkgs="puppet-agent"
-
-    installpkgs $pkgs
-
-    # yum doesn't return a useful return code in the case of error, so we
-    # validate the packages manually.
-    for pkg in $pkgs; do
-        if ! `pkgexists $pkg`; then
-            echo "Error installing package \"${pkg}\"." | tee -a /tmp/install-tortuga.log
-            echo
-
-            if [[ $dist == rhel ]]; then
-                echo "Ensure \"optional\" RPMs channel is enabled, otherwise" \
-                    "check network and/or Yum repository configuration." \
-                    | fold -sw $wrapwidth | tee -a /tmp/install-tortuga.log
-            else
-                echo "Check network and/or Yum repository configuration" \
-                     " and restart" | tee -a /tmp/install-tortuga.log
-            fi
-
-            exit 1
-        fi
-    done
-
-fi
+[[ ${enable_puppetlabs} -ne 0 ]] && install_puppetlabs_repo
 
 # 'pkgs' is a list of packages to be installed on the Tortuga installer
 # 'cachedpkgs' are cached for use by on-prem nodes
 
-if [[ $distro_family == rhel ]]; then
-    # Packages common to all RHEL versions
-    pkgs="\
+# these packages are installed locally and cached
+commonpkgs="\
+rh-python36 \
+rh-python36-runtime \
+rh-python36-python \
+rh-python36-python-pip \
+rh-python36-python-libs \
+rh-python36-python-devel \
+rh-python36-python-setuptools \
+rh-python36-python-virtualenv \
+"
+
+# Packages common to all RHEL versions
+pkgs="\
 puppetserver \
 rsync \
-rh-python36 \
 "
 
-    # Packages cached for all RHEL versions
-    cachedpkgs="\
+# Packages cached for all RHEL versions
+cachedpkgs="\
 puppet-agent \
 "
-fi
 
-[[ ${dist} == centos ]] && {
+pkgs+=" ${commonpkgs}"
+cachedpkgs+=" ${commonpkgs}"
+
+# only install 'centos-release-scl' when running normal installation
+[[ -z "${local_deps}" ]] && [[ ${dist} == centos ]] && {
     echo "Installing SCL repository... "
     installpkg centos-release-scl
     [[ $? -eq 0 ]] || {
@@ -714,49 +759,77 @@ fi
     }
 }
 
-if [ $enable_package_caching -eq 1 ]; then
-    cachepkgs $cachedpkgs
-else
-    echo "* Package dependency caching disabled by command-line option"
-fi
+# download packages to local cache
+[[ $enable_package_caching -ne 0 ]] && cachepkgs ${commonpkgs}
 
 # Create Tortuga internal webroot
-INTWEBROOT="${TORTUGA_ROOT}/www_int"
-
 [[ -d $INTWEBROOT/3rdparty ]] || mkdir -p "$INTWEBROOT/3rdparty"
-
-# Download mcollective-puppet-agent plugin
-echo -n "Downloading 'mcollective-puppet-agent' plugin... "
 
 [[ -d ${INTWEBROOT}/3rdparty/mcollective-puppet-agent ]] || \
     mkdir -p ${INTWEBROOT}/3rdparty/mcollective-puppet-agent
+[[ -z ${local_deps} ]] && {
+    # Download mcollective-puppet-agent plugin
+    echo -n "Downloading 'mcollective-puppet-agent' plugin... "
 
-( cd ${INTWEBROOT}/3rdparty/mcollective-puppet-agent; \
-    curl --retry 10 --retry-max-time 60 --silent --fail --location --remote-name https://github.com/puppetlabs/mcollective-puppet-agent/archive/1.13.1.tar.gz 2>&1 | tee -a /tmp/install-tortuga.log )
+    url=https://github.com/puppetlabs/mcollective-puppet-agent/archive/1.13.1.tar.gz
 
-[[ $? -eq 0 ]] || {
-    echo "Error retrieving mcollective-puppet-agent. Unable to proceed" >&2
-    exit 1
+    ( cd ${INTWEBROOT}/3rdparty/mcollective-puppet-agent; \
+        curl --retry 10 --retry-max-time 60 --silent --fail --location \
+        --remote-name ${url} 2>&1 | tee -a /tmp/install-tortuga.log )
+
+    [[ $? -eq 0 ]] || {
+    echo "failed."
+        echo
+        echo "Error retrieving mcollective-puppet-agent. Unable to proceed" >&2
+
+        exit 1
+    }
+
+    echo "done."
 }
 
-echo "done."
-
-if [ $download_only -eq 1 ]; then
+[[ "${download_only}" -eq 1 ]] && {
     # Force next Puppet run to synchronize newly downloaded packages
     echo "Done."
 
     exit 0
+}
+
+# install all (local) packages
+
+installpkgs ${pkgs}
+
+# Create Puppet modules directory, as necessary
+echo "Installing Puppet modules" | tee -a /tmp/install-tortuga.log
+
+# Install stdlib module from puppetlabs
+
+if [[ ${FORCE} -eq 1 ]] || ! is_puppet_module_installed puppetlabs-stdlib; then
+    echo "Installing puppetlabs-stdlib Puppet module..."
+
+    if [[ -n "${local_deps}" ]]; then
+        puppet_module_src="${local_deps}/puppet/puppetlabs-stdlib-4.25.1.tar.gz"
+    else
+        puppet_module_src="puppetlabs-stdlib"
+    fi
+
+    install_puppet_module ${puppet_module_src}
+    [[ $? -eq 0 ]] || {
+        echo "Error installing Puppet module \"puppetlabs-stdlib\"" | \
+            tee -a /tmp/install-tortuga.log
+
+        exit 1
+    }
 fi
 
-installpkgs $pkgs
-
-echo "Installing Tortuga Puppet integration module..." | tee -a /tmp/install-tortuga.log
-/opt/puppetlabs/bin/puppet module install univa-tortuga-*.tar.gz
-
-if [ $? -ne 0 ]; then
-    echo "Installation failed... unable to proceed" | tee -a /tmp/install-tortuga.log
-    exit 1
-fi
+is_puppet_module_installed univa-tortuga || {
+    echo "Installing Tortuga Puppet integration module..." | tee -a /tmp/install-tortuga.log
+    install_puppet_module univa-tortuga-*.tar.gz
+    [[ $? -eq 0 ]] || {
+        echo "Installation failed... unable to proceed" | tee -a /tmp/install-tortuga.log
+        exit 1
+    }
+}
 
 # source SCL Python 3.6 environment
 . /opt/rh/rh-python36/enable
@@ -785,7 +858,7 @@ for module in tortuga-core tortuga-installer; do
     echo -n "Installing ${module} Python package... " | \
         tee -a /tmp/install-tortuga.log
 
-    ${pip_install_cmd} ${module} 2>&1 >>/tmp/install-tortuga.log
+    ${pip_install_cmd} ${module} >>/tmp/install-tortuga.log 2>&1
     [[ $? -eq 0 ]] || {
         echo "failed."
 
@@ -794,16 +867,16 @@ for module in tortuga-core tortuga-installer; do
         echo "Check /tmp/install-tortuga.log for errors" >&2
 
         exit 1
-    }
+   }
 
-    echo "done."
+   echo "done."
 done
 
 # copy Tortuga Python package repository
-rsync -av ${local_tortuga_pip_repository}/ ${INTWEBROOT}/python-tortuga \
-    2>&1 >>/tmp/install-tortuga.log
+rsync -av "${local_tortuga_pip_repository}/" "${INTWEBROOT}/python-tortuga" \
+    >>/tmp/install-tortuga.log 2>&1
 [[ $? -eq 0 ]] || {
-    echo "Error copying from \"python-tortuga\" to \"${INTWEBROOT}/python-tortuga\"" >&2
+    echo "Error copying from \"${local_deps}/python-tortuga\" to \"${INTWEBROOT}/python-tortuga\"" >&2
 
     echo >&2
 
@@ -811,11 +884,6 @@ rsync -av ${local_tortuga_pip_repository}/ ${INTWEBROOT}/python-tortuga \
 
     exit 1
 }
-
-# Create required directories
-for dirname in var/lib var/action-log; do
-    [[ -d $TORTUGA_ROOT/$dirname ]] || mkdir -p "$TORTUGA_ROOT/$dirname"
-done
 
 # Copy Puppet Hiera configuration
 readonly hiera_data_dir="/etc/puppetlabs/code/environments/production/data"
@@ -851,13 +919,13 @@ mkdir -p "${kitsdir}"
 
 echo "Copying default kits to ${kitsdir}... "
 
-for filename in $(find . -maxdepth 1 -type f -name 'kit-*.tar.bz2'); do
-    echo -n "   $(basename ${filename})... "
+find . -maxdepth 1 -type f -name 'kit-*.tar.bz2' | while read filename; do
+    echo -n "   $(basename "${filename}")... "
     cp -f "${filename}" "${kitsdir}"
     echo "done."
 done
 
-if [[ $enable_package_caching -eq 1 ]]; then
+[[ $enable_package_caching -eq 1 ]] || [[ -n ${local_deps} ]] && {
     # Copy cached packages from temporary directory to proper location
     echo -n "Synchronizing cached packages for use by compute nodes... " | tee -a /tmp/install-tortuga.log
 
@@ -865,9 +933,11 @@ if [[ $enable_package_caching -eq 1 ]]; then
 
     mkdir -p "${dstdir}"
 
+    [[ ${enable_package_caching} -ne 0 ]] && srcdir=${ucpkgcachedir} || srcdir="${local_deps}/rpms"
+
     # We only want the output from this rsync to appear in the log file, not
     # on the console.
-    rsync -av $ucpkgcachedir/ $dstdir/ 2>&1 >>/tmp/install-tortuga.log
+    rsync -av "${srcdir}/" "${dstdir}/" >>/tmp/install-tortuga.log 2>&1
 
     [[ $? -ne 0 ]] && {
         echo " failed."
@@ -878,14 +948,22 @@ if [[ $enable_package_caching -eq 1 ]]; then
     } | tee -a /tmp/install-tortuga.log
 
     echo "done." | tee -a /tmp/install-tortuga.log
-fi
+}
+
+# update 'tortuga.ini' to indicate offline installation mode
+[[ -n "${local_deps}" ]] && {
+    cat >>"${TORTUGA_ROOT}/config/tortuga.ini" <<ENDL
+[installer]
+offline_installation = true
+ENDL
+}
 
 donemsg="Tortuga successfully installed."
 
 # Log installation completion including timestamp
 echo "<<<<< $donemsg ($(date))" >>/tmp/install-tortuga.log
 
-echo $donemsg
+echo "${donemsg}"
 
 echo
 echo "Complete Tortuga set up as follows:"

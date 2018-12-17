@@ -18,7 +18,7 @@ import re
 
 
 class MockRedis:
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self._data_store: Dict[bytes, Union[bytes, dict]] = {}
         self._channels: List[bytes] = []
         self._pubsubs: List[PubSub] = []

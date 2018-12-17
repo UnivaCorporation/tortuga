@@ -24,8 +24,9 @@ class tortuga::config (
   Variant[String, Undef] $puppet_proxy_http_user = undef,
   Variant[String, Undef] $puppet_proxy_http_password = undef,
 ) inherits tortuga::params {
-  $config_dir = "${instroot}/config"
 
+  $config_dir = "${instroot}/config"
+  $etc_dir = "${instroot}/etc"
   $bin_dir = "${instroot}/bin"
 
   $curl_base_cmd = 'curl --remote-name --fail'

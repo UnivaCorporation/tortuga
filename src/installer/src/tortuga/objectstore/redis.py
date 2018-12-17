@@ -79,6 +79,8 @@ class RedisObjectStore(ObjectStore):
         for k, v in value.items():
             if isinstance(v, (dict, list, tuple)):
                 to_store[k] = 'JSON:{}'.format(json.dumps(v))
+            elif v is None:
+                to_store[k] = 'NULL'
             else:
                 to_store[k] = v
 
@@ -136,6 +138,8 @@ class RedisObjectStore(ObjectStore):
                 v = v.decode()
             if isinstance(v, str) and v.startswith('JSON:'):
                 deserialized[k] = json.loads(v[5:])
+            elif v == 'NULL':
+                deserialized[k] = None
             else:
                 deserialized[k] = v
 

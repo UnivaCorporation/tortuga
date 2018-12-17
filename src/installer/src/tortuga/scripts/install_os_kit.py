@@ -16,7 +16,7 @@ from typing import List
 
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.db.dbManager import DbManager
-from tortuga.kit.kitApiFactory import getKitApi
+from tortuga.kit.kitApi import KitApi
 from tortuga.kit.loader import load_kits
 from tortuga.puppet import Puppet
 
@@ -54,7 +54,7 @@ package-based node provisioning.
 
         load_kits()
 
-        api = getKitApi(self.getUsername(), self.getPassword())
+        api = KitApi()
 
         # Pre-process the media URL list
         os_media_urls: List[str] = self.getArgs().osMediaUrl.split(',')

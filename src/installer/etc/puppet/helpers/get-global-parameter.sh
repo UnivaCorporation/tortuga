@@ -26,11 +26,11 @@ keyname="$1"
 python - <<ENDL
 import sys
 
-from tortuga.parameter.parameterApiFactory import getParameterApi
+from tortuga.parameter.parameterApi import ParameterApi
 from tortuga.exceptions import parameterNotFound
 
 try:
-    print getParameterApi().getParameter("$keyname").getValue()
+    print ParameterApi().getParameter("$keyname").getValue()
 except parameterNotFound.ParameterNotFound:
     sys.exit(1)
 ENDL
