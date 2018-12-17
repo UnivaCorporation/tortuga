@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime
 from sqlalchemy.orm.session import Session
 
 from tortuga.db.models.dataRequest import DataRequest
@@ -68,11 +69,9 @@ def enqueue_addnodes_request(session: Session, addNodesRequest: dict) -> str:
 
     return request.addHostSession
 
-
-    return request
-
 def _init_data_request(data, addHostSession):
     request = DataRequest()
     request.request = data
     request.timestamp = datetime.datetime.utcnow()
     request.addHostSession = addHostSession
+    return request

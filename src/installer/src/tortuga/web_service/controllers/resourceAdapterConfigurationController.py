@@ -196,6 +196,7 @@ class ResourceAdapterConfigurationController(TortugaController):
             ra_class: Type[ResourceAdapter] = get_resourceadapter_class(
                 resadapter_name)
             ra = ra_class()
+            ra.session = cherrypy.request.db
 
             #
             # Validate the configuration

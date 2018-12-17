@@ -82,7 +82,6 @@ def get_puppet_node_yaml(session, nodeName):
     try:
         from tortuga.db.dataRequestsDbHandler import DataRequestsDbHandler
         dbDataRequest = DataRequestsDbHandler().get_by_addHostSession(session, dbNode.addHostSession)
-#        print('dbDataRequest: %s' % dbDataRequest)
         if dbDataRequest:
             data = dbDataRequest.request
     except Exception as e:

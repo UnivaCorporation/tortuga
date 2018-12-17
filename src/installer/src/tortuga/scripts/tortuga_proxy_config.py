@@ -22,7 +22,7 @@ import urllib.parse
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.invalidArgument import InvalidArgument
-from tortuga.kit import kitApiFactory
+from tortuga.kit.kitApi import KitApi
 
 
 class TortugaProxyConfig(TortugaCli):
@@ -30,7 +30,7 @@ class TortugaProxyConfig(TortugaCli):
         super(TortugaProxyConfig, self).__init__(validArgCount=4)
 
         self._cm = ConfigManager()
-        self._kitApi = kitApiFactory.getKitApi()
+        self._kitApi = KitApi()
 
     def parseArgs(self, usage=None):
         # TODO: add stuff here
