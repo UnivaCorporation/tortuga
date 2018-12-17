@@ -893,8 +893,10 @@ however.
 
 #### Firewall Configuration {#firewall}
 
-If possible, firewalls on Tortuga installer and compute nodes should be
-disabled to maximize speed and compatibility.
+It is recommended that any system-level firewall be disabled on both the
+Tortuga installer and compute nodes during the initial installation. Once a
+baseline level of functionality has been established, it is possible to
+re-enable the firewall.
 
 To disable the firewall, run the following commands as `root` on RHEL/CentOS 6.x:
 
@@ -911,31 +913,31 @@ systemctl stop firewalld
 systemctl disable firewalld
 ```
 
-If this is not practical for security reasons, a firewall may be used as
-long as it provides access to the necessary ports:
+The following ports *must* be open for ingress on the Tortuga installer and
+egress on the Tortuga-managed compute nodes:
 
-| Port  | Protocol | Description                                                      |
-|------:|:--------:|------------------------------------------------------------------|
-| 22    | tcp      | ssh                                                              |
-| 53    | udp/tcp  | DNS (installer)                                                  |
-| 67    | udp/tcp  | DHCP (only req'd for on-premise node provisioning) (installer)   |
-| 68    | udp/tcp  | DHCP (only req'd for on-premise node provisioning) (installer)   |
-| 111   | udp/tcp  | rpcbind (req'd for NFS)                                          |
-| 2049  | udp/tcp  | NFS (installer)                                                  |
-| 6444  | tcp      | Grid Engine qmaster (installer) *default*                        |
-| 6445  | tcp      | Grid Engine execd (compute) *default*                            |
-| 8008  | tcp      | Tortuga "internal" web server (installer)                        |
-| 8140  | tcp      | Puppet server (installer)                                        |
-| 8443  | tcp      | Tortuga web service (installer)                                  |
-| 61614 | tcp      | [ActiveMQ][] (req'd by [MCollective][]) (installer)              |
+| Port  | Protocol | Description                                          |
+|------:|:--------:|------------------------------------------------------|
+| 22    | tcp      | ssh                                                  |
+| 53    | udp/tcp  | DNS                                                  |
+| 67    | udp/tcp  | DHCP (only req'd for on-premises node provisioning)  |
+| 68    | udp/tcp  | DHCP (only req'd for on-premises node provisioning)  |
+| 111   | udp/tcp  | rpcbind (req'd for NFS)                              |
+| 2049  | udp/tcp  | NFS                                                  |
+| 6444  | tcp      | Grid Engine qmaster *default*                        |
+| 6445  | tcp      | Grid Engine execd *default*                          |
+| 8008  | tcp      | Tortuga "internal" web server                        |
+| 8140  | tcp      | Puppet server                                        |
+| 8443  | tcp      | Tortuga web service                                  |
+| 61614 | tcp      | [ActiveMQ][] (req'd by [MCollective][])              |
 
 **Note:** it may be necessary to open additional ports depending on system
 configuration and/or applications in use.
 
-**Warning:** An overly restrictive firewall can cause connectivity issues in a
-cluster if not properly configured. As a first troubleshooting step, if
-possible, temporarily disable the firewall if network connectivity issues are
-suspected.
+**Warning:** An overly restrictive firewall can cause connectivity issues
+in a cluster if not properly configured. As a first troubleshooting step,
+if possible, temporarily disable the firewall if network connectivity
+issues are suspected.
 
 #### Puppet
 
