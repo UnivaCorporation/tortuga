@@ -350,9 +350,9 @@ Commands listed in this "Quickstart" section are intended to be run as the
 
         The `adapter-mgmt` command is used to manage resource adapter
         configuration profiles for all Tortuga supported resource adapters.
-        In this example, we are configuring the `aws` resource adapter:
+        In this example, we are configuring the `AWS` resource adapter:
 
-            adapter-mgmt create --resource-adapter aws \
+            adapter-mgmt create --resource-adapter AWS \
                 --profile default \
                 --setting region=<AWS region name> \
                 --setting awsAccessKey=<AWS access key> \
@@ -369,7 +369,7 @@ Commands listed in this "Quickstart" section are intended to be run as the
 
         If using Amazon VPC, the `subnet_id` in the desired VPC must be specified:
 
-            adapter-mgmt create --resource-adapter aws \
+            adapter-mgmt create --resource-adapter AWS \
                 --profile default \
                 <settings from above..>
                 --setting subnet_id=<subnet-XXXXXXXX>
@@ -417,7 +417,7 @@ Commands listed in this "Quickstart" section are intended to be run as the
         Configure newly created hardware profile for use with Amazon EC2:
 
             update-hardware-profile --name execd-aws \
-                --resource-adapter aws --location remote
+                --resource-adapter AWS --location remote
 
         When running with an EC2-based Tortuga installer, it is _also_
         necessary to set the hardware profile name format so EC2-assigned host
@@ -2592,21 +2592,33 @@ and cloud platforms.
 
 ## Resource adapter configuration profiles
 
-Starting with Tortuga 7.0, resource adapter configuration is managed
-using the `adapter-mgmt` command-line interface. This functionality
-obsoletes the need for resource adapter configuration files previously
-found in `$TORTUGA_ROOT/config/adapter-defaults-*.conf`.
+A resource adapter configuration profile contains resource adapter settings,
+including access credentials, instance/VM types, compute node operating system
+image, networking configuration, etc.
 
-It is also no longer necessary to create resource adapter configuration
-profile names matching hardware profile names.
+Tortuga supports multiple resource adapter configuration profiles to allow
+custom tailored cloud provider configuration per groups of nodes. The "Default"
+resource adapter configuration profile would usually contain access credentials
+and default configuration. Resource adapter configuration profiles can be
+created that only override or add specific settings to eliminate the need for
+duplicating common settings.
+
+A non-default resource adapter configuration profile can be set on hardware
+profiles to automatically apply those settings to all nodes added to that
+hardware profile.
+
+Resource adapter configuration profiles can be created to support multiple sets
+of access credentials to allow, for example, multiple UGE clusters within a
+Tortuga managed environment, each with using a different set of access
+credentials and therefore, billed to the end-user independently.
 
 ### Creating a resource adapter configuration profile
 
 Create a resource adapter configuration profile named "example" for the
-"aws" resource adapter:
+"AWS" resource adapter:
 
 ```shell
-adapter-mgmt create --resource-adapter aws --profile example \
+adapter-mgmt create --resource-adapter AWS --profile example \
     --setting key=value
 ```
 
@@ -2659,7 +2671,7 @@ configuration was contained within a file. These existing resource adapter
 configurations may be imported as follows:
 
 ```shell
-adapter-mgmt import --resource-adapter aws --adapter-config <filename>
+adapter-mgmt import --resource-adapter AWS --adapter-config <filename>
 ```
 
 This will create a `default` resource adapter configuration profile for the
@@ -2669,10 +2681,10 @@ all sections listed in the adapter configuration file.
 ### List all resource adapter configuration profiles
 
 For example, to list all resource adapter configuration profiles for the
-"aws" resource adapter, use the following command-line:
+"AWS" resource adapter, use the following command-line:
 
 ```shell
-adapter-mgmt list --resource-adapter aws
+adapter-mgmt list --resource-adapter AWS
 ```
 
 ### Show specific resource adapter configuration profile
@@ -2681,7 +2693,7 @@ To display all settings for a specific resource adapter configuration
 profile:
 
 ```shell
-adapter-mgmt show --resource-adapter aws --profile default
+adapter-mgmt show --resource-adapter AWS --profile default
 ```
 
 All "secret" information (ie. AWS access/secret keys, passwords, etc.) will
@@ -2689,16 +2701,16 @@ be hidden from the output of `adapter-mgmt show` by default. To display
 *all* information, add the `--all` argument. For example:
 
 ```shell
-adapter-mgmt show --all --resource-adapter aws --profile default
+adapter-mgmt show --all --resource-adapter AWS --profile default
 ```
 
 ### Deleting resource adapter configuration profiles
 
-Delete the resource adapter configuration profile "example" from the "aws"
+Delete the resource adapter configuration profile "example" from the "AWS"
 resource adapter:
 
 ```shell
-adapter-mgmt delete --resource-adapter aws --profile example
+adapter-mgmt delete --resource-adapter AWS --profile example
 ```
 
 ### Specify resource adapter configuration profile when adding nodes
