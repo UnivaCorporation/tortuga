@@ -41,6 +41,7 @@ from tortuga.exceptions.invalidMachineConfiguration import \
     InvalidMachineConfiguration
 from tortuga.exceptions.kitNotFound import KitNotFound
 from tortuga.exceptions.softwareAlreadyDeployed import SoftwareAlreadyDeployed
+from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.helper.osHelper import getOsInfo
 from tortuga.kit.kitApi import KitApi
 from tortuga.kit.loader import load_kits
@@ -697,7 +698,7 @@ class TortugaDeployer: \
         except Exception:  # pylint: disable=broad-except
             self._logger.exception('Fatal error occurred during setup')
 
-            self.out('\nInstallation failed...\n')
+            raise TortugaException('Installation failed')
 
     def _generateDbPassword(self):
         '''
