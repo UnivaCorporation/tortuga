@@ -13,27 +13,61 @@
 # limitations under the License.
 
 class tortuga::puppet::package {
-  require tortuga::packages
-
   $pkgs = ['puppet-agent']
 
   ensure_packages($pkgs, {'ensure' => 'installed'})
 }
 
-class tortuga::puppet::config (
-  $installer = $::puppet_server,
-) {
+class tortuga::puppet::config {
   require tortuga::puppet::package
 
-  $normalized_installer = downcase($installer)
+  include tortuga::config
+
+  $normalized_installer = downcase($tortuga::puppet::installer)
 
   augeas { 'configure_puppet_agent':
     context => '/files/etc/puppetlabs/puppet/puppet.conf',
     changes => [
       "set main/server ${normalized_installer}",
-      # 'set main/pluginsync true',
-      # 'set agent/report true',
     ],
+  }
+
+  # configure puppet proxy settings
+
+  if $tortuga::config::puppet_proxy_http_host {
+    augeas { 'configure puppet proxy_http_host':
+      context => '/files/etc/puppetlabs/puppet/puppet.conf',
+      changes => [
+        "set main/http_proxy_host ${tortuga::config::puppet_proxy_http_host}",
+      ],
+    }
+  }
+
+  if $tortuga::config::puppet_proxy_http_port {
+    augeas { 'configure puppet proxy_http_port':
+      context => '/files/etc/puppetlabs/puppet/puppet.conf',
+      changes => [
+        "set main/http_proxy_port ${tortuga::config::puppet_proxy_http_port}",
+      ],
+    }
+  }
+
+  if $tortuga::config::puppet_proxy_http_user {
+    augeas { 'configure puppet proxy_http_user':
+      context => '/files/etc/puppetlabs/puppet/puppet.conf',
+      changes => [
+        "set main/http_proxy_user ${tortuga::config::puppet_proxy_http_user}",
+      ],
+    }
+  }
+
+  if $tortuga::config::puppet_proxy_http_password {
+    augeas { 'configure puppet proxy_http_password':
+      context => '/files/etc/puppetlabs/puppet/puppet.conf',
+      changes => [
+        "set main/http_proxy_password ${tortuga::config::puppet_proxy_http_password}",
+      ],
+    }
   }
 
   augeas { 'disable deprecation warnings':
@@ -43,12 +77,8 @@ class tortuga::puppet::config (
 }
 
 class tortuga::puppet (
-  $installer = $::puppet_server,
+  String $installer = $::puppet_server,
 ) {
   contain tortuga::puppet::package
-
-  class { 'tortuga::puppet::config':
-    installer => $installer,
-  }
   contain tortuga::puppet::config
 }

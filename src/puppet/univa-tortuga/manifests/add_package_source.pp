@@ -12,22 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-class tortuga::packages (
-  $repos = undef,
+define tortuga::add_package_source(
+  String $baseurl,
+  Integer $cost=1000,
+  String $type='yum',
 ) {
-  # This is necessary because this module is referenced as part of the
-  # bootstrap before the ENC is available, so $::repos is undefined.
-  if $repos == undef {
-    $repos_arg = $::repos
-  } else {
-    $repos_arg = $repos
-  }
-
-  if $repos_arg != undef {
-    $repos_arg.each |String $repo_name, Hash $repo_spec| {
-      tortuga::add_package_source { $repo_name:
-        baseurl => $repo_spec['baseurl'],
-      }
+  # Currently, we only support writing a YUM repository configuration.
+  if $::facts['os']['family'] == 'RedHat' and $type == 'yum' {
+    yumrepo { $name:
+      baseurl        => $baseurl,
+      descr          => "Repository for ${name}",
+      enabled        => 1,
+      gpgcheck       => 0,
+      cost           => $cost,
+      proxy          => $tortuga::config::proxy_uri,
+      proxy_username => $tortuga::config::proxy_user,
+      proxy_password => $tortuga::config::proxy_password,
     }
   }
 }
