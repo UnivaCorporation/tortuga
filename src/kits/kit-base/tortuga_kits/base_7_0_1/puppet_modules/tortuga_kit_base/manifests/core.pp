@@ -14,24 +14,18 @@
 
 
 class tortuga_kit_base::core {
+  contain tortuga_kit_base::core::actions
+  contain tortuga_kit_base::core::done
+}
+
+class tortuga_kit_base::core::actions {
   # Incorporate classes defined in Hiera
   $classes = lookup('classes', {'merge' => 'unique', 'default_value' => []})
   if $classes {
     include($classes)
   }
 
-  contain tortuga_kit_base::core::packages
-  contain tortuga_kit_base::core::worker
-  contain tortuga_kit_base::core::installed
-}
-
-class tortuga_kit_base::core::packages {
   contain tortuga::packages
-}
-
-class tortuga_kit_base::core::worker {
-  require tortuga_kit_base::core::packages
-
   contain tortuga::compute
   contain tortuga_kit_base::core::cfmsecret
   contain tortuga_kit_base::core::ssh_server
@@ -43,13 +37,13 @@ class tortuga_kit_base::core::worker {
 
   contain tortuga_kit_base::core::post_install
 
-  Class['tortuga_kit_base::core::install']
-    -> Class['tortuga::envscript']
-    -> Class['tortuga_kit_base::core::links']
+  Class['tortuga_kit_base::core::install'] ->
+    Class['tortuga::envscript'] ->
+    Class['tortuga_kit_base::core::links']
 }
 
-class tortuga_kit_base::core::installed {
-  require tortuga_kit_base::core::worker
+class tortuga_kit_base::core::done {
+  require tortuga_kit_base::core::actions
 
   tortuga_kit_base::installed { 'compute': }
 }
