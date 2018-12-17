@@ -2557,6 +2557,58 @@ running `install-tortuga.sh`.
 Provisioned compute nodes are automatically configured to use the local
 installation dependencies, instead of connecting to remote sites.
 
+### Compute Node Proxy Support
+
+It is possible to define proxy settings for use by compute nodes in
+environments where there is no direct connectivity between the Tortuga
+installer and compute nodes.
+
+The proxy is configured through the Puppet Hiera mechanism and is applied
+directly to software profiles and the nodes contained therein.
+
+#### Proxy settings
+
+The following proxy settings are available:
+
+* `tortuga::config::puppet_proxy_http_host`
+* `tortuga::config::puppet_proxy_http_port`
+* `tortuga::config::puppet_proxy_http_user` (*optional*)
+* `tortuga::config::puppet_proxy_http_password` (*optional*)
+* `tortuga::config::proxy_uri`
+* `tortuga::config::proxy_user` (*optional*)
+* `tortuga::config::proxy_password` (*optional*)
+
+The settings with the `puppet_` prefix apply specifically to the Puppet client
+run on the compute nodes. The settings with the `proxy_` prefix apply to both
+the YUM repository URLs used by the compute nodes as well as accessing the
+Tortuga webservice and internal HTTP server.
+
+#### Example Proxy configuration
+
+For example, to apply these settings to the "Compute" software profile, add
+the proxy configuration to `/etc/puppetlabs/code/environments/production/data/tortuga-Compute.yaml`.
+
+**Note:** the file name `tortuga-Compute.yaml` is case-sensitive and
+**must** match the software profile name exactly.
+
+```yaml
+---
+version: 5
+
+tortuga::config::puppet_proxy_http_host: myproxy
+tortuga::config::puppet_proxy_http_port: 3128
+
+tortuga::config::proxy_uri: http://myproxy:3128
+```
+
+**Note:** it is currently necessary to duplicate the proxy host/port/uri
+settings as seen above.
+
+The proxy configuration takes effect immediately. If the setting(s) are
+changed after a node deployment, run `schedule-update` to trigger a
+system-wide change, otherwise invoke a Puppet update on each affected
+compute node, as necessary.
+
 ### Managing Operating System Updates
 
 #### Red Hat Enterprise Linux
