@@ -774,7 +774,7 @@ class SoftwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
             maxNodes=src_swprofile.maxNodes,
             lockedState=src_swprofile.lockedState,
             isIdle=src_swprofile.isIdle,
-            dataRoot=src_swprofile.dataRoot
+            dataRoot=src_swprofile.dataRoot,
             dataRsync=src_swprofile.dataRsync
         )
 
