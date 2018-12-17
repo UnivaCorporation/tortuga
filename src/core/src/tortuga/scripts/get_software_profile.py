@@ -299,7 +299,7 @@ class GetSoftwareProfileCli(TortugaCli):
             else:
                 print('  - Data Roots: (none)')
 
-        if self.getArgs().getDataRync:
+        if self.getArgs().getDataRsync:
             if swprofile.getDataRsync():
                 print('  - Rsync config: {0}'.format(swprofile.getDataRsync()))
             else:
