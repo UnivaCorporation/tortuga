@@ -28,7 +28,7 @@ from setuptools import find_packages, setup
 srcRoot = 'tortuga'
 module_name = 'tortuga-core'
 
-version = '7.0.1'
+version = '7.0.2'
 
 if os.getenv('RELEASE'):
     requirements_file = 'requirements.txt'

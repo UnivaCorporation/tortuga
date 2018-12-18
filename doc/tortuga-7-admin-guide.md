@@ -413,7 +413,7 @@ the `root` user on the Tortuga installer node.
     
     ``` shell
     install-kit --i-accept-the-eula kit-awsadapter-*.tar.bz2
-    enable-component -p --no-sync awsadapter-7.0.1-0 management-7.0.1
+    enable-component -p --no-sync awsadapter-7.0.2-0 management-7.0.2
     ```
     
     1.  Configure AWS resource adapter
@@ -1586,13 +1586,13 @@ The `get-kit-list` command will display all installed kits (application
 
 ``` shell
 [root@tortuga ~]# get-kit-list
-awsadapter-7.0.1-0
-base-7.0.1-0
+awsadapter-7.0.2-0
+base-7.0.2-0
 centos-7.0-0
 ganglia-3.7.2-1
-gceadapter-7.0.1-0
-simple_policy_engine-7.0.1-0
-snmp-7.0.1-0
+gceadapter-7.0.2-0
+simple_policy_engine-7.0.2-0
+snmp-7.0.2-0
 uge-8.6.4-0
 ```
 
@@ -1629,19 +1629,19 @@ Use `get-component-list` to display all available components.
 
 ``` shell
 [root@tortuga ~]# get-component-list
-snmp-7.0.1-0 snmpd-7.0.1
-base-7.0.1-0 core-7.0.1
-base-7.0.1-0 installer-7.0.1
-base-7.0.1-0 dhcpd-7.0.1
-base-7.0.1-0 dns-7.0.1
-awsadapter-7.0.1-0 management-7.0.1
-gceadapter-7.0.1-0 management-7.0.1
+snmp-7.0.2-0 snmpd-7.0.2
+base-7.0.2-0 core-7.0.2
+base-7.0.2-0 installer-7.0.2
+base-7.0.2-0 dhcpd-7.0.2
+base-7.0.2-0 dns-7.0.2
+awsadapter-7.0.2-0 management-7.0.2
+gceadapter-7.0.2-0 management-7.0.2
 uge-8.6.4-0 qmaster-8.6.4
 uge-8.6.4-0 execd-8.6.4
-simple_policy_engine-7.0.1-0 engine-7.0.1
+simple_policy_engine-7.0.2-0 engine-7.0.2
 ganglia-3.7.2-1 gmetad-3.7.2
 ganglia-3.7.2-1 gmond-3.7.2
-centos-7.0-0 centos-7.0-x86_64-7.0.1
+centos-7.0-0 centos-7.0-x86_64-7.0.2
 ```
 
 #### Display list of enabled components
@@ -1654,8 +1654,8 @@ For example, to display the components enabled on the Tortuga installer:
 
 ``` shell
 [root@tortuga ~]# get-component-list --software-profile Installer
-base-7.0.1-0 installer-7.0.1
-base-7.0.1-0 dns-7.0.1
+base-7.0.2-0 installer-7.0.2
+base-7.0.2-0 dns-7.0.2
 uge-8.6.4-0 qmaster-8.6.4
 ```
 
@@ -1678,7 +1678,7 @@ command. For example, to enable the `pdsh` component on the Tortuga
 installer:
 
 ``` shell
-enable-component -p base-7.0.1-0 pdsh-7.0.1
+enable-component -p base-7.0.2-0 pdsh-7.0.2
 ```
 
 **Hint:** Since it is unlikely to be another component named “pdsh”, use
@@ -1756,7 +1756,7 @@ This component must be enabled to provision *local* (non-cloud) nodes.
 Enable the `dhcpd` component with the command:
 
 ``` shell
-enable-component -p base-7.0.1-0 dhcpd-7.0.1
+enable-component -p base-7.0.2-0 dhcpd-7.0.2
 ```
 
 `/opt/puppetlabs/bin/puppet agent --onetime --no-daemonize` is used to
@@ -1781,7 +1781,7 @@ system to its associated IP address.
 Enable the `dns` component with the command:
 
 ``` shell
-enable-component -p base-7.0.1-0 dns-7.0.1
+enable-component -p base-7.0.2-0 dns-7.0.2
 ```
 
 ###### Configuring Tortuga private DNS domain
@@ -1791,7 +1791,7 @@ compute node host name when provisioning on-premise physical or virtual
 machines or when *optionally* enabled in resource adapter(s) using the
 `override_dns_domain` resource adapter configuration setting.
 
-On Tortuga 7.0.1 (and later), the `set-private-dns-zone` command-line is
+On Tortuga 7.0.2 (and later), the `set-private-dns-zone` command-line is
 used to display the current “private” DNS zone by calling it without an
 argument:
 
@@ -1800,7 +1800,7 @@ argument:
 cloud.univa.com
 ```
 
-On Tortuga versions prior to 7.0.1, use `ucparam` to get the current
+On Tortuga versions prior to 7.0.2, use `ucparam` to get the current
 (private) DNS domain. The Tortuga default private DNS domain is
 `private`.
 
@@ -2020,8 +2020,8 @@ Enable the following base components on the installer for provisioning:
 These components are enabled using `enable-component`. For example:
 
 ``` shell
-enable-component -p base-7.0.1-0 dhcpd-7.0.1
-enable-component -p base-7.0.1-0 dns-7.0.1
+enable-component -p base-7.0.2-0 dhcpd-7.0.2
+enable-component -p base-7.0.2-0 dns-7.0.2
 ```
 
 Use `get-component-list` to see the exact name of the components and
@@ -2771,13 +2771,13 @@ Cons:
 When a compute node is provisioned by Tortuga, it installs the base
 operating system from the OS media as provided by ‘install-os-kit’.
 Packages which constitute the Tortuga “base” kit are installed from
-‘/opt/tortuga/depot/kits/base/7.0.1-0/noarch’.
+‘/opt/tortuga/depot/kits/base/7.0.2-0/noarch’.
 
 Updated packages can be dropped into this directory and will be
 automatically available to Tortuga provisioned compute nodes.
 
 **Note: after updating packages in
-`/opt/tortuga/depot/kits/base/7.0.1-0/noarch`, it is required to run
+`/opt/tortuga/depot/kits/base/7.0.2-0/noarch`, it is required to run
 `createrepo` to update the Tortuga **base\*\* kit YUM repository
 metadata.\*\*
 
