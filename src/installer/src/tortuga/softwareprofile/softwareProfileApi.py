@@ -16,10 +16,10 @@
 
 from sqlalchemy.orm.session import Session
 from tortuga.exceptions.tortugaException import TortugaException
+from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.softwareprofile.softwareProfileManager import \
     SoftwareProfileManager
 from tortuga.utility.tortugaApi import TortugaApi
-from tortuga.objects.tortugaObject import TortugaObjectList
 
 
 class SoftwareProfileApi(TortugaApi): \
@@ -306,7 +306,7 @@ class SoftwareProfileApi(TortugaApi): \
 
     def enableComponent(self, session: Session, softwareProfileName, kitName,
                         kitVersion,
-                        kitIteration, compName, compVersion=None, sync=True):
+                        kitIteration, compName, compVersion=None):
         try:
             return self._softwareProfileManager.enableComponent(
                 session,
@@ -316,7 +316,7 @@ class SoftwareProfileApi(TortugaApi): \
                 kitIteration,
                 compName,
                 compVersion,
-                sync=sync)
+            )
         except Exception as ex:
             if not isinstance(ex, TortugaException):
                 self.getLogger().exception(
@@ -329,8 +329,7 @@ class SoftwareProfileApi(TortugaApi): \
             raise
 
     def disableComponent(self, session: Session, softwareProfileName, kitName,
-                         kitVersion, kitIteration, compName, compVersion=None,
-                         sync=True):
+                         kitVersion, kitIteration, compName, compVersion=None):
         try:
             return self._softwareProfileManager.disableComponent(
                 session,
@@ -340,7 +339,7 @@ class SoftwareProfileApi(TortugaApi): \
                 kitIteration,
                 compName,
                 compVersion,
-                sync=sync)
+            )
         except TortugaException as ex:
             raise
         except Exception as ex:
