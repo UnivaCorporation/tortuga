@@ -2547,18 +2547,19 @@ get-hardware-profile-list --tag <key>
 
 ## Advanced Topics
 
-### “Offline” installation
+### “Off-line” installation
 
 The process for installing Tortuga in an environment that is entirely
-offline is completed in two steps. The first step is to download the
-installation dependencies on a host that does have internet access:
+off-line is completed in two steps. The first step is to download the
+installation dependencies on a host that does have internet access.
 
-#### Prepare Offline Installation Dependencies
+#### Prepare Off-line Installation Dependencies
 
-The script `prep-offline-install.sh` is to be run on a connected host;
-one that has unrestricted access to package repositories required by the
-Tortuga installer. This includes `yum.puppetlabs.com`, the EPEL
-repository, and sites redirected from PyPI (the Python Package Index).
+The script `prep-offline-install.sh` is to be run on an internet
+connected host; one that has unrestricted access to package repositories
+required by the Tortuga installer. This includes `yum.puppetlabs.com`,
+the EPEL repository, and sites redirected from PyPI (the Python Package
+Index).
 
 ##### Run `prep-offline-install.sh` script
 
@@ -2590,10 +2591,14 @@ Tortuga is to be installed.
 The Tortuga installation on the “disconnected” server must reference the
 previously downloaded dependencies.
 
-It is *assumed* that the CentOS repository will be available for the
-Tortuga installation process. Alternatively, this can be substituted for
-a locally available media ISO, mounted on `/media/cdrom', and with
+##### Prerequisites
+
+It is *assumed* that the RHEL/CentOS repository will be available for
+the Tortuga installation process. Alternatively, this can be substituted
+for a locally available media ISO, mounted on `/media/cdrom', and with
 the`c7-media\` YUM repository enabled.
+
+Compute nodes require access to the same RHEL/CentOS repository.
 
 ##### Extract dependencies tarball
 
@@ -2620,6 +2625,37 @@ after running `install-tortuga.sh`.
 
 Provisioned compute nodes are automatically configured to use the local
 installation dependencies, instead of connecting to remote sites.
+
+#### (*optional*) Setting up OS repository for compute nodes
+
+If the installation environment does not have local access to a
+pre-configured OS repository, it is necessary to set this up for access
+by compute nodes.
+
+For AWS environments, the bundled
+`/opt/tortuga/config/bootstrap-offline.tmpl` bootstrap script assumes
+the OS repository is available under
+`/opt/tortuga/www_int/compute-os-repo`. The files contained under this
+subdirectory should be a self-contained YUM repository (ie. containing
+the subdirectories `repodata` and `Packages`).
+
+The repository found at `/opt/tortuga/www_int/compute-os-repo` may be
+loopback mounted ISO media or files mirrored from an upstream location.
+
+A sample empty directory is included. Overwrite these files with an
+actual repository.
+
+#### Resource adapter bootstrap script
+
+The AWS resource adapter includes a bootstrap script
+`bootstrap-offline.tmpl` which configures the offline dependencies and
+OS repositories. It is *expected* that the end-user will need to modify
+this for their particular environment.
+
+Use `adapter-mgmt update -r AWS -p Default -s
+user_data_script_template=aws-bootstrap-offline.tmpl` to enable this for
+offline compute nodes in the AWS environment. Other resource
+adapters/cloud providers will require similar configuration.
 
 ### Compute Node Proxy Support
 
