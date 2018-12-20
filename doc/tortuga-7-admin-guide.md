@@ -2417,47 +2417,18 @@ nodes to transfer, favoring idle and unused nodes when possible.
 ### Node states
 
 The output of `get-node-status` can reveal nodes in Tortuga can exist in
-one of several different states:
+one of several different
+states:
 
-  - Installed
-    
-    Node is available and ready to use.
-
-  - Provisioned
-    
-    Node has been added to Tortuga and is in the process of being
-    bootstrapped. Nodes in the ‘Provisioned’ state should successfully
-    transition to ‘Installed’ state.
-
-  - Expired
-    
-    Existing node is being reinstalled. Only nodes that have been idled
-    and (re)activated or reinstalled will ever be in this state.
-
-  - Deleted
-    
-    Tortuga is in the process of removing this node. The backing
-    instance has been terminated/destroyed and database cleanup will
-    eventually remove the node record entirely.
-
-  - Error
-    
-    Consult `/var/log/tortuga` (or `get-node-requests`) to determine the
-    cause of the node error state.
-
-  - Launching
-    
-    Tortuga has received and begun processing the add nodes request.
-    This state is typically associated with cloud-backed node instances
-    where there is a delay caused by the cloud platform.
-
-  - Allocated
-    
-    Tortuga has created node record(s) and is in the process of
-    launching the backing instance.
-
-This list of node states is subject to change as support for additional
-cloud providers is added and additional states may be added.
+| State       | Description                                                                                                                                                                               |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Installed   | Node is available and ready to use.                                                                                                                                                       |
+| Provisioned | Node has been added to Tortuga and is in the process of being bootstrapped. Nodes in the ‘Provisioned’ state should successfully transition to ‘Installed’ state.                         |
+| Expired     | Existing node is being reinstalled. Only nodes that have been idled and (re)activated or reinstalled will ever be in this state.                                                          |
+| Deleted     | Tortuga is in the process of removing this node. The backing instance has been terminated/destroyed and database cleanup will eventually remove the node record entirely.                 |
+| Error       | Consult `/var/log/tortugawsd` (or `get-node-requests`) to determine the cause of the node error state.                                                                                    |
+| Launching   | Tortuga has received and begun processing the add nodes request. This state is typically associated with cloud-backed node instances where there is a delay caused by the cloud platform. |
+| Allocated   | Tortuga has created node record(s) and is in the process of launching the backing instance.                                                                                               |
 
 ### Resource tagging
 
