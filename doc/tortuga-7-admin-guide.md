@@ -2595,10 +2595,12 @@ previously downloaded dependencies.
 
 It is *assumed* that the RHEL/CentOS repository will be available for
 the Tortuga installation process. Alternatively, this can be substituted
-for a locally available media ISO, mounted on `/media/cdrom', and with
-the`c7-media\` YUM repository enabled.
+for a locally available media ISO, mounted on `/media/cdrom`, and with
+the `c7-media` YUM repository enabled.
 
-Compute nodes require access to the same RHEL/CentOS repository.
+Compute nodes require access to the same RHEL/CentOS repository. Refer
+to the section *Configuring OS distribution proxy* below for more
+details.
 
 ##### Extract dependencies tarball
 
@@ -2626,31 +2628,83 @@ after running `install-tortuga.sh`.
 Provisioned compute nodes are automatically configured to use the local
 installation dependencies, instead of connecting to remote sites.
 
-#### (*optional*) Setting up OS repository for compute nodes
+#### Configuring OS distribution proxy
 
-If the installation environment does not have local access to a
-pre-configured OS repository, it is necessary to set this up for access
-by compute nodes.
+It is necessary to set up access to OS distribution YUM repositories in
+an environment where Tortuga compute nodes do not have direct access to
+upstream OS distribution YUM repositories.
 
-For AWS environments, the bundled
-`/opt/tortuga/config/bootstrap-offline.tmpl` bootstrap script assumes
-the OS repository is available under
-`/opt/tortuga/www_int/compute-os-repo`. The files contained under this
-subdirectory should be a self-contained YUM repository (ie. containing
-the subdirectories `repodata` and `Packages`).
+By default, the Tortuga off-line installation sets up a YUM repository
+under `$TORTUGA_ROOT/www_int/compute-os-repo`.
 
-The repository found at `/opt/tortuga/www_int/compute-os-repo` may be
-loopback mounted ISO media or files mirrored from an upstream location.
+There are three options for making the OS distribution repository
+available to the compute nodes.
 
-A sample empty directory is included. Overwrite these files with an
-actual repository.
+**Note:** only one of the following mechanisms is required.
+
+##### 1\. Locally hosted OS distribution repository
+
+The following steps will serve the OS distribution repository from the
+Tortuga installer:
+
+  - Remove the default directory as set up by Tortuga
+    
+    ``` shell
+    rm -rf $TORTUGA_ROOT/www_int/compute-os-repo
+    ```
+
+  - Copy or loopback mount the distribution ISO locally
+    
+    The goal here is making the OS distribution repository available in
+    a well-known location within the Tortuga environment.
+    
+      - Copy contents of OS distribution ISO to
+        `$TORTUGA_ROOT/www_int/compute-os-repo`
+        
+        ``` shell
+        rsync -av /media/cdrom/ $TORTUGA_ROOT/www_int/compute-os-repo
+        ```
+    
+    or:
+    
+      - Loopback mount OS distribution ISO into local filesystem on
+        Tortuga
+        installer.
+        
+        ``` shell
+        mount -ro loop <distribution ISO> $TORTUGA_ROOT/www_int/compute-os-repo
+        ```
+        
+        This will serve the contents of the specified OS distribution
+        ISO in a common location under the Tortuga internal web server
+        accessible to compute nodes.
+
+##### 2\. Proxying to an external OS distribution repository
+
+Configure Squid (or other proxy) to proxy to an upstream OS repository
+and modify the offline bootstrap script (ie.
+`$TORTUGA_ROOT/config/aws-bootstrap-offline.tmpl`) to use that proxied
+path.
+
+Refer to the documentation of the proxy for details on how to proxy a
+specific host/path.
+
+The filename of this repository is
+`/etc/yum.repos.d/tortuga-offline-centos.repo` as set up by the default
+off-line bootstrap script. Modify the value of `baseurl` to point to the
+proxied URL on the Tortuga installer.\`
+
+##### 3\. Install OS distribution “kit” using Tortuga
+
+Install the desired OS distribution using `install-os-kit`. This will
+automatically configure the repository on Tortuga compute nodes.
 
 #### Resource adapter bootstrap script
 
 The AWS resource adapter includes a bootstrap script
-`bootstrap-offline.tmpl` which configures the offline dependencies and
-OS repositories. It is *expected* that the end-user will need to modify
-this for their particular environment.
+`aws-bootstrap-offline.tmpl` which configures the offline dependencies
+and OS repositories. It is *expected* that the end-user will need to
+modify this for their particular environment.
 
 Use `adapter-mgmt update -r AWS -p Default -s
 user_data_script_template=aws-bootstrap-offline.tmpl` to enable this for
@@ -2666,7 +2720,20 @@ installer and compute nodes.
 The proxy is configured through the Puppet Hiera mechanism and is
 applied directly to software profiles and the nodes contained therein.
 
-#### Proxy settings
+#### Setting up a proxy server
+
+Tortuga proxy support was tested exclusively with the [Squid caching
+proxy](http://www.squid-cache.org), though others are equally as capable
+and suitable.
+
+The default Squid configuration needs *minor* modification to tunnel SSL
+ports `8443/tcp` (Tortuga webservice) and `8140/tcp` (Puppet server).
+
+The installation of a proxy server within the Tortuga environment can be
+automated using the built-in Puppet server. See the section
+*Puppet-based Configuration Management* in this manual.
+
+#### Tortuga proxy settings
 
 The following proxy settings are available:
 
@@ -2692,6 +2759,9 @@ add the proxy configuration to
 **Note:** the file name `tortuga-Compute.yaml` is case-sensitive and
 **must** match the software profile name exactly.
 
+Port 3128 is the default port used by the Squid proxy. If using an
+alternate proxy, this value is likely to be different.
+
 ``` yaml
 ---
 version: 5
@@ -2703,12 +2773,14 @@ tortuga::config::proxy_uri: http://myproxy:3128
 ```
 
 **Note:** it is currently necessary to duplicate the proxy host/port/uri
-settings as seen above.
+settings as seen above. The Puppet proxy settings require a host name
+only for the value of `tortuga::config::puppet_proxy_http_host`.
+Specifying a URL here is incorrect and will not work.
 
 The proxy configuration takes effect immediately. If the setting(s) are
-changed after a node deployment, run `schedule-update` to trigger a
-system-wide change, otherwise invoke a Puppet update on each affected
-compute node, as necessary.
+changed after an existing node deployment, run `schedule-update` to
+trigger a system-wide change, otherwise invoke a Puppet update on each
+affected compute node, as necessary.
 
 ### Managing Operating System Updates
 
@@ -2885,7 +2957,9 @@ information about MCollective and other potential use cases.
 
 ### Tortuga Puppet Integration & Extensibility
 
-#### Puppet-based Configuration Management Overview
+#### Puppet-based Configuration Management
+
+##### Overview
 
 Configuration management of nodes within Tortuga is done entirely via
 Puppet. By using the Tortuga Puppet integration, it is very easy to
