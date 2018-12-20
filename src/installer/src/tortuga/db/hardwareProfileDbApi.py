@@ -15,9 +15,8 @@
 from typing import Dict, List, Optional
 
 import sqlalchemy.exc
-from sqlalchemy.orm.session import Session
-
 import tortuga.objects.nic
+from sqlalchemy.orm.session import Session
 from tortuga.config.configManager import ConfigManager
 from tortuga.db.adminsDbHandler import AdminsDbHandler
 from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
@@ -260,8 +259,8 @@ class HardwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
 
             if hwProfile.nodes:
                 raise TortugaException(
-                    'Unable to remove hardware profile with associated'
-                    ' nodes')
+                    'Unable to delete hardware profile with associated nodes'
+                )
 
             # First delete the mappings
             hwProfile.mappedsoftwareprofiles = []
