@@ -342,7 +342,7 @@ function install_epel() {
 
 function check_puppet_memory() {
     local total_memory
-    
+
     total_memory=$(free -g | grep "Mem:" | awk '{ print $2 }')
 
     if [ "$total_memory" -lt "2" ] && [ "$1" -lt "1" ]; then
@@ -956,6 +956,14 @@ done
 [installer]
 offline_installation = true
 ENDL
+
+    echo "Creating empty OS media repository for off-line compute nodes"
+
+    os_repodir="${TORTUGA_ROOT}/www_int/compute-os-repo"
+
+    mkdir -p "${os_repodir}"
+
+    createrepo "${os_repodir}" >>/tmp/install-tortuga.log 2>&1
 }
 
 donemsg="Tortuga successfully installed."

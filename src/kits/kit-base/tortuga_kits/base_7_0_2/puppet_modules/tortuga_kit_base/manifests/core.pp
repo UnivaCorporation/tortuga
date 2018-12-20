@@ -13,7 +13,9 @@
 # limitations under the License.
 
 
-class tortuga_kit_base::core {
+class tortuga_kit_base::core (
+  Boolean $offline_installation = false,
+) {
   contain tortuga_kit_base::core::actions
   contain tortuga_kit_base::core::done
 }
@@ -37,9 +39,9 @@ class tortuga_kit_base::core::actions {
 
   contain tortuga_kit_base::core::post_install
 
-  Class['tortuga_kit_base::core::install'] ->
-    Class['tortuga::envscript'] ->
-    Class['tortuga_kit_base::core::links']
+  Class['tortuga_kit_base::core::install']
+    -> Class['tortuga::envscript']
+    -> Class['tortuga_kit_base::core::links']
 }
 
 class tortuga_kit_base::core::done {

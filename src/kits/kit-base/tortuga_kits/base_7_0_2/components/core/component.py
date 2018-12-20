@@ -24,3 +24,13 @@ class ComponentInstaller(ComponentInstallerBase):
     ]
 
     compute_only = True
+
+    def action_get_puppet_args(self, db_software_profile,
+                               db_hardware_profile):
+
+        if self.kit_installer.config_manager.is_offline_installation():
+            return {
+                'offline_installation': True,
+            }
+
+        return {}
