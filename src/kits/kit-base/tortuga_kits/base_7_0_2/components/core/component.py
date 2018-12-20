@@ -32,3 +32,5 @@ class ComponentInstaller(ComponentInstallerBase):
             return {
                 'offline_installation': True,
             }
+
+        return {}
