@@ -24,7 +24,7 @@ from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
 class UpdateSoftwareProfileCli(TortugaCli):
     """
     Update software profile command line interface.
-    #"""
+    """
 
     # Software Profile Fetch Options
     # Skip nodes, components, and admins for update operations
