@@ -12,15 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tortuga.kit.installer import ComponentInstallerBase
+import pytest
+
+from tortuga.config.configManager import ConfigManager
 
 
-class ComponentInstaller(ComponentInstallerBase):
-    name = 'core'
-    version = '7.0.1'
-    os_list = [
-        {'family': 'rhel', 'version': '6', 'arch': 'x86_64'},
-        {'family': 'rhel', 'version': '7', 'arch': 'x86_64'},
-    ]
-
-    compute_only = True
+@pytest.fixture(scope='session')
+def config_manager():
+    return ConfigManager()

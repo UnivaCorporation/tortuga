@@ -26,21 +26,26 @@ class tortuga::mcollective::package {
       ensure => directory,
     }
 
-    if $::osfamily == 'RedHat' {
-      $cmd = "curl -LO ${url}"
-      $cwd = $tmpdir
-    } elsif $::osfamily == 'Debian' {
-      $cmd = "wget -O ${tarball} ${url}"
-      $cwd = undef
+    $cmd = "${tortuga::config::curl_cmd} ${url}"
+    $cwd = $tmpdir
+
+    if $tortuga::config::proxy_uri {
+      # both curl and wget honour 'http_proxy' environment variable
+      $environment = [
+        "http_proxy=${tortuga::config::proxy_uri}",
+      ]
+    } else {
+      $environment = []
     }
 
     exec { 'retrieve mcollective-puppet-agent':
-      path    => ['/bin', '/usr/bin'],
-      command => $cmd,
-      creates => $tarball,
-      cwd     => $cwd,
-      require => File[$tmpdir],
-      before  => Exec['extract mcollective-puppet-agent plugin'],
+      path        => ['/bin', '/usr/bin'],
+      command     => $cmd,
+      creates     => $tarball,
+      cwd         => $cwd,
+      require     => File[$tmpdir],
+      before      => Exec['extract mcollective-puppet-agent plugin'],
+      environment => $environment,
     }
   } else {
     $tarball = "${tortuga::config::instroot}/www_int/3rdparty/mcollective-puppet-agent/${filename}"
@@ -100,8 +105,8 @@ class tortuga::mcollective::service {
 }
 
 class tortuga::mcollective (
-  $puppet_server,
-  $is_installer = false,
+  String $puppet_server,
+  Boolean $is_installer = false,
 ) {
   contain tortuga::mcollective::package
   contain tortuga::mcollective::config

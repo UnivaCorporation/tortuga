@@ -260,8 +260,8 @@ def get_puppet_node_yaml(session, nodeName):
         local_repos_path = os.path.join(repodir, third_party_repo_subpath)
 
         # Check for existence of repository metadata to validate existence
-        if os.path.exists(os.path.join(local_repos_path,
-                                       'repodata', 'repomd.xml')):
+        if enabledKits and os.path.exists(
+                os.path.join(local_repos_path, 'repodata', 'repomd.xml')):
             third_party_repo_dict = {
                 'tortuga-third-party': {
                     'type': 'yum',

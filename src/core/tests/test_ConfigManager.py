@@ -34,3 +34,13 @@ def test_getfqdn():
         assert fqdn == expected_fqdn
     else:
         assert fqdn.split('.', 1)[0] == expected_fqdn.split('.', 1)[0]
+
+
+def test_getIntWebRootUrl(config_manager):
+    assert config_manager.getIntWebRootUrl()
+
+
+def test_getIntWebRootUrl_with_host(config_manager):
+    result = config_manager.getIntWebRootUrl('XXXXXXXX')
+
+    assert result and 'XXXXXXXX' in result

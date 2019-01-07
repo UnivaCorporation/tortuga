@@ -25,31 +25,11 @@ class tortuga_kit_base::core::install::virtualenv::package {
         'python36',
       ]
     } else {
-      # python36 must be installed from SCL on RHEL and CentOS
+      # Install Python 3.6 package and dependencies
       $pkgs = [
         'rh-python36-python-virtualenv',
       ]
 
-      if $facts['os']['name'] == 'RedHat' {
-        # enable rhscl repository on RHEL
-        exec { 'enable rhscl repository':
-          command => 'yum-config-manager --enable rhui-REGION-rhel-server-rhscl',
-          path    => ['/bin', '/usr/bin'],
-          unless  => 'yum repolist | grep -q rhscl',
-        }
-
-        Exec['enable rhscl repository']
-          -> Package['rh-python36-python-virtualenv']
-      } elsif $facts['os']['name'] == 'CentOS' {
-        # Set up SCL repository
-        ensure_packages(['centos-release-scl'], {'ensure' => 'installed'})
-
-        # Install Python 3.6 from SCL repository
-        Package['centos-release-scl']
-          -> Package['rh-python36-python-virtualenv']
-      }
-
-      # Install Python 3.6 package and dependencies
       ensure_packages($pkgs, {'ensure' => 'installed'})
     }
   } elsif $facts['os']['name'] == 'Ubuntu' {
@@ -72,32 +52,44 @@ class tortuga_kit_base::core::install::virtualenv::package {
   }
 }
 
+# install 'pip' on distros other than RHEL-based and Debian-based
 class tortuga_kit_base::core::install::virtualenv::pip {
   require tortuga_kit_base::core::install::virtualenv::pre_install
-
-#   ensure_resource('package', 'virtualenv', {
-#     ensure   => installed,
-#     provider => 'pip',
-#   })
 }
 
 # set up any repositories required to bootstrap virtualenv
 class tortuga_kit_base::core::install::virtualenv::pre_install {
   require tortuga::packages
 
-  if $facts['os']['name'] == 'Ubuntu' {
-    include apt
+  if !$tortuga_kit_base::core::offline_installation {
+    # only install requisite package repositories if *not* running in
+    # offline mode.
 
-    # install PPA containing Python 3.6
-    apt::ppa { 'ppa:deadsnakes/ppa':
-      ensure => present,
+    if $facts['os']['name'] == 'Ubuntu' {
+      include apt
+
+      # install PPA containing Python 3.6
+      apt::ppa { 'ppa:deadsnakes/ppa':
+        ensure => present,
+      }
+    } elsif $facts['os']['name'] == 'Redhat' {
+      # enable rhscl repository on RHEL
+      exec { 'enable rhscl repository':
+        command => 'yum-config-manager --enable rhui-REGION-rhel-server-rhscl',
+        path    => ['/bin', '/usr/bin'],
+        unless  => 'yum repolist | grep -q rhscl',
+      }
+
+      Exec['enable rhscl repository']
+        -> Package['rh-python36-python-virtualenv']
+    } elsif $facts['os']['name'] == 'CentOS' {
+      # Set up SCL repository
+      ensure_packages(['centos-release-scl'], {'ensure' => 'installed'})
     }
   }
 }
 
 class tortuga_kit_base::core::install::virtualenv {
-  contain tortuga_kit_base::core::install::virtualenv::pre_install
-
   case $::osfamily {
     'RedHat', 'Debian': { contain tortuga_kit_base::core::install::virtualenv::package }
     'Suse': { contain tortuga_kit_base::core::install::virtualenv::pip }
@@ -145,7 +137,7 @@ class tortuga_kit_base::core::install::create_tortuga_instroot {
   file { ["${tortuga::config::instroot}/var/run",
           "${tortuga::config::instroot}/var",
           "${tortuga::config::instroot}/var/tmp"]:
-    ensure => directory,
+    ensure  => directory,
     require => Exec['create_tortuga_base'],
   }
 }
@@ -161,8 +153,19 @@ class tortuga_kit_base::core::install::install_tortuga_base {
 
   $pipcmd = "${tortuga::config::instroot}/bin/pip"
 
-  $pip_install_opts = "--extra-index-url ${tortuga_pkg_url} \
+  if ! $tortuga_kit_base::core::offline_installation {
+    # regular installation
+    $pip_install_opts = "--extra-index-url ${tortuga_pkg_url} \
 --trusted-host ${::primary_installer_hostname}"
+  } else {
+    # offline installation
+
+    $tortuga_offline_url = "${intweburl}/offline-deps/python/simple/"
+
+    $pip_install_opts = "--index-url ${tortuga_pkg_url} \
+--extra-index-url ${tortuga_offline_url} \
+--trusted-host ${::primary_installer_hostname}"
+  }
 
   exec { 'install tortuga-core Python package':
     command => "${pipcmd} install ${pip_install_opts} tortuga-core",
@@ -175,36 +178,59 @@ class tortuga_kit_base::core::install::bootstrap {
 
   include tortuga::config
 
+  if $tortuga::config::proxy_uri {
+    $env = [
+      "https_proxy=${tortuga::config::proxy_uri}",
+    ]
+  } else {
+    $env = undef
+  }
+
   exec { 'generate_nii_profile':
-    path    => ['/bin', '/usr/bin'],
-    command => "${tortuga::config::instroot}/bin/generate-nii-profile --installer ${::primary_installer_hostname} --node ${::fqdn}",
-    unless  => 'test -f /etc/profile.nii',
+    path        => ['/bin', '/usr/bin'],
+    command     => "${tortuga::config::instroot}/bin/generate-nii-profile \
+--installer ${::primary_installer_hostname} --node ${::fqdn}",
+    environment => $env,
+    unless      => 'test -f /etc/profile.nii',
   }
 }
 
+# run post-installation steps
 class tortuga_kit_base::core::install::final {
   require tortuga_kit_base::core::install::bootstrap
 
   include tortuga::config
 
+  if $tortuga::config::proxy_uri {
+    $env = [
+      "https_proxy=${tortuga::config::proxy_uri}",
+    ]
+  } else {
+    $env = undef
+  }
+
   exec { 'update_node_status':
-    path      => ['/bin', '/usr/bin'],
-    command   => "${tortuga::config::instroot}/bin/update-node-status --status Installed",
-    unless    => "test -f ${tortuga::config::instroot}/var/run/CONFIGURED",
-    tries     => 10,
-    try_sleep => 10,
-  } ~>
-  exec { 'drop_configured_marker':
+    path        => ['/bin', '/usr/bin'],
+    command     => "${tortuga::config::instroot}/bin/update-node-status --status Installed",
+    environment => $env,
+    tries       => 10,
+    try_sleep   => 10,
+    unless      => "test -f ${tortuga::config::instroot}/var/run/CONFIGURED",
+  }
+  ~> exec { 'drop_configured_marker':
     path        => ['/bin', '/usr/bin'],
     command     => "touch ${tortuga::config::instroot}/var/run/CONFIGURED",
     refreshonly => true,
   }
 }
 
+
+# install tortuga
 class tortuga_kit_base::core::install {
   require tortuga_kit_base::core::cfmsecret
   require tortuga_kit_base::core::certificate_authority
 
+  contain tortuga_kit_base::core::install::virtualenv::pre_install
   contain tortuga_kit_base::core::install::virtualenv
   contain tortuga_kit_base::core::install::create_tortuga_instroot
   contain tortuga_kit_base::core::install::install_tortuga_base

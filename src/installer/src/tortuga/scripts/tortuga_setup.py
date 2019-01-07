@@ -116,6 +116,7 @@ in order to configure the base cluster environment.
             self._logger.info('=' * 75)
             self._logger.info('Installation completed successfully')
             self._logger.info('=' * 75)
+
         except TortugaException:
             self._logger.info('=' * 75)
             self._logger.info('Installation failed')

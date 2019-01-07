@@ -26,15 +26,8 @@ class tortuga::installer::activemq::package::redhat {
   # resolves the package dependency.
   ensure_packages($pkgs, {'ensure' => 'installed'})
 
-  exec { 'install-puppetlabs-release':
-    path    => ['/bin', '/usr/bin'],
-    command => "rpm -ivh http://yum.puppetlabs.com/puppetlabs-release-el-${::operatingsystemmajrelease}.noarch.rpm",
-    unless  => "rpm -qq puppetlabs-release",
-  }
-
   ensure_packages(['activemq'], {
     'ensure'  => 'installed',
-    'require' => Exec['install-puppetlabs-release'],
   })
 }
 
