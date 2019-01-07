@@ -96,6 +96,12 @@ class AddNodes(TortugaCli): \
             metavar='NAME',
             help=_('Specify resource adapter configuration for operation'))
 
+        self.addOptionToGroup(
+            mainGroup, '--data',
+            metavar="<user1:module:path1:dest_root_path1;user2:module:path2:dest_root_path2>;...>",
+            dest='data',
+            help=_('Add user data sets.'))
+
         outputGroup = _('Output options')
         self.addOptionGroup(outputGroup, None)
 
@@ -194,6 +200,9 @@ class AddNodes(TortugaCli): \
 
         if self.getArgs().tags:
             addNodesRequest['tags'] = parse_tags(self.getArgs().tags)
+
+        if self.getArgs().data:
+            addNodesRequest['data'] = self.getArgs().data
 
         nodeDetails = []
 

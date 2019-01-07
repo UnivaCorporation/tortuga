@@ -165,6 +165,9 @@ class UpdateSoftwareProfileCli(TortugaCli):
                        metavar='key[,key...]', action='append',
                        help='Name of tags to remove')
 
+        self.addOption('--data-root', dest='dataRoot',
+                       help=_('(optional) Root directory for user data.'))
+
         self.getParser().add_argument(
             'name', metavar='NAME',
             help=_('Name of software profile'),
@@ -437,6 +440,9 @@ Updates software profile in the Tortuga system.
                         tags.pop(tag_name)
             sp.setTags(tags)
             print(tags)  # DEBUG
+
+        if self.getArgs().dataRoot is not None:
+            sp.setDataRoot(self.getArgs().dataRoot)
 
         api.updateSoftwareProfile(sp)
 

@@ -4,7 +4,16 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-"66f681e" = {path = "src/core", editable = true}
+tortuga-core = {editable = true,file = "file:///Users/mfrisch/Devel/tortuga/src/core"}
+mock = "*"
+pylint = "*"
+pyflakes = "*"
+pycodestyle = "*"
+pytest = "*"
+pytest-cov = "*"
+tox = "*"
+Paver = "*"
+Babel = "*"
 
 [dev-packages]
 mock = "*"
@@ -12,11 +21,14 @@ wheel = "*"
 pylint = "*"
 pyflakes = "*"
 pycodestyle = "*"
-paver = "*"
 pytest = "*"
 pytest-cov = "*"
-babel = "*"
 tox = "*"
+Paver = "*"
+Babel = "*"
 
 [requires]
 python_version = "3.6"
+
+[pipenv]
+allow_prereleases = true
