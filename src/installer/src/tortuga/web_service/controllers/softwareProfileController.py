@@ -484,13 +484,11 @@ class SoftwareProfileController(TortugaController):
             componentName = component['componentName']
             componentVersion = component['componentVersion']
 
-            puppet_sync = str2bool(postdata['sync']) \
-                if 'sync' in postdata else True
-
             self._softwareProfileManager.enableComponent(
                 cherrypy.request.db, softwareProfileName, kitName,
                 kitVersion, kitIteration, componentName,
-                comp_version=componentVersion, sync=puppet_sync)
+                comp_version=componentVersion,
+            )
         except Exception as ex:
             self.getLogger().exception(
                 'software profile WS API enableComponent() failed')
@@ -523,13 +521,10 @@ class SoftwareProfileController(TortugaController):
             componentName = component['componentName']
             componentVersion = component['componentVersion']
 
-            puppet_sync = str2bool(postdata['sync']) \
-                if 'sync' in postdata else True
-
             self._softwareProfileManager.disableComponent(
                 cherrypy.request.db, softwareProfileName, kitName,
                 kitVersion, kitIteration, componentName, componentVersion,
-                sync=puppet_sync)
+            )
         except Exception as ex:
             self.getLogger().exception(
                 'software profile WS API disableComponent() failed')

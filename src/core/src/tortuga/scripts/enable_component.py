@@ -27,7 +27,6 @@ class EnableComponent(ComponentCli):
             self.kit_version,
             self.kit_iteration,
             self.component_name,
-            sync=self.getArgs().sync
         )
 
 

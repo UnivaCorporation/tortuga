@@ -33,7 +33,6 @@ from tortuga.objects.softwareProfile import SoftwareProfile
 from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.os_utility import osUtility
-from tortuga.puppet import Puppet
 from tortuga.utility import validation
 
 
@@ -466,8 +465,7 @@ class SoftwareProfileManager(TortugaObjectManager): \
     def enableComponent(self, session: Session,
                         software_profile_name: str, kit_name: str,
                         kit_version: str, kit_iteration: str,
-                        comp_name: str, comp_version: Optional[str] = None,
-                        sync: bool = True):
+                        comp_name: str, comp_version: Optional[str] = None):
         """
         Enable a component on a software profile.
 
@@ -506,9 +504,6 @@ class SoftwareProfileManager(TortugaObjectManager): \
                     best_match_component, software_profile
                 )
             )
-
-            if sync:
-                Puppet().agent()
 
     def _get_kit_and_component_version(self, session: Session,
                                        kit_name, kit_version,
@@ -660,7 +655,7 @@ class SoftwareProfileManager(TortugaObjectManager): \
 
     def disableComponent(self, session: Session, software_profile_name,
                          kit_name, kit_version, kit_iteration,
-                         comp_name, comp_version=None, sync=True): \
+                         comp_name, comp_version=None): \
             # pylint: disable=unused-argument
         """
         Disables a component on a software profile.
@@ -695,9 +690,6 @@ class SoftwareProfileManager(TortugaObjectManager): \
                 best_match_component, software_profile
             )
         )
-
-        if sync:
-            Puppet().agent()
 
     def _disable_kit_component(self, session, kit, comp_name, comp_version,
                                software_profile):
