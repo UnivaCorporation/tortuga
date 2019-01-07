@@ -36,29 +36,14 @@ logger = getLogger(__name__)
 
 def pip_install_requirements(requirements_path):
     """
-    Installs packages specified in a requirements.txt file, using the kit
+    Installs packages specified in a requirements.txt file, using the tortuga
     package repo in addition to the standard python repos. This function
     returns nothing, and does nothing if the requirements.txt file is not
     found.
 
-    :param kit_installer:     an instance of KitInstallerBase, which will
-                              be searched for a local python package repo
     :param requirements_path: the path to the requirements.txt file
 
     """
-    #
-    # In the kit directory:
-    #
-    #     /opt/tortuga/kits/kit-x.y.z/tortuga_kits/kit_x_y_z
-    #
-    # if there is a python_packages directory, with a simple subdirectory
-    # in it, it is assumed that the simple subdirectory is a PEP 503
-    # compliant Python package repository. If found, this directory is
-    # added to the list of directories searched for Python packages via
-    # pip when installing the requirements.txt file.
-    #
-    # These directories can easily be created using the py2pi utility.
-    #
     cm = ConfigManager()
 
     if not os.path.exists(requirements_path):
@@ -97,7 +82,10 @@ def pip_install_requirements(requirements_path):
     ])
 
     logger.debug(' '.join(pip_cmd))
-    subprocess.Popen(pip_cmd).wait()
+    proc = subprocess.Popen(pip_cmd)
+    proc.wait()
+    if proc.returncode:
+        raise Exception(proc.stderr)
 
 
 def is_requirements_empty(requirements_file_path):
