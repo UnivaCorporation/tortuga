@@ -49,8 +49,10 @@ class KitApi(TortugaApi):
         try:
             return self._kit_manager.getKit(
                 session, name, version=version, iteration=iteration)
-        except TortugaException as ex:
+
+        except TortugaException:
             raise
+
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
@@ -67,8 +69,10 @@ class KitApi(TortugaApi):
         """
         try:
             return self._kit_manager.getKitById(session, id_)
-        except TortugaException as ex:
+
+        except TortugaException:
             raise
+
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
 
@@ -84,8 +88,10 @@ class KitApi(TortugaApi):
         try:
             kitList = self._kit_manager.getKitList(session)
             return kitList
-        except TortugaException as ex:
+
+        except TortugaException:
             raise
+
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
@@ -105,8 +111,10 @@ class KitApi(TortugaApi):
         try:
             return self._kit_manager.installKit(
                 session, name, version, iteration)
-        except TortugaException as ex:
+
+        except TortugaException:
             raise
+
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
@@ -148,8 +156,10 @@ class KitApi(TortugaApi):
         try:
             return self._kit_manager.get_kit_eula(
                 name, version, iteration)
-        except TortugaException as ex:
+
+        except TortugaException:
             raise
+
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
@@ -168,8 +178,10 @@ class KitApi(TortugaApi):
         """
         try:
             return self._kit_manager.get_kit_package_eula(packageUrl)
-        except TortugaException as ex:
+
+        except TortugaException:
             raise
+
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
