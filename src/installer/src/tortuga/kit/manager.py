@@ -25,11 +25,9 @@ from tortuga.boot.distro import DistributionFactory
 from tortuga.config import VERSION, version_is_compatible
 from tortuga.config.configManager import ConfigManager
 from tortuga.db import componentDbApi
-from tortuga.db.dbManager import DbManager
 from tortuga.db.kitDbApi import KitDbApi
 from tortuga.exceptions.eulaAcceptanceRequired import EulaAcceptanceRequired
 from tortuga.exceptions.kitAlreadyExists import KitAlreadyExists
-from tortuga.exceptions.kitInstallError import KitInstallError
 from tortuga.exceptions.kitNotFound import KitNotFound
 from tortuga.exceptions.operationFailed import OperationFailed
 from tortuga.exceptions.osNotSupported import OsNotSupported
@@ -103,7 +101,7 @@ class KitManager(TortugaObjectManager):
         return os.path.join(
             native_repo.getRemoteUrl(), kit.getTarBz2FileName())
 
-    def installKit(self, db_manager, name, version, iteration, key=None):
+    def installKit(self, db_manager, name, version, iteration):
         """
         Install kit using kit name/version/iteration.
 
@@ -133,137 +131,6 @@ class KitManager(TortugaObjectManager):
 
         return self.installKitPackage(db_manager, kitPkgUrl, key)
 
-    def installKitPackage(self, db_manager, kit_pkg_url, key=None):
-        """
-        Install kit from the given kit url (url might be a local file). Kit
-        will be installed for all operating systems that:
-
-            1) have repo configured on the local machine
-            2) are specified in the kit.xml file
-
-        :raisesKitAlreadyExists:
-        :raisesEulaAcceptanceRequired:
-
-        """
-        self.getLogger().debug('Installing kit package: {}'.format(kit_pkg_url))
-
-        #
-        # Download/copy kit archive.
-        #
-        kit_src_path = os.path.basename(kit_pkg_url)
-        kit_pkg_path = utils.retrieve(
-            kit_src_path, kit_pkg_url, self._kits_root)
-
-        #
-        # Make sure the kit version is compatible
-        #
-        kit_meta = utils.get_metadata_from_archive(kit_pkg_path)
-        requires_core = kit_meta.get('requires_core', VERSION)
-        if not version_is_compatible(requires_core):
-            errmsg = 'The {} kit requires tortuga core >= {}'.format(
-                kit_meta['name'],requires_core)
-
-            raise OperationFailed(errmsg)
-
-        #
-        # Unpack the archive
-        #
-        kit_spec = utils.unpack_archive(kit_pkg_path, self._kits_root)
-
-        #
-        # Load and initialize kit installer
-        #
-        load_kits()
-        installer = get_kit_installer(kit_spec)()
-
-        if not installer.is_installable():
-            self.getLogger().warning(
-                'Kit is not installable: {}'.format(kit_spec))
-            return
-
-        with db_manager.session() as session:
-            installer.session = session
-
-            kit = installer.get_kit()
-
-            #
-            # This method will throw KitAlreadyExists, if it does...
-            #
-            self._check_if_kit_exists(session, kit)
-
-            #
-            # Validate eula
-            #
-            eula = installer.get_eula()
-            if not eula:
-                self.getLogger().debug('No EULA acceptance required')
-            else:
-                if not self._eula_validator.validate_eula(eula):
-                    raise EulaAcceptanceRequired(
-                        'You must accept the EULA to install this kit')
-
-            #
-            # Runs the kit pre install method
-            #
-            installer.run_action('pre_install')
-
-            #
-            # Get list of operating systems supported by this installer
-            #
-            os_info_list = [
-                repo.getOsInfo() for repo in repoManager.getRepoList()
-            ]
-
-            #
-            # Install operating system specific packages
-            #
-            self._install_os_packages(kit, os_info_list)
-
-            #
-            # Initialize any DB tables provided by the kit
-            #
-            # db_manager = DbManager()
-            db_manager.init_database()
-
-            #
-            # Add the kit to the database
-            #
-            self._kit_db_api.addKit(session, kit)
-
-            #
-            # Clean up the kit archive directory
-            #
-            self._clean_kit_achiv_dir(kit, installer.install_path)
-
-            #
-            # Install puppet modules
-            #
-            installer.run_action('install_puppet_modules')
-
-            #
-            # Run post install
-            #
-            try:
-                installer.run_action('post_install')
-            except Exception as e:
-                self._uninstall_kit(session, kit, True)
-                raise KitInstallError(
-                    'Kit installation failed during post_install: {}'.format(e))
-
-            if eula:
-                ActionManager().logAction(
-                    'Kit [{}] installed and EULA accepted at [{}]'
-                    ' local machine time.'.format(
-                        installer.spec, time.ctime())
-                )
-            else:
-                ActionManager().logAction(
-                    'Kit [{}] installed at [{}] local machine time.'.format(
-                        installer.spec, time.ctime())
-                )
-
-            return kit
-
     def _check_if_kit_exists(self, session: Session, kit):
         """
         Check if a kit exists, if it does then raise an exception.
@@ -281,6 +148,169 @@ class KitManager(TortugaObjectManager):
             )
         except KitNotFound:
             pass
+
+    def installKitPackage(self, db_manager, kit_pkg_url):
+        """
+        Install kit from the given kit url (url might be a local file).
+
+        :param db_manager:  a database manager instance
+        :param kit_pkg_url: the URL to the kit package archive
+
+        :raises KitAlreadyExists:
+        :raises EulaAcceptanceRequired:
+
+        """
+        self.getLogger().debug(
+            'Installing kit package: {}'.format(kit_pkg_url))
+
+        installer = self._prepare_installer(kit_pkg_url)
+        kit = installer.get_kit()
+
+        with db_manager.session() as session:
+            installer.session = session
+
+            try:
+                self._run_installer(installer)
+
+            except Exception as ex:
+                self._delete_kit(session, kit, force=False)
+                raise ex
+
+        return kit
+
+    def _prepare_installer(self, kit_pkg_url):
+        """
+        Extracts a kit archive and prepares the kit installer for the
+        installation process.
+
+        :param kit_pkg_url: the URL to the kit package archive
+
+        :return: the KitInstaller instance
+
+        """
+        #
+        # Download/copy kit archive.
+        #
+        kit_src_path = os.path.basename(kit_pkg_url)
+        kit_pkg_path = utils.retrieve(
+            kit_src_path, kit_pkg_url, self._kits_root)
+
+        #
+        # Make sure the kit version is compatible
+        #
+        kit_meta = utils.get_metadata_from_archive(kit_pkg_path)
+        kit_spec = (kit_meta['name'], kit_meta['version'],
+                    kit_meta['iteration'])
+        requires_core = kit_meta.get('requires_core', VERSION)
+        if not version_is_compatible(requires_core):
+            errmsg = 'The {} kit requires tortuga core >= {}'.format(
+                kit_meta['name'], requires_core)
+
+            raise OperationFailed(errmsg)
+
+        #
+        # Unpack the archive
+        #
+        kit_dir = utils.unpack_kit_archive(kit_pkg_path, self._kits_root)
+
+        #
+        # Load and initialize kit installer
+        #
+        load_kits()
+        try:
+            installer = get_kit_installer(kit_spec)()
+            assert installer.is_installable()
+
+        except Exception as ex:
+            if os.path.exists(kit_dir):
+                self.getLogger().debug(
+                    'Removing kit installation directory: {}'.format(kit_dir))
+                osUtility.removeDir(kit_dir)
+            self.getLogger().warning(
+                'Kit is not installable: {}'.format(kit_spec))
+            return
+
+        return installer
+
+    def _run_installer(self, installer):
+        """
+        Runs the installation process for a kit installer.
+
+        :param installer: the KitInstaller instance to run the install process
+                          for
+
+        """
+        kit = installer.get_kit()
+
+        #
+        # This method will throw KitAlreadyExists, if it does...
+        #
+        self._check_if_kit_exists(installer.session, kit)
+
+        #
+        # Validate eula
+        #
+        eula = installer.get_eula()
+        if not eula:
+            self.getLogger().debug('No EULA acceptance required')
+        else:
+            if not self._eula_validator.validate_eula(eula):
+                raise EulaAcceptanceRequired(
+                    'You must accept the EULA to install this kit')
+
+        #
+        # Runs the kit pre install method
+        #
+        installer.run_action('pre_install')
+
+        #
+        # Get list of operating systems supported by this installer
+        #
+        os_info_list = [
+            repo.getOsInfo() for repo in repoManager.getRepoList()
+        ]
+
+        #
+        # Install operating system specific packages
+        #
+        self._install_os_packages(kit, os_info_list)
+
+        #
+        # Initialize any DB tables provided by the kit
+        #
+        installer.register_database_tables()
+
+        #
+        # Add the kit to the database
+        #
+        self._kit_db_api.addKit(installer.session, kit)
+
+        #
+        # Clean up the kit archive directory
+        #
+        self._clean_kit_achiv_dir(kit, installer.install_path)
+
+        #
+        # Install puppet modules
+        #
+        installer.run_action('install_puppet_modules')
+
+        #
+        # Run post install
+        #
+        installer.run_action('post_install')
+
+        if eula:
+            ActionManager().logAction(
+                'Kit [{}] installed and EULA accepted at [{}]'
+                ' local machine time.'.format(
+                    installer.spec, time.ctime())
+            )
+        else:
+            ActionManager().logAction(
+                'Kit [{}] installed at [{}] local machine time.'.format(
+                    installer.spec, time.ctime())
+            )
 
     def _install_os_packages(self, kit, os_info_list):
         """
@@ -661,6 +691,7 @@ class KitManager(TortugaObjectManager):
         """
         Delete a kit.
 
+        :param session:   a database session
         :param name:      the kit name
         :param version:   the kit version
         :param iteration: the kit iteration
@@ -671,30 +702,11 @@ class KitManager(TortugaObjectManager):
 
         if kit.getIsOs():
             self._delete_os_kit(session, kit, force)
+
         else:
             self._delete_kit(session, kit, force)
 
         self.getLogger().info('Deleted kit: {}'.format(kit))
-
-    def _delete_kit(self, session, kit, force):
-        """
-        Deletes a regular kit.
-
-        :param kit:   the Kit instance
-        :param force: whether or not to force the deletion
-
-        """
-        kit_install_path = os.path.join(self._kits_root, kit.getDirName())
-        if os.path.exists(kit_install_path):
-            kit_spec = (kit.getName(), kit.getVersion(), kit.getIteration())
-
-            installer = get_kit_installer(kit_spec)()
-            installer.session = session
-
-            installer.run_action('pre_uninstall')
-            self._uninstall_kit(session, kit, force)
-            installer.run_action('uninstall_puppet_modules')
-            installer.run_action('post_uninstall')
 
     def _delete_os_kit(self, session: Session, kit, force):
         """
@@ -704,17 +716,90 @@ class KitManager(TortugaObjectManager):
         :param force: whether or not to force the deletion
 
         """
-        osi = kit.getComponentList()[0].getOsInfoList()[0]
-        repo_dir = os.path.join(kit.getName(), kit.getVersion(),
-                                osi.getArch())
-        self._uninstall_kit(session, kit, force)
+        self._cleanup_kit(session, kit, force)
 
-    def _uninstall_kit(self, session: Session, kit, force):
+    def _delete_kit(self, session: Session, kit: Kit, force: bool):
+        """
+        Deletes a regular kit.
+
+        :param session: a database instance
+        :param kit:     the Kit instance
+        :param force:   whether or not to force the deletion
+
+        """
+        kit_spec = (kit.getName(), kit.getVersion(), kit.getIteration())
+
+        #
+        # If the kit does not exist in the DB, then we want to skip
+        # the step of removing it from the DB
+        #
+        skip_db = False
+        try:
+            self.getKit(session, *kit_spec)
+        except KitNotFound:
+            skip_db = True
+
+        kit_install_path = os.path.join(self._kits_root, kit.getDirName())
+        if os.path.exists(kit_install_path):
+
+            #
+            # Attempt to get the kit installer
+            #
+            installer = None
+            try:
+                installer = get_kit_installer(kit_spec)()
+                installer.session = session
+
+            except KitNotFound:
+                pass
+
+            #
+            # Attempt to run pre-uninstall action
+            #
+            if installer:
+                try:
+                    installer.run_action('pre_uninstall')
+                except Exception as ex:
+                    self.getLogger().warning(
+                        'Error running pre_uninstall: {}'.format(
+                            str(ex)
+                        )
+                    )
+
+            #
+            # Remove db record and files
+            #
+            self._cleanup_kit(session, kit, force, skip_db)
+
+            #
+            # Attempt to uninstall puppet modules, and perform post-install
+            #
+            if installer:
+                try:
+                    installer.run_action('uninstall_puppet_modules')
+                except Exception as ex:
+                    self.getLogger().warning(
+                        'Error uninstalling puppet modules: {}'.format(
+                            str(ex)
+                        )
+                    )
+                try:
+                    installer.run_action('post_uninstall')
+                except Exception as ex:
+                    self.getLogger().warning(
+                        'Error running post-install: {}'.format(
+                            str(ex)
+                        )
+                    )
+
+    def _cleanup_kit(self, session: Session, kit: Kit, force: bool,
+                     skip_db: bool = False):
         """
         Uninstalls the kit and it's file repos.
 
-        :param kit:      the Kit instance
-        :param force:    whether or not to force the deletion
+        :param session: a database session
+        :param kit:     the Kit instance
+        :param force:   whether or not to force the deletion
 
         """
         repo_dir = kit.getKitRepoDir()
@@ -722,8 +807,10 @@ class KitManager(TortugaObjectManager):
         #
         # Remove the kit from the DB
         #
-        self._kit_db_api.deleteKit(session, kit.getName(), kit.getVersion(),
-                                   kit.getIteration(), force=force)
+        if not skip_db:
+            self._kit_db_api.deleteKit(session, kit.getName(),
+                                       kit.getVersion(), kit.getIteration(),
+                                       force=force)
 
         #
         # Remove the files and repo
@@ -756,14 +843,13 @@ class KitManager(TortugaObjectManager):
         self.remove_proxy(repo_dir)
 
         #
-        # Remove the kit archive dir
+        # Remove the kit installation dir
         #
-        kit_arch_dir = os.path.join(repoManager.getKitArchiveDir(),
-                                    kit.getDirName())
-        if os.path.exists(kit_arch_dir):
+        kit_dir = os.path.join(self._kits_root, kit.getDirName())
+        if os.path.exists(kit_dir):
             self.getLogger().debug(
-                'Removing kit archive dir: {}'.format(kit_arch_dir))
-            osUtility.removeDir(kit_arch_dir)
+                'Removing kit installation directory: {}'.format(kit_dir))
+            osUtility.removeDir(kit_dir)
 
     def remove_proxy(self, repoDir):
         # Check for this repo as an actual entry in the tortuga apache.conf

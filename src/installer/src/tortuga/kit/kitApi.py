@@ -49,8 +49,10 @@ class KitApi(TortugaApi):
         try:
             return self._kit_manager.getKit(
                 session, name, version=version, iteration=iteration)
-        except TortugaException as ex:
+
+        except TortugaException:
             raise
+
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
@@ -67,8 +69,10 @@ class KitApi(TortugaApi):
         """
         try:
             return self._kit_manager.getKitById(session, id_)
-        except TortugaException as ex:
+
+        except TortugaException:
             raise
+
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
 
@@ -84,14 +88,15 @@ class KitApi(TortugaApi):
         try:
             kitList = self._kit_manager.getKitList(session)
             return kitList
-        except TortugaException as ex:
+
+        except TortugaException:
             raise
+
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
 
-    def installKit(self, session: Session, name, version, iteration=None,
-                   key=None):
+    def installKit(self, session: Session, name, version, iteration=None):
         """
         Install kit using kit name/version/iteration.
 
@@ -105,14 +110,16 @@ class KitApi(TortugaApi):
         """
         try:
             return self._kit_manager.installKit(
-                session, name, version, iteration, key)
-        except TortugaException as ex:
+                session, name, version, iteration)
+
+        except TortugaException:
             raise
+
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
 
-    def installKitPackage(self, db_manager, packageUrl, key=None):
+    def installKitPackage(self, db_manager, packageUrl):
         """
             Install kit package.
 
@@ -125,10 +132,11 @@ class KitApi(TortugaApi):
                 TortugaException
         """
         try:
-            return self._kit_manager.installKitPackage(
-                db_manager, packageUrl, key)
-        except TortugaException as ex:
+            return self._kit_manager.installKitPackage(db_manager, packageUrl)
+
+        except TortugaException:
             raise
+
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
@@ -148,8 +156,10 @@ class KitApi(TortugaApi):
         try:
             return self._kit_manager.get_kit_eula(
                 name, version, iteration)
-        except TortugaException as ex:
+
+        except TortugaException:
             raise
+
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
@@ -168,8 +178,10 @@ class KitApi(TortugaApi):
         """
         try:
             return self._kit_manager.get_kit_package_eula(packageUrl)
-        except TortugaException as ex:
+
+        except TortugaException:
             raise
+
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)

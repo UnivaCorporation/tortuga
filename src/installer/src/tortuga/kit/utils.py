@@ -236,8 +236,7 @@ def get_metadata_from_archive(kit_archive_path: str) -> dict:
     return meta_dict
 
 
-def unpack_archive(kit_archive_path: str,
-                   dest_root_dir: str) -> Tuple[str, str, str]:
+def unpack_kit_archive(kit_archive_path: str, dest_root_dir: str) -> str:
     """
     Unpacks a kit archive into a directory.
 
@@ -245,7 +244,7 @@ def unpack_archive(kit_archive_path: str,
     :param str dest_root_dir:    the destination directory in which the
                                  archive will be extracted
 
-    :return Tuple[str, str, str]: the kit (name, version, iteration)
+    :return the kit installation directory
 
     """
     meta_dict = get_metadata_from_archive(kit_archive_path)
@@ -283,7 +282,7 @@ def unpack_archive(kit_archive_path: str,
         '[utils.parse()] Unpacked [%s] into [%s]' % (
             kit_archive_path, destdir))
 
-    return meta_dict['name'], meta_dict['version'], meta_dict['iteration']
+    return destdir
 
 
 def format_kit_descriptor(name, version, iteration):
