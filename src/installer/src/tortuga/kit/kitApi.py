@@ -124,11 +124,10 @@ class KitApi(TortugaApi):
                 TortugaException
         """
         try:
-            return self._kit_manager.installKitPackage(
-                db_manager, packageUrl)
+            return self._kit_manager.installKitPackage(db_manager, packageUrl)
 
-        except TortugaException as ex:
-            raise ex
+        except TortugaException:
+            raise
 
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
