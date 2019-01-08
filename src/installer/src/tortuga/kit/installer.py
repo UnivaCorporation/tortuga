@@ -495,7 +495,17 @@ class KitInstallerBase(ConfigurableMixin, metaclass=KitInstallerMeta):
         #
         # Prevent circular import
         #
-        from .actions import InstallPuppetModulesAction
+        from .actions import UninstallPuppetModulesAction, \
+            InstallPuppetModulesAction
+        #
+        # Do an uninstall first, just in case there is an old version of
+        # the module still hanging around. This should fail silently if the
+        # module is not installed.
+        #
+        UninstallPuppetModulesAction(self)(*args, **kwargs)
+        #
+        # Do the actual install
+        #
         return InstallPuppetModulesAction(self)(*args, **kwargs)
 
     def action_pre_install(self):

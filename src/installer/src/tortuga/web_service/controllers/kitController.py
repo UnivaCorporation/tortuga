@@ -136,7 +136,7 @@ class KitController(TortugaController):
 
         return self.formatResponse(response)
 
-    def installKit(self, name, version, iteration=None, key=None):
+    def installKit(self, name, version, iteration=None):
         """ Install kit by name, version and iteration. """
 
         response = None

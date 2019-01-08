@@ -90,8 +90,7 @@ class KitApi(TortugaApi):
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
 
-    def installKit(self, session: Session, name, version, iteration=None,
-                   key=None):
+    def installKit(self, session: Session, name, version, iteration=None):
         """
         Install kit using kit name/version/iteration.
 
@@ -105,14 +104,14 @@ class KitApi(TortugaApi):
         """
         try:
             return self._kit_manager.installKit(
-                session, name, version, iteration, key)
+                session, name, version, iteration)
         except TortugaException as ex:
             raise
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
 
-    def installKitPackage(self, db_manager, packageUrl, key=None):
+    def installKitPackage(self, db_manager, packageUrl):
         """
             Install kit package.
 
@@ -126,9 +125,11 @@ class KitApi(TortugaApi):
         """
         try:
             return self._kit_manager.installKitPackage(
-                db_manager, packageUrl, key)
+                db_manager, packageUrl)
+
         except TortugaException as ex:
-            raise
+            raise ex
+
         except Exception as ex:
             self.getLogger().exception('%s' % ex)
             raise TortugaException(exception=ex)
