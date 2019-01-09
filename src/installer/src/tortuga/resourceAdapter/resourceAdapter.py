@@ -40,6 +40,7 @@ from tortuga.exceptions.nicNotFound import NicNotFound
 from tortuga.exceptions.resourceNotFound import ResourceNotFound
 from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
 from tortuga.kit.actions.manager import KitActionsManager
+from tortuga.logging import RESOURCE_ADAPTER_NAMESPACE
 from tortuga.objects.node import Node as TortugaNode
 from tortuga.os_utility.osUtility import getOsObjectFactory
 from tortuga.parameter.parameterApi import ParameterApi
@@ -75,7 +76,7 @@ class ResourceAdapter(UserDataMixin): \
                 ' defined')
 
         self._logger = logging.getLogger(
-            'tortuga.resourceAdapter.%s' % (self.__adaptername__))
+            '{}.{}'.format(RESOURCE_ADAPTER_NAMESPACE, self.__adaptername__))
 
         self.__installer_public_hostname = None
         self.__installer_public_ipaddress = None

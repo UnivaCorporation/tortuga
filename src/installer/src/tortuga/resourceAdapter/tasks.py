@@ -18,10 +18,11 @@ from tortuga.addhost.addHostRequest import process_addhost_request
 from tortuga.addhost.deleteHostRequest import process_delete_host_request
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.exceptions.operationFailed import OperationFailed
+from tortuga.logging import RESOURCE_ADAPTER_NAMESPACE
 from tortuga.tasks.celery import app
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(RESOURCE_ADAPTER_NAMESPACE)
 
 
 @app.task(bind=True)
