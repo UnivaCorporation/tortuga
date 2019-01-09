@@ -163,11 +163,12 @@ class KitManager(TortugaObjectManager):
         self.getLogger().debug(
             'Installing kit package: {}'.format(kit_pkg_url))
 
-        installer = self._prepare_installer(kit_pkg_url)
-        kit = installer.get_kit()
-
         with db_manager.session() as session:
+            installer = self._prepare_installer(kit_pkg_url)
+
             installer.session = session
+
+            kit = installer.get_kit()
 
             try:
                 self._run_installer(installer)
