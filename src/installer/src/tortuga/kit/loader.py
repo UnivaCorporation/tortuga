@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 import os
 import sys
-from logging import getLogger
 from pathlib import Path
 
 from tortuga.config.configManager import ConfigManager
@@ -23,7 +23,7 @@ from tortuga.logging import KITS_NAMESPACE
 from .registry import discover_kit_installers
 
 
-logger = getLogger(KITS_NAMESPACE)
+logger = logging.getLogger(KITS_NAMESPACE)
 
 
 def load_kits():

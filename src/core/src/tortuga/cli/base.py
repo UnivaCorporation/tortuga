@@ -14,8 +14,8 @@
 
 import argparse
 import importlib
+import logging
 import pkgutil
-from logging import getLogger
 from typing import List, Optional, Type
 
 from tortuga.logging import CLI_NAMESPACE
@@ -38,7 +38,7 @@ class Command:
         """
         self.parent: 'Command' = None
         self.parser: Optional[argparse.ArgumentParser] = None
-        self._logger = getLogger(CLI_NAMESPACE)
+        self._logger = logging.getLogger(CLI_NAMESPACE)
 
     def set_parent(self, parent: 'Command'):
         """

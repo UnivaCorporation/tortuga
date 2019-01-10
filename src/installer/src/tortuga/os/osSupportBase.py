@@ -33,9 +33,6 @@ class OsSupportBase:
         self._logger = logging.getLogger(OS_NAMESPACE)
         self._cm = ConfigManager()
 
-    def getLogger(self):
-        return self._logger
-
     def getKickstartFileContents(
             self, session: Session, node: Node,
             hardwareprofile: HardwareProfile,

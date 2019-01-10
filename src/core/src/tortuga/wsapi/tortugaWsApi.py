@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from logging import getLogger
+import logging
 from typing import Optional
 
 import requests
@@ -38,7 +38,7 @@ class TortugaWsApi(RestApiClient):
                  verify: bool = True):
 
         self._cm = ConfigManager()
-        self._logger = getLogger(WEBSERVICE_CLIENT_NAMESPACE)
+        self._logger = logging.getLogger(WEBSERVICE_CLIENT_NAMESPACE)
 
         if not baseurl:
             baseurl = '{}://{}:{}'.format(

@@ -19,7 +19,7 @@ import inspect
 import json
 import os
 import pkgutil
-from logging import getLogger
+import logging
 from typing import Optional, Type
 
 from tortuga.config import VERSION, version_is_compatible
@@ -38,7 +38,7 @@ from .registry import register_kit_installer
 from .utils import pip_install_requirements
 
 
-logger = getLogger(KITS_NAMESPACE)
+logger = logging.getLogger(KITS_NAMESPACE)
 
 
 EULA_FILE = 'docs/EULA.txt'

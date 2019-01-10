@@ -13,8 +13,8 @@
 # limitations under the License.
 
 import glob
+import logging
 import os
-from logging import getLogger
 
 from tortuga.exceptions.configurationError import ConfigurationError
 from tortuga.logging import KITS_NAMESPACE
@@ -23,7 +23,7 @@ from tortuga.os_utility import tortugaSubprocess
 from .base import KitActionBase
 
 
-logger = getLogger(KITS_NAMESPACE)
+logger = logging.getLogger(KITS_NAMESPACE)
 
 
 class InstallPuppetModulesAction(KitActionBase):

@@ -12,13 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from logging import getLogger
+import logging
 from typing import Any, Dict, Iterator, Optional, Tuple, Union
 
 from tortuga.logging import OBJECT_STORE_NAMESPACE
 
-
-logger = getLogger(OBJECT_STORE_NAMESPACE)
+logger = logging.getLogger(OBJECT_STORE_NAMESPACE)
 
 
 def cmp_equals(left: Any, right: Any):

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import json
-from logging import getLogger
+import logging
 from typing import Optional, Union
 
 import requests
@@ -65,7 +65,7 @@ class RestApiClient:
         self.verify = verify
 
         self._requests_kwargs = None
-        self._logger = getLogger(WEBSERVICE_CLIENT_NAMESPACE)
+        self._logger = logging.getLogger(WEBSERVICE_CLIENT_NAMESPACE)
 
         if not verify:
             self._logger.warning('SSL verification turned off')

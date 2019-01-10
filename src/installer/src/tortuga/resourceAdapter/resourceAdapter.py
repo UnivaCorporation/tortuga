@@ -277,9 +277,6 @@ class ResourceAdapter(UserDataMixin): \
             '-- (pass) %s::%s %s %s' % (
                 self.__adaptername__, funcname, pargs, kargs))
 
-    def getLogger(self):
-        return self._logger
-
     def validate_config(self, profile: str = 'Default') -> ConfigurationValidator:
         """
         Validates the configuration profile.

@@ -13,8 +13,8 @@
 # limitations under the License.
 
 import json
+import logging
 import os
-from logging import getLogger
 from typing import List
 
 from passlib.hash import pbkdf2_sha256
@@ -32,7 +32,7 @@ from .manager import AuthManager
 from tortuga.web_service.database import dbm
 
 
-logger = getLogger(AUTH_NAMESPACE)
+logger = logging.getLogger(AUTH_NAMESPACE)
 
 
 class AuthenticationMethod:

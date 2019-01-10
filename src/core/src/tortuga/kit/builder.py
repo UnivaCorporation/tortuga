@@ -14,9 +14,9 @@
 
 import copy
 import json
+import logging
 import os
 import shutil
-from logging import getLogger
 
 from tortuga.config import version_is_compatible, VERSION
 from tortuga.exceptions.commandFailed import CommandFailed
@@ -27,7 +27,7 @@ from tortuga.os_utility.tortugaSubprocess import executeCommand
 from .metadata import KitMetadataSchema
 
 
-logger = getLogger(KITS_NAMESPACE)
+logger = logging.getLogger(KITS_NAMESPACE)
 
 
 KIT_METADATA_FILE = 'kit.json'

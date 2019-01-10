@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import json
-from logging import getLogger
+import logging
 from typing import Iterator, Optional, Tuple
 
 from redis.exceptions import ResponseError
@@ -21,8 +21,7 @@ from redis.exceptions import ResponseError
 from tortuga.logging import OBJECT_STORE_NAMESPACE
 from .base import ObjectStore
 
-
-logger = getLogger(OBJECT_STORE_NAMESPACE)
+logger = logging.getLogger(OBJECT_STORE_NAMESPACE)
 
 
 class RedisObjectStore(ObjectStore):

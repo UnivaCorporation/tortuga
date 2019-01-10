@@ -15,7 +15,7 @@
 # pylint: disable=no-member
 
 import base64
-from logging import getLogger
+import logging
 from typing import Tuple
 
 import cherrypy
@@ -26,8 +26,7 @@ from tortuga.auth.methods import (AuthenticationMethod,
 from tortuga.exceptions.authenticationFailed import AuthenticationFailed
 from tortuga.logging import AUTH_NAMESPACE
 
-
-logger = getLogger(AUTH_NAMESPACE)
+logger = logging.getLogger(AUTH_NAMESPACE)
 
 
 class AuthorizationHeaderMixin: \
