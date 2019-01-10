@@ -58,7 +58,7 @@ class KitApi(TortugaApi):
             raise
 
         except Exception as ex:
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def getKitById(self, session: Session, id_):
@@ -78,7 +78,7 @@ class KitApi(TortugaApi):
             raise
 
         except Exception as ex:
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
 
     def getKitList(self, session: Session):
         """
@@ -97,7 +97,7 @@ class KitApi(TortugaApi):
             raise
 
         except Exception as ex:
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def installKit(self, session: Session, name, version, iteration=None):
@@ -120,7 +120,7 @@ class KitApi(TortugaApi):
             raise
 
         except Exception as ex:
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def installKitPackage(self, db_manager, packageUrl):
@@ -142,7 +142,7 @@ class KitApi(TortugaApi):
             raise
 
         except Exception as ex:
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def getKitEula(self, name, version, iteration=None):
@@ -165,7 +165,7 @@ class KitApi(TortugaApi):
             raise
 
         except Exception as ex:
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def getKitPackageEula(self, packageUrl):
@@ -187,7 +187,7 @@ class KitApi(TortugaApi):
             raise
 
         except Exception as ex:
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def installOsKit(self, session: Session, os_media_urls: List[str],
@@ -230,5 +230,5 @@ class KitApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)

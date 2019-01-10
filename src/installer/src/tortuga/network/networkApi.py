@@ -53,7 +53,7 @@ class NetworkApi(TortugaApi):
         except TortugaException as ex:
             raise
         except Exception as ex:
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def getNetworkById(self, session: Session, id_: str):
@@ -72,7 +72,7 @@ class NetworkApi(TortugaApi):
         except TortugaException as ex:
             raise
         except Exception as ex:
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def getNetworkList(self, session: Session) -> TortugaObjectList:
@@ -90,7 +90,7 @@ class NetworkApi(TortugaApi):
         except TortugaException as ex:
             raise
         except Exception as ex:
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def addNetwork(self, session: Session, network: Network) -> int:
@@ -109,7 +109,7 @@ class NetworkApi(TortugaApi):
         except TortugaException as ex:
             raise
         except Exception as ex:
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def deleteNetwork(self, session: Session, id_: str):
@@ -128,7 +128,7 @@ class NetworkApi(TortugaApi):
         except TortugaException as ex:
             raise
         except Exception as ex:
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def updateNetwork(self, session: Session, network: Network) -> Network:
@@ -147,5 +147,5 @@ class NetworkApi(TortugaApi):
         except TortugaException as ex:
             raise
         except Exception as ex:
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)

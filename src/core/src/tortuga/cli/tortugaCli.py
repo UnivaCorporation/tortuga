@@ -272,12 +272,12 @@ class TortugaCli(metaclass=ABCMeta):
         try:
             self.runCommand()
         except TortugaException as ex:
-            print('%s' % (ex.getErrorMessage()))
+            print(ex.getErrorMessage())
             raise SystemExit(ex.getErrorCode())
-        except SystemExit as ex:
+        except SystemExit:
             raise
         except Exception as ex:
-            print('%s' % (ex))
+            print(str(ex))
             raise SystemExit(-1)
 
     def _parseDiskSize(self, diskSizeParam): \

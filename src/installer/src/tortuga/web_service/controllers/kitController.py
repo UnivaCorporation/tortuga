@@ -87,7 +87,7 @@ class KitController(TortugaController):
                 'kit': kit.getCleanDict(),
             }
         except Exception as ex:
-            self._logger.error('%s' % ex)
+            self._logger.error(str(ex))
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -130,7 +130,7 @@ class KitController(TortugaController):
             code = self.getTortugaStatusCode(ex)
             response = self.notFoundErrorResponse(str(ex), code)
         except Exception as ex:
-            self._logger.error('%s' % ex)
+            self._logger.error(str(ex))
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -145,7 +145,7 @@ class KitController(TortugaController):
             KitManager().installKit(
                 cherrypy.request.db, name, version, iteration, key)
         except Exception as ex:
-            self._logger.error('%s' % ex)
+            self._logger.error(str(ex))
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -160,7 +160,7 @@ class KitController(TortugaController):
 
             response = eula.getCleanDict()
         except Exception as ex:
-            self._logger.error('%s' % ex)
+            self._logger.error(str(ex))
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 

@@ -235,7 +235,7 @@ class TortugaObject(dict): \
             else:
                 if key in self._encodedKeyTypeDict:
                     self[key] = base64.\
-                        b64encode(base64.encodestring('%s' % value))
+                        b64encode(base64.encodestring(str(value)))
 
     def decode(self):
         """ Decode values for listed keys. """
@@ -250,7 +250,7 @@ class TortugaObject(dict): \
                         continue
 
                     value = base64.\
-                        decodestring(base64.b64decode('%s' % value))
+                        decodestring(base64.b64decode(str(value)))
 
                     keyType = self._encodedKeyTypeDict.get(key)
 

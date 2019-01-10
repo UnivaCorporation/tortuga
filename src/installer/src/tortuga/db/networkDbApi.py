@@ -56,7 +56,7 @@ class NetworkDbApi(TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def getNetwork(self, session: Session, address: str, netmask: str):
@@ -75,7 +75,7 @@ class NetworkDbApi(TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def getNetworkById(self, session: Session, id_):
@@ -92,7 +92,7 @@ class NetworkDbApi(TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def addNetwork(self, session: Session, network):
@@ -133,7 +133,7 @@ class NetworkDbApi(TortugaDbApi):
         except Exception as ex:
             session.rollback()
 
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
 
             raise
 
@@ -174,7 +174,7 @@ class NetworkDbApi(TortugaDbApi):
         except Exception as ex:
             session.rollback()
 
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
 
             raise
 
@@ -228,7 +228,7 @@ class NetworkDbApi(TortugaDbApi):
         except Exception as ex:
             session.rollback()
 
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
 
             raise
 

@@ -59,7 +59,7 @@ class KitDbApi(TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def __retrieveAllKitData(self, dbKit, kit):
@@ -102,7 +102,7 @@ class KitDbApi(TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def getKitList(self, session: Session,
@@ -124,7 +124,7 @@ class KitDbApi(TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self._logger.exception('%s' % (ex))
+            self._logger.exception(str(ex))
             raise
 
     def addKit(self, session: Session, kit):
@@ -155,10 +155,10 @@ class KitDbApi(TortugaDbApi):
             session.rollback()
 
             raise
-        except Exception as exc:
+        except Exception as ex:
             session.rollback()
 
-            self._logger.exception('%s' % (exc))
+            self._logger.exception(str(ex))
 
             raise
 
@@ -184,7 +184,7 @@ class KitDbApi(TortugaDbApi):
         except Exception as ex:
             session.rollback()
 
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def addComponentsToKit(self, session: Session, kit, compList):
@@ -208,5 +208,5 @@ class KitDbApi(TortugaDbApi):
             raise
         except Exception as ex:
             session.rollback()
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise

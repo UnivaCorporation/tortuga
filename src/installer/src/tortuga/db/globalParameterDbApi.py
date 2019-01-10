@@ -43,7 +43,7 @@ class GlobalParameterDbApi(TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def getParameterList(self, session: Session) -> TortugaObjectList:
@@ -64,7 +64,7 @@ class GlobalParameterDbApi(TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def addParameter(self, session: Session, parameter: Parameter) -> None:
@@ -88,7 +88,7 @@ class GlobalParameterDbApi(TortugaDbApi):
             raise
         except Exception as ex:
             session.rollback()
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def upsertParameter(self, session: Session, parameter: Parameter) -> None:
@@ -132,5 +132,5 @@ class GlobalParameterDbApi(TortugaDbApi):
             raise
         except Exception as ex:
             session.rollback()
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise

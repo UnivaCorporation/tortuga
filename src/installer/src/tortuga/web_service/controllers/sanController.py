@@ -40,7 +40,7 @@ class SanController(TortugaController):
 
             response = volumeList.getCleanDict()
         except Exception as ex:
-            self._logger.error('%s' % ex)
+            self._logger.error(str(ex))
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -61,7 +61,7 @@ class SanController(TortugaController):
 
             response = volume.getCleanDict()
         except Exception as ex:
-            self._logger.error('%s' % ex)
+            self._logger.error(str(ex))
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -80,7 +80,7 @@ class SanController(TortugaController):
         try:
             SanApi().updateVolume(volume, shared == 'True')
         except Exception as ex:
-            self._logger.error('%s' % ex)
+            self._logger.error(str(ex))
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -99,7 +99,7 @@ class SanController(TortugaController):
         try:
             SanApi().deleteVolume(volume)
         except Exception as ex:
-            self._logger.error('%s' % ex)
+            self._logger.error(str(ex))
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 

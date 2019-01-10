@@ -50,7 +50,7 @@ class NicDbApi(TortugaDbApi):
             raise
         except Exception as ex:
             session.rollback()
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def setIp(self, session: Session, nicId, ip):
@@ -70,5 +70,5 @@ class NicDbApi(TortugaDbApi):
             raise
         except Exception as ex:
             session.rollback()
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise

@@ -38,6 +38,6 @@ class OperatingSystemDbApi(TortugaDbApi):
             dbOs = self._osDbHandler.addOsIfNotFound(session, osInfo)
             session.commit()
         except (Exception, TortugaException) as ex:
-            self._logger.exception('%s' % (ex))
+            self._logger.exception(str(ex))
 
         return dbOs

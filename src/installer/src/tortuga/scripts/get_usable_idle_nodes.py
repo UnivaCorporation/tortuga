@@ -61,7 +61,7 @@ Display list of nodes that are able to use the specified software profile.
             for node in nodeList:
                 if node.getHardwareProfile().getId() in \
                 hardwareProfileIdList and node.getIsIdle():
-                    print('%s' % node)
+                    print(str(node))
 
 
 def main():

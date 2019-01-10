@@ -170,7 +170,7 @@ class Kit(TortugaObject): \
             return '%s-%s' % (self.getVersion(), self.getIteration())
 
         if self.getVersion():
-            return '%s' % (self.getVersion())
+            return str(self.getVersion())
 
         return None
 

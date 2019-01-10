@@ -206,7 +206,7 @@ def get_puppet_node_yaml(session, nodeName):
 
             for kit in enabledKits:
                 if kit.isOs:
-                    verstr = '%s' % (kit.version)
+                    verstr = str(kit.version)
                     arch = kit.components[0].os[0].arch
                 else:
                     verstr = '%s-%s' % (kit.version, kit.iteration)

@@ -1371,7 +1371,7 @@ class NodeManager(TortugaObjectManager): \
             raise
         except Exception as ex:
             session.rollback()
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def shutdownNode(self, session, nodespec: str, bSoftShutdown: bool = False) \
@@ -1403,7 +1403,7 @@ class NodeManager(TortugaObjectManager): \
             raise
         except Exception as ex:
             session.rollback()
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def rebootNode(self, session, nodespec: str, bSoftReset: bool = False,

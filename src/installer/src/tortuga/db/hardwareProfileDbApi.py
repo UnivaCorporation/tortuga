@@ -99,7 +99,7 @@ class HardwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def getHardwareProfileById(
@@ -127,7 +127,7 @@ class HardwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def getHardwareProfileList(
@@ -164,7 +164,7 @@ class HardwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def setIdleSoftwareProfile(
@@ -196,7 +196,7 @@ class HardwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def addHardwareProfile(
@@ -238,7 +238,7 @@ class HardwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
             raise
         except Exception as ex:
             session.rollback()
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def deleteHardwareProfile(self, session: Session, name: str) -> None:
@@ -276,7 +276,7 @@ class HardwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
             raise
         except Exception as ex:
             session.rollback()
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def copyHardwareProfile(self, session: Session,
@@ -343,7 +343,7 @@ class HardwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
             raise
         except Exception as ex:
             session.rollback()
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def deleteAdmin(
@@ -375,7 +375,7 @@ class HardwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
             raise
         except Exception as ex:
             session.rollback()
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def updateHardwareProfile(
@@ -401,7 +401,7 @@ class HardwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
 
         except Exception as ex:
             session.rollback()
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def __getInstallerNode(self, session: Session) -> Node:
@@ -608,7 +608,7 @@ class HardwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def getProvisioningNicForNetwork(
@@ -633,7 +633,7 @@ class HardwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
 
             return tortuga.objects.nic.Nic.getFromDbDict(nics[0].__dict__)
         except TortugaException as exc:
-            self._logger.exception('%s' % exc)
+            self._logger.exception(str(ex)c)
             raise
 
 

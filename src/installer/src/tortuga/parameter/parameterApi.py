@@ -51,7 +51,7 @@ class ParameterApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self._logger.exception('%s' % (ex))
+            self._logger.exception(str(ex))
 
             raise TortugaException(exception=ex)
 
@@ -71,7 +71,7 @@ class ParameterApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self._logger.exception('%s' % (ex))
+            self._logger.exception(str(ex))
 
             raise TortugaException(exception=ex)
 
@@ -91,7 +91,7 @@ class ParameterApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self._logger.exception('%s' % (ex))
+            self._logger.exception(str(ex))
 
             raise TortugaException(exception=ex)
 
@@ -110,7 +110,7 @@ class ParameterApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self._logger.exception('%s' % (ex))
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def upsertParameter(self, session: Session, parameter: Parameter) \

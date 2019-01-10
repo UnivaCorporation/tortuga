@@ -45,7 +45,7 @@ class SanApi(TortugaApi):
         except TortugaException as ex:
             raise
         except Exception as ex:
-            self._logger.exception('%s' % (ex))
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def deleteVolume(self, volume, force=False): \
@@ -67,7 +67,7 @@ class SanApi(TortugaApi):
         except TortugaException as ex:
             raise
         except Exception as ex:
-            self._logger.exception('%s' % (ex))
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def getVolumeList(self):
@@ -87,7 +87,7 @@ class SanApi(TortugaApi):
         except TortugaException as ex:
             raise
         except Exception as ex:
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def updateVolume(self, volume, shared):
@@ -110,7 +110,7 @@ class SanApi(TortugaApi):
         except TortugaException as ex:
             raise
         except Exception as ex:
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def __getPersistentVolume(self, volume):

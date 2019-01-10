@@ -60,7 +60,7 @@ class RunManager(TortugaObjectManager):
                     % (utilityName, pid))
             else:
                 pid = os.getpid()
-                open(lockFile, 'w').write('%s' % pid)
+                open(lockFile, 'w').write(str(pid))
                 self._logger.debug(
                     'Acquired lock file %s for %s' % (
                         lockFile, utilityName))
@@ -74,7 +74,7 @@ class RunManager(TortugaObjectManager):
         self._lock.acquire()
         try:
             lockFile, pid = self.getLockFileAndPid(utilityName)
-            myPid = '%s' % os.getpid()
+            myPid = str(os.getpid())
             if os.path.exists(lockFile):
                 if int(myPid.strip()) != pid:
                     raise AnotherInstanceOwnsLock(

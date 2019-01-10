@@ -82,7 +82,7 @@ class NetworkController(TortugaController):
 
             response = {'networks': networkList.getCleanDict()}
         except Exception as ex:
-            self._logger.error('%s' % ex)
+            self._logger.error(str(ex))
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -107,7 +107,7 @@ class NetworkController(TortugaController):
             code = self.getTortugaStatusCode(ex)
             response = self.notFoundErrorResponse(str(ex), code)
         except Exception as ex:
-            self._logger.error('%s' % ex)
+            self._logger.error(str(ex))
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -127,7 +127,7 @@ class NetworkController(TortugaController):
 
             response = {'network': network.getCleanDict()}
         except Exception as ex:
-            self._logger.error('%s' % ex)
+            self._logger.error(str(ex))
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -154,7 +154,7 @@ class NetworkController(TortugaController):
 
             self.app.network_api.addNetwork(cherrypy.request.db, network)
         except Exception as ex:
-            self._logger.error('%s' % ex)
+            self._logger.error(str(ex))
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -173,7 +173,7 @@ class NetworkController(TortugaController):
         try:
             self.app.network_api.deleteNetwork(cherrypy.request.db, network_id)
         except Exception as ex:
-            self._logger.error('%s' % ex)
+            self._logger.error(str(ex))
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -264,7 +264,7 @@ class NetworkController(TortugaController):
             code = self.getTortugaStatusCode(ex)
             response = self.notFoundErrorResponse(str(ex), code)
         except Exception as ex:
-            self._logger.error('%s' % (ex))
+            self._logger.error(str(ex))
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 

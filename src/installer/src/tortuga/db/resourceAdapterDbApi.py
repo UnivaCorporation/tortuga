@@ -131,7 +131,7 @@ class ResourceAdapterDbApi(TortugaDbApi):
             raise
 
         except Exception as ex:
-            self._logger.exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def getTortugaObjectList(self,
