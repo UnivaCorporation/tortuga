@@ -28,6 +28,7 @@ from tortuga.config import VERSION, version_is_compatible
 from tortuga.config.configManager import ConfigManager
 from tortuga.db import componentDbApi
 from tortuga.db.kitDbApi import KitDbApi
+from tortuga.db.dbManager import DbManager
 from tortuga.exceptions.eulaAcceptanceRequired import EulaAcceptanceRequired
 from tortuga.exceptions.kitAlreadyExists import KitAlreadyExists
 from tortuga.exceptions.kitNotFound import KitNotFound
@@ -166,14 +167,15 @@ class KitManager(TortugaObjectManager):
         self._logger.debug(
             'Installing kit package: {}'.format(kit_pkg_url))
 
-        installer = self._prepare_installer(kit_pkg_url)
-        kit = installer.get_kit()
-
         with db_manager.session() as session:
+            installer = self._prepare_installer(kit_pkg_url)
+
             installer.session = session
 
+            kit = installer.get_kit()
+
             try:
-                self._run_installer(installer)
+                self._run_installer(db_manager, installer)
 
             except Exception as ex:
                 self._delete_kit(session, kit, force=False)
@@ -235,10 +237,11 @@ class KitManager(TortugaObjectManager):
 
         return installer
 
-    def _run_installer(self, installer):
+    def _run_installer(self, db_manager: DbManager, installer):
         """
         Runs the installation process for a kit installer.
 
+        :param db_manager: the DbManager instance
         :param installer: the KitInstaller instance to run the install process
                           for
 
@@ -281,7 +284,7 @@ class KitManager(TortugaObjectManager):
         #
         # Initialize any DB tables provided by the kit
         #
-        installer.register_database_tables()
+        db_manager.init_database()
 
         #
         # Add the kit to the database
