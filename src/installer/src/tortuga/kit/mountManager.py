@@ -20,12 +20,14 @@ Simple class for mounting/umounting specified media
 This code originally extracted from kitops
 """
 
-import os
-import tempfile
-import subprocess
 import logging
-from tortuga.exceptions.cannotMountKitMedia import CannotMountKitMedia
+import os
+import subprocess
+import tempfile
+
 from tortuga.config.configManager import ConfigManager
+from tortuga.exceptions.cannotMountKitMedia import CannotMountKitMedia
+from tortuga.logging import KITS_NAMESPACE
 
 
 class MountManager(object):
@@ -35,8 +37,7 @@ class MountManager(object):
         self.bIsMounted = False
         self._tmpprefix = '/tmp'
         self.bIsIso = False
-        self._logger = logging.getLogger(
-            'tortuga.%s' % (self.__class__.__name__))
+        self._logger = logging.getLogger(KITS_NAMESPACE)
 
         self._cm = ConfigManager()
 

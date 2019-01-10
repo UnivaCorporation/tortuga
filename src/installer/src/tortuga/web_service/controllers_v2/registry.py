@@ -15,10 +15,11 @@
 from logging import getLogger
 from typing import List, Type
 
+from tortuga.logging import WEBSERVICE_NAMESPACE
 from .base import Controller
 
 
-logger = getLogger(__name__)
+logger = getLogger(WEBSERVICE_NAMESPACE)
 
 
 WS_CONTROLLER_REGISTRY: List[Type[Controller]] = []

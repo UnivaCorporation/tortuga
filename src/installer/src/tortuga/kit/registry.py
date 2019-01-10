@@ -18,10 +18,10 @@ from logging import getLogger
 from typing import Tuple
 
 from tortuga.exceptions.kitNotFound import KitNotFound
+from tortuga.logging import KITS_NAMESPACE
 from tortuga.objects.kit import Kit
 
-
-logger = getLogger(__name__)
+logger = getLogger(KITS_NAMESPACE)
 
 
 KIT_INSTALLER_PACKAGES = ['tortuga_kits']

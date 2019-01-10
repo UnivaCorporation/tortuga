@@ -20,21 +20,20 @@ from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
 from tortuga.exceptions.adminAlreadyExists import AdminAlreadyExists
 from tortuga.exceptions.adminNotFound import AdminNotFound
 from tortuga.exceptions.deleteAdminFailed import DeleteAdminFailed
-
 from .models.admin import Admin
 
 
 class AdminsDbHandler(TortugaDbObjectHandler):
     """
     This class handles global admins table.
+    
     """
-
     def getAdmin(self, session, name):
         """
         Return admin.
         """
 
-        self.getLogger().debug('Retrieving admin user [%s]' % name)
+        self._logger.debug('Retrieving admin user [%s]' % name)
 
         try:
             return session.query(

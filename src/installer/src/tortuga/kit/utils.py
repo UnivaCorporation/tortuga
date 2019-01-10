@@ -21,17 +21,15 @@ import shutil
 import subprocess
 import urllib.error
 import urllib.request
-from logging import getLogger
-from typing import Tuple
 
 from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.fileNotFound import FileNotFound
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.kit.metadata import KitMetadataSchema
+from tortuga.logging import KITS_NAMESPACE
 from tortuga.os_utility.tortugaSubprocess import TortugaSubprocess
 
-
-logger = getLogger(__name__)
+logger = logging.getLogger(KITS_NAMESPACE)
 
 
 def pip_install_requirements(requirements_path):

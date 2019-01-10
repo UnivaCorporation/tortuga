@@ -82,7 +82,7 @@ class NetworkController(TortugaController):
 
             response = {'networks': networkList.getCleanDict()}
         except Exception as ex:
-            self.getLogger().error('%s' % ex)
+            self._logger.error('%s' % ex)
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -94,7 +94,7 @@ class NetworkController(TortugaController):
     def getNetwork(self, address, netmask):
         """Return networks"""
 
-        # self.getLogger().debug('Retrieving network %s/%s' % (
+        # self._logger.debug('Retrieving network %s/%s' % (
         #     address, netmask))
 
         try:
@@ -107,7 +107,7 @@ class NetworkController(TortugaController):
             code = self.getTortugaStatusCode(ex)
             response = self.notFoundErrorResponse(str(ex), code)
         except Exception as ex:
-            self.getLogger().error('%s' % ex)
+            self._logger.error('%s' % ex)
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -119,7 +119,7 @@ class NetworkController(TortugaController):
     def getNetworkById(self, network_id):
         """Return networks by id"""
 
-        self.getLogger().debug('Retrieving network id [%s]' % (network_id))
+        self._logger.debug('Retrieving network id [%s]' % (network_id))
 
         try:
             network = self.app.network_api.getNetworkById(
@@ -127,7 +127,7 @@ class NetworkController(TortugaController):
 
             response = {'network': network.getCleanDict()}
         except Exception as ex:
-            self.getLogger().error('%s' % ex)
+            self._logger.error('%s' % ex)
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -154,7 +154,7 @@ class NetworkController(TortugaController):
 
             self.app.network_api.addNetwork(cherrypy.request.db, network)
         except Exception as ex:
-            self.getLogger().error('%s' % ex)
+            self._logger.error('%s' % ex)
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -173,7 +173,7 @@ class NetworkController(TortugaController):
         try:
             self.app.network_api.deleteNetwork(cherrypy.request.db, network_id)
         except Exception as ex:
-            self.getLogger().error('%s' % ex)
+            self._logger.error('%s' % ex)
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -264,7 +264,7 @@ class NetworkController(TortugaController):
             code = self.getTortugaStatusCode(ex)
             response = self.notFoundErrorResponse(str(ex), code)
         except Exception as ex:
-            self.getLogger().error('%s' % (ex))
+            self._logger.error('%s' % (ex))
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 

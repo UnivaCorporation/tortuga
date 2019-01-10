@@ -26,6 +26,7 @@ from tortuga.exceptions.volumeStillAttached import VolumeStillAttached
 from tortuga.exceptions.deletePersistentVolumeFailed \
     import DeletePersistentVolumeFailed
 from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
+from tortuga.logging import SAN_NAMESPACE
 from tortuga.objects.volume import Volume
 from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.config.configManager import ConfigManager
@@ -81,14 +82,13 @@ class San(object): \
     VOLUME_SECTION_NAME = 'volumes'
 
     def __init__(self):
-        self._logger = logging.getLogger(
-            'tortuga.san.%s' % self.__class__.__name__)
+        self._logger = logging.getLogger(SAN_NAMESPACE)
 
     def __read_cache_file(self, filename=None):
         if filename is None:
             filename = self.DEFAULT_CACHE_FILE
 
-        self.getLogger().debug(
+        self._logger.debug(
             '[%s] Reading cache file [%s]' % (
                 self.__class__.__name__, filename))
 
@@ -102,7 +102,7 @@ class San(object): \
         if filename is None:
             filename = self.DEFAULT_CACHE_FILE
 
-        self.getLogger().debug(
+        self._logger.debug(
             '[%s] Writing cache file [%s]' % (
                 self.__class__.__name__, filename))
 
@@ -329,7 +329,7 @@ class San(object): \
 
         previousHardDrivesConfig = config.items(nodeName)
 
-        self.getLogger().debug(
+        self._logger.debug(
             '[%s] Previous drives for node [%s]: [%s]' % (
                 self.__class__.__name__, nodeName, previousHardDrivesConfig))
 
@@ -352,7 +352,7 @@ class San(object): \
 
         for driveNumber in previousHardDrives:
             if previousHardDrives[driveNumber]['volume'].getPersistent():
-                self.getLogger().debug(
+                self._logger.debug(
                     '[%s] Looking for [%s] in [%s]' % (
                         self.__class__.__name__,
                         previousHardDrives[driveNumber]['volume'],
@@ -507,7 +507,7 @@ class San(object): \
             previousHardDrives, swpPersistentDrives, diskChanges, deleteNode,
             driveNumbers)
 
-        self.getLogger().debug(
+        self._logger.debug(
             '[%s] Returning diskChanges %s' % (
                 self.__class__.__name__, diskChanges))
 
@@ -532,7 +532,7 @@ class San(object): \
                 "%s-%s" % (dbNode.name, driveNumber),
                 False)
 
-        self.getLogger().debug(
+        self._logger.debug(
             '[%s] SAN DB add drive: node [%s], driveNumber [%s],'
             ' volume [%s]' % (
                 self.__class__.__name__, dbNode.name, driveNumber,
@@ -560,7 +560,7 @@ class San(object): \
         # Create a volume ID
         volume = str(uuid.uuid1())
 
-        self.getLogger().debug(
+        self._logger.debug(
             '[%s] SAN DB add vol: adapter [%s], volume [%s] size [%s]'
             ' persistent [%s]' % (
                 self.__class__.__name__, storageAdapter, volume, size,
@@ -599,7 +599,7 @@ class San(object): \
 
             self.__write_cache_file(config)
 
-        self.getLogger().debug(
+        self._logger.debug(
             '[%s] SAN DB remove mapping: node [%s], driveNumber [%s],'
             ' adapter [%s]' % (
                 self.__class__.__name__, dbNode.name, driveNumber,
@@ -671,11 +671,11 @@ class San(object): \
             except UnsupportedOperation:
                 raise
             except Exception:
-                self.getLogger().debug(
+                self._logger.debug(
                     '[%s] Error getting info for node [%s] drive [%s]' % (
                         self.__class__.__name__, dbNode.name, drive))
 
-                self.getLogger().exception(
+                self._logger.exception(
                     'Exception raised attempting to connect storage volume')
 
                 raise
@@ -693,7 +693,7 @@ class San(object): \
             try:
                 driveinfo = self.__getDriveInfo(dbNode.name, drive)
 
-                self.getLogger().debug(
+                self._logger.debug(
                     '[%s] Comparing drive [%s] volume [%s] to [%s]' % (
                         self.__class__.__name__, drive, driveinfo.volume,
                         volume))
@@ -708,7 +708,7 @@ class San(object): \
 
                     driveNumbers.append((drive, driveinfo.device, vol))
             except Exception:
-                self.getLogger().debug(
+                self._logger.debug(
                     '[%s] Error getting info for node [%s] drive [%s]' % (
                         self.__class__.__name__, dbNode.name, drive))
 
@@ -729,7 +729,7 @@ class San(object): \
         # Get the list of all mounts for this volume
         _, mappedNodes = self.__getVolumeTargetHosts(driveinfo.volume)
 
-        self.getLogger().debug(
+        self._logger.debug(
             '[%s] Volume [%s] is mapped to nodes [%s]' % (
                 self.__class__.__name__, driveinfo.volume, mappedNodes))
 
@@ -737,7 +737,7 @@ class San(object): \
         nodes, device = self.__checkVolumeTargetHost(
             driveinfo.volume, targetHost)
 
-        self.getLogger().debug(
+        self._logger.debug(
             '[%s] Volume [%s] is connected on target host [%s] at [%s]'
             ' for nodes [%s]' % (
                 self.__class__.__name__, driveinfo.volume, targetHost,
@@ -817,11 +817,11 @@ class San(object): \
                 # Disconnect this drive
                 self.disconnectStorage(dbNode, drive, connectedNodeName)
             except Exception as ex:
-                self.getLogger().debug(
+                self._logger.debug(
                     '[%s] Error getting info for node [%s] drive [%s]' % (
                         self.__class__.__name__, dbNode.name, drive))
 
-                self.getLogger().exception(ex)
+                self._logger.exception(ex)
 
                 raise
 
@@ -842,7 +842,7 @@ class San(object): \
         nodes, _ = self.__checkVolumeTargetHost(
             driveinfo.volume, attachedNodeName)
 
-        self.getLogger().debug(
+        self._logger.debug(
             '[%s] Volume [%s] is connected on target host [%s] at [%s]'
             ' for nodes [%s]' % (
                 self.__class__.__name__, driveinfo.volume, attachedNodeName,
@@ -880,7 +880,7 @@ class San(object): \
 
                 vols.append(driveinfo.volume)
             except Exception as ex:
-                self.getLogger().debug(
+                self._logger.debug(
                     '[%s] Error getting info for node [%s] drive [%s]:'
                     ' %s' % (self.__class__.__name__, nodeName, drive, ex))
 
@@ -944,7 +944,7 @@ class San(object): \
             raise UnsupportedOperation(
                 'Node [%s] does not support checkpointing' % (dbNode.name))
 
-        self.getLogger().debug('[%s] Checkpointing node [%s]' % (
+        self._logger.debug('[%s] Checkpointing node [%s]' % (
             self.__class__.__name__, dbNode.name))
 
         # Find out what kind of disks we need for this node
@@ -995,7 +995,7 @@ class San(object): \
             raise UnsupportedOperation(
                 'Node [%s] does not support checkpointing' % (dbNode.name))
 
-        self.getLogger().debug(
+        self._logger.debug(
             '[%s] Reverting node [%s] to checkpoint' % (
                 self.__class__.__name__, dbNode.name))
 
@@ -1147,6 +1147,3 @@ class San(object): \
                 'Volume [%s] does not exist' % (queryVolume.lower()))
 
         return volumes
-
-    def getLogger(self):
-        return self._logger

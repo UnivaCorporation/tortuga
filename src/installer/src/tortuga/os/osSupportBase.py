@@ -23,13 +23,14 @@ from tortuga.config.configManager import ConfigManager
 from tortuga.db.models.hardwareProfile import HardwareProfile
 from tortuga.db.models.node import Node
 from tortuga.db.models.softwareProfile import SoftwareProfile
+from tortuga.logging import OS_NAMESPACE
 from tortuga.objects.osFamilyInfo import OsFamilyInfo
 
 
 class OsSupportBase:
     def __init__(self, osFamilyInfo: OsFamilyInfo) -> None:
         self._osFamilyInfo = osFamilyInfo
-        self._logger = logging.getLogger('tortuga.os')
+        self._logger = logging.getLogger(OS_NAMESPACE)
         self._cm = ConfigManager()
 
     def getLogger(self):

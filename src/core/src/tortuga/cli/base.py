@@ -18,8 +18,10 @@ from logging import getLogger
 import pkgutil
 from typing import List, Optional, Type
 
+from tortuga.logging import CLI_NAMESPACE
 
-logger = getLogger(__name__)
+
+logger = getLogger(CLI_NAMESPACE)
 
 
 class Command:

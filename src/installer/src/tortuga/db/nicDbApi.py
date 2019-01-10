@@ -39,7 +39,7 @@ class NicDbApi(TortugaDbApi):
         try:
             dbNics = self._nicsDbHandler.getNic(session, mac)
 
-            self.getLogger().debug(
+            self._logger.debug(
                 'setNicIp: mac [%s] ip [%s]' % (mac, ip))
 
             dbNics.ip = ip
@@ -50,14 +50,14 @@ class NicDbApi(TortugaDbApi):
             raise
         except Exception as ex:
             session.rollback()
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception('%s' % ex)
             raise
 
     def setIp(self, session: Session, nicId, ip):
         try:
             dbNic = self._nicsDbHandler.getNicById(session, nicId)
 
-            self.getLogger().debug('setIp: nicId [%s] ip [%s]' % (
+            self._logger.debug('setIp: nicId [%s] ip [%s]' % (
                 nicId, ip))
 
             dbNic.ip = ip
@@ -70,5 +70,5 @@ class NicDbApi(TortugaDbApi):
             raise
         except Exception as ex:
             session.rollback()
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception('%s' % ex)
             raise

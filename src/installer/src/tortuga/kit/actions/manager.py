@@ -13,18 +13,22 @@
 # limitations under the License.
 
 # pylint: disable=no-name-in-module,no-member
-
+import logging
 from typing import List
 
 from tortuga.kit.registry import get_all_kit_installers
+from tortuga.logging import KITS_NAMESPACE
 from tortuga.objects.node import Node
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 
 
 class KitActionsManager(TortugaObjectManager):
+    def __init__(self):
+        self._logger = logging.getLogger(KITS_NAMESPACE)
+        
     def get_cloud_config(self, node, hardware_profile, software_profile,
                          user_data, *args, **kwargs):
-        self.getLogger().debug(
+        self._logger.debug(
             'get_cloud_config: {}, {}, {}, {}, {}'.format(
                 node.name, hardware_profile.name, software_profile.name, args,
                 kwargs
@@ -54,7 +58,7 @@ class KitActionsManager(TortugaObjectManager):
         to add host workflow.
         """
 
-        self.getLogger().debug(
+        self._logger.debug(
             'pre_add_host: {}, {}, {}, {}'.format(
                 hardware_profile_name, software_profile_name, hostname, ip
             )
@@ -77,7 +81,7 @@ class KitActionsManager(TortugaObjectManager):
         Post add host processing on the installer node.
         """
 
-        self.getLogger().debug(
+        self._logger.debug(
             'post_add_host: {}, {}, nodes={}'.format(
                 hardware_profile_name, software_profile_name,
                 '[...]' if nodes else '[]',
@@ -94,7 +98,7 @@ class KitActionsManager(TortugaObjectManager):
         )
 
     def refresh(self, software_profile_list, *args, **kwargs):
-        self.getLogger().debug('refresh: {} {} kargs {}'.format(software_profile_list,
+        self._logger.debug('refresh: {} {} kargs {}'.format(software_profile_list,
                                                       args, kwargs))
 
         component_installers = self._get_enabled_component_installers(
@@ -130,7 +134,7 @@ class KitActionsManager(TortugaObjectManager):
     def _delete_host_action(self, hardware_profile_name,
                             software_profile_name, action_name,
                             *args, **kwargs):
-        self.getLogger().debug(
+        self._logger.debug(
             '{}: {}, {}, {}, {}'.format(
                 action_name, hardware_profile_name, software_profile_name,
                 args, kwargs

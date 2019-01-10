@@ -21,12 +21,13 @@ from logging import getLogger
 from tortuga.config import version_is_compatible, VERSION
 from tortuga.exceptions.commandFailed import CommandFailed
 from tortuga.exceptions.kitBuildError import KitBuildError
+from tortuga.logging import KITS_NAMESPACE
 from tortuga.os_utility.tortugaSubprocess import executeCommand
 
 from .metadata import KitMetadataSchema
 
 
-logger = getLogger('KitBuilder')
+logger = getLogger(KITS_NAMESPACE)
 
 
 KIT_METADATA_FILE = 'kit.json'

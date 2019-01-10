@@ -16,7 +16,6 @@
 # pylint: disable=not-callable
 
 import configparser
-from logging import getLogger
 import os
 
 import sqlalchemy
@@ -26,14 +25,8 @@ from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.dbError import DbError
 from tortuga.kit.registry import get_all_kit_installers
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
-# from .tables import get_all_table_mappers
-from .sessionContextManager import SessionContextManager
 from .models.base import ModelBase
-
-from . import models  # noqa pylint: disable=unused-import
-
-
-logger = getLogger(__name__)
+from .sessionContextManager import SessionContextManager
 
 
 class DbManager(TortugaObjectManager):
@@ -48,7 +41,7 @@ class DbManager(TortugaObjectManager):
 
     """
     def __init__(self, engine=None):
-        super(DbManager, self).__init__()
+        super().__init__()
 
         if not engine:
             self._cm = ConfigManager()
@@ -99,7 +92,7 @@ class DbManager(TortugaObjectManager):
         try:
             ModelBase.metadata.create_all(self.engine)
         except Exception:
-            self.getLogger().exception('SQLAlchemy raised exception')
+            self._logger.exception('SQLAlchemy raised exception')
             raise DbError('Check database settings or credentials')
 
     @property

@@ -22,11 +22,12 @@ from sqlalchemy.orm.session import Session
 from tortuga.db.nodeRequestsDbHandler import NodeRequestsDbHandler
 from tortuga.events.types import AddNodeRequestComplete
 from tortuga.exceptions.tortugaException import TortugaException
+from tortuga.logging import ADD_HOST_NAMESPACE
 
 from .contextManager import AddHostSessionContextManager
 
 
-logger = logging.getLogger('tortuga.addhost')
+logger = logging.getLogger(ADD_HOST_NAMESPACE)
 
 
 def process_addhost_request(session: Session, request: dict,

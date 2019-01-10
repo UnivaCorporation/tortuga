@@ -19,11 +19,6 @@ class TortugaApi(object): \
         # pylint: disable=too-few-public-methods
     """
     Base tortuga api class.
+    
     """
-    def __init__(self):
-        self._logger = logging.getLogger(
-            'tortuga.%s' % (self.__class__.__name__))
-
-    def getLogger(self):
-        """ Get logger for this class. """
-        return self._logger
+    pass

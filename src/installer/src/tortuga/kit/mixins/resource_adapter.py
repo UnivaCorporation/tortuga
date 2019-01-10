@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from logging import getLogger
 import os
 import shutil
+from logging import getLogger
 
 from tortuga.db.kitDbApi import KitDbApi
 from tortuga.db.resourceAdapterDbApi import ResourceAdapterDbApi
@@ -24,10 +24,11 @@ from tortuga.exceptions.resourceAdapterAlreadyExists import \
 from tortuga.hardwareprofile.hardwareProfileApi import \
     HardwareProfileApi
 from tortuga.kit.installer import ComponentInstallerBase
+from tortuga.logging import RESOURCE_ADAPTER_NAMESPACE
 from ..utils import pip_install_requirements
 
 
-logger = getLogger(__name__)
+logger = getLogger(RESOURCE_ADAPTER_NAMESPACE)
 
 
 class ResourceAdapterMixin:

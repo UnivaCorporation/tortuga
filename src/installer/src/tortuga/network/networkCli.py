@@ -254,7 +254,7 @@ class NetworkCli(TortugaCli):
                 from tortuga.objects.network import Network
                 network = Network.getFromXml(xmlString)
             except Exception as ex:   # pylint: disable=W0703
-                self.getLogger().debug('Error parsing xml %s' % ex)
+                self._logger.debug('Error parsing xml %s' % ex)
 
             if network is None:
                 raise InvalidCliRequest(

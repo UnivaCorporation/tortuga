@@ -24,9 +24,10 @@ from tortuga.auth.methods import (AuthenticationMethod,
                                   JwtAuthenticationMethod,
                                   UsernamePasswordAuthenticationMethod)
 from tortuga.exceptions.authenticationFailed import AuthenticationFailed
+from tortuga.logging import AUTH_NAMESPACE
 
 
-logger = getLogger(__name__)
+logger = getLogger(AUTH_NAMESPACE)
 
 
 class AuthorizationHeaderMixin: \

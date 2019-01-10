@@ -19,11 +19,11 @@ from typing import List
 
 from passlib.hash import pbkdf2_sha256
 
+from tortuga.logging import AUTH_NAMESPACE
 from oic.oic import Client
 from oic.oic.message import RegistrationResponse
 from oic.utils.authn.client import CLIENT_AUTHN_METHOD
 from oic.utils.jwt import JWT
-from sqlalchemy.orm.session import Session
 from tortuga.admin.api import AdminApi
 from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.authenticationFailed import AuthenticationFailed
@@ -31,7 +31,8 @@ from tortuga.exceptions.authenticationFailed import AuthenticationFailed
 from .manager import AuthManager
 from tortuga.web_service.database import dbm
 
-logger = getLogger(__name__)
+
+logger = getLogger(AUTH_NAMESPACE)
 
 
 class AuthenticationMethod:

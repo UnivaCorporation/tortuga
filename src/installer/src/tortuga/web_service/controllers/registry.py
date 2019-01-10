@@ -14,8 +14,10 @@
 
 from logging import getLogger
 
+from tortuga.logging import WEBSERVICE_NAMESPACE
 
-logger = getLogger(__name__)
+
+logger = getLogger(WEBSERVICE_NAMESPACE)
 
 
 WS_CONTROLLER_REGISTRY = []

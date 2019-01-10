@@ -15,11 +15,12 @@
 from logging import getLogger
 from typing import Iterator, Optional
 
+from tortuga.logging import EVENTS_NAMESPACE
 from tortuga.objectstore.base import matches_filters, ObjectStore
 from .types import BaseEvent, get_event_class
 
 
-logger = getLogger(__name__)
+logger = getLogger(EVENTS_NAMESPACE)
 
 
 class EventStore:

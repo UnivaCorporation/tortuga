@@ -57,7 +57,7 @@ class SoftwareUsesHardwareDbApi(TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception('%s' % ex)
             raise
 
     def getAllowedHardwareProfilesBySoftwareProfileName(
@@ -85,5 +85,5 @@ class SoftwareUsesHardwareDbApi(TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception('%s' % ex)
             raise

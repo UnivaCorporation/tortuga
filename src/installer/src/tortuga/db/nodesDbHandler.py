@@ -13,21 +13,19 @@
 # limitations under the License.
 
 # pylint: disable=not-callable,no-member,multiple-statements,no-self-use
-
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Union
 
 from sqlalchemy import and_, func, or_
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.session import Session
+
 from tortuga.config.configManager import getfqdn
 from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
 from tortuga.exceptions.nodeNotFound import NodeNotFound
-
 from .models.nic import Nic
 from .models.node import Node
 from .models.softwareProfile import SoftwareProfile
-
 
 Tags = Dict[str, Optional[str]]
 
@@ -38,7 +36,7 @@ class NodesDbHandler(TortugaDbObjectHandler):
     """
 
     def __init__(self):
-        TortugaDbObjectHandler.__init__(self)
+        super().__init__()
 
         self._softwareProfilesDbHandler = SoftwareProfilesDbHandler()
 
@@ -135,7 +133,7 @@ class NodesDbHandler(TortugaDbObjectHandler):
         Returns a list of nodes
         """
 
-        self.getLogger().debug(
+        self._logger.debug(
             'getNodesByAddHostSession(): ahSession [%s]' % (ahSession))
 
         return session.query(Node).filter(
@@ -194,7 +192,7 @@ class NodesDbHandler(TortugaDbObjectHandler):
             NodeNotFound
         """
 
-        self.getLogger().debug('Retrieving node by ID [%s]' % (_id))
+        self._logger.debug('Retrieving node by ID [%s]' % (_id))
 
         dbNode = session.query(Node).get(_id)
 
@@ -209,7 +207,7 @@ class NodesDbHandler(TortugaDbObjectHandler):
             NodeNotFound
         """
 
-        self.getLogger().debug('Retrieving node by IP [%s]' % (ip))
+        self._logger.debug('Retrieving node by IP [%s]' % (ip))
 
         try:
             return session.query(Node).join(Nic).filter(Nic.ip == ip).one()
@@ -227,7 +225,7 @@ class NodesDbHandler(TortugaDbObjectHandler):
             SoftwareProfileNotFound
         """
 
-        self.getLogger().debug('getNodeList()')
+        self._logger.debug('getNodeList()')
 
         if softwareProfile:
             dbSoftwareProfile = \
@@ -264,7 +262,7 @@ class NodesDbHandler(TortugaDbObjectHandler):
         Get list of nodes from the db.
         """
 
-        self.getLogger().debug(
+        self._logger.debug(
             'Retrieving nodes with state [%s] from software'
             ' profile [%s]' % (nodeState, softwareProfileName))
 

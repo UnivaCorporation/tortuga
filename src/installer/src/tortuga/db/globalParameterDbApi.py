@@ -43,7 +43,7 @@ class GlobalParameterDbApi(TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception('%s' % ex)
             raise
 
     def getParameterList(self, session: Session) -> TortugaObjectList:
@@ -64,7 +64,7 @@ class GlobalParameterDbApi(TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception('%s' % ex)
             raise
 
     def addParameter(self, session: Session, parameter: Parameter) -> None:
@@ -88,7 +88,7 @@ class GlobalParameterDbApi(TortugaDbApi):
             raise
         except Exception as ex:
             session.rollback()
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception('%s' % ex)
             raise
 
     def upsertParameter(self, session: Session, parameter: Parameter) -> None:
@@ -103,7 +103,7 @@ class GlobalParameterDbApi(TortugaDbApi):
             raise
         except Exception:
             session.rollback()
-            self.getLogger().exception('upsertParameter failed')
+            self._logger.exception('upsertParameter failed')
             raise
 
     def deleteParameter(self, session: Session, name: str) -> None:
@@ -120,17 +120,17 @@ class GlobalParameterDbApi(TortugaDbApi):
         try:
             p = self._globalParametersDbHandler.getParameter(session, name)
 
-            self.getLogger().debug('Deleting parameter [%s]' % (name))
+            self._logger.debug('Deleting parameter [%s]' % (name))
 
             session.delete(p)
 
             session.commit()
 
-            self.getLogger().info('Deleted parameter [%s]' % name)
+            self._logger.info('Deleted parameter [%s]' % name)
         except TortugaException:
             session.rollback()
             raise
         except Exception as ex:
             session.rollback()
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception('%s' % ex)
             raise

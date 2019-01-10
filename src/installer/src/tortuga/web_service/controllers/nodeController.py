@@ -172,7 +172,7 @@ class NodeController(TortugaController):
                 'nodes': NodeSchema().dump(nodeList, many=True).data
             }
         except Exception as ex:  # noqa pylint: disable=broad-except
-            self.getLogger().exception('node WS API getNodes() failed')
+            self._logger.exception('node WS API getNodes() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -202,7 +202,7 @@ class NodeController(TortugaController):
             code = self.getTortugaStatusCode(ex)
             response = self.notFoundErrorResponse(str(ex), code)
         except Exception as ex:  # pylint: disable=broad-except
-            self.getLogger().exception('node WS API getNodeById() failed')
+            self._logger.exception('node WS API getNodeById() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -226,7 +226,7 @@ class NodeController(TortugaController):
             code = self.getTortugaStatusCode(ex)
             response = self.notFoundErrorResponse(str(ex), code)
         except Exception as ex:  # noqa pylint: disable=broad-except
-            self.getLogger().exception(
+            self._logger.exception(
                 'node WS API gRequest() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
@@ -261,7 +261,7 @@ class NodeController(TortugaController):
 
                 raise InvalidArgument(buf)
         except Exception as ex:  # noqa pylint: disable=broad-except
-            self.getLogger().exception(
+            self._logger.exception(
                 'node WS API updateNodeRequest() failed')
 
             self.handleException(ex)
@@ -290,7 +290,7 @@ class NodeController(TortugaController):
             code = self.getTortugaStatusCode(ex)
             response = self.notFoundErrorResponse(str(ex), code)
         except Exception as ex:  # noqa pylint: disable=broad-except
-            self.getLogger().exception(
+            self._logger.exception(
                 'node WS API getNodeProvisioningInfo() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
@@ -313,7 +313,7 @@ class NodeController(TortugaController):
             code = self.getTortugaStatusCode(ex)
             response = self.notFoundErrorResponse(str(ex), code)
         except Exception as ex:  # noqa pylint: disable=broad-except
-            self.getLogger().exception('node WS API idleNode() failed')
+            self._logger.exception('node WS API idleNode() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -337,7 +337,7 @@ class NodeController(TortugaController):
                 cherrypy.request.db, nodeName, softwareProfileName)
 
         except Exception as ex:  # noqa pylint: disable=broad-except
-            self.getLogger().exception('node WS API activateNode() failed')
+            self._logger.exception('node WS API activateNode() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -361,7 +361,7 @@ class NodeController(TortugaController):
             code = self.getTortugaStatusCode(ex)
             response = self.notFoundErrorResponse(str(ex), code)
         except Exception as ex:  # noqa pylint: disable=broad-except
-            self.getLogger().exception('node WS API startupNode() failed')
+            self._logger.exception('node WS API startupNode() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -380,7 +380,7 @@ class NodeController(TortugaController):
             code = self.getTortugaStatusCode(ex)
             response = self.notFoundErrorResponse(str(ex), code)
         except Exception as ex:  # noqa pylint: disable=broad-except
-            self.getLogger().exception('node WS API shutdownNode() failed')
+            self._logger.exception('node WS API shutdownNode() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -406,7 +406,7 @@ class NodeController(TortugaController):
             code = self.getTortugaStatusCode(ex)
             response = self.notFoundErrorResponse(str(ex), code)
         except Exception as ex:  # noqa pylint: disable=broad-except
-            self.getLogger().exception('node WS API rebootNode() failed')
+            self._logger.exception('node WS API rebootNode() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -448,7 +448,7 @@ class NodeController(TortugaController):
             code = self.getTortugaStatusCode(ex)
             response = self.errorResponse(str(ex))
         except Exception as ex:  # noqa pylint: disable=broad-except
-            self.getLogger().exception(str(ex))
+            self._logger.exception(str(ex))
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -468,7 +468,7 @@ class NodeController(TortugaController):
             self.app.node_api.addStorageVolume(
                 nodeName, volume, bDirect)
         except Exception as ex:  # noqa pylint: disable=broad-except
-            self.getLogger().exception('node WS API addStorageVolume() failed')
+            self._logger.exception('node WS API addStorageVolume() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -484,7 +484,7 @@ class NodeController(TortugaController):
             self.app.node_api.removeStorageVolume(
                 nodeName, volume)
         except Exception as ex:  # noqa pylint: disable=broad-except
-            self.getLogger().exception(
+            self._logger.exception(
                 'node WS API removeStorageVolume() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
@@ -501,7 +501,7 @@ class NodeController(TortugaController):
 
             response = result.getCleanDict()
         except Exception as ex:  # noqa pylint: disable=broad-except
-            self.getLogger().exception(
+            self._logger.exception(
                 'node WS API getStorageVolumeList() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
@@ -522,7 +522,7 @@ class NodeController(TortugaController):
                 str2bool(kwargs.get('force'))
             )
 
-            self.getLogger().debug(
+            self._logger.debug(
                 'NodeController.deleteNode(): delete request queued: %s' % (
                     transaction_id))
 
@@ -534,7 +534,7 @@ class NodeController(TortugaController):
                 if isinstance(ex, OperationFailed) else \
                 self.notFoundErrorResponse(str(ex), code)
         except Exception as ex:  # noqa pylint: disable=broad-except
-            self.getLogger().exception('node WS API deleteNode() failed')
+            self._logger.exception('node WS API deleteNode() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 

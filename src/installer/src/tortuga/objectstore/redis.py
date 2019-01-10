@@ -18,10 +18,11 @@ from typing import Iterator, Optional, Tuple
 
 from redis.exceptions import ResponseError
 
+from tortuga.logging import OBJECT_STORE_NAMESPACE
 from .base import ObjectStore
 
 
-logger = getLogger(__name__)
+logger = getLogger(OBJECT_STORE_NAMESPACE)
 
 
 class RedisObjectStore(ObjectStore):

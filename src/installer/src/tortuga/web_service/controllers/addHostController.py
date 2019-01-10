@@ -92,7 +92,7 @@ class AddHostController(TortugaController):
             }
         except Exception as ex:  # pylint: disable=broad-except
             if not isinstance(ex, TortugaException):
-                self.getLogger().exception(
+                self._logger.exception(
                     'Exception occurred while adding hosts')
 
             self.handleException(ex)
@@ -125,7 +125,7 @@ class AddHostController(TortugaController):
             code = self.getTortugaStatusCode(ex)
             response = self.notFoundErrorResponse(str(ex), code)
         except Exception as ex:  # pylint: disable=broad-except
-            self.getLogger().error('Exception retrieving addhost status')
+            self._logger.error('Exception retrieving addhost status')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -148,7 +148,7 @@ class AddHostController(TortugaController):
 
             response = NodeRequestSchema().dump(result, many=True).data
         except Exception as ex:  # pylint: disable=broad-except
-            self.getLogger().error('Exception retrieving add host request(s)')
+            self._logger.error('Exception retrieving add host request(s)')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 

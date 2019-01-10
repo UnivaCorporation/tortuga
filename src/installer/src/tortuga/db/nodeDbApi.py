@@ -67,7 +67,7 @@ class NodeDbApi(TagsDbApiMixin, TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception('%s' % ex)
             raise
 
     def getNodesByAddHostSession(self, session, ahSession: str,
@@ -84,7 +84,7 @@ class NodeDbApi(TagsDbApiMixin, TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception('%s' % ex)
             raise
 
     def getNodesByNameFilter(self, session, nodespec: str,
@@ -105,7 +105,7 @@ class NodeDbApi(TagsDbApiMixin, TortugaDbApi):
                 optionDict=optionDict)
         except Exception as ex:
             if not isinstance(ex, TortugaException):
-                self.getLogger().exception('%s' % ex)
+                self._logger.exception('%s' % ex)
 
             raise
 
@@ -150,7 +150,7 @@ class NodeDbApi(TagsDbApiMixin, TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception('%s' % ex)
             raise
 
     def getNodeByIp(self, session, ip: str,
@@ -166,7 +166,7 @@ class NodeDbApi(TagsDbApiMixin, TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception('%s' % ex)
             raise
 
     def __convert_nodes_to_TortugaObjectList(
@@ -216,7 +216,7 @@ class NodeDbApi(TagsDbApiMixin, TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception('%s' % ex)
             raise
 
     def getProvisioningInfo(self, session: Session, nodeName: str) \
@@ -280,7 +280,7 @@ class NodeDbApi(TagsDbApiMixin, TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception('%s' % ex)
             raise
 
     def getNodesByNodeState(self, session, node_state: str,
@@ -297,5 +297,5 @@ class NodeDbApi(TagsDbApiMixin, TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % (ex))
+            self._logger.exception('%s' % (ex))
             raise

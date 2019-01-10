@@ -18,11 +18,12 @@ from logging import getLogger
 from pathlib import Path
 
 from tortuga.config.configManager import ConfigManager
+from tortuga.logging import KITS_NAMESPACE
 
 from .registry import discover_kit_installers
 
 
-logger = getLogger(__name__)
+logger = getLogger(KITS_NAMESPACE)
 
 
 def load_kits():

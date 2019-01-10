@@ -18,18 +18,17 @@ import logging
 from typing import Optional
 
 from tortuga.config.configManager import ConfigManager
+from tortuga.logging import OS_NAMESPACE
 from tortuga.os_utility import tortugaSubprocess
 
 
 class OsObjectManager:
     """
     Base tortuga os object manager class.
+
     """
     def __init__(self, configManager: Optional[ConfigManager] = None) -> None:
-        self._logger = logging.getLogger(
-            'tortuga.%s' % (self.__class__.__name__))
-        self._logger.addHandler(logging.NullHandler())
-
+        self._logger = logging.getLogger(OS_NAMESPACE)
         self._cm = configManager if configManager else ConfigManager()
 
     def execute(self, cmd, echo: bool = False): \
@@ -43,7 +42,3 @@ class OsObjectManager:
 
     def executeAndIgnoreFailure(self, cmd):
         return tortugaSubprocess.executeCommandAndIgnoreFailure(cmd)
-
-    def getLogger(self):
-        """ Get logger for this class. """
-        return self._logger

@@ -14,20 +14,19 @@
 
 # pylint: disable=not-callable,multiple-statements,no-self-use,no-member
 
-from sqlalchemy import and_, func, or_
+from sqlalchemy import and_, or_
 from sqlalchemy.orm.exc import NoResultFound
 
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
-from tortuga.exceptions.componentAlreadyExists import ComponentAlreadyExists
 from tortuga.exceptions.componentNotFound import ComponentNotFound
 from tortuga.helper import osHelper
-
 from .models.component import Component
 
 
 class ComponentsDbHandler(TortugaDbObjectHandler):
     """
     This class handles components table.
+
     """
 
     def getComponentById(self, session, _id):
@@ -86,7 +85,7 @@ class ComponentsDbHandler(TortugaDbObjectHandler):
         The query will search for an exact or family match.
         """
 
-        self.getLogger().debug(
+        self._logger.debug(
             'Retrieving best match component for %s-%s (%s)' % (
                 name, version, osInfo))
 

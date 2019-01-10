@@ -15,8 +15,10 @@
 from logging import getLogger
 from typing import Any, Dict, Iterator, Optional, Tuple, Union
 
+from tortuga.logging import OBJECT_STORE_NAMESPACE
 
-logger = getLogger(__name__)
+
+logger = getLogger(OBJECT_STORE_NAMESPACE)
 
 
 def cmp_equals(left: Any, right: Any):

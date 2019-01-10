@@ -16,6 +16,7 @@
 
 import datetime
 import json
+import logging
 import time
 from collections import defaultdict
 from typing import Any, Dict, List, Optional, Tuple
@@ -45,6 +46,7 @@ from tortuga.exceptions.profileMappingNotAllowed import \
     ProfileMappingNotAllowed
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.kit.actions import KitActionsManager
+from tortuga.logging import NODES_NAMESPACE
 from tortuga.objects.node import Node
 from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
@@ -73,6 +75,7 @@ class NodeManager(TortugaObjectManager): \
         self._syncApi = SyncApi()
         self._nodesDbHandler = NodesDbHandler()
         self._addHostManager = AddHostManager()
+        self._logger = logging.getLogger(NODES_NAMESPACE)
 
     def __validateHostName(self, hostname: str, name_format: str) -> None:
         """
@@ -105,7 +108,7 @@ class NodeManager(TortugaObjectManager): \
             NicNotFound
         """
 
-        self.getLogger().debug(
+        self._logger.debug(
             'createNewNode(): session=[%s], addNodeRequest=[%s],'
             ' dbHardwareProfile=[%s], dbSoftwareProfile=[%s],'
             ' validateIp=[%s], bGenerateIp=[%s]' % (
@@ -251,7 +254,7 @@ class NodeManager(TortugaObjectManager): \
         Calls updateNode() method of resource adapter
         """
 
-        self.getLogger().debug('updateNode(): name=[{0}]'.format(nodeName))
+        self._logger.debug('updateNode(): name=[{0}]'.format(nodeName))
 
         try:
             node = self._nodesDbHandler.getNode(session, nodeName)
@@ -298,7 +301,7 @@ class NodeManager(TortugaObjectManager): \
                                       previous_state=previous_state)
 
             if run_post_install:
-                self.getLogger().debug(
+                self._logger.debug(
                     'updateNode(): run-post-install for node [{0}]'.format(
                         node.name))
 
@@ -324,7 +327,7 @@ class NodeManager(TortugaObjectManager): \
         value = 'None' if bootFrom is None else \
             '1 (disk)' if int(bootFrom) == 1 else '0 (network)'
 
-        self.getLogger().debug(
+        self._logger.debug(
             'updateNodeStatus(): node=[%s], node_state=[{%s}],'
             ' bootFrom=[{%s}]', nodeName, node_state, value
         )
@@ -366,9 +369,9 @@ class NodeManager(TortugaObjectManager): \
 
                 dbNode.bootFrom = bootFrom
 
-            self.getLogger().info(msg)
+            self._logger.info(msg)
         else:
-            self.getLogger().info(
+            self._logger.info(
                 'Updated timestamp for node [%s]' % (dbNode.name))
 
         dbNode.lastUpdate = time.strftime(
@@ -472,7 +475,7 @@ class NodeManager(TortugaObjectManager): \
 
                 self._bhm.nodeCleanup(nodeName)
 
-                self.getLogger().info('Node [%s] deleted' % (nodeName))
+                self._logger.info('Node [%s] deleted' % (nodeName))
 
             # Schedule a cluster update
             self.__scheduleUpdate()
@@ -615,7 +618,7 @@ class NodeManager(TortugaObjectManager): \
                         session.delete(tag)
 
                 # Delete the Node
-                self.getLogger().debug('Deleting node [%s]' % (dbNode.name))
+                self._logger.debug('Deleting node [%s]' % (dbNode.name))
 
                 session.delete(dbNode)
 
@@ -669,7 +672,7 @@ class NodeManager(TortugaObjectManager): \
         return result, nodes_deleted
 
     def __preDeleteHost(self, kitmgr: KitActionsManager, nodes):
-        self.getLogger().debug(
+        self._logger.debug(
             '__preDeleteHost(): nodes=[%s]' % (
                 ' '.join([node.name for node in nodes])))
 
@@ -691,11 +694,11 @@ class NodeManager(TortugaObjectManager): \
         # if the node does not have an associated software profile, the
         # dict does not contain the key 'softwareprofile'.
 
-        self.getLogger().debug(
+        self._logger.debug(
             '__postDeleteHost(): nodes_deleted=[%s]' % (nodes_deleted))
 
         if not nodes_deleted:
-            self.getLogger().debug('No nodes deleted in this operation')
+            self._logger.debug('No nodes deleted in this operation')
 
             return
 
@@ -833,11 +836,11 @@ class NodeManager(TortugaObjectManager): \
                 msg = 'Node [%s] is already in software profile [%s]' % (
                     node.name, dbDstSoftwareProfile.name)
 
-                self.getLogger().info(msg)
+                self._logger.info(msg)
 
                 raise NodeTransferNotValid(msg)
 
-            self.getLogger().debug(
+            self._logger.debug(
                 'transferNode: Transferring node [%s] to'
                 ' software profile [%s]' % (
                     node.name, dbDstSoftwareProfile.name))
@@ -936,7 +939,7 @@ class NodeManager(TortugaObjectManager): \
             nSoftLockedNodes = len(dbSoftLockedNodes)
 
             if nSoftLockedNodes == 0:
-                self.getLogger().debug(
+                self._logger.debug(
                     '[%s] No softlocked nodes available' % (
                         self.__module__))
 
@@ -946,7 +949,7 @@ class NodeManager(TortugaObjectManager): \
                 # Use a different error message to be friendly...
                 msg = 'No nodes available to transfer'
 
-                self.getLogger().error(msg)
+                self._logger.error(msg)
 
                 raise NodeTransferNotValid(msg)
 
@@ -956,7 +959,7 @@ class NodeManager(TortugaObjectManager): \
                        ' %d available, %d requested' % (
                            nNodesAvailable, count))
 
-                self.getLogger().info(msg)
+                self._logger.info(msg)
 
                 raise NodeTransferNotValid(msg)
 
@@ -1045,7 +1048,7 @@ class NodeManager(TortugaObjectManager): \
 
                 # Idle the Node
                 if hardware_profile.idlesoftwareprofile:
-                    self.getLogger().debug(
+                    self._logger.debug(
                         'Idling node [%s] to idle software profile [%s]' % (
                             dbNode.name,
                             hardware_profile.idlesoftwareprofile.name))
@@ -1209,7 +1212,7 @@ class NodeManager(TortugaObjectManager): \
             activateSoftwareProfilesDict = {}
 
             for dbNode in dbNodes:
-                self.getLogger().debug(
+                self._logger.debug(
                     'Attempting to activate node [%s]' % (dbNode.name))
 
                 # Check to see if the node is already active
@@ -1275,7 +1278,7 @@ class NodeManager(TortugaObjectManager): \
                     continue
 
                 # Activate the Node
-                self.getLogger().debug(
+                self._logger.debug(
                     'Activating node [%s] to software profile [%s]' % (
                         dbNode.name, dbSoftwareProfile.name))
 
@@ -1368,7 +1371,7 @@ class NodeManager(TortugaObjectManager): \
             raise
         except Exception as ex:
             session.rollback()
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception('%s' % ex)
             raise
 
     def shutdownNode(self, session, nodespec: str, bSoftShutdown: bool = False) \
@@ -1400,7 +1403,7 @@ class NodeManager(TortugaObjectManager): \
             raise
         except Exception as ex:
             session.rollback()
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception('%s' % ex)
             raise
 
     def rebootNode(self, session, nodespec: str, bSoftReset: bool = False,

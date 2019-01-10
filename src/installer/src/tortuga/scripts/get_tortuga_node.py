@@ -26,9 +26,10 @@ from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.exceptions.parameterNotFound import ParameterNotFound
 from tortuga.kit.loader import load_kits
 from tortuga.kit.registry import get_kit_installer
+from tortuga.logging import PUPPET_NAMESPACE
 
 
-logger = logging.getLogger('tortuga.puppet_enc')
+logger = logging.getLogger(PUPPET_NAMESPACE)
 
 dbm = DbManager()
 
