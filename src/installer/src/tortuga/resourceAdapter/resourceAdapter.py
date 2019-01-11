@@ -41,7 +41,6 @@ from tortuga.exceptions.resourceNotFound import ResourceNotFound
 from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
 from tortuga.kit.actions.manager import KitActionsManager
 from tortuga.objects.node import Node as TortugaNode
-from tortuga.os_utility.osUtility import getOsObjectFactory
 from tortuga.parameter.parameterApi import ParameterApi
 from tortuga.resourceAdapterConfiguration.settings import BaseSetting
 from tortuga.resourceAdapterConfiguration.validator import (ConfigurationValidator,
@@ -516,7 +515,7 @@ class ResourceAdapter(UserDataMixin): \
             return
 
         # Set up DHCP/PXE for newly addded node
-        bhm = getOsObjectFactory().getOsBootHostManager(self._cm)
+        bhm = self.osObject.getOsBootHostManager(self._cm)
 
         # Write out the PXE file
         bhm.writePXEFile(
