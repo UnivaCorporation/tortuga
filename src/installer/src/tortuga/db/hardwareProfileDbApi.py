@@ -632,8 +632,8 @@ class HardwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
                     ' netmask [%s]' % (network, netmask))
 
             return tortuga.objects.nic.Nic.getFromDbDict(nics[0].__dict__)
-        except TortugaException as exc:
-            self._logger.exception(str(ex)c)
+        except TortugaException as ex:
+            self._logger.exception(str(ex))
             raise
 
 
