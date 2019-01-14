@@ -42,7 +42,6 @@ from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
 from tortuga.kit.actions.manager import KitActionsManager
 from tortuga.logging import RESOURCE_ADAPTER_NAMESPACE
 from tortuga.objects.node import Node as TortugaNode
-from tortuga.os_utility.osUtility import getOsObjectFactory
 from tortuga.parameter.parameterApi import ParameterApi
 from tortuga.resourceAdapterConfiguration.settings import BaseSetting
 from tortuga.resourceAdapterConfiguration.validator import (ConfigurationValidator,
@@ -405,7 +404,8 @@ class ResourceAdapter(UserDataMixin): \
         """
         pass
 
-    def __getAddHostApi(self):
+    @property
+    def addHostApi(self):
         """Get and cache the Add Host API"""
 
         if self.__addHostApi is None:
@@ -416,7 +416,8 @@ class ResourceAdapter(UserDataMixin): \
 
         return self.__addHostApi
 
-    def __getNodeApi(self):
+    @property
+    def nodeApi(self):
         """Get and cache the Node API"""
 
         if self.__nodeApi is None:
@@ -424,7 +425,8 @@ class ResourceAdapter(UserDataMixin): \
             self.__nodeApi = NodeApi()
         return self.__nodeApi
 
-    def __getOsObject(self):
+    @property
+    def osObject(self):
         """Get and cache the OS Object Factory"""
 
         if self.__osObject is None:
@@ -432,19 +434,14 @@ class ResourceAdapter(UserDataMixin): \
             self.__osObject = osUtility.getOsObjectFactory()
         return self.__osObject
 
-    def __getSanApi(self):
+    @property
+    def sanApi(self):
         """Internal: Get and cache the SAN API"""
 
         if self.__sanApi is None:
             from tortuga.san import san
             self.__sanApi = san.San()
         return self.__sanApi
-
-    # Properties for this object
-    addHostApi = property(__getAddHostApi, None, None, None)
-    nodeApi = property(__getNodeApi, None, None, None)
-    osObject = property(__getOsObject, None, None, None)
-    sanApi = property(__getSanApi, None, None, None)
 
     def statusMessage(self, msg: str) -> None:
         if self._addHostSession:
@@ -516,7 +513,7 @@ class ResourceAdapter(UserDataMixin): \
             return
 
         # Set up DHCP/PXE for newly addded node
-        bhm = getOsObjectFactory().getOsBootHostManager(self._cm)
+        bhm = self.osObject.getOsBootHostManager(self._cm)
 
         # Write out the PXE file
         bhm.writePXEFile(
