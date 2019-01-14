@@ -19,6 +19,7 @@ import os
 from typing import Dict, List, Optional
 
 from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
+from tortuga.db.models.hardwareProfile import HardwareProfile
 from tortuga.db.models.node import Node
 from tortuga.db.models.softwareProfile import SoftwareProfile
 from tortuga.db.nodesDbHandler import NodesDbHandler
