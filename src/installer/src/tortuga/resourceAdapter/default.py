@@ -88,7 +88,7 @@ class Default(ResourceAdapter):
 
         if not cfgFile.has_section(RA_SECTION) or \
                 not cfgFile.has_option(RA_SECTION, OPTION):
-            self.getLogger().warning('Hook script is not defined')
+            self._logger.warning('Hook script is not defined')
 
             return None
 
@@ -102,7 +102,7 @@ class Default(ResourceAdapter):
                 '$TORTUGA_ROOT', self._cm.getRoot())
 
         if not os.path.join(tmpHookScript):
-            self.getLogger().warning(
+            self._logger.warning(
                 'Hook script [%s] does not exist' % (tmpHookScript))
 
             return None
@@ -183,7 +183,7 @@ class Default(ResourceAdapter):
 
     def rebootNode(self, nodes: List[Node],
                    bSoftReset: Optional[bool] = False):
-        self.getLogger().debug('rebootNode()')
+        self._logger.debug('rebootNode()')
 
         # Call the reboot script hook
         self.hookAction('reset', [node.name for node in nodes],
@@ -424,7 +424,7 @@ class Default(ResourceAdapter):
         p1 = addHostManager.dhcpCaptureSubprocess(deviceName)
 
         if nodeCount:
-            self.getLogger().debug(
+            self._logger.debug(
                 'Adding [%s] new %s' % (
                     nodeCount, 'nodes' if nodeCount > 1 else 'node'))
 
@@ -448,12 +448,12 @@ class Default(ResourceAdapter):
                 line = p1.stdout.readline()
 
                 if not line:
-                    self.getLogger().debug(
+                    self._logger.debug(
                         'DHCP packet capture process ended... exiting')
 
                     break
 
-                self.getLogger().debug(
+                self._logger.debug(
                     'Read line "%s" len=%s' % (line, len(line)))
 
                 mac = addHostManager.getMacAddressFromCaptureEntry(line)
@@ -461,11 +461,11 @@ class Default(ResourceAdapter):
                 if not mac:
                     continue
 
-                self.getLogger().debug('Discovered MAC address [%s]' % (mac))
+                self._logger.debug('Discovered MAC address [%s]' % (mac))
 
                 if self.__is_duplicate_mac(mac, newNodes):
                     # Ignore DHCP request from known MAC
-                    self.getLogger().debug(
+                    self._logger.debug(
                         'MAC address [%s] is already known' % (mac))
 
                     continue
@@ -492,17 +492,17 @@ class Default(ResourceAdapter):
                 except NodeAlreadyExists as ex:
                     existingNodeName = ex.args[0]
 
-                    self.getLogger().debug(
+                    self._logger.debug(
                         'Node [%s] already exists' % (existingNodeName))
 
                     continue
                 except MacAddressAlreadyExists:
-                    self.getLogger().debug(
+                    self._logger.debug(
                         'MAC address [%s] already exists' % (mac))
 
                     continue
                 except IpAlreadyExists as ex:
-                    self.getLogger().debug(
+                    self._logger.debug(
                         'IP address already in use by node'
                         ' [%s]: %s' % (existingNodeName, ex))
 
@@ -527,9 +527,9 @@ class Default(ResourceAdapter):
                     if nic.mac:
                         msg += ' MAC [%s]' % (nic.mac)
 
-                    self.getLogger().info(msg)
+                    self._logger.info(msg)
                 except Exception as ex:  # noqa pylint: disable=broad-except
-                    self.getLogger().exception('Error setting status message')
+                    self._logger.exception('Error setting status message')
 
                 self._pre_add_host(
                     node.name,
@@ -544,13 +544,13 @@ class Default(ResourceAdapter):
                     if not nodeCount:
                         self.looping = False
         except Exception as msg:  # noqa pylint: disable=broad-except
-            self.getLogger().exception('DHCP discovery failed')
+            self._logger.exception('DHCP discovery failed')
 
         try:
             os.kill(p1.pid, signal.SIGKILL)
             os.waitpid(p1.pid, 0)
         except Exception:  # noqa pylint: disable=broad-except
-            self.getLogger().exception(
+            self._logger.exception(
                 'Error killing network capture process')
 
         # This is a necessary evil for the time being, until there's
@@ -576,7 +576,7 @@ class Default(ResourceAdapter):
             # have the node connect the storage
             self.sanApi.connectStorageVolume(node, volume, node.getName())
         except Exception:  # noqa pylint: disable=broad-except
-            self.getLogger().exception('Error adding volume to node')
+            self._logger.exception('Error adding volume to node')
 
             # Need to clean up mapping
             self.sanApi.unmapDrive(node, driveNumber=openDriveNumber)
@@ -592,7 +592,7 @@ class Default(ResourceAdapter):
                     node, volume, node.getName())
             except Exception:  # noqa pylint: disable=broad-except
                 # Failed disconnect...
-                self.getLogger().exception(
+                self._logger.exception(
                     'Error disconnecting volume from node')
 
                 raise

@@ -328,7 +328,7 @@ class ResourceAdapter(UserDataMixin): \
         :raises ResourceNotFound:
 
         """
-        self.getLogger().debug(
+        self._logger.debug(
             'getResourceAdapterConfig(sectionName=[{0}])'.format(
                 sectionName if sectionName else '(none)'))
 
@@ -488,7 +488,7 @@ class ResourceAdapter(UserDataMixin): \
             # Hardware profile has no provisioning NICs defined. This
             # shouldn't happen...
 
-            self.getLogger().debug(
+            self._logger.debug(
                 'No provisioning nics defined in hardware profile %s' % (
                     hardwareprofile.name))
 
@@ -506,7 +506,7 @@ class ResourceAdapter(UserDataMixin): \
                 node.nics, hwProfileProvisioningNic.network)
 
         if not nic or not nic.mac:
-            self.getLogger().warning(
+            self._logger.warning(
                 'MAC address not defined for nic (ip=[%s]) on node [%s]' % (
                     nic.ip, node.name))
 
@@ -609,7 +609,7 @@ class ResourceAdapter(UserDataMixin): \
 
             return 1
         except Exception as exc:  # pylint: disable=broad-except
-            self.getLogger().error(
+            self._logger.error(
                 'Error processing instance type mapping'
                 ' [{0}] (exc=[{1}]). Using default value'.format(fn, exc))
 

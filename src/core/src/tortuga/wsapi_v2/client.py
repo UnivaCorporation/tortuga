@@ -16,10 +16,11 @@ import logging
 from typing import Optional
 
 from tortuga.config.configManager import ConfigManager
+from tortuga.logging import WEBSERVICE_CLIENT_NAMESPACE
 from tortuga.wsapi.client import RestApiClient
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(WEBSERVICE_CLIENT_NAMESPACE)
 
 
 WS_API_VERSION = 'v2'
