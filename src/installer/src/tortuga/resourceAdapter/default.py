@@ -83,7 +83,7 @@ class Default(ResourceAdapter):
 
         if not cfgFile.has_section(RA_SECTION) or \
                 not cfgFile.has_option(RA_SECTION, OPTION):
-            self.getLogger().warning('Hook script is not defined')
+            self._logger.warning('Hook script is not defined')
 
             return None
 
@@ -97,7 +97,7 @@ class Default(ResourceAdapter):
                 '$TORTUGA_ROOT', self._cm.getRoot())
 
         if not os.path.join(tmpHookScript):
-            self.getLogger().warning(
+            self._logger.warning(
                 'Hook script [%s] does not exist' % (tmpHookScript))
 
             return None
@@ -175,7 +175,7 @@ class Default(ResourceAdapter):
 
     def rebootNode(self, nodes: List[Node],
                    bSoftReset: Optional[bool] = False):
-        self.getLogger().debug('rebootNode()')
+        self._logger.debug('rebootNode()')
 
         # Call the reboot script hook
         self.hookAction('reset', [node.name for node in nodes],
@@ -380,7 +380,7 @@ class Default(ResourceAdapter):
             # have the node connect the storage
             self.sanApi.connectStorageVolume(node, volume, node.getName())
         except Exception:  # noqa pylint: disable=broad-except
-            self.getLogger().exception('Error adding volume to node')
+            self._logger.exception('Error adding volume to node')
 
             # Need to clean up mapping
             self.sanApi.unmapDrive(node, driveNumber=openDriveNumber)
@@ -396,7 +396,7 @@ class Default(ResourceAdapter):
                     node, volume, node.getName())
             except Exception:  # noqa pylint: disable=broad-except
                 # Failed disconnect...
-                self.getLogger().exception(
+                self._logger.exception(
                     'Error disconnecting volume from node')
 
                 raise

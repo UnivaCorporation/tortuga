@@ -72,7 +72,7 @@ Returns details of the specified kit
 
             if not self.getArgs().bQuiet:
                 if self.getArgs().xml:
-                    print('%s' % (kit.getXmlRep()))
+                    print(kit.getXmlRep())
                 elif self.getArgs().json:
                     print(json.dumps({
                         'kit': kit.getCleanDict(),

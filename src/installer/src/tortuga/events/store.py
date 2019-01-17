@@ -12,14 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from logging import getLogger
+import logging
 from typing import Iterator, Optional
 
+from tortuga.logging import EVENTS_NAMESPACE
 from tortuga.objectstore.base import matches_filters, ObjectStore
 from .types import BaseEvent, get_event_class
 
 
-logger = getLogger(__name__)
+logger = logging.getLogger(EVENTS_NAMESPACE)
 
 
 class EventStore:

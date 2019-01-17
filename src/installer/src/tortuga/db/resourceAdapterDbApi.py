@@ -48,7 +48,7 @@ class ResourceAdapterDbApi(TortugaDbApi):
             raise
 
         except Exception as ex:
-            self.getLogger().exception(str(ex))
+            self._logger.exception(str(ex))
 
         return ra_obj
 
@@ -62,7 +62,7 @@ class ResourceAdapterDbApi(TortugaDbApi):
 
         resourceAdapterObj = None
 
-        self.getLogger().debug('addResourceAdapter(name=[%s])' % (name))
+        self._logger.debug('addResourceAdapter(name=[%s])' % (name))
 
         try:
             self.getResourceAdapter(session, name)
@@ -84,10 +84,10 @@ class ResourceAdapterDbApi(TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception(str(ex))
+            self._logger.exception(str(ex))
 
         # Success!
-        self.getLogger().info('Added resource adapter [%s]' % (name))
+        self._logger.info('Added resource adapter [%s]' % (name))
 
         return resourceAdapterObj
 
@@ -98,7 +98,7 @@ class ResourceAdapterDbApi(TortugaDbApi):
         Raises:
         """
 
-        self.getLogger().debug('deleteResourceAdapter(name=[%s])' % (name))
+        self._logger.debug('deleteResourceAdapter(name=[%s])' % (name))
 
         try:
             self._resourceAdaptersDbHandler.deleteResourceAdapter(
@@ -106,16 +106,16 @@ class ResourceAdapterDbApi(TortugaDbApi):
 
             session.commit()
         except ResourceAdapterNotFound:
-            self.getLogger().info(
+            self._logger.info(
                 'Resource adapter [%s] not found' % (name))
             return
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception(str(ex))
+            self._logger.exception(str(ex))
 
         # Success!
-        self.getLogger().info('Deleted resource adapter [%s]' % (name))
+        self._logger.info('Deleted resource adapter [%s]' % (name))
 
     def getResourceAdapterList(self, session: Session) -> List[ResourceAdapter]:
         try:
@@ -131,7 +131,7 @@ class ResourceAdapterDbApi(TortugaDbApi):
             raise
 
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def getTortugaObjectList(self,

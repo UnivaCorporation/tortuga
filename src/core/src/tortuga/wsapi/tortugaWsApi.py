@@ -12,18 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from logging import getLogger
+import logging
 from typing import Optional
 
 import requests
 
 from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.tortugaException import TortugaException
+from tortuga.logging import WEBSERVICE_CLIENT_NAMESPACE
 from tortuga.utility import tortugaStatus
 from .client import RestApiClient
-
-
-logger = getLogger(__name__)
 
 
 WS_API_VERSION = 'v1'
@@ -40,6 +38,7 @@ class TortugaWsApi(RestApiClient):
                  verify: bool = True):
 
         self._cm = ConfigManager()
+        self._logger = logging.getLogger(WEBSERVICE_CLIENT_NAMESPACE)
 
         if not baseurl:
             baseurl = '{}://{}:{}'.format(
@@ -49,7 +48,7 @@ class TortugaWsApi(RestApiClient):
             )
 
         if username is None and password is None:
-            logger.debug('Using built-in user credentials')
+            self._logger.debug('Using built-in user credentials')
             username = self._cm.getCfmUser()
             password = self._cm.getCfmPassword()
 

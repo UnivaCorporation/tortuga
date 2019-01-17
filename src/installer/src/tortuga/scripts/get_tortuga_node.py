@@ -26,9 +26,10 @@ from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.exceptions.parameterNotFound import ParameterNotFound
 from tortuga.kit.loader import load_kits
 from tortuga.kit.registry import get_kit_installer
+from tortuga.logging import PUPPET_NAMESPACE
 
 
-logger = logging.getLogger('tortuga.puppet_enc')
+logger = logging.getLogger(PUPPET_NAMESPACE)
 
 dbm = DbManager()
 
@@ -205,7 +206,7 @@ def get_puppet_node_yaml(session, nodeName):
 
             for kit in enabledKits:
                 if kit.isOs:
-                    verstr = '%s' % (kit.version)
+                    verstr = str(kit.version)
                     arch = kit.components[0].os[0].arch
                 else:
                     verstr = '%s-%s' % (kit.version, kit.iteration)

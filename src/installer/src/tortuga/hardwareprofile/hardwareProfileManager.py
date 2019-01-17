@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # pylint: disable=no-name-in-module,no-member
-
+import logging
 from typing import Any, Dict, Optional, Union
 
 from sqlalchemy.orm.session import Session
@@ -26,6 +26,7 @@ from tortuga.db.softwareProfileDbApi import SoftwareProfileDbApi
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.networkNotFound import NetworkNotFound
 from tortuga.exceptions.nicNotFound import NicNotFound
+from tortuga.logging import HARDWARE_PROFILE_NAMESPACE
 from tortuga.objects.hardwareProfile import HardwareProfile
 from tortuga.objects.networkDevice import NetworkDevice
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
@@ -46,6 +47,7 @@ class HardwareProfileManager(TortugaObjectManager):
         self._networkDbApi = NetworkDbApi()
         self._globalParameterDbApi = GlobalParameterDbApi()
         self._nodeDbApi = NodeDbApi()
+        self._logger = logging.getLogger(HARDWARE_PROFILE_NAMESPACE)
 
     def getHardwareProfileList(self,
                                session: Session,
@@ -124,7 +126,7 @@ class HardwareProfileManager(TortugaObjectManager):
 
         """
 
-        self.getLogger().debug(
+        self._logger.debug(
             'Updating hardware profile [%s]' % (
                 hardwareProfileObject.getName()))
 
@@ -270,7 +272,7 @@ class HardwareProfileManager(TortugaObjectManager):
 
         self._hpDbApi.deleteHardwareProfile(session, name)
 
-        self.getLogger().info('Deleted hardware profile [%s]' % (name))
+        self._logger.info('Deleted hardware profile [%s]' % (name))
 
     def updateSoftwareOverrideAllowed(self, session: Session,
                                       hardwareProfileName: str,
@@ -292,7 +294,7 @@ class HardwareProfileManager(TortugaObjectManager):
                             dstHardwareProfileName: str):
         validation.validateProfileName(dstHardwareProfileName)
 
-        self.getLogger().info(
+        self._logger.info(
             'Copying hardware profile [%s] to [%s]' % (
                 srcHardwareProfileName, dstHardwareProfileName))
 

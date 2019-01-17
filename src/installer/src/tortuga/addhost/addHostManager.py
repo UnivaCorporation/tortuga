@@ -14,6 +14,7 @@
 
 # pylint: disable=no-member,maybe-no-member
 
+import logging
 import threading
 import uuid
 from typing import List, Optional
@@ -28,6 +29,7 @@ from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
 from tortuga.exceptions.notFound import NotFound
 from tortuga.exceptions.resourceAdapterNotFound import ResourceAdapterNotFound
 from tortuga.kit.actions import KitActionsManager
+from tortuga.logging import ADD_HOST_NAMESPACE
 from tortuga.objects.addHostStatus import AddHostStatus
 from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
@@ -44,6 +46,7 @@ class AddHostManager(TagsDbApiMixin, TortugaObjectManager):
 
         # Now do the class specific variable initialization
         self._addHostLock = threading.RLock()
+        self._logger = logging.getLogger(ADD_HOST_NAMESPACE)
         self._nodeDbApi = NodeDbApi()
         self._sessions = ObjectStoreManager.get(namespace='add-host-manager')
 
@@ -54,7 +57,7 @@ class AddHostManager(TagsDbApiMixin, TortugaObjectManager):
             ResourceAdapterNotFound
         """
 
-        self.getLogger().debug('addHosts()')
+        self._logger.debug('addHosts()')
 
         dbHardwareProfile = \
             HardwareProfilesDbHandler().getHardwareProfile(
@@ -64,7 +67,7 @@ class AddHostManager(TagsDbApiMixin, TortugaObjectManager):
             errmsg = ('Resource adapter not defined for hardware'
                       ' profile [%s]' % (dbHardwareProfile.name))
 
-            self.getLogger().error(errmsg)
+            self._logger.error(errmsg)
 
             raise ResourceAdapterNotFound(errmsg)
 
@@ -103,7 +106,7 @@ class AddHostManager(TagsDbApiMixin, TortugaObjectManager):
         # Only perform post-add operations if we actually added a node
         if newNodes:
             if dbSoftwareProfile and not dbSoftwareProfile.isIdle:
-                self.getLogger().info(
+                self._logger.info(
                     'Node(s) added to software profile [%s] and'
                     ' hardware profile [%s]' % (
                         dbSoftwareProfile.name
@@ -120,7 +123,7 @@ class AddHostManager(TagsDbApiMixin, TortugaObjectManager):
 
                 resourceAdapter.hookAction('start', newNodeNames)
 
-        self.getLogger().debug('Add host workflow complete')
+        self._logger.debug('Add host workflow complete')
 
     def postAddHost(self, session: Session, hardwareProfileName: str,
                     softwareProfileName: Optional[str],
@@ -129,7 +132,7 @@ class AddHostManager(TagsDbApiMixin, TortugaObjectManager):
         Perform post add host operations
         """
 
-        self.getLogger().debug(
+        self._logger.debug(
             'postAddHost(): hardwareProfileName=[%s]'
             ' softwareProfileName=[%s] addHostSession=[%s]' % (
                 hardwareProfileName, softwareProfileName, addHostSession))
@@ -156,7 +159,7 @@ class AddHostManager(TagsDbApiMixin, TortugaObjectManager):
 
         try:
             if not self._sessions.exists(addHostSession):
-                self.getLogger().warning(
+                self._logger.warning(
                     'updateStatus(): unknown session ID [%s]' % (
                         addHostSession))
 
@@ -203,7 +206,7 @@ class AddHostManager(TagsDbApiMixin, TortugaObjectManager):
             return status_copy
 
     def createNewSession(self) -> str:
-        self.getLogger().debug('createNewSession()')
+        self._logger.debug('createNewSession()')
 
         with self._addHostLock:
             # Create new add nodes session
@@ -225,19 +228,19 @@ class AddHostManager(TagsDbApiMixin, TortugaObjectManager):
         Currently only called when deleting nodes
         """
 
-        self.getLogger().debug('delete_sessions()')
+        self._logger.debug('delete_sessions()')
 
         with self._addHostLock:
             for session_id in session_ids:
                 if self._sessions.exists(session_id):
-                    self.getLogger().debug(
+                    self._logger.debug(
                         'Deleting session [{0}]'.format(session_id))
 
                     self._sessions.delete(session_id)
 
     def update_session(
             self, session_id: str, running: Optional[bool] = None):
-        self.getLogger().debug(
+        self._logger.debug(
             'Updating add host session [%s] (status: running=%s)' % (
                 session_id, str(running)))
 

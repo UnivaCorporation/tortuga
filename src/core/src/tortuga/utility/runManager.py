@@ -12,11 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 import os
 import threading
 
 from tortuga.exceptions.anotherInstanceOwnsLock import AnotherInstanceOwnsLock
 from tortuga.exceptions.invalidArgument import InvalidArgument
+from tortuga.logging import ROOT_NAMESPACE
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.os_utility import osUtility
 
@@ -26,6 +28,7 @@ class RunManager(TortugaObjectManager):
         super(RunManager, self).__init__()
 
         self._lock = threading.RLock()
+        self._logger = logging.getLogger(ROOT_NAMESPACE)
 
     def getLockFileName(self, utilityName): \
             # pylint: disable=no-self-use
@@ -57,8 +60,8 @@ class RunManager(TortugaObjectManager):
                     % (utilityName, pid))
             else:
                 pid = os.getpid()
-                open(lockFile, 'w').write('%s' % pid)
-                self.getLogger().debug(
+                open(lockFile, 'w').write(str(pid))
+                self._logger.debug(
                     'Acquired lock file %s for %s' % (
                         lockFile, utilityName))
 
@@ -71,7 +74,7 @@ class RunManager(TortugaObjectManager):
         self._lock.acquire()
         try:
             lockFile, pid = self.getLockFileAndPid(utilityName)
-            myPid = '%s' % os.getpid()
+            myPid = str(os.getpid())
             if os.path.exists(lockFile):
                 if int(myPid.strip()) != pid:
                     raise AnotherInstanceOwnsLock(
@@ -79,11 +82,11 @@ class RunManager(TortugaObjectManager):
                         % (utilityName, pid))
                 else:
                     os.remove(lockFile)
-                    self.getLogger().debug(
+                    self._logger.debug(
                         'Released lock file %s for %s'
                         % (lockFile, utilityName))
             else:
-                self.getLogger().error(
+                self._logger.error(
                     'Ignoring attempt to release unacquired lock file'
                     ' for %s' % (utilityName))
         finally:
@@ -96,10 +99,10 @@ class RunManager(TortugaObjectManager):
             lockFile = self.getLockFileName(utilityName)
             if os.path.exists(lockFile):
                 os.remove(lockFile)
-                self.getLogger().debug(
+                self._logger.debug(
                     'Cleared lock file %s for %s' % (lockFile, utilityName))
             else:
-                self.getLogger().debug(
+                self._logger.debug(
                     'Lock file %s does not exist for %s'
                     % (lockFile, utilityName))
         finally:
@@ -117,7 +120,7 @@ class RunManager(TortugaObjectManager):
         self._lock.acquire()
         try:
             lockFile, pid = self.getLockFileAndPid(utilityName)
-            self.getLogger().debug(
+            self._logger.debug(
                 'checking if %s exists and %s is running' % (lockFile, pid))
 
             if not os.path.exists(lockFile):
@@ -140,6 +143,6 @@ class RunManager(TortugaObjectManager):
             self.clearLock(utilityName)
         else:
             _, pid = self.getLockFileAndPid(utilityName)
-            self.getLogger().debug(
+            self._logger.debug(
                 'Not clearing lock for %s as locking pid %d is still active.'
                 % (utilityName, pid))

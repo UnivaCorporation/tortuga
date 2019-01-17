@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 import os
 import shutil
 from typing import Dict, Optional
@@ -28,6 +29,7 @@ from tortuga.exceptions.componentNotFound import ComponentNotFound
 from tortuga.exceptions.kitNotFound import KitNotFound
 from tortuga.helper import osHelper
 from tortuga.kit.registry import get_kit_installer
+from tortuga.logging import SOFTWARE_PROFILE_NAMESPACE
 from tortuga.objects.kit import Kit
 from tortuga.objects.softwareProfile import SoftwareProfile
 from tortuga.objects.tortugaObject import TortugaObjectList
@@ -49,6 +51,7 @@ class SoftwareProfileManager(TortugaObjectManager): \
         self._global_param_db_api = GlobalParameterDbApi()
         self._kit_db_api = KitDbApi()
         self._config_manager = ConfigManager()
+        self._logger = logging.getLogger(SOFTWARE_PROFILE_NAMESPACE)
 
     def getSoftwareProfileList(self, session: Session, tags=None):
         """Return all of the softwareprofiles with referenced components
@@ -108,7 +111,7 @@ class SoftwareProfileManager(TortugaObjectManager): \
 
     def updateSoftwareProfile(self, session: Session,
                               softwareProfileObject):
-        self.getLogger().debug(
+        self._logger.debug(
             'Updating software profile: %s' % (
                 softwareProfileObject.getName()))
 
@@ -267,7 +270,7 @@ class SoftwareProfileManager(TortugaObjectManager): \
             swProfileSpec.setDescription(
                 '%s Nodes' % (swProfileSpec.getName()))
 
-        self.getLogger().debug(
+        self._logger.debug(
             'Creating software profile [%s]' % (swProfileSpec))
 
         osInfo = swProfileSpec.getOsInfo() \
@@ -341,7 +344,7 @@ class SoftwareProfileManager(TortugaObjectManager): \
                                            osInfo.getVersion(),
                                            osInfo.getArch())
 
-                self.getLogger().debug(
+                self._logger.debug(
                     'Automatically adding OS component [%s]'
                     ' (not specified in template)' % (osCompName))
 
@@ -367,13 +370,13 @@ class SoftwareProfileManager(TortugaObjectManager): \
                 try:
                     comp = self._getCoreComponentForOsInfo(session, osInfo)
 
-                    self.getLogger().debug(
+                    self._logger.debug(
                         'Automatically adding [core] component'
                         ' (not specified in template)')
 
                     components.append(comp)
                 except ComponentNotFound:
-                    self.getLogger().warning(
+                    self._logger.warning(
                         'OS [{}] does not have a compatible \'core\''
                         ' component'.format(osInfo)
                     )
@@ -392,7 +395,7 @@ class SoftwareProfileManager(TortugaObjectManager): \
 
             # Enable components in one fell swoop
             for comp in components:
-                self.getLogger().debug(
+                self._logger.debug(
                     'Enabling component [%s]' % (comp.getName()))
 
                 if comp.getKit().getIsOs():
@@ -410,7 +413,7 @@ class SoftwareProfileManager(TortugaObjectManager): \
                                      comp.getName(),
                                      comp.getVersion())
 
-            self.getLogger().debug(
+            self._logger.debug(
                 'Software profile [%s] created successfully' % (
                     swProfileSpec.getName()))
 
@@ -496,10 +499,10 @@ class SoftwareProfileManager(TortugaObjectManager): \
                 session, kit, comp_name, comp_version, software_profile)
 
         if not best_match_component:
-            self.getLogger().info(
+            self._logger.info(
                 'Component not enabled: {}'.format(comp_name))
         else:
-            self.getLogger().info(
+            self._logger.info(
                 'Enabled component on software profile: {} -> {}'.format(
                     best_match_component, software_profile
                 )
@@ -589,7 +592,7 @@ class SoftwareProfileManager(TortugaObjectManager): \
                 'Component [%s] not found in kit [%s]' % (comp_name, kit))
 
         if not comp_installer.is_enableable(software_profile):
-            self.getLogger().warning(
+            self._logger.warning(
                 'Component cannot be enabled: {}'.format(
                     comp_installer.spec
                 )
@@ -685,7 +688,7 @@ class SoftwareProfileManager(TortugaObjectManager): \
             best_match_component = self._disable_kit_component(
                 session, kit, comp_name, comp_version, software_profile)
 
-        self.getLogger().info(
+        self._logger.info(
             'Disabled component on software profile: {} -> {}'.format(
                 best_match_component, software_profile
             )
@@ -792,7 +795,7 @@ class SoftwareProfileManager(TortugaObjectManager): \
         if os.path.exists(swProfileFlagPath):
             shutil.rmtree(swProfileFlagPath)
 
-        self.getLogger().info('Deleted software profile [%s]' % (name))
+        self._logger.info('Deleted software profile [%s]' % (name))
 
     def getNodeList(self, session: Session, softwareProfileName):
         return self._sp_db_api.getNodeList(session, softwareProfileName)
@@ -846,7 +849,7 @@ class SoftwareProfileManager(TortugaObjectManager): \
         Call action_get_metadata() method for all kits
         """
 
-        self.getLogger().debug(
+        self._logger.debug(
             'Retrieving metadata for software profile [%s]', name)
 
         metadata: Dict[str, str] = {}

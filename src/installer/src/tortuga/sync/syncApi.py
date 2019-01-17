@@ -13,14 +13,23 @@
 # limitations under the License.
 
 # pylint: disable=no-member
+import logging
 
+from tortuga.logging import SYNC_NAMESPACE
 from tortuga.sync.syncManager import SyncManager
 from tortuga.utility.tortugaApi import TortugaApi
 from tortuga.exceptions.tortugaException import TortugaException
 
 
 class SyncApi(TortugaApi):
-    """Cluster sync API class"""
+    """
+    Cluster sync API class
+    
+    """
+    def __init__(self):
+        super().__init__()
+        
+        self._logger = logging.getLogger(SYNC_NAMESPACE)
 
     def scheduleClusterUpdate(self, updateReason=None):
         """Schedule cluster update.
@@ -37,7 +46,7 @@ class SyncApi(TortugaApi):
             if isinstance(ex, TortugaException):
                 raise
 
-            self.getLogger().exception('Error scheduling cluster update')
+            self._logger.exception('Error scheduling cluster update')
 
             raise TortugaException(exception=ex)
 
@@ -55,6 +64,6 @@ class SyncApi(TortugaApi):
             if isinstance(ex, TortugaException):
                 raise
 
-            self.getLogger().exception('Error getting update status')
+            self._logger.exception('Error getting update status')
 
             raise TortugaException(exception=ex)

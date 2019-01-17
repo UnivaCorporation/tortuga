@@ -33,14 +33,14 @@ class SanController(TortugaController):
     def getVolumeList(self):
         """Return list of all available volumes"""
 
-        # self.getLogger().debug('Retrieving volume list')
+        # self._logger.debug('Retrieving volume list')
 
         try:
             volumeList = SanApi().getVolumeList()
 
             response = volumeList.getCleanDict()
         except Exception as ex:
-            self.getLogger().error('%s' % ex)
+            self._logger.error(str(ex))
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -53,7 +53,7 @@ class SanController(TortugaController):
                   shared=False):
         """ Add volume to the SAN system"""
 
-        # self.getLogger().debug('Adding volume')
+        # self._logger.debug('Adding volume')
 
         try:
             volume = SanApi().addVolume(
@@ -61,7 +61,7 @@ class SanController(TortugaController):
 
             response = volume.getCleanDict()
         except Exception as ex:
-            self.getLogger().error('%s' % ex)
+            self._logger.error(str(ex))
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -75,12 +75,12 @@ class SanController(TortugaController):
 
         response = None
 
-        # self.getLogger().debug('Updating volume')
+        # self._logger.debug('Updating volume')
 
         try:
             SanApi().updateVolume(volume, shared == 'True')
         except Exception as ex:
-            self.getLogger().error('%s' % ex)
+            self._logger.error(str(ex))
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -94,12 +94,12 @@ class SanController(TortugaController):
 
         response = None
 
-        # self.getLogger().debug('Deleting volume')
+        # self._logger.debug('Deleting volume')
 
         try:
             SanApi().deleteVolume(volume)
         except Exception as ex:
-            self.getLogger().error('%s' % ex)
+            self._logger.error(str(ex))
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 

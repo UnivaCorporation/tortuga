@@ -81,7 +81,7 @@ class AdminController(TortugaController):
                 'admin': admin.getCleanDict(),
             }
         except Exception as ex:
-            self.getLogger().error('%s' % ex)
+            self._logger.error(str(ex))
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -99,7 +99,7 @@ class AdminController(TortugaController):
                 'admins': adminList.getCleanDict(),
             }
         except Exception as ex:
-            self.getLogger().error('%s' % ex)
+            self._logger.error(str(ex))
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -133,7 +133,7 @@ class AdminController(TortugaController):
                 adminRequestObject.getRealname(),
                 adminRequestObject.getDescription())
         except Exception as ex:
-            self.getLogger().error('%s' % ex)
+            self._logger.error(str(ex))
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -149,7 +149,7 @@ class AdminController(TortugaController):
         try:
             self.app.admin_api.deleteAdmin(cherrypy.request.db, admin_id)
         except Exception as ex:
-            self.getLogger().error('%s' % ex)
+            self._logger.error(str(ex))
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -178,7 +178,7 @@ class AdminController(TortugaController):
 
             response = None
         except Exception as ex:
-            self.getLogger().error('%s' % ex)
+            self._logger.error(str(ex))
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -202,7 +202,7 @@ class AdminController(TortugaController):
                 'authenticate': valid_user,
             }
         except Exception as ex:
-            self.getLogger().error('%s' % ex)
+            self._logger.error(str(ex))
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 

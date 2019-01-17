@@ -16,12 +16,14 @@
 Base class for OS kit 'plugins'
 """
 
-import os
 import logging
+import os
 from typing import Dict
+
 from tortuga.boot.distro import DistributionFactory
-from tortuga.exceptions.abstractMethod import AbstractMethod
 from tortuga.config.configManager import ConfigManager
+from tortuga.exceptions.abstractMethod import AbstractMethod
+from tortuga.logging import KIT_NAMESPACE
 from tortuga.os_utility.osUtility import getOsObjectFactory
 
 
@@ -39,8 +41,7 @@ class OsKitOps(object):
 
         self._mirror = kwargs['mirror'] if 'mirror' in kwargs else False
 
-        self._logger = logging.getLogger(
-            'tortuga.kit.%s' % self.__class__.__name__)
+        self._logger = logging.getLogger(KIT_NAMESPACE)
 
         self._cm = ConfigManager()
 

@@ -84,7 +84,7 @@ class SoftwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def __get_software_profile_obj(
@@ -131,7 +131,7 @@ class SoftwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def getSoftwareProfileList(self, session: Session, tags=None):
@@ -165,7 +165,7 @@ class SoftwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def getIdleSoftwareProfileList(self, session: Session):
@@ -192,7 +192,7 @@ class SoftwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def setIdleState(
@@ -212,7 +212,7 @@ class SoftwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
                 self._softwareProfilesDbHandler.getSoftwareProfile(
                     session, softwareProfileName)
 
-            self.getLogger().debug(
+            self._logger.debug(
                 'Setting idle state [%s] on software profile [%s]' % (
                     state, dbSoftwareProfile.name))
 
@@ -222,7 +222,7 @@ class SoftwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def addSoftwareProfile(
@@ -255,7 +255,7 @@ class SoftwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
 
             softwareProfile.setId(dbSoftwareProfile.id)
 
-            self.getLogger().info(
+            self._logger.info(
                 'Added software profile [%s]' % (dbSoftwareProfile.name))
 
             return dbSoftwareProfile
@@ -264,7 +264,7 @@ class SoftwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
             raise
         except Exception as ex:
             session.rollback()
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def deleteSoftwareProfile(self, session: Session, name: str) -> None:
@@ -310,7 +310,7 @@ class SoftwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
                              hwprofileswithidle])))
 
             # Proceed with software profile deletion
-            self.getLogger().debug(
+            self._logger.debug(
                 'Marking software profile [%s] for deletion' % (name))
 
             session.delete(dbSwProfile)
@@ -321,7 +321,7 @@ class SoftwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
             raise
         except Exception as ex:
             session.rollback()
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def getAllEnabledComponentList(
@@ -335,7 +335,7 @@ class SoftwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
                 DbError
         """
 
-        self.getLogger().debug('Retrieving enabled component list')
+        self._logger.debug('Retrieving enabled component list')
 
         try:
             dbComponents = \
@@ -345,7 +345,7 @@ class SoftwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def getEnabledComponentList(
@@ -372,7 +372,7 @@ class SoftwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def getNodeList(
@@ -403,7 +403,7 @@ class SoftwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def getPartitionList(
@@ -429,7 +429,7 @@ class SoftwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def addPartition(
@@ -455,7 +455,7 @@ class SoftwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
             raise
         except Exception as ex:
             session.rollback()
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def deletePartition(self, session: Session, partitionName: str,
@@ -481,7 +481,7 @@ class SoftwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
             raise
         except Exception as ex:
             session.rollback()
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def addUsableHardwareProfileToSoftwareProfile(
@@ -509,7 +509,7 @@ class SoftwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
             raise
         except Exception as ex:
             session.rollback()
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def deleteUsableHardwareProfileFromSoftwareProfile(
@@ -538,7 +538,7 @@ class SoftwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
             raise
         except Exception as ex:
             session.rollback()
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def addAdmin(self, session: Session, softwareProfileName: str,
@@ -570,7 +570,7 @@ class SoftwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
             raise
         except Exception as ex:
             session.rollback()
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def deleteAdmin(self, session: Session, softwareProfileName: str,
@@ -599,7 +599,7 @@ class SoftwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
             raise
         except Exception as ex:
             session.rollback()
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def updateSoftwareProfile(
@@ -623,7 +623,7 @@ class SoftwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
             raise
         except Exception as ex:
             session.rollback()
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def __populateSoftwareProfile(
@@ -831,5 +831,5 @@ class SoftwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise

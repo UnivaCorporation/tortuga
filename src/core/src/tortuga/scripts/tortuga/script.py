@@ -19,9 +19,10 @@ import sys
 
 from tortuga.cli.base import Argument, Cli
 from tortuga.config.configManager import ConfigManager
+from tortuga.logging import CLI_NAMESPACE, ROOT_NAMESPACE
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(CLI_NAMESPACE)
 
 
 class TortugaScript(Cli):
@@ -105,7 +106,7 @@ class TortugaScript(Cli):
 
         """
         if args.debug:
-            root_logger = logging.getLogger('tortuga')
+            root_logger = logging.getLogger(ROOT_NAMESPACE)
             root_logger.setLevel(logging.DEBUG)
 
             ch = logging.StreamHandler()

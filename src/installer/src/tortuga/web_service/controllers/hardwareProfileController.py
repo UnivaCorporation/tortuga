@@ -122,7 +122,7 @@ class HardwareProfileController(TortugaController):
                 'hardwareprofiles': hardwareProfiles.getCleanDict(),
             }
         except Exception as ex:  # pylint: disable=broad-except
-            self.getLogger().exception(
+            self._logger.exception(
                 'hardware profile WS API getHardwareProfiles() failed')
 
             self.handleException(ex)
@@ -147,7 +147,7 @@ class HardwareProfileController(TortugaController):
             code = self.getTortugaStatusCode(ex)
             response = self.notFoundErrorResponse(str(ex), code)
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'hardware profile WS API getHardwareProfile() failed')
 
             self.handleException(ex)
@@ -183,10 +183,10 @@ class HardwareProfileController(TortugaController):
             HardwareProfileManager().createHardwareProfile(
                 cherrypy.request.db, hwProfile, settingsDict=settingsDict)
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'hardware profile WS API createHardwareProfile() failed')
 
-            self.getLogger().exception(ex)
+            self._logger.exception(ex)
 
             self.handleException(ex)
 
@@ -210,7 +210,7 @@ class HardwareProfileController(TortugaController):
             code = self.getTortugaStatusCode(ex)
             response = self.notFoundErrorResponse(str(ex), code)
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'hardware profile WS API deleteHardwareProfile() failed')
 
             self.handleException(ex)
@@ -242,7 +242,7 @@ class HardwareProfileController(TortugaController):
             response = self.notFoundErrorResponse(str(ex), code)
 
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'hardware profile WS API updateHardwareProfile() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
@@ -263,7 +263,7 @@ class HardwareProfileController(TortugaController):
             hpMgr.addAdmin(
                 cherrypy.request.db, hardwareProfileName, adminUsername)
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'hardware profile WS API addAdmin() failed')
 
             self.handleException(ex)
@@ -286,7 +286,7 @@ class HardwareProfileController(TortugaController):
             hpMgr.deleteAdmin(
                 cherrypy.request.db, hardwareProfileName, adminUsername)
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'hardware profile WS API deleteAdmin() failed')
 
             self.handleException(ex)
@@ -304,7 +304,7 @@ class HardwareProfileController(TortugaController):
                 'admins': True,
             }).getAdmins()
 
-        self.getLogger().debug(
+        self._logger.debug(
             'Checking %s against %s' % (cherrypy.request.login, admins))
 
         for admin in admins:
@@ -330,7 +330,7 @@ class HardwareProfileController(TortugaController):
             code = self.getTortugaStatusCode(ex)
             response = self.notFoundErrorResponse(str(ex), code)
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'hardware profile WS API copyHardwareProfile() failed')
 
             self.handleException(ex)

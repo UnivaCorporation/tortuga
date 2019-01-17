@@ -40,6 +40,7 @@ from tortuga.exceptions.nicNotFound import NicNotFound
 from tortuga.exceptions.resourceNotFound import ResourceNotFound
 from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
 from tortuga.kit.actions.manager import KitActionsManager
+from tortuga.logging import RESOURCE_ADAPTER_NAMESPACE
 from tortuga.objects.node import Node as TortugaNode
 from tortuga.parameter.parameterApi import ParameterApi
 from tortuga.resourceAdapterConfiguration.settings import BaseSetting
@@ -74,7 +75,7 @@ class ResourceAdapter(UserDataMixin): \
                 ' defined')
 
         self._logger = logging.getLogger(
-            'tortuga.resourceAdapter.%s' % (self.__adaptername__))
+            '{}.{}'.format(RESOURCE_ADAPTER_NAMESPACE, self.__adaptername__))
 
         self.__installer_public_hostname = None
         self.__installer_public_ipaddress = None
@@ -275,9 +276,6 @@ class ResourceAdapter(UserDataMixin): \
             '-- (pass) %s::%s %s %s' % (
                 self.__adaptername__, funcname, pargs, kargs))
 
-    def getLogger(self):
-        return self._logger
-
     def validate_config(self, profile: str = 'Default') -> ConfigurationValidator:
         """
         Validates the configuration profile.
@@ -330,7 +328,7 @@ class ResourceAdapter(UserDataMixin): \
         :raises ResourceNotFound:
 
         """
-        self.getLogger().debug(
+        self._logger.debug(
             'getResourceAdapterConfig(sectionName=[{0}])'.format(
                 sectionName if sectionName else '(none)'))
 
@@ -490,7 +488,7 @@ class ResourceAdapter(UserDataMixin): \
             # Hardware profile has no provisioning NICs defined. This
             # shouldn't happen...
 
-            self.getLogger().debug(
+            self._logger.debug(
                 'No provisioning nics defined in hardware profile %s' % (
                     hardwareprofile.name))
 
@@ -508,7 +506,7 @@ class ResourceAdapter(UserDataMixin): \
                 node.nics, hwProfileProvisioningNic.network)
 
         if not nic or not nic.mac:
-            self.getLogger().warning(
+            self._logger.warning(
                 'MAC address not defined for nic (ip=[%s]) on node [%s]' % (
                     nic.ip, node.name))
 
@@ -611,7 +609,7 @@ class ResourceAdapter(UserDataMixin): \
 
             return 1
         except Exception as exc:  # pylint: disable=broad-except
-            self.getLogger().error(
+            self._logger.error(
                 'Error processing instance type mapping'
                 ' [{0}] (exc=[{1}]). Using default value'.format(fn, exc))
 

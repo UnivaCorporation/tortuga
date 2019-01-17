@@ -20,6 +20,7 @@ import os
 
 from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.configurationError import ConfigurationError
+from tortuga.logging import REPO_NAMESPACE
 from tortuga.objects.osInfo import OsInfo
 from tortuga.os_utility import osUtility
 
@@ -31,8 +32,7 @@ class RepoManager:
 
     def __init__(self):
         """ Initialize repository manager instance. """
-        self._logger = logging.getLogger(
-            'tortuga.%s' % (self.__class__.__name__))
+        self._logger = logging.getLogger(REPO_NAMESPACE)
         self._kitArchiveDir = None
         self._cm = ConfigManager()
         self._repoRoot = self._cm.getReposDir()

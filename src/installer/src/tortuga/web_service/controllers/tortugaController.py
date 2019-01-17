@@ -19,6 +19,7 @@ from sys import exc_info
 import cherrypy
 
 from tortuga.exceptions.internalError import InternalError
+from tortuga.logging import WEBSERVICE_NAMESPACE
 from tortuga.utility import tortugaStatus
 from tortuga.types.application import Application
 
@@ -42,12 +43,7 @@ class TortugaController:
 
     def __init__(self, app: Application) -> None:
         self.app = app
-
-        self._logger = logging.getLogger(
-            'tortuga.web_service.%s' % (self.__class__.__name__))
-
-    def getLogger(self):
-        return self._logger
+        self._logger = logging.getLogger(WEBSERVICE_NAMESPACE)
 
     @classmethod
     def addTortugaResponseHeaders(cls, status, msg='Success'):

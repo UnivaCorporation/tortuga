@@ -68,7 +68,7 @@ class UpdateController(TortugaController):
         try:
             self._syncApi.scheduleClusterUpdate(updateReason)
         except Exception as ex:
-            self.getLogger().exception('scheduleClusterUpdate() failed')
+            self._logger.exception('scheduleClusterUpdate() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -87,7 +87,7 @@ class UpdateController(TortugaController):
                 'running': status,
             }
         except Exception as ex:
-            self.getLogger().exception('getUpdateStatus() failed')
+            self._logger.exception('getUpdateStatus() failed')
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 

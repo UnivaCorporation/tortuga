@@ -13,9 +13,12 @@
 # limitations under the License.
 
 # pylint: disable=no-member
+import logging
 
 from sqlalchemy.orm.session import Session
+
 from tortuga.exceptions.tortugaException import TortugaException
+from tortuga.logging import NETWORK_NAMESPACE
 from tortuga.network.networkManager import NetworkManager
 from tortuga.objects.network import Network
 from tortuga.objects.tortugaObject import TortugaObjectList
@@ -25,8 +28,13 @@ from tortuga.utility.tortugaApi import TortugaApi
 class NetworkApi(TortugaApi):
     """
     Network API class.
+    
     """
-
+    def __init__(self):
+        super().__init__()
+        
+        self._logger = logging.getLogger(NETWORK_NAMESPACE)
+        
     def getNetwork(self, session: Session, networkAddress: str,
                    networkSubnet: str):
         """
@@ -45,7 +53,7 @@ class NetworkApi(TortugaApi):
         except TortugaException as ex:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def getNetworkById(self, session: Session, id_: str):
@@ -64,7 +72,7 @@ class NetworkApi(TortugaApi):
         except TortugaException as ex:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def getNetworkList(self, session: Session) -> TortugaObjectList:
@@ -82,7 +90,7 @@ class NetworkApi(TortugaApi):
         except TortugaException as ex:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def addNetwork(self, session: Session, network: Network) -> int:
@@ -101,7 +109,7 @@ class NetworkApi(TortugaApi):
         except TortugaException as ex:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def deleteNetwork(self, session: Session, id_: str):
@@ -120,7 +128,7 @@ class NetworkApi(TortugaApi):
         except TortugaException as ex:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def updateNetwork(self, session: Session, network: Network) -> Network:
@@ -139,5 +147,5 @@ class NetworkApi(TortugaApi):
         except TortugaException as ex:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)

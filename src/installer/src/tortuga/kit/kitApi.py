@@ -13,11 +13,13 @@
 # limitations under the License.
 
 # pylint: disable=no-member
+import logging
 from typing import List, Optional
 
 from sqlalchemy.orm.session import Session
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.kit.manager import KitManager
+from tortuga.logging import KIT_NAMESPACE
 from tortuga.objects.kit import Kit
 from tortuga.utility.tortugaApi import TortugaApi
 
@@ -30,9 +32,11 @@ class KitApi(TortugaApi):
     """
     def __init__(self):
         super().__init__()
+        
         self._kit_manager = KitManager(
             eula_validator=CommandLineEulaValidator()
         )
+        self._logger = logging.getLogger(KIT_NAMESPACE)
 
     def getKit(self, session: Session, name: str,
                version: Optional[str] = None,
@@ -54,7 +58,7 @@ class KitApi(TortugaApi):
             raise
 
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def getKitById(self, session: Session, id_):
@@ -74,7 +78,7 @@ class KitApi(TortugaApi):
             raise
 
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
 
     def getKitList(self, session: Session):
         """
@@ -93,7 +97,7 @@ class KitApi(TortugaApi):
             raise
 
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def installKit(self, session: Session, name, version, iteration=None):
@@ -116,7 +120,7 @@ class KitApi(TortugaApi):
             raise
 
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def installKitPackage(self, db_manager, packageUrl):
@@ -138,7 +142,7 @@ class KitApi(TortugaApi):
             raise
 
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def getKitEula(self, name, version, iteration=None):
@@ -161,7 +165,7 @@ class KitApi(TortugaApi):
             raise
 
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def getKitPackageEula(self, packageUrl):
@@ -183,7 +187,7 @@ class KitApi(TortugaApi):
             raise
 
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def installOsKit(self, session: Session, os_media_urls: List[str],
@@ -205,7 +209,7 @@ class KitApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception(ex)
+            self._logger.exception(ex)
             raise TortugaException(exception=ex)
 
     def deleteKit(self, name, version=None, iteration=None, force=False) -> None:
@@ -226,5 +230,5 @@ class KitApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)

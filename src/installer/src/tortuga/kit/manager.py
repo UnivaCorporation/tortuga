@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import configparser
+import logging
 import os
 import time
 import urllib.error
@@ -21,6 +22,7 @@ import urllib.request
 from typing import Any, List
 
 from sqlalchemy.orm.session import Session
+
 from tortuga.boot.distro import DistributionFactory
 from tortuga.config import VERSION, version_is_compatible
 from tortuga.config.configManager import ConfigManager
@@ -39,6 +41,7 @@ from tortuga.helper import osHelper
 from tortuga.kit import utils
 from tortuga.kit.mountManager import MountManager
 from tortuga.kit.utils import format_kit_descriptor
+from tortuga.logging import KIT_NAMESPACE
 from tortuga.objects.component import Component
 from tortuga.objects.kit import Kit
 from tortuga.objects.osInfo import OsInfo
@@ -48,7 +51,6 @@ from tortuga.os_utility.osUtility import getOsObjectFactory, mapOsName
 from tortuga.repo import repoManager
 from tortuga.softwareprofile.softwareProfileApi import SoftwareProfileApi
 from tortuga.utility.actionManager import ActionManager
-
 from .eula import BaseEulaValidator
 from .loader import load_kits
 from .registry import get_kit_installer
@@ -66,6 +68,7 @@ class KitManager(TortugaObjectManager):
         self._config_manager = ConfigManager()
         self._kits_root = self._config_manager.getKitDir()
         self._component_db_api = componentDbApi.ComponentDbApi()
+        self._logger = logging.getLogger(KIT_NAMESPACE)
 
     def getKitList(self, session: Session):
         """
@@ -126,11 +129,11 @@ class KitManager(TortugaObjectManager):
         with db_manager.session() as session:
             self._check_if_kit_exists(session, kit)
 
-        self.getLogger().debug(
+        self._logger.debug(
             '[{0}] Installing kit [{1}]'.format(
                 self.__class__.__name__, kit))
 
-        return self.installKitPackage(db_manager, kitPkgUrl, key)
+        return self.installKitPackage(db_manager, kitPkgUrl)
 
     def _check_if_kit_exists(self, session: Session, kit):
         """
@@ -161,7 +164,7 @@ class KitManager(TortugaObjectManager):
         :raises EulaAcceptanceRequired:
 
         """
-        self.getLogger().debug(
+        self._logger.debug(
             'Installing kit package: {}'.format(kit_pkg_url))
 
         with db_manager.session() as session:
@@ -225,10 +228,10 @@ class KitManager(TortugaObjectManager):
 
         except Exception as ex:
             if os.path.exists(kit_dir):
-                self.getLogger().debug(
+                self._logger.debug(
                     'Removing kit installation directory: {}'.format(kit_dir))
                 osUtility.removeDir(kit_dir)
-            self.getLogger().warning(
+            self._logger.warning(
                 'Kit is not installable: {}'.format(kit_spec))
             return
 
@@ -255,7 +258,7 @@ class KitManager(TortugaObjectManager):
         #
         eula = installer.get_eula()
         if not eula:
-            self.getLogger().debug('No EULA acceptance required')
+            self._logger.debug('No EULA acceptance required')
         else:
             if not self._eula_validator.validate_eula(eula):
                 raise EulaAcceptanceRequired(
@@ -326,7 +329,7 @@ class KitManager(TortugaObjectManager):
         all_component_list = kit.getComponentList()
 
         for os_info in os_info_list:
-            self.getLogger().debug(
+            self._logger.debug(
                 'Preparing to install ({}, {}, {}) for {}'.format(
                     kit.getName(), kit.getVersion(), kit.getIteration(),
                     os_info
@@ -356,14 +359,14 @@ class KitManager(TortugaObjectManager):
             # Install the packages into the repo package directory
             #
             for component in component_list:
-                self.getLogger().debug(
+                self._logger.debug(
                     '[{0}] Found component [{1}]'.format(
                         self.__class__.__name__, component))
 
                 for package in component.getPackageList():
                     package_file = os.path.join(
                         kit.install_path, package.getRelativePath())
-                    self.getLogger().debug(
+                    self._logger.debug(
                         '[{0}] Found package [{1}]'.format(
                             self.__class__.__name__, package_file))
                     repo.addPackage(package_file, kit.getKitRepoDir())
@@ -669,11 +672,11 @@ class KitManager(TortugaObjectManager):
         """
         component_list = kit.getComponentList()
         if not component_list:
-            self.getLogger().debug('No components found')
+            self._logger.debug('No components found')
             return
 
         for component in component_list:
-            self.getLogger().debug(
+            self._logger.debug(
                 'Found component: {}'.format(component))
 
             for package in component.getPackageList():
@@ -681,11 +684,11 @@ class KitManager(TortugaObjectManager):
                                             package.getRelativePath())
 
                 if os.path.exists(package_path):
-                    self.getLogger().debug(
+                    self._logger.debug(
                         'Deleting package: {}'.format(package_path))
                     os.remove(package_path)
                 else:
-                    self.getLogger().debug(
+                    self._logger.debug(
                         'Skipping non-existent package: {}'.format(
                             package_path))
 
@@ -709,7 +712,7 @@ class KitManager(TortugaObjectManager):
         else:
             self._delete_kit(session, kit, force)
 
-        self.getLogger().info('Deleted kit: {}'.format(kit))
+        self._logger.info('Deleted kit: {}'.format(kit))
 
     def _delete_os_kit(self, session: Session, kit, force):
         """
@@ -763,7 +766,7 @@ class KitManager(TortugaObjectManager):
                 try:
                     installer.run_action('pre_uninstall')
                 except Exception as ex:
-                    self.getLogger().warning(
+                    self._logger.warning(
                         'Error running pre_uninstall: {}'.format(
                             str(ex)
                         )
@@ -781,7 +784,7 @@ class KitManager(TortugaObjectManager):
                 try:
                     installer.run_action('uninstall_puppet_modules')
                 except Exception as ex:
-                    self.getLogger().warning(
+                    self._logger.warning(
                         'Error uninstalling puppet modules: {}'.format(
                             str(ex)
                         )
@@ -789,7 +792,7 @@ class KitManager(TortugaObjectManager):
                 try:
                     installer.run_action('post_uninstall')
                 except Exception as ex:
-                    self.getLogger().warning(
+                    self._logger.warning(
                         'Error running post-install: {}'.format(
                             str(ex)
                         )
@@ -828,7 +831,7 @@ class KitManager(TortugaObjectManager):
             # Remove repo files
             #
             full_repo_dir = os.path.join(repo.getLocalPath(), repo_dir)
-            self.getLogger().debug(
+            self._logger.debug(
                 'Removing repo dir: {}'.format(full_repo_dir))
             #
             # When LINKOSKITMEDIA is used, the kit directory is a symlink
@@ -850,7 +853,7 @@ class KitManager(TortugaObjectManager):
         #
         kit_dir = os.path.join(self._kits_root, kit.getDirName())
         if os.path.exists(kit_dir):
-            self.getLogger().debug(
+            self._logger.debug(
                 'Removing kit installation directory: {}'.format(kit_dir))
             osUtility.removeDir(kit_dir)
 
