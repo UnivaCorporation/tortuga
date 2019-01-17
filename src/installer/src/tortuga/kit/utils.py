@@ -26,10 +26,10 @@ from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.fileNotFound import FileNotFound
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.kit.metadata import KitMetadataSchema
-from tortuga.logging import KITS_NAMESPACE
+from tortuga.logging import KIT_NAMESPACE
 from tortuga.os_utility.tortugaSubprocess import TortugaSubprocess
 
-logger = logging.getLogger(KITS_NAMESPACE)
+logger = logging.getLogger(KIT_NAMESPACE)
 
 
 def pip_install_requirements(requirements_path):

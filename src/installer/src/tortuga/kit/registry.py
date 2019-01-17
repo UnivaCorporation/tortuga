@@ -18,10 +18,10 @@ import pkgutil
 from typing import Tuple
 
 from tortuga.exceptions.kitNotFound import KitNotFound
-from tortuga.logging import KITS_NAMESPACE
+from tortuga.logging import KIT_NAMESPACE
 from tortuga.objects.kit import Kit
 
-logger = logging.getLogger(KITS_NAMESPACE)
+logger = logging.getLogger(KIT_NAMESPACE)
 
 
 KIT_INSTALLER_PACKAGES = ['tortuga_kits']

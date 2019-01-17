@@ -14,11 +14,11 @@
 
 import logging
 
-from tortuga.logging import KITS_NAMESPACE
+from tortuga.logging import KIT_NAMESPACE
 from tortuga.os_utility import tortugaSubprocess
 from .base import KitActionBase
 
-logger = logging.getLogger(KITS_NAMESPACE)
+logger = logging.getLogger(KIT_NAMESPACE)
 
 
 class UninstallPuppetModulesAction(KitActionBase):

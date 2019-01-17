@@ -19,7 +19,7 @@ from typing import List, Optional
 from sqlalchemy.orm.session import Session
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.kit.manager import KitManager
-from tortuga.logging import KITS_NAMESPACE
+from tortuga.logging import KIT_NAMESPACE
 from tortuga.objects.kit import Kit
 from tortuga.utility.tortugaApi import TortugaApi
 
@@ -36,7 +36,7 @@ class KitApi(TortugaApi):
         self._kit_manager = KitManager(
             eula_validator=CommandLineEulaValidator()
         )
-        self._logger = logging.getLogger(KITS_NAMESPACE)
+        self._logger = logging.getLogger(KIT_NAMESPACE)
 
     def getKit(self, session: Session, name: str,
                version: Optional[str] = None,

@@ -41,7 +41,7 @@ from tortuga.helper import osHelper
 from tortuga.kit import utils
 from tortuga.kit.mountManager import MountManager
 from tortuga.kit.utils import format_kit_descriptor
-from tortuga.logging import KITS_NAMESPACE
+from tortuga.logging import KIT_NAMESPACE
 from tortuga.objects.component import Component
 from tortuga.objects.kit import Kit
 from tortuga.objects.osInfo import OsInfo
@@ -68,7 +68,7 @@ class KitManager(TortugaObjectManager):
         self._config_manager = ConfigManager()
         self._kits_root = self._config_manager.getKitDir()
         self._component_db_api = componentDbApi.ComponentDbApi()
-        self._logger = logging.getLogger(KITS_NAMESPACE)
+        self._logger = logging.getLogger(KIT_NAMESPACE)
 
     def getKitList(self, session: Session):
         """

@@ -26,7 +26,7 @@ import cherrypy
 from cherrypy.process import plugins
 
 from tortuga.kit.loader import load_kits
-from tortuga.logging import KITS_NAMESPACE, ROOT_NAMESPACE, \
+from tortuga.logging import KIT_NAMESPACE, ROOT_NAMESPACE, \
     WEBSERVICE_NAMESPACE
 from . import controllers, controllers_v2, rootRouteMapper
 from .app import app
@@ -46,7 +46,7 @@ if log_conf_file.exists():
 root_logger = logging.getLogger(ROOT_NAMESPACE)
 
 # and everything 'tortuga_kits.*'
-tortuga_kits_logger = logging.getLogger(KITS_NAMESPACE)
+tortuga_kits_logger = logging.getLogger(KIT_NAMESPACE)
 
 if not log_conf_file.exists():
     # in the absence of a `tortugawsd` logging configuration, use

@@ -23,7 +23,7 @@ from typing import Dict
 from tortuga.boot.distro import DistributionFactory
 from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.abstractMethod import AbstractMethod
-from tortuga.logging import KITS_NAMESPACE
+from tortuga.logging import KIT_NAMESPACE
 from tortuga.os_utility.osUtility import getOsObjectFactory
 
 
@@ -41,7 +41,7 @@ class OsKitOps(object):
 
         self._mirror = kwargs['mirror'] if 'mirror' in kwargs else False
 
-        self._logger = logging.getLogger(KITS_NAMESPACE)
+        self._logger = logging.getLogger(KIT_NAMESPACE)
 
         self._cm = ConfigManager()
 

@@ -22,7 +22,7 @@ from tortuga.db.models.hardwareProfile import HardwareProfile
 from tortuga.db.models.node import Node as NodeModel
 from tortuga.db.models.softwareProfile import SoftwareProfile
 from tortuga.exceptions.tortugaException import TortugaException
-from tortuga.logging import NODES_NAMESPACE
+from tortuga.logging import NODE_NAMESPACE
 from tortuga.node.nodeManager import NodeManager
 from tortuga.objects.node import Node
 from tortuga.objects.tortugaObject import TortugaObjectList
@@ -40,7 +40,7 @@ class NodeApi(TortugaApi):
         super(NodeApi, self).__init__()
 
         self._nodeManager = NodeManager()
-        self._logger = logging.getLogger(NODES_NAMESPACE)
+        self._logger = logging.getLogger(NODE_NAMESPACE)
 
     def createNewNode(self, session: Session, addNodeRequest: dict,
                       dbHardwareProfile: HardwareProfile,

@@ -27,7 +27,7 @@ from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.configurationError import ConfigurationError
 from tortuga.kit.metadata import KIT_METADATA_FILE, KitMetadataSchema
 from tortuga.kit.registry import get_all_kit_installers
-from tortuga.logging import KITS_NAMESPACE
+from tortuga.logging import KIT_NAMESPACE
 from tortuga.objects.component import Component
 from tortuga.objects.eula import Eula
 from tortuga.objects.kit import Kit
@@ -38,7 +38,7 @@ from .registry import register_kit_installer
 from .utils import pip_install_requirements
 
 
-logger = logging.getLogger(KITS_NAMESPACE)
+logger = logging.getLogger(KIT_NAMESPACE)
 
 
 EULA_FILE = 'docs/EULA.txt'

@@ -27,7 +27,7 @@ import tempfile
 
 from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.cannotMountKitMedia import CannotMountKitMedia
-from tortuga.logging import KITS_NAMESPACE
+from tortuga.logging import KIT_NAMESPACE
 
 
 class MountManager(object):
@@ -37,7 +37,7 @@ class MountManager(object):
         self.bIsMounted = False
         self._tmpprefix = '/tmp'
         self.bIsIso = False
-        self._logger = logging.getLogger(KITS_NAMESPACE)
+        self._logger = logging.getLogger(KIT_NAMESPACE)
 
         self._cm = ConfigManager()
 

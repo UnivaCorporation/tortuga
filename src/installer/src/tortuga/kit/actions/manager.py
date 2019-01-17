@@ -17,14 +17,14 @@ import logging
 from typing import List
 
 from tortuga.kit.registry import get_all_kit_installers
-from tortuga.logging import KITS_NAMESPACE
+from tortuga.logging import KIT_NAMESPACE
 from tortuga.objects.node import Node
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 
 
 class KitActionsManager(TortugaObjectManager):
     def __init__(self):
-        self._logger = logging.getLogger(KITS_NAMESPACE)
+        self._logger = logging.getLogger(KIT_NAMESPACE)
         
     def get_cloud_config(self, node, hardware_profile, software_profile,
                          user_data, *args, **kwargs):

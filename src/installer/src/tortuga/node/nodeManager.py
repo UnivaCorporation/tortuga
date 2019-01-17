@@ -46,7 +46,7 @@ from tortuga.exceptions.profileMappingNotAllowed import \
     ProfileMappingNotAllowed
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.kit.actions import KitActionsManager
-from tortuga.logging import NODES_NAMESPACE
+from tortuga.logging import NODE_NAMESPACE
 from tortuga.objects.node import Node
 from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
@@ -75,7 +75,7 @@ class NodeManager(TortugaObjectManager): \
         self._syncApi = SyncApi()
         self._nodesDbHandler = NodesDbHandler()
         self._addHostManager = AddHostManager()
-        self._logger = logging.getLogger(NODES_NAMESPACE)
+        self._logger = logging.getLogger(NODE_NAMESPACE)
 
     def __validateHostName(self, hostname: str, name_format: str) -> None:
         """

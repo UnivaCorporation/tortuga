@@ -18,7 +18,7 @@ import logging
 from sqlalchemy.orm.session import Session
 
 from tortuga.exceptions.tortugaException import TortugaException
-from tortuga.logging import NETWORKS_NAMESPACE
+from tortuga.logging import NETWORK_NAMESPACE
 from tortuga.network.networkManager import NetworkManager
 from tortuga.objects.network import Network
 from tortuga.objects.tortugaObject import TortugaObjectList
@@ -33,7 +33,7 @@ class NetworkApi(TortugaApi):
     def __init__(self):
         super().__init__()
         
-        self._logger = logging.getLogger(NETWORKS_NAMESPACE)
+        self._logger = logging.getLogger(NETWORK_NAMESPACE)
         
     def getNetwork(self, session: Session, networkAddress: str,
                    networkSubnet: str):
