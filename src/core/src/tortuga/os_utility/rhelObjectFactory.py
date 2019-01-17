@@ -65,10 +65,6 @@ class RhelObjectFactory(OsObjectFactory):
         from tortuga.os_objects.rhel.bootHostManager import BootHostManager
         return BootHostManager(configManager)
 
-    def getOsAddHostManager(self):
-        from tortuga.os_objects.rhel.addHostManager import AddHostManager
-        return AddHostManager()
-
     def getTortugawsManager(self):
         from tortuga.os_objects.rhel.tortugawsManager import TortugawsManager
         return TortugawsManager()

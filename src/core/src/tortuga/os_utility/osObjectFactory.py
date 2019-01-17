@@ -149,12 +149,6 @@ class OsObjectFactory:
             'getOsBootHostManager() has to be overridden in the derived'
             ' class.')
 
-    def getOsAddHostManager(self):
-        """Get manager for addhost"""
-        raise AbstractMethod(
-            'getOsAddHostManager() has to be overridden in the derived'
-            ' class.')
-
     def getTortugawsManager(self):
         """Get manager for tortugaws"""
         raise AbstractMethod(

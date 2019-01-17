@@ -16,25 +16,22 @@
 
 import configparser
 import os
-import select
-import signal
 from typing import Dict, List, Optional
 
 from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
+from tortuga.db.models.hardwareProfile import HardwareProfile
 from tortuga.db.models.node import Node
+from tortuga.db.models.softwareProfile import SoftwareProfile
 from tortuga.db.nodesDbHandler import NodesDbHandler
 from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
 from tortuga.exceptions.commandFailed import CommandFailed
-from tortuga.exceptions.ipAlreadyExists import IpAlreadyExists
-from tortuga.exceptions.macAddressAlreadyExists import MacAddressAlreadyExists
 from tortuga.exceptions.nodeAlreadyExists import NodeAlreadyExists
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.exceptions.parameterNotFound import ParameterNotFound
 from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
 from tortuga.os_utility import osUtility, tortugaSubprocess
 from tortuga.resourceAdapter.resourceAdapter import ResourceAdapter
-from tortuga.resourceAdapter.utility import (get_provisioning_nic,
-                                             get_provisioning_nics)
+from tortuga.resourceAdapter.utility import get_provisioning_nics
 from tortuga.resourceAdapterConfiguration import settings as ra_settings
 
 
@@ -68,8 +65,6 @@ class Default(ResourceAdapter):
 
         self._bhm = \
             osUtility.getOsObjectFactory().getOsBootHostManager(self._cm)
-
-        self.looping = False
 
     @property
     def hookScript(self):
@@ -160,6 +155,8 @@ class Default(ResourceAdapter):
     def activateIdleNode(self, node: Node, softwareProfileName: str,
                          softwareProfileChanged: bool):
             # pylint: disable=no-self-use
+        softwareprofile: Optional[SoftwareProfile] = None
+
         if softwareProfileChanged:
             softwareprofile = \
                 SoftwareProfilesDbHandler().getSoftwareProfile(
@@ -167,16 +164,11 @@ class Default(ResourceAdapter):
 
             # Mark node for network boot if software profile changed
             node.bootFrom = 0
-        else:
-            softwareprofile = None
 
         self._bhm.writePXEFile(
             self.session, node, localboot=not softwareProfileChanged,
             softwareprofile=softwareprofile
         )
-
-    def abort(self):
-        self.looping = False
 
     def deleteNode(self, nodes: List[Node]) -> None:
         self.hookAction('delete', [node.name for node in nodes])
@@ -188,26 +180,6 @@ class Default(ResourceAdapter):
         # Call the reboot script hook
         self.hookAction('reset', [node.name for node in nodes],
                         'soft' if bSoftReset else 'hard')
-
-    def __is_duplicate_mac_in_session(self, mac, session_nodes): \
-            # pylint: disable=no-self-use
-        for node in session_nodes:
-            for nic in node.nics:
-                if nic.mac == mac:
-                    return True
-
-        return False
-
-    def __is_duplicate_mac(self, mac, session_nodes):
-        if self.__is_duplicate_mac_in_session(mac, session_nodes):
-            return True
-
-        try:
-            NodesDbHandler().getNodeByMac(self.session, mac)
-
-            return True
-        except NodeNotFound:
-            return False
 
     def __get_node_details(self, addNodesRequest, dbHardwareProfile,
                            dbSoftwareProfile): \
@@ -247,13 +219,6 @@ class Default(ResourceAdapter):
         nodeDetails = self.__get_node_details(
             addNodesRequest, dbHardwareProfile, dbSoftwareProfile)
 
-        # return self.__add_predefined_nodes(
-        #     addNodesRequest, dbSession, dbHardwareProfile,
-        #     dbSoftwareProfile) \
-        #     if nodeDetails else self.__dhcp_discovery(
-        #         addNodesRequest, dbSession, dbHardwareProfile,
-        #         dbSoftwareProfile)
-
         if not nodeDetails:
             raise CommandFailed('Invalid operation (DHCP discovery)')
 
@@ -273,8 +238,9 @@ class Default(ResourceAdapter):
 
         return nodes
 
-    def validate_start_arguments(self, addNodesRequest, dbHardwareProfile,
-                                 dbSoftwareProfile): \
+    def validate_start_arguments(self, addNodesRequest: dict,
+                                 dbHardwareProfile: HardwareProfile,
+                                 dbSoftwareProfile: SoftwareProfile): \
             # pylint: disable=unused-argument,no-self-use
         '''
         :raises CommandFailed:
@@ -300,7 +266,7 @@ class Default(ResourceAdapter):
             NodesDbHandler().getNode(self.session, self._cm.getInstaller())
 
         components = [c for c in dbInstallerNode.softwareprofile.components
-                        if c.name == 'dhcpd']
+                      if c.name == 'dhcpd']
 
         if not components:
             raise CommandFailed(
@@ -394,168 +360,6 @@ class Default(ResourceAdapter):
                 nics[0].ip if nics else None)
 
             newNodes.append(node)
-
-        return newNodes
-
-    def __dhcp_discovery(self, addNodesRequest, dbSession, dbHardwareProfile,
-                         dbSoftwareProfile):
-        # Listen for DHCP requests
-
-        if not dbHardwareProfile.nics:
-            raise CommandFailed(
-                'Hardware profile [%s] does not have a provisioning'
-                ' NIC defined' % (dbHardwareProfile.name))
-
-        newNodes = []
-
-        deviceName = addNodesRequest['deviceName'] \
-            if 'deviceName' in addNodesRequest else None
-
-        nodeCount = addNodesRequest['count'] \
-            if 'count' in addNodesRequest else 0
-
-        bGenerateIp = dbHardwareProfile.location != 'remote'
-
-        # Obtain platform-specific packet capture subprocess object
-        addHostManager = osUtility.getOsObjectFactory().getOsAddHostManager()
-
-        deviceName = dbHardwareProfile.nics[0].networkdevice.name
-
-        p1 = addHostManager.dhcpCaptureSubprocess(deviceName)
-
-        if nodeCount:
-            self._logger.debug(
-                'Adding [%s] new %s' % (
-                    nodeCount, 'nodes' if nodeCount > 1 else 'node'))
-
-        self.looping = True
-
-        index = 0
-
-        # Node count was not specified, so discover DHCP nodes
-        # until manually aborted by user.
-        msg = 'Waiting for new node...' if not nodeCount else \
-            'Waiting for new node #1 of %d...' % (nodeCount)
-
-        try:
-            while self.looping:
-                # May not need this...
-                dataReady = select.select([p1.stdout], [], [], 5)
-
-                if not dataReady[0]:
-                    continue
-
-                line = p1.stdout.readline()
-
-                if not line:
-                    self._logger.debug(
-                        'DHCP packet capture process ended... exiting')
-
-                    break
-
-                self._logger.debug(
-                    'Read line "%s" len=%s' % (line, len(line)))
-
-                mac = addHostManager.getMacAddressFromCaptureEntry(line)
-
-                if not mac:
-                    continue
-
-                self._logger.debug('Discovered MAC address [%s]' % (mac))
-
-                if self.__is_duplicate_mac(mac, newNodes):
-                    # Ignore DHCP request from known MAC
-                    self._logger.debug(
-                        'MAC address [%s] is already known' % (mac))
-
-                    continue
-
-                addNodeRequest = {}
-
-                if 'rack' in addNodesRequest:
-                    addNodeRequest['rack'] = addNodesRequest['rack']
-
-                # Get nics based on hardware profile networks
-                addNodeRequest['nics'] = initialize_nics(
-                    dbHardwareProfile.nics[0],
-                    dbHardwareProfile.hardwareprofilenetworks, mac)
-
-                # We may be trying to create the same node for the
-                # second time so we'll ignore errors
-                try:
-                    node = self.nodeApi.createNewNode(
-                        None,
-                        addNodeRequest,
-                        dbHardwareProfile,
-                        dbSoftwareProfile,
-                        bGenerateIp=bGenerateIp)
-                except NodeAlreadyExists as ex:
-                    existingNodeName = ex.args[0]
-
-                    self._logger.debug(
-                        'Node [%s] already exists' % (existingNodeName))
-
-                    continue
-                except MacAddressAlreadyExists:
-                    self._logger.debug(
-                        'MAC address [%s] already exists' % (mac))
-
-                    continue
-                except IpAlreadyExists as ex:
-                    self._logger.debug(
-                        'IP address already in use by node'
-                        ' [%s]: %s' % (existingNodeName, ex))
-
-                    continue
-
-                # Add the newly created node to the session
-                dbSession.add(node)
-
-                # Create DHCP/PXE configuration
-                self.writeLocalBootConfiguration(
-                    node, dbHardwareProfile, dbSoftwareProfile)
-
-                index += 1
-
-                # Use first provisioning nic
-                nic = get_provisioning_nic(node)
-
-                try:
-                    msg = 'Added node [%s] IP [%s]' % (
-                        node.name, nic.ip)
-
-                    if nic.mac:
-                        msg += ' MAC [%s]' % (nic.mac)
-
-                    self._logger.info(msg)
-                except Exception as ex:  # noqa pylint: disable=broad-except
-                    self._logger.exception('Error setting status message')
-
-                self._pre_add_host(
-                    node.name,
-                    dbHardwareProfile.name,
-                    dbSoftwareProfile.name,
-                    nic.ip)
-
-                newNodes.append(node)
-
-                if nodeCount > 0:
-                    nodeCount -= 1
-                    if not nodeCount:
-                        self.looping = False
-        except Exception as msg:  # noqa pylint: disable=broad-except
-            self._logger.exception('DHCP discovery failed')
-
-        try:
-            os.kill(p1.pid, signal.SIGKILL)
-            os.waitpid(p1.pid, 0)
-        except Exception:  # noqa pylint: disable=broad-except
-            self._logger.exception(
-                'Error killing network capture process')
-
-        # This is a necessary evil for the time being, until there's
-        # a proper context manager implemented.
-        self.addHostApi.clear_session_nodes(newNodes)
 
         return newNodes
 
