@@ -15,7 +15,7 @@
 from distutils.version import LooseVersion
 
 
-VERSION = '7.0.2+001'
+VERSION = '7.0.2+003'
 
 
 def version_is_compatible(version_string: str):
