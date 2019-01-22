@@ -452,10 +452,10 @@ Commands listed in this "Quickstart" section are intended to be run as the
         * `bootstrap.debian.tmpl` for recent Debian/Ubuntu versions
         * `bootstrap.suse.tmpl` for SUSE Linux/openSUSE versions
 
-    `adapter-mgmt update` can be used to manage resource adapter configuration
-    profile settings. Erroneous/invalid settings can be removed by using
-    `adapter-mgmt update PROFILENAME --delete NAME`, where `NAME` is the
-    setting name.
+        `adapter-mgmt update` can be used to manage resource adapter
+        configuration profile settings. Erroneous/invalid settings can be
+        removed by using `adapter-mgmt update PROFILENAME --delete NAME`,
+        where `NAME` is the setting name.
 
     1. Create hardware profile to represent EC2 nodes
 
@@ -512,9 +512,9 @@ Commands listed in this "Quickstart" section are intended to be run as the
 
     1. Install UGE kit
 
-    ```shell
-    install-kit kit-uge*.tar.bz2
-    ```
+        ```shell
+        install-kit kit-uge*.tar.bz2
+        ```
 
     1. Create default Grid Engine cluster
 
