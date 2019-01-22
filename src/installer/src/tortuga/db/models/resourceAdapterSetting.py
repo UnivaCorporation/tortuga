@@ -15,12 +15,14 @@
 # pylint: disable=too-few-public-methods
 
 from sqlalchemy import Column, ForeignKey, Integer, String, UniqueConstraint
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, validates
 
 from .base import ModelBase
 
 
 class ResourceAdapterSetting(ModelBase):
+    """Resource adapter key-value setting pair."""
+
     __tablename__ = 'resource_adapter_settings'
     __table_args__ = (
         UniqueConstraint('key', 'resource_adapter_config_id'),
@@ -33,6 +35,12 @@ class ResourceAdapterSetting(ModelBase):
         Integer, ForeignKey('resource_adapter_config.id'))
     resource_adapter_config = relationship(
         "ResourceAdapterConfig", back_populates='configuration')
+
+    @validates('key')
+    def normalize(self, key, value): \
+            # pylint: disable=unused-argument,no-self-use
+        """Ensure 'key' is always lowercase."""
+        return value.lower()
 
     def __repr__(self):
         return ('<ResourceAdapterSetting(resource_adapter_config=[{}]:'

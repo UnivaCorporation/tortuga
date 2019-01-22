@@ -86,11 +86,11 @@ class ResourceAdapterConfigurationManager:
         for entry in configuration or []:
             cfg.configuration.append(
                 ResourceAdapterSetting(
-                    key=entry['key'],
+                    key=entry['key'].lower(),
                     value=entry['value']
                 )
             )
-            validator[entry['key']] = entry['value']
+            validator[entry['key'].lower()] = entry['value']
 
         if not force:
             validator.validate(full=False)
@@ -185,7 +185,7 @@ class ResourceAdapterConfigurationManager:
             validator = ConfigurationValidator(adapter.settings)
 
             for entry in configuration or []:
-                validator[entry['key']] = entry['value']
+                validator[entry['key'].lower()] = entry['value']
 
             validator.validate(full=False)
 
@@ -209,7 +209,7 @@ class ResourceAdapterConfigurationManager:
                 raise InvalidArgument(
                     'Malformed resource adapter configuration data')
 
-            setting = setting_exists(existing_settings, entry['key'])
+            setting = _setting_exists(existing_settings, entry['key'].lower())
 
             if entry['value'] is None:
                 if setting:
@@ -221,7 +221,8 @@ class ResourceAdapterConfigurationManager:
             if setting is None:
                 if entry['value'] is not None:
                     # create new setting
-                    new_settings.append((entry['key'], entry['value']))
+                    new_settings.append(
+                        (entry['key'].lower(), entry['value']))
 
                 continue
 
@@ -239,10 +240,10 @@ class ResourceAdapterConfigurationManager:
             session.delete(delete_setting)
 
 
-def setting_exists(settings: List[ResourceAdapterSetting], key: str) \
+def _setting_exists(settings: List[ResourceAdapterSetting], key: str) \
         -> Union[ResourceAdapterSetting, None]:
     for setting in settings:
-        if setting.key == key:
+        if setting.key == key.lower():
             return setting
 
     return None

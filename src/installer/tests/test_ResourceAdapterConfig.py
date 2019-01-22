@@ -16,8 +16,14 @@ from tortuga.db.models.resourceAdapterConfig import ResourceAdapterConfig
 from tortuga.db.models.resourceAdapterSetting import ResourceAdapterSetting
 
 
-def test_instantiation():
-    adapter_cfg = ResourceAdapterConfig(name='default')
+def test_validate_key_normalization():
+    """Ensure ResourceAdapterSetting key is stored as lowercase."""
+
+    key_name = 'XXXXXXXX'
+
+    adapter_cfg = ResourceAdapterConfig(name='Default')
     adapter_cfg.configuration.append(
-        ResourceAdapterSetting(key='test_key', value='test_value')
+        ResourceAdapterSetting(key=key_name, value='YYYYYYYY')
     )
+
+    assert adapter_cfg.configuration[0].key == key_name.lower()
