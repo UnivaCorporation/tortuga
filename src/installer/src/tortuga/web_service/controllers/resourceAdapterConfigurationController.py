@@ -25,12 +25,16 @@ from tortuga.exceptions.resourceAdapterNotFound import ResourceAdapterNotFound
 from tortuga.exceptions.resourceAlreadyExists import ResourceAlreadyExists
 from tortuga.exceptions.resourceNotFound import ResourceNotFound
 from tortuga.exceptions.tortugaException import TortugaException
+from tortuga.exceptions.validationError \
+    import ValidationError as TortugaValidationError
+from tortuga.objects.validators import FieldValidationError, RegexValidator
 from tortuga.resourceAdapter.resourceAdapter import ResourceAdapter
 from tortuga.resourceAdapter.resourceAdapterFactory import \
     get_resourceadapter_class
 from tortuga.resourceAdapterConfiguration.api import \
     ResourceAdapterConfigurationApi
-from tortuga.resourceAdapterConfiguration.validator import ValidationError
+from tortuga.resourceAdapterConfiguration.validator \
+    import ValidationError as ConfigurationValidationError
 from tortuga.schema import ResourceAdapterConfigSchema
 from tortuga.web_service.auth.decorators import authentication_required
 
@@ -114,6 +118,13 @@ class ResourceAdapterConfigurationController(TortugaController):
         postdata = cherrypy.request.json
 
         try:
+            try:
+                validator = RegexValidator(pattern='[a-zA-Z0-9-_]+')
+                validator.validate(name)
+
+            except FieldValidationError as ex:
+                raise TortugaValidationError('Invalid name: {}'.format(ex))
+
             if not postdata or (postdata and 'configuration' not in postdata):
                 raise InvalidArgument(
                     'Malformed arguments: missing \'configuration\' value')
@@ -123,24 +134,28 @@ class ResourceAdapterConfigurationController(TortugaController):
                 postdata['configuration'])
 
             response = None
+
         except ResourceAlreadyExists as exc:
             self.handleException(exc)
 
             response = self.errorResponse(
                 str(exc), code=self.getTortugaStatusCode(exc),
                 http_status=http.client.CONFLICT)
+
         except ResourceAdapterNotFound as exc:
             self.handleException(exc)
 
             response = self.notFoundErrorResponse(
                 str(exc),
                 code=self.getTortugaStatusCode(exc))
+
         except TortugaException as exc:
             self.handleException(exc)
 
             response = self.errorResponse(
                 str(exc),
                 code=self.getTortugaStatusCode(exc))
+
         except Exception:
             # Unhandled server exception
             self.getLogger().exception('create() failed')
@@ -209,7 +224,7 @@ class ResourceAdapterConfigurationController(TortugaController):
             self.handleException(exc)
             response = self.notFoundErrorResponse(str(exc))
 
-        except ValidationError as exc:
+        except ConfigurationValidationError as exc:
             response = {}
             for k, v in exc.errors.items():
                 response[k] = str(v)

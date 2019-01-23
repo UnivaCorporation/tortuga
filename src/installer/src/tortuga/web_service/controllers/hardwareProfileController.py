@@ -180,8 +180,10 @@ class HardwareProfileController(TortugaController):
         hwProfile = HardwareProfile.getFromDict(hwProfileDict)
 
         try:
+            hwProfile.validate()
             HardwareProfileManager().createHardwareProfile(
                 cherrypy.request.db, hwProfile, settingsDict=settingsDict)
+
         except Exception as ex:
             self.getLogger().exception(
                 'hardware profile WS API createHardwareProfile() failed')

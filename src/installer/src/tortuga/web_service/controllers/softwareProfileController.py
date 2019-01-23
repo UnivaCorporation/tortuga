@@ -242,9 +242,11 @@ class SoftwareProfileController(TortugaController):
             postdata['softwareProfile'])
 
         try:
+            swProfileSpec.validate()
             SoftwareProfileApi().createSoftwareProfile(
                 cherrypy.request.db,
                 swProfileSpec, settingsDict=settingsDict)
+
         except Exception as ex:
             self.getLogger().exception(
                 'software profile WS API createSoftwareProfile() failed')
