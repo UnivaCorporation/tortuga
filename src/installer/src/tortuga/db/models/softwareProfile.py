@@ -43,7 +43,7 @@ class SoftwareProfile(ModelBase):
     osId = Column(Integer, ForeignKey('operatingsystems.id'), nullable=False)
     type = Column(String(20), nullable=False)
     minNodes = Column(Integer, default=-1)
-    maxNodes = Column(Integer, default=-1)
+    maxNodes = Column(Integer, default=25)
     lockedState = Column(String(20), nullable=False, default='Unlocked')
     isIdle = Column(Boolean, nullable=False, default=False)
 
