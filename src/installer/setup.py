@@ -27,7 +27,7 @@ from setuptools import find_packages, setup
 
 
 module_name = 'tortuga-installer'
-version = '7.0.2'
+version = '7.0.3'
 
 if os.getenv('RELEASE'):
     requirements_file = 'requirements.txt'
