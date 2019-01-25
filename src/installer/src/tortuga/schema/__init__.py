@@ -151,6 +151,11 @@ class ResourceAdapterSchema(ModelSchema):
 
 
 class InstanceMetadataSchema(ModelSchema):
+    instance = fields.Nested(
+        'InstanceMappingSchema',
+        exclude=('instance_metadata', 'resource_adapter_configuration')
+    )
+
     class Meta:
         model = InstanceMetadataModel
 
@@ -159,6 +164,7 @@ class InstanceMappingSchema(ModelSchema):
     instance_metadata = fields.Nested('InstanceMetadataSchema', many=True)
     resource_adapter_configuration = \
         fields.Nested('ResourceAdapterConfigSchema')
+    node = fields.Nested('NodeSchema', only=('id', 'name'))
 
     class Meta:
         model = InstanceMappingModel
@@ -167,7 +173,7 @@ class InstanceMappingSchema(ModelSchema):
 class NodeTagSchema(ModelSchema):
     class Meta:
         model = NodeTagModel
-        
+
 
 class NodeSchema(ModelSchema):
     softwareprofile = fields.Nested('SoftwareProfileSchema',
