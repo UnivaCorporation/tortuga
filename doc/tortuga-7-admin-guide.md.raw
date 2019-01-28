@@ -336,9 +336,16 @@ Commands listed in this "Quickstart" section are intended to be run as the
     instances already have an operating system installed, it is not necessary to
     define the installation media.
 
-    **Note:** Software profiles are created with a default max nodes setting
-    of 25. To change or remove this limit, please read the section on
-    software profiles.
+    **Note**: Software profiles are created with a default max nodes setting
+    of 25. To change or remove this limit:
+
+    ```shell
+    update-software-profile --name execd --max-nodes XX
+    ```
+
+    Where `XX` is the maximum number of nodes you want to allow. To remove
+    the limit altogether, use `none`. See the section on software profiles
+    below for more information.
 
 1. Create hardware profile for compute nodes
 
