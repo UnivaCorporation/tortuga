@@ -42,8 +42,7 @@ class PackageFile(TortugaObject): \
 
     def __repr__(self):
         """ Display info. """
-        result = '%s' % (self['path'])
-        return result
+        return self['path']
 
     @staticmethod
     def getKeys():

@@ -14,7 +14,6 @@
 
 import argparse
 import io
-from logging import getLogger
 import subprocess
 from typing import List
 from xml.etree.ElementTree import ElementTree
@@ -25,9 +24,6 @@ from tortuga.cli.base import RootCommand, Command, Argument
 from tortuga.cli.utils import pretty_print
 from tortuga.config.configManager import ConfigManager
 from .tortuga_ws import get_web_service_config
-
-
-logger = getLogger(__name__)
 
 
 class ListCommand(Command):

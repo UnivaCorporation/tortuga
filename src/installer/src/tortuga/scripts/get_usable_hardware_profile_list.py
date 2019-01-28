@@ -54,7 +54,7 @@ Lists all software to hardware profile mappings in the system.
                     outputString = outputString.ljust(32)
             for hp in hwPList:
                 if hp.getId() == mapping[1]:
-                    outputString += '%s' % hp.getName()
+                    outputString += hp.getName()
 
             print(outputString)
 

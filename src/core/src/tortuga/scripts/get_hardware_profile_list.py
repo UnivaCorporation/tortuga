@@ -38,7 +38,7 @@ class GetHardwareProfileListCli(TortugaCli):
                                    verify=self._verify)
 
         for hp in api.getHardwareProfileList(tags=self.getArgs().tags):
-            print('%s' % (hp))
+            print(str(hp))
 
 
 def main():

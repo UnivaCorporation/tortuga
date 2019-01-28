@@ -19,7 +19,7 @@ import inspect
 import json
 import os
 import pkgutil
-from logging import getLogger
+import logging
 from typing import Optional, Type
 
 from tortuga.config import VERSION, version_is_compatible
@@ -27,6 +27,7 @@ from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.configurationError import ConfigurationError
 from tortuga.kit.metadata import KIT_METADATA_FILE, KitMetadataSchema
 from tortuga.kit.registry import get_all_kit_installers
+from tortuga.logging import KIT_NAMESPACE
 from tortuga.objects.component import Component
 from tortuga.objects.eula import Eula
 from tortuga.objects.kit import Kit
@@ -36,7 +37,9 @@ from tortuga.os_utility.tortugaSubprocess import executeCommand
 from .registry import register_kit_installer
 from .utils import pip_install_requirements
 
-logger = getLogger(__name__)
+
+logger = logging.getLogger(KIT_NAMESPACE)
+
 
 EULA_FILE = 'docs/EULA.txt'
 
@@ -495,7 +498,17 @@ class KitInstallerBase(ConfigurableMixin, metaclass=KitInstallerMeta):
         #
         # Prevent circular import
         #
-        from .actions import InstallPuppetModulesAction
+        from .actions import UninstallPuppetModulesAction, \
+            InstallPuppetModulesAction
+        #
+        # Do an uninstall first, just in case there is an old version of
+        # the module still hanging around. This should fail silently if the
+        # module is not installed.
+        #
+        UninstallPuppetModulesAction(self)(*args, **kwargs)
+        #
+        # Do the actual install
+        #
         return InstallPuppetModulesAction(self)(*args, **kwargs)
 
     def action_pre_install(self):
@@ -759,7 +772,8 @@ class ComponentInstallerBase(ConfigurableMixin):
         pass
 
     def action_get_puppet_args(self, db_software_profile,
-                               db_hardware_profile):
+                               db_hardware_profile,
+                               *args, **kwargs):
         return {}
 
     def action_pre_add_host(self, hardware_profile, software_profile,

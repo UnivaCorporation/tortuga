@@ -30,8 +30,8 @@ from typing import Any, Tuple
 
 import yaml
 from six import print_
-from sqlalchemy.orm.session import Session
 
+from sqlalchemy.orm.session import Session
 from tortuga.admin.api import AdminApi
 from tortuga.config.configManager import ConfigManager, getfqdn
 from tortuga.deployer import dbUtility
@@ -978,7 +978,7 @@ class TortugaDeployer: \
                 base_kit.getVersion(),
                 base_kit.getIteration(),
                 component.getName(), compVersion=component.getVersion(),
-                sync=False)
+            )
 
     def promptForAdminCredentials(self):
         # Get admin username and password for use with web service

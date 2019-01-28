@@ -80,10 +80,10 @@ class BootHostManager(OsBootHostManagerCommon):
                 if os.path.exists(filename):
                     os.remove(filename)
 
-                self.getLogger().debug(
+                self._logger.debug(
                     "Removed [%s] for node [%s]" % (filename, dbNode.name))
             except Exception as msg:  # noqa pylint: disable=broad-except
-                self.getLogger().debug(
+                self._logger.debug(
                     "Can't remove [%s] for node [%s]; [%s]" % (
                         filename, dbNode.name, msg))
 
@@ -92,13 +92,13 @@ class BootHostManager(OsBootHostManagerCommon):
 
     def deleteNodeCleanup(self, node: Node):
         if not node.softwareprofile:
-            self.getLogger().debug(
+            self._logger.debug(
                 'deleteNodeCleanup(): node [%s] has no associated'
                 ' software profile' % (node.name))
 
             return
 
-        self.getLogger().debug(
+        self._logger.debug(
             'deleteNodeCleanup(): node=[%s]' % (node.name))
 
         self.__get_ossupport(node.softwareprofile).deleteNodeCleanup(node)
@@ -122,7 +122,7 @@ class BootHostManager(OsBootHostManagerCommon):
         localboot = bool(localboot) \
             if localboot is not None else bool(node.bootFrom)
 
-        self.getLogger().debug(
+        self._logger.debug(
             'writePXEFile(): node=[%s], hwprofile=[%s],'
             ' swprofile=[%s], localboot=[%s]' % (
                 node.name, hwprofile.name, swprofile.name, localboot))
@@ -179,7 +179,7 @@ label Reinstall
                         globals(), locals(), ['osSupport'], 0)
 
                     if not hasattr(osSupport, 'OSSupport'):
-                        self.getLogger().error(
+                        self._logger.error(
                             'Invalid OS support module for [%s]' % (
                                 osFamilyInfo.name))
 
@@ -190,7 +190,7 @@ label Reinstall
                             ksurl, node, hardwareprofile=hwprofile,
                             softwareprofile=swprofile) + '\n'
                 except ImportError:
-                    self.getLogger().warning(
+                    self._logger.warning(
                         'OS support module not found for [%s]' % (
                             osFamilyInfo.name))
             else:
@@ -270,7 +270,7 @@ label Reinstall
         return node.name
 
     def addDhcpLease(self, node: Node, nic: Nic) -> None:
-        self.getLogger().debug(
+        self._logger.debug(
             'Adding DHCP lease for node [%s] MAC [%s]' % (node.name, nic.mac))
 
         dhcpName = self._getDhcpNodeName(node, nic)
@@ -294,7 +294,7 @@ label Reinstall
         stdout, _ = p.communicate(cmds)
 
         if p.poll() != 0:
-            self.getLogger().error(
+            self._logger.error(
                 'Error adding DHCP lease for node [%s] (retval=%d): %s' % (
                     node.name, p.returncode, stdout))
 
@@ -305,7 +305,7 @@ label Reinstall
         except NicNotFound:
             return
 
-        self.getLogger().debug(
+        self._logger.debug(
             'Removing DHCP lease for node [%s] MAC [%s]' % (
                 node.name, nic.mac))
 
@@ -331,7 +331,7 @@ label Reinstall
         stdout, _ = p.communicate(cmds)
 
         if p.poll() != 0:
-            self.getLogger().error(
+            self._logger.error(
                 'Error removing DHCP lease for node [%s] (retval=%d): %s' % (
                     node.name, p.returncode, stdout))
 
@@ -377,7 +377,7 @@ label Reinstall
         be converted to YAML to be used by cloud providers!
         '''
 
-        self.getLogger().debug(
+        self._logger.debug(
             'get_cloud_config(): node=[%s], hardwareprofile=[%s],'
             ' softwareprofile=[%s]' % (
                 node.name,
@@ -400,7 +400,7 @@ label Reinstall
         if not softwareprofile:
             softwareprofile = node.softwareprofile
 
-        self.getLogger().debug(
+        self._logger.debug(
             'write_other_boot_files(): node=[%s], hardwareprofile=[%s],'
             ' softwareprofile=[%s]' % (
                 node.name,

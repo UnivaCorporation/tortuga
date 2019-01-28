@@ -15,7 +15,6 @@
 import logging
 import os.path
 import sys
-
 import yaml
 
 from tortuga.config.configManager import ConfigManager
@@ -27,9 +26,10 @@ from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.exceptions.parameterNotFound import ParameterNotFound
 from tortuga.kit.loader import load_kits
 from tortuga.kit.registry import get_kit_installer
+from tortuga.logging import PUPPET_NAMESPACE
 
 
-logger = logging.getLogger('tortuga.puppet_enc')
+logger = logging.getLogger(PUPPET_NAMESPACE)
 
 dbm = DbManager()
 
@@ -78,6 +78,15 @@ def get_puppet_node_yaml(session, nodeName):
         dbNode = NodesDbHandler().getNode(session, nodeName)
     except NodeNotFound:
         sys.exit(1)
+
+    data = None
+    try:
+        from tortuga.db.dataRequestsDbHandler import DataRequestsDbHandler
+        dbDataRequest = DataRequestsDbHandler().get_by_addHostSession(session, dbNode.addHostSession)
+        if dbDataRequest:
+            data = dbDataRequest.request
+    except Exception as e:
+        pass
 
     if dbNode.hardwareprofile.nics:
         privateInstallerFQDN = '%s%s%s' % (
@@ -134,7 +143,8 @@ def get_puppet_node_yaml(session, nodeName):
                     puppet_class_args = _component.run_action(
                         'get_puppet_args',
                         dbNode.softwareprofile,
-                        dbNode.hardwareprofile
+                        dbNode.hardwareprofile,
+                        data = data
                     )
                     if puppet_class_args is not None:
                         puppet_classes[_component.puppet_class] = \
@@ -196,7 +206,7 @@ def get_puppet_node_yaml(session, nodeName):
 
             for kit in enabledKits:
                 if kit.isOs:
-                    verstr = '%s' % (kit.version)
+                    verstr = str(kit.version)
                     arch = kit.components[0].os[0].arch
                 else:
                     verstr = '%s-%s' % (kit.version, kit.iteration)

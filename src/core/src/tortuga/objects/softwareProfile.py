@@ -213,6 +213,12 @@ class SoftwareProfile(TortugaObject): \
     def setMetadata(self, value):
         self['metadata'] = value
 
+    def getDataRoot(self):
+        return self.get('dataRoot')
+
+    def setDataRoot(self, value):
+        self['dataRoot'] = value
+
     @staticmethod
     def getKeys():
         return [
@@ -230,14 +236,13 @@ class SoftwareProfile(TortugaObject): \
             'isIdle',
             'metadata',
             'tags',
+            'dataRoot',
         ]
 
     @classmethod
     def getFromDict(cls, _dict, ignore: Optional[Iterable[str]] = None):
         """ Get software profile from _dict. """
-
         softwareProfile = super(SoftwareProfile, cls).getFromDict(_dict)
-
         softwareProfile.setAdmins(
             tortuga.objects.admin.Admin.getListFromDict(_dict))
 

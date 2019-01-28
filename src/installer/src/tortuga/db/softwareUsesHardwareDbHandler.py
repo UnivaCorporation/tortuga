@@ -18,7 +18,6 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
 from tortuga.exceptions.softwareProfileNotFound import SoftwareProfileNotFound
-
 from .models.softwareProfile import SoftwareProfile
 from .models.softwareUsesHardware import SoftwareUsesHardware
 
@@ -29,7 +28,7 @@ class SoftwareUsesHardwareDbHandler(TortugaDbObjectHandler):
         Get list of all mappings
         """
 
-        self.getLogger().debug('Retrieving all available mappings')
+        self._logger.debug('Retrieving all available mappings')
 
         return session.query(SoftwareUsesHardware).all()
 
@@ -39,7 +38,7 @@ class SoftwareUsesHardwareDbHandler(TortugaDbObjectHandler):
         Get list of mappings for the given software profile name
         """
 
-        self.getLogger().debug(
+        self._logger.debug(
             'Retrieving mappings for software profile [%s]' % (
                 softwareProfileName))
 

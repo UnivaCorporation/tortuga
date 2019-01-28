@@ -13,11 +13,12 @@
 # limitations under the License.
 
 # pylint: disable=no-member
-
+import logging
 from typing import Optional
 
 from sqlalchemy.orm.session import Session
 from tortuga.exceptions.tortugaException import TortugaException
+from tortuga.logging import PARAMETERS_NAMESPACE
 from tortuga.objects.parameter import Parameter
 from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.parameter.parameterManager import ParameterManager
@@ -27,7 +28,12 @@ from tortuga.utility.tortugaApi import TortugaApi
 class ParameterApi(TortugaApi):
     """
     Parameter API class.
+    
     """
+    def __init__(self):
+        super().__init__()
+        
+        self._logger = logging.getLogger(PARAMETERS_NAMESPACE)
 
     def getParameter(self, session: Session, name: str) -> Parameter:
         """
@@ -45,7 +51,7 @@ class ParameterApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % (ex))
+            self._logger.exception(str(ex))
 
             raise TortugaException(exception=ex)
 
@@ -65,7 +71,7 @@ class ParameterApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % (ex))
+            self._logger.exception(str(ex))
 
             raise TortugaException(exception=ex)
 
@@ -85,7 +91,7 @@ class ParameterApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % (ex))
+            self._logger.exception(str(ex))
 
             raise TortugaException(exception=ex)
 
@@ -104,7 +110,7 @@ class ParameterApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % (ex))
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def upsertParameter(self, session: Session, parameter: Parameter) \
@@ -114,7 +120,7 @@ class ParameterApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'Error upserting parameter [%s]' % (parameter.getName()))
 
             raise TortugaException(exception=ex)
@@ -129,7 +135,7 @@ class ParameterApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'Error deleting parameter [%s]' % (name))
 
             raise TortugaException(exception=ex)

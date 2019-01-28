@@ -21,44 +21,27 @@ import shutil
 import subprocess
 import urllib.error
 import urllib.request
-from logging import getLogger
-from typing import Tuple
 
 from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.fileNotFound import FileNotFound
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.kit.metadata import KitMetadataSchema
+from tortuga.logging import KIT_NAMESPACE
 from tortuga.os_utility.tortugaSubprocess import TortugaSubprocess
 
-
-logger = getLogger(__name__)
+logger = logging.getLogger(KIT_NAMESPACE)
 
 
 def pip_install_requirements(requirements_path):
     """
-    Installs packages specified in a requirements.txt file, using the kit
+    Installs packages specified in a requirements.txt file, using the tortuga
     package repo in addition to the standard python repos. This function
     returns nothing, and does nothing if the requirements.txt file is not
     found.
 
-    :param kit_installer:     an instance of KitInstallerBase, which will
-                              be searched for a local python package repo
     :param requirements_path: the path to the requirements.txt file
 
     """
-    #
-    # In the kit directory:
-    #
-    #     /opt/tortuga/kits/kit-x.y.z/tortuga_kits/kit_x_y_z
-    #
-    # if there is a python_packages directory, with a simple subdirectory
-    # in it, it is assumed that the simple subdirectory is a PEP 503
-    # compliant Python package repository. If found, this directory is
-    # added to the list of directories searched for Python packages via
-    # pip when installing the requirements.txt file.
-    #
-    # These directories can easily be created using the py2pi utility.
-    #
     cm = ConfigManager()
 
     if not os.path.exists(requirements_path):
@@ -97,7 +80,10 @@ def pip_install_requirements(requirements_path):
     ])
 
     logger.debug(' '.join(pip_cmd))
-    subprocess.Popen(pip_cmd).wait()
+    proc = subprocess.Popen(pip_cmd)
+    proc.wait()
+    if proc.returncode:
+        raise Exception(proc.stderr)
 
 
 def is_requirements_empty(requirements_file_path):
@@ -248,8 +234,7 @@ def get_metadata_from_archive(kit_archive_path: str) -> dict:
     return meta_dict
 
 
-def unpack_archive(kit_archive_path: str,
-                   dest_root_dir: str) -> Tuple[str, str, str]:
+def unpack_kit_archive(kit_archive_path: str, dest_root_dir: str) -> str:
     """
     Unpacks a kit archive into a directory.
 
@@ -257,7 +242,7 @@ def unpack_archive(kit_archive_path: str,
     :param str dest_root_dir:    the destination directory in which the
                                  archive will be extracted
 
-    :return Tuple[str, str, str]: the kit (name, version, iteration)
+    :return the kit installation directory
 
     """
     meta_dict = get_metadata_from_archive(kit_archive_path)
@@ -295,7 +280,7 @@ def unpack_archive(kit_archive_path: str,
         '[utils.parse()] Unpacked [%s] into [%s]' % (
             kit_archive_path, destdir))
 
-    return meta_dict['name'], meta_dict['version'], meta_dict['iteration']
+    return destdir
 
 
 def format_kit_descriptor(name, version, iteration):

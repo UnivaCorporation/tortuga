@@ -14,8 +14,7 @@
 
 # pylint: disable=not-callable,multiple-statements,no-member,no-self-use
 # pylint; disable=no-name-in-module
-
-from typing import Optional, Union
+from typing import Optional
 
 from sqlalchemy import and_
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
@@ -27,7 +26,6 @@ from tortuga.exceptions.kitAlreadyExists import KitAlreadyExists
 from tortuga.exceptions.kitInUse import KitInUse
 from tortuga.exceptions.kitNotFound import KitNotFound
 from tortuga.kit.utils import format_kit_descriptor
-
 from .models.component import Component
 from .models.kit import Kit
 from .models.operatingSystemFamily import OperatingSystemFamily
@@ -40,14 +38,14 @@ class KitsDbHandler(TortugaDbObjectHandler):
     This class is meant to be used by the kit DB API. It should hide
     implementation details from the api class, but not provide any
     session/transaction management.
+    
     """
-
     def getKitById(self, session, kit_id):
         """
         Get kit from the db using its id.
         """
 
-        self.getLogger().debug('Retrieving kit id [%s]' % (kit_id))
+        self._logger.debug('Retrieving kit id [%s]' % (kit_id))
 
         dbKit = session.query(Kit).get(kit_id)
 
@@ -103,11 +101,11 @@ class KitsDbHandler(TortugaDbObjectHandler):
         """
 
         if os_kits_only:
-            self.getLogger().debug('Retrieving OS kits only')
+            self._logger.debug('Retrieving OS kits only')
 
             return session.query(Kit).filter(Kit.isOs == True).all()
 
-        self.getLogger().debug('Retrieving all available kits')
+        self._logger.debug('Retrieving all available kits')
 
         return session.query(Kit).all()
 
@@ -219,7 +217,7 @@ class KitsDbHandler(TortugaDbObjectHandler):
             # OK.
             pass
 
-        self.getLogger().debug('Installing kit [%s]' % (kit))
+        self._logger.debug('Installing kit [%s]' % (kit))
 
         dbKit = Kit(name=kit.getName(),
                     version=kit.getVersion(),
@@ -248,7 +246,7 @@ class KitsDbHandler(TortugaDbObjectHandler):
         dbKit = self.getKit(session, name, version, iteration)
 
         # Check if kit exists, and whether it is being used.
-        self.getLogger().debug(
+        self._logger.debug(
             'Deleting kit [%s]' % (
                 format_kit_descriptor(
                     dbKit.name, dbKit.version, dbKit.iteration)))
@@ -279,5 +277,5 @@ class KitsDbHandler(TortugaDbObjectHandler):
 
         session.delete(dbKit)
 
-        self.getLogger().debug(
+        self._logger.debug(
             'Marking kit [%s] for deletion' % (dbKit.name))

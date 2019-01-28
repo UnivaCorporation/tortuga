@@ -13,8 +13,8 @@
 # limitations under the License.
 
 # pylint: disable=no-member,too-many-public-methods,try-except-raise
-
-from typing import List, Optional, Union, Dict, Tuple
+import logging
+from typing import Optional, Dict
 
 from sqlalchemy.orm.session import Session
 
@@ -22,11 +22,11 @@ from tortuga.db.models.hardwareProfile import HardwareProfile
 from tortuga.db.models.node import Node as NodeModel
 from tortuga.db.models.softwareProfile import SoftwareProfile
 from tortuga.exceptions.tortugaException import TortugaException
+from tortuga.logging import NODE_NAMESPACE
 from tortuga.node.nodeManager import NodeManager
 from tortuga.objects.node import Node
 from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.utility.tortugaApi import TortugaApi
-
 
 Tags = Dict[str, Optional[str]]
 OptionDict = Dict[str, bool]
@@ -40,6 +40,7 @@ class NodeApi(TortugaApi):
         super(NodeApi, self).__init__()
 
         self._nodeManager = NodeManager()
+        self._logger = logging.getLogger(NODE_NAMESPACE)
 
     def createNewNode(self, session: Session, addNodeRequest: dict,
                       dbHardwareProfile: HardwareProfile,
@@ -55,7 +56,7 @@ class NodeApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('Fatal error creating new node')
+            self._logger.exception('Fatal error creating new node')
 
             raise TortugaException(exception=ex)
 
@@ -74,7 +75,7 @@ class NodeApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('Fatal error retrieving node list')
+            self._logger.exception('Fatal error retrieving node list')
 
             raise TortugaException(exception=ex)
 
@@ -87,7 +88,7 @@ class NodeApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'Fatal error retrieving node [{}]'.format(name))
 
             raise TortugaException(exception=ex)
@@ -105,7 +106,7 @@ class NodeApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'Fatal error retrieving installer node')
 
             raise TortugaException(exception=ex)
@@ -122,7 +123,7 @@ class NodeApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'Fatal error retrieving node by id [{}]'.format(nodeId))
 
             raise TortugaException(exception=ex)
@@ -137,7 +138,7 @@ class NodeApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'Fatal error retrieving node by ip [{}]'.format(ip))
 
             raise TortugaException(exception=ex)
@@ -149,7 +150,7 @@ class NodeApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'Fatal error deleting nodespec [{}]'.format(nodespec))
 
             raise TortugaException(exception=ex)
@@ -161,7 +162,7 @@ class NodeApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'Fatal error retrieving provisioning info for'
                 ' node [{}]'.format(nodeName))
 
@@ -174,7 +175,7 @@ class NodeApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'Fatal error updating node [{0}]'.format(name))
 
             raise TortugaException(exception=ex)
@@ -188,7 +189,7 @@ class NodeApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'Fatal error updating status for node [{}]'.format(name))
 
             raise TortugaException(exception=ex)
@@ -224,7 +225,7 @@ class NodeApi(TortugaApi):
             else:
                 excmsg = 'Fatal error transferring nodes'
 
-            self.getLogger().exception(excmsg)
+            self._logger.exception(excmsg)
 
             raise TortugaException(exception=ex)
 
@@ -234,7 +235,7 @@ class NodeApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'Fatal error idling nodes matching nodespec [{}]'.format(
                     nodespec))
 
@@ -248,7 +249,7 @@ class NodeApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'Fatal error activating node [{}]'.format(nodeName))
 
             raise TortugaException(exception=ex)
@@ -264,7 +265,7 @@ class NodeApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'Fatal error starting node(s) matching nodespec [{}]'.format(
                     nodespec))
 
@@ -278,7 +279,7 @@ class NodeApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'Fatal error shutting down node(s) matching'
                 ' nodespec [{0}]'.format(nodespec))
 
@@ -294,7 +295,7 @@ class NodeApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'Fatal error rebooting node(s) matching'
                 ' nodespec [{0}]'.format(nodespec))
 
@@ -308,7 +309,7 @@ class NodeApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'Fatal error adding storage volume to node [{}]'.format(
                     nodeName))
 
@@ -320,7 +321,7 @@ class NodeApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'Fatal error removing storage volume from node [{}]'.format(
                     nodeName))
 
@@ -332,7 +333,7 @@ class NodeApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'Fatal error retrieving storage volumes for node [{}]'.format(
                     nodeName))
 
@@ -354,7 +355,7 @@ class NodeApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'Fatal error retrieving nodes in state [{}]'.format(state))
 
             raise TortugaException(exception=ex)
@@ -368,7 +369,7 @@ class NodeApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'Fatal error retrieving nodes by nodespec [{}]'.format(
                     nodespec))
 
@@ -384,7 +385,7 @@ class NodeApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'Fatal error retrieving nodes by add host session [{}]'.format(
                     addHostSession))
 

@@ -13,17 +13,24 @@
 # limitations under the License.
 
 # pylint: disable=no-member
+import logging
 from typing import Dict, List
 
 from sqlalchemy.orm.session import Session
 
 from tortuga.exceptions.validationError import ValidationError
+from tortuga.logging import RESOURCE_ADAPTER_NAMESPACE
 from . import validator
 from .manager import ResourceAdapterConfigurationManager
 from ..utility.tortugaApi import TortugaApi
 
 
 class ResourceAdapterConfigurationApi(TortugaApi):
+    def __init__(self):
+        super().__init__()
+        
+        self._logger = logging.getLogger(RESOURCE_ADAPTER_NAMESPACE)
+        
     def create(self, session: Session, resadapter_name: str, name: str,
                configuration: List[Dict[str, str]],
                force: bool = False):
@@ -47,7 +54,7 @@ class ResourceAdapterConfigurationApi(TortugaApi):
         :raises ValidationError:
 
         """
-        self.getLogger().debug(
+        self._logger.debug(
             'create(resadapter_name=[{}], name=[{}],'
             ' configuration=[...])'.format(resadapter_name, name))
 
@@ -59,7 +66,7 @@ class ResourceAdapterConfigurationApi(TortugaApi):
             raise ValidationError(str(ex))
 
     def get(self, session, resadapter_name, name):
-        self.getLogger().debug(
+        self._logger.debug(
             'get(resadapter_name=[{}], name=[{}])'.format(
                 resadapter_name, name))
 
@@ -67,12 +74,12 @@ class ResourceAdapterConfigurationApi(TortugaApi):
             session, resadapter_name, name)
 
     def get_profile_names(self, session, adapter_name):
-        self.getLogger().debug('get_profile_names()')
+        self._logger.debug('get_profile_names()')
         return ResourceAdapterConfigurationManager().get_profile_names(
             session, adapter_name)
 
     def delete(self, session, resadapter_name, name):
-        self.getLogger().debug(
+        self._logger.debug(
             'delete(resadapter_name=[{}], name=[{}])'.format(
                 resadapter_name, name))
 
@@ -102,7 +109,7 @@ class ResourceAdapterConfigurationApi(TortugaApi):
         :raises ValidationError:
 
         """
-        self.getLogger().debug(
+        self._logger.debug(
             'update(resadapter_name=[{}], name=[{}],'
             ' configuration=[...])'.format(resadapter_name, name))
 

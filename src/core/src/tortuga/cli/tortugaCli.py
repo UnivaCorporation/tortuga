@@ -24,6 +24,7 @@ from abc import ABCMeta, abstractmethod
 
 from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.tortugaException import TortugaException
+from tortuga.logging import CLI_NAMESPACE, ROOT_NAMESPACE
 
 
 def check_for_root(cls):
@@ -40,8 +41,7 @@ class TortugaCli(metaclass=ABCMeta):
     """
 
     def __init__(self, validArgCount=0):
-        self._logger = logging.getLogger(
-            'tortuga.cli.%s' % (self.__class__.__name__))
+        self._logger = logging.getLogger(CLI_NAMESPACE)
 
         self._parser = argparse.ArgumentParser()
         self._args = []
@@ -54,10 +54,6 @@ class TortugaCli(metaclass=ABCMeta):
         self._cm = ConfigManager()
 
         self.__initializeLocale()
-
-    def getLogger(self):
-        """ Get logger for this class. """
-        return self._logger
 
     def __initializeLocale(self):
         """Initialize the gettext domain """
@@ -162,7 +158,7 @@ class TortugaCli(metaclass=ABCMeta):
 
         log_level = getattr(logging, log_level_name)
 
-        logger = logging.getLogger('tortuga')
+        logger = logging.getLogger(ROOT_NAMESPACE)
         logger.setLevel(log_level)
 
         ch = logging.StreamHandler()
@@ -276,12 +272,12 @@ class TortugaCli(metaclass=ABCMeta):
         try:
             self.runCommand()
         except TortugaException as ex:
-            print('%s' % (ex.getErrorMessage()))
+            print(ex.getErrorMessage())
             raise SystemExit(ex.getErrorCode())
-        except SystemExit as ex:
+        except SystemExit:
             raise
         except Exception as ex:
-            print('%s' % (ex))
+            print(str(ex))
             raise SystemExit(-1)
 
     def _parseDiskSize(self, diskSizeParam): \

@@ -23,11 +23,12 @@ from tortuga.config.configManager import ConfigManager
 from tortuga.db.dbManager import DbManager
 from tortuga.kit.loader import load_kits
 from tortuga.kit.registry import get_all_kit_installers
+from tortuga.logging import ROOT_NAMESPACE, KIT_NAMESPACE
 from tortuga.types.application import Application
 
 
-logging.getLogger('tortuga').setLevel(logging.DEBUG)
-logging.getLogger('tortuga_kits').setLevel(logging.DEBUG)
+logging.getLogger(ROOT_NAMESPACE).setLevel(logging.DEBUG)
+logging.getLogger(KIT_NAMESPACE).setLevel(logging.DEBUG)
 
 
 class TortugaCeleryApp(Celery):

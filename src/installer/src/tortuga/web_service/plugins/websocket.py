@@ -24,10 +24,11 @@ import cherrypy
 import websockets
 from cherrypy.process import plugins
 
+from tortuga.logging import WEBSERVICE_NAMESPACE
 from tortuga.web_service.websocket.state_manager import StateManager
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(WEBSERVICE_NAMESPACE)
 
 
 class WebsocketPlugin(plugins.SimplePlugin):

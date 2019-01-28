@@ -11,9 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import logging
 
 from tortuga.admin.manager import AdminManager
 from tortuga.exceptions.tortugaException import TortugaException
+from tortuga.logging import ADMIN_NAMESPACE
 from tortuga.utility.tortugaApi import TortugaApi
 from sqlalchemy.orm.session import Session
 
@@ -25,6 +27,7 @@ class AdminApi(TortugaApi):
         super(AdminApi, self).__init__()
 
         self._adminManager = AdminManager()
+        self._logger = logging.getLogger(ADMIN_NAMESPACE)
 
     def getAdmin(self, session: Session, adminName):
         """Get an admin by name"""
@@ -34,7 +37,7 @@ class AdminApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'Error getting admin [{0}]'.format(adminName))
 
             raise TortugaException(exception=ex)
@@ -47,7 +50,7 @@ class AdminApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'Error getting admin by id [{0}]'.format(admin_id))
 
             raise TortugaException(exception=ex)
@@ -60,7 +63,7 @@ class AdminApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('Error getting admin list')
+            self._logger.exception('Error getting admin list')
 
             raise TortugaException(exception=ex)
 
@@ -86,7 +89,7 @@ class AdminApi(TortugaApi):
             raise
 
         except Exception as ex:
-            self.getLogger().exception('addAdmin failed')
+            self._logger.exception('addAdmin failed')
             raise TortugaException(exception=ex)
 
     def deleteAdmin(self, session: Session, admin):
@@ -97,7 +100,7 @@ class AdminApi(TortugaApi):
         except TortugaException as ex:
             raise
         except Exception as ex:
-            self.getLogger().exception('deleteAdmin failed')
+            self._logger.exception('deleteAdmin failed')
             raise TortugaException(exception=ex)
 
     def updateAdmin(self, session: Session, adminObject, isCrypted=True):
@@ -108,5 +111,5 @@ class AdminApi(TortugaApi):
         except TortugaException as ex:
             raise
         except Exception as ex:
-            self.getLogger().exception('updateAdmin failed')
+            self._logger.exception('updateAdmin failed')
             raise TortugaException(exception=ex)

@@ -11,21 +11,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import logging
+
+from tortuga.logging import DATABASE_NAMESPACE
 
 
 class TortugaDbObjectHandler(object): \
         # pylint: disable=too-few-public-methods
-
     """
     Base tortuga db object handler class.
+    
     """
 
     def __init__(self):
-        self._logger = logging.getLogger(
-            'tortuga.db.%s' % (self.__class__.__name__))
+        super().__init__()
 
-    def getLogger(self):
-        """ Get logger for this class. """
-        return self._logger
+        self._logger = logging.getLogger(DATABASE_NAMESPACE)

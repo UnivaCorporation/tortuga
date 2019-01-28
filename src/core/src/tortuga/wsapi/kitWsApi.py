@@ -134,7 +134,7 @@ class KitWsApi(TortugaWsApi):
         dbVersion = '%s-%s' % (version, iteration)
 
         if not iteration:
-            dbVersion = '%s' % (version)
+            dbVersion = str(version)
 
         url = 'kits/%s/%s/%s' % (name, dbVersion, key)
 
@@ -190,7 +190,7 @@ class KitWsApi(TortugaWsApi):
         dbVersion = '%s-%s' % (version, iteration)
 
         if not iteration:
-            dbVersion = '%s' % (version)
+            dbVersion = str(version)
 
         url = 'kits/%s/%s/eula' % (name, dbVersion)
 

@@ -18,10 +18,8 @@ from typing import Any, List
 
 import cherrypy
 
+from tortuga.logging import WEBSERVICE_NAMESPACE
 from tortuga.web_service.auth.decorators import authentication_required
-
-
-logger = logging.getLogger(__name__)
 
 
 class Controller(object):
@@ -32,6 +30,9 @@ class Controller(object):
     name = None
     methods = ['GET']
     object_store = None
+
+    def __init__(self):
+        self._logger = logging.getLogger(WEBSERVICE_NAMESPACE)
 
     @property
     def actions(self):
@@ -112,7 +113,7 @@ class Controller(object):
                     response.append(obj)
 
         except Exception as ex:
-            logger.error('%s' % ex)
+            logger.error(str(ex))
             response = self.error_response(str(ex))
 
         return self.format_response(response)
@@ -136,7 +137,7 @@ class Controller(object):
                 response = obj
 
         except Exception as ex:
-            logger.error('%s' % ex)
+            logger.error(str(ex))
             response = self.error_response(str(ex))
 
         return self.format_response(response)
