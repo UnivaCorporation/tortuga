@@ -13,10 +13,12 @@
 # limitations under the License.
 
 # pylint: disable=no-member
+import logging
 
 from tortuga.utility.tortugaApi import TortugaApi
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
+from tortuga.logging import SAN_NAMESPACE
 from tortuga.san.san import San
 from tortuga.objects.tortugaObject import TortugaObjectList
 
@@ -30,6 +32,7 @@ class SanApi(TortugaApi):
         super(SanApi, self).__init__()
 
         self._san = San()
+        self._logger = logging.getLogger(SAN_NAMESPACE)
 
     def addVolume(self, storageAdapter, size, nameFormat='*', shared=False):
         """Add a volume to the system"""
@@ -42,7 +45,7 @@ class SanApi(TortugaApi):
         except TortugaException as ex:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % (ex))
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def deleteVolume(self, volume, force=False): \
@@ -64,7 +67,7 @@ class SanApi(TortugaApi):
         except TortugaException as ex:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % (ex))
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def getVolumeList(self):
@@ -84,7 +87,7 @@ class SanApi(TortugaApi):
         except TortugaException as ex:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def updateVolume(self, volume, shared):
@@ -107,7 +110,7 @@ class SanApi(TortugaApi):
         except TortugaException as ex:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def __getPersistentVolume(self, volume):

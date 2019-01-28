@@ -259,8 +259,7 @@ class SoftwareProfileWsApi(TortugaWsApi):
             raise TortugaException(exception=ex)
 
     def enableComponent(self, softwareProfileName, kitName, kitVersion,
-                        kitIteration, componentName, componentVersion=None,
-                        sync=True):
+                        kitIteration, componentName, componentVersion=None):
         """
         Enable a component on a given software profile
 
@@ -287,7 +286,6 @@ class SoftwareProfileWsApi(TortugaWsApi):
                     'componentVersion': componentVersion,
                 },
             ],
-            'sync': sync,
         }
 
         try:
@@ -300,8 +298,7 @@ class SoftwareProfileWsApi(TortugaWsApi):
             raise TortugaException(exception=ex)
 
     def disableComponent(self, softwareProfileName, kitName, kitVersion,
-                         kitIteration, componentName, componentVersion=None,
-                         sync=True):
+                         kitIteration, componentName, componentVersion=None):
         """
         Disable a component on a given software profile
 
@@ -327,7 +324,6 @@ class SoftwareProfileWsApi(TortugaWsApi):
                     'componentVersion': componentVersion,
                 },
             ],
-            'sync': sync,
         }
 
         try:

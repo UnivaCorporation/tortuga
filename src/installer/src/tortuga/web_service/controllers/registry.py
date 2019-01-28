@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from logging import getLogger
+import logging
 
+from tortuga.logging import WEBSERVICE_NAMESPACE
 
-logger = getLogger(__name__)
+logger = logging.getLogger(WEBSERVICE_NAMESPACE)
 
 
 WS_CONTROLLER_REGISTRY = []

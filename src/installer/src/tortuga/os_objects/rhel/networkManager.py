@@ -211,7 +211,7 @@ class NetworkManager(OsObjectManager):
         if not device:
             # Unable to determine device name for network interface,
             # configuration may be bogus.
-            self.getLogger().warning(
+            self._logger.warning(
                 'Unable to determine device name for [%s]' % (cfgFile)
             )
 
@@ -297,7 +297,7 @@ class NetworkManager(OsObjectManager):
             return m.group('ip'), m.group('mask')
 
         except Exception as msg:
-            self.getLogger().warning(
+            self._logger.warning(
                 "Warning: Can't get_interface_ip_address for [%s]: %s" % (
                     name, msg))
 
@@ -325,7 +325,7 @@ class NetworkManager(OsObjectManager):
         if retval != 0 or 'interfaces' not in result:
             errmsg = 'Unable to find public NIC on installer'
 
-            self.getLogger().error('[networkManager] ' + errmsg)
+            self._logger.error('[networkManager] ' + errmsg)
 
             raise NicNotFound(errmsg)
 

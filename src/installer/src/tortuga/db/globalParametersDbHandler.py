@@ -13,22 +13,21 @@
 # limitations under the License.
 
 # pylint: disable=not-callable,multiple-statements,no-member
-
 from typing import List
 
 from sqlalchemy.orm.exc import NoResultFound
+
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
 from tortuga.exceptions.parameterAlreadyExists import ParameterAlreadyExists
 from tortuga.exceptions.parameterNotFound import ParameterNotFound
-
 from .models.globalParameter import GlobalParameter
 
 
 class GlobalParametersDbHandler(TortugaDbObjectHandler):
     """
     This class handles global parameters table.
+    
     """
-
     def getParameter(self, session, name: str) -> GlobalParameter:
         """
         Return parameter.
@@ -37,7 +36,7 @@ class GlobalParametersDbHandler(TortugaDbObjectHandler):
             ParameterNotFound
         """
 
-        self.getLogger().debug('Retrieving parameter [%s]' % (name))
+        self._logger.debug('Retrieving parameter [%s]' % (name))
 
         try:
             return session.query(GlobalParameter).filter(
@@ -50,7 +49,7 @@ class GlobalParametersDbHandler(TortugaDbObjectHandler):
         Get list of parameters from the db.
         """
 
-        self.getLogger().debug('Retrieving parameter list')
+        self._logger.debug('Retrieving parameter list')
 
         return session.query(GlobalParameter).all()
 
@@ -62,7 +61,7 @@ class GlobalParametersDbHandler(TortugaDbObjectHandler):
             ParameterAlreadyExists
         """
 
-        self.getLogger().debug(
+        self._logger.debug(
             'Inserting parameter [%s]' % (parameter.getName()))
 
         try:

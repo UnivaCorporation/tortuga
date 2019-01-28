@@ -54,7 +54,8 @@ class NodeProvisioningListener(BaseListener):
             try:
                 node = manager.getNode(session, event.node['name'])
 
-                if node.getState() != state.NODE_STATE_INSTALLED:
+                if node.getState() not in [state.NODE_STATE_INSTALLED,
+                                           state.NODE_STATE_DELETED]:
                     manager.updateNodeStatus(
                         session,
                         node.getName(),

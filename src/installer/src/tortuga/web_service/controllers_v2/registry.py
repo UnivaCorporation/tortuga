@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from logging import getLogger
+import logging
 from typing import List, Type
 
+from tortuga.logging import WEBSERVICE_NAMESPACE
 from .base import Controller
 
-
-logger = getLogger(__name__)
+logger = logging.getLogger(WEBSERVICE_NAMESPACE)
 
 
 WS_CONTROLLER_REGISTRY: List[Type[Controller]] = []

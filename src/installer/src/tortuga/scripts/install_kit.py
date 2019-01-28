@@ -93,15 +93,15 @@ class InstallKitCli(TortugaCli):
 
             sys.exit(1)
 
-    def installKitHelper(self, api, key=None, accept_eula=False):
+    def installKitHelper(self, api, accept_eula=False):
         dbm = DbManager()
 
         args = self.getArgs()
 
         if args.package_uri:
-            return api.installKitPackage(dbm, self.getArgs().package_uri, key)
+            return api.installKitPackage(dbm, self.getArgs().package_uri)
 
-        return api.installKit(dbm, args.name, args.version, args.iteration, key)
+        return api.installKit(dbm, args.name, args.version, args.iteration)
 
 
 def main():

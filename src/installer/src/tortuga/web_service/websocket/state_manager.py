@@ -21,13 +21,14 @@ import websockets
 from marshmallow import UnmarshalResult
 
 from tortuga.events.types import BaseEvent
+from tortuga.logging import WEBSERVICE_NAMESPACE
 from .actions import BaseAction, get_action_class
 from .exceptions import AuthenticationRequired, ActionNotFoundError
 from .messages import BaseMessage, AuthenticationRequiredMessage, ErrorMessage
 from .state import State
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(WEBSERVICE_NAMESPACE)
 
 
 class StateManager:

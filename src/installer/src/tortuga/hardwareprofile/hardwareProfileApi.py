@@ -13,13 +13,14 @@
 # limitations under the License.
 
 # pylint: disable=no-member
-
+import logging
 from typing import Optional
 
 from sqlalchemy.orm.session import Session
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.hardwareprofile.hardwareProfileManager import \
     HardwareProfileManager
+from tortuga.logging import HARDWARE_PROFILE_NAMESPACE
 from tortuga.objects.hardwareProfile import HardwareProfile
 from tortuga.utility.tortugaApi import TortugaApi
 
@@ -28,6 +29,11 @@ class HardwareProfileApi(TortugaApi):
     """
     HardwareProfile API class.
     """
+    
+    def __init__(self):
+        super().__init__()
+        
+        self._logger = logging.getLogger(HARDWARE_PROFILE_NAMESPACE)
 
     def getHardwareProfile(self, session: Session, hardwareProfileName,
                            optionDict=None):
@@ -46,7 +52,7 @@ class HardwareProfileApi(TortugaApi):
         except TortugaException as ex:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def getHardwareProfileById(self, session: Session, id_, optionDict=None):
@@ -65,7 +71,7 @@ class HardwareProfileApi(TortugaApi):
         except TortugaException as ex:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def deleteHardwareProfile(self, session: Session, hardwareProfileName):
@@ -84,7 +90,7 @@ class HardwareProfileApi(TortugaApi):
         except TortugaException as ex:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def getHardwareProfileList(self, session: Session, optionDict=None,
@@ -104,7 +110,7 @@ class HardwareProfileApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def addAdmin(self, session: Session, hardwareProfileName, adminUsername):
@@ -124,7 +130,7 @@ class HardwareProfileApi(TortugaApi):
         except TortugaException as ex:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def deleteAdmin(self, session: Session, hardwareProfileName,
@@ -145,7 +151,7 @@ class HardwareProfileApi(TortugaApi):
         except TortugaException as ex:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def updateHardwareProfile(self, session: Session, hardwareProfileObject):
@@ -168,7 +174,7 @@ class HardwareProfileApi(TortugaApi):
         except TortugaException as ex:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def createHardwareProfile(self, session: Session,
@@ -189,7 +195,7 @@ class HardwareProfileApi(TortugaApi):
         except TortugaException as ex:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def setProvisioningNic(self, session: Session, hardwareProfileName, nicId):
@@ -206,7 +212,7 @@ class HardwareProfileApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def getProvisioningNicForNetwork(self, session: Session, network, netmask):
@@ -216,7 +222,7 @@ class HardwareProfileApi(TortugaApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def copyHardwareProfile(self, session: Session, srcHardwareProfileName,
@@ -227,7 +233,7 @@ class HardwareProfileApi(TortugaApi):
         except TortugaException as ex:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def setIdleSoftwareProfile(self, session: Session, hardware_profile_name,
@@ -238,15 +244,15 @@ class HardwareProfileApi(TortugaApi):
         except TortugaException as ex:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
     def getNodeList(self, session: Session, hardware_profile_name):
         try:
             HardwareProfileManager().getNodeList(
                 session, hardware_profile_name)
-        except TortugaException as exc:
+        except TortugaException:
             raise
         except Exception as exc:
-            self.getLogger().exception('%s' % (exc))
+            self._logger.exception(str(exc))
             raise TortugaException(exception=exc)

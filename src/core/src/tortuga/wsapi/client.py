@@ -13,15 +13,13 @@
 # limitations under the License.
 
 import json
-from logging import getLogger
+import logging
 from typing import Optional, Union
 
 import requests
 
 from tortuga.config.configManager import ConfigManager
-
-
-logger = getLogger(__name__)
+from tortuga.logging import WEBSERVICE_CLIENT_NAMESPACE
 
 
 class RequestError(Exception):
@@ -44,6 +42,7 @@ class RequestError(Exception):
         """
         self.status_code = status_code
         self.data = data
+
         super().__init__(*args, **kwargs)
 
 
@@ -66,9 +65,10 @@ class RestApiClient:
         self.verify = verify
 
         self._requests_kwargs = None
+        self._logger = logging.getLogger(WEBSERVICE_CLIENT_NAMESPACE)
 
         if not verify:
-            logger.warning('SSL verification turned off')
+            self._logger.warning('SSL verification turned off')
 
         self._cm = ConfigManager()
 
@@ -88,7 +88,7 @@ class RestApiClient:
             #
             if self.verify:
                 self._requests_kwargs['verify'] = self._cm.getCaBundle()
-                logger.debug('Using CA path: {}'.format(
+                self._logger.debug('Using CA path: {}'.format(
                     self._cm.getCaBundle()))
 
             else:
@@ -142,7 +142,7 @@ class RestApiClient:
         except Exception:
             pass
 
-        logger.debug('Response Payload: {}'.format(json.dumps(data)))
+        self._logger.debug('Response Payload: {}'.format(json.dumps(data)))
 
         return data
 
@@ -156,7 +156,7 @@ class RestApiClient:
         :raises RequestError:   if the a non 2xx status code is returned
 
         """
-        logger.debug('ERROR Code: {}'.format(error_response.status_code))
+        self._logger.debug('ERROR Code: {}'.format(error_response.status_code))
 
         #
         # Attempt to get JSON data from the error response
@@ -168,7 +168,7 @@ class RestApiClient:
         except Exception:
             pass
 
-        logger.debug('ERROR Payload: {}'.format(json.dumps(data)))
+        self._logger.debug('ERROR Payload: {}'.format(json.dumps(data)))
 
         raise RequestError(
             "ERROR: API Request Error {}".format(error_response.status_code),
@@ -187,7 +187,7 @@ class RestApiClient:
 
         """
         url = self.build_url(path)
-        logger.debug('GET: {}'.format(url))
+        self._logger.debug('GET: {}'.format(url))
 
         result = requests.get(
             url,
@@ -208,7 +208,7 @@ class RestApiClient:
 
         """
         url = self.build_url(path)
-        logger.debug('POST: {}'.format(url))
+        self._logger.debug('POST: {}'.format(url))
 
         result = requests.post(
             url,
@@ -230,7 +230,7 @@ class RestApiClient:
 
         """
         url = self.build_url(path)
-        logger.debug('PUT: {}'.format(url))
+        self._logger.debug('PUT: {}'.format(url))
 
         result = requests.put(
             url,
@@ -250,7 +250,7 @@ class RestApiClient:
 
         """
         url = self.build_url(path)
-        logger.debug('DELETE: {}'.format(url))
+        self._logger.debug('DELETE: {}'.format(url))
 
         result = requests.delete(
             url,
@@ -271,7 +271,7 @@ class RestApiClient:
 
         """
         url = self.build_url(path)
-        logger.debug('PATCH: {}'.format(url))
+        self._logger.debug('PATCH: {}'.format(url))
 
         result = requests.patch(
             url,

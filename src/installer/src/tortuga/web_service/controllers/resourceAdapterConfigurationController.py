@@ -99,7 +99,7 @@ class ResourceAdapterConfigurationController(TortugaController):
             ]
         except Exception:  # noqa pylint: disable=broad-except
             # Unhandled server exception
-            self.getLogger().exception('create() failed')
+            self._logger.exception('create() failed')
 
             response = self.errorResponse(
                 'Internal server error',
@@ -143,7 +143,7 @@ class ResourceAdapterConfigurationController(TortugaController):
                 code=self.getTortugaStatusCode(exc))
         except Exception:
             # Unhandled server exception
-            self.getLogger().exception('create() failed')
+            self._logger.exception('create() failed')
 
             response = self.errorResponse(
                 'Internal server error',
@@ -171,7 +171,7 @@ class ResourceAdapterConfigurationController(TortugaController):
                 code=self.getTortugaStatusCode(exc))
         except Exception:  # noqa pylint: disable=broad-except
             # Unhandled server exception
-            self.getLogger().exception('get() failed')
+            self._logger.exception('get() failed')
 
             response = self.errorResponse(
                 'Internal server error',
@@ -220,7 +220,7 @@ class ResourceAdapterConfigurationController(TortugaController):
                                           code=self.getTortugaStatusCode(exc))
 
         except Exception:
-            self.getLogger().exception('validate() failed')
+            self._logger.exception('validate() failed')
             response = self.errorResponse(
                 'Internal server error',
                 http_status=http.client.INTERNAL_SERVER_ERROR)
@@ -245,7 +245,7 @@ class ResourceAdapterConfigurationController(TortugaController):
                 code=self.getTortugaStatusCode(exc))
         except Exception:  # noqa pylint: disable=broad-except
             # Unhandled server exception
-            self.getLogger().exception('get() failed')
+            self._logger.exception('get() failed')
 
             response = self.errorResponse(
                 'Internal server error',
@@ -276,7 +276,7 @@ class ResourceAdapterConfigurationController(TortugaController):
                 code=self.getTortugaStatusCode(exc))
         except Exception:  # noqa pylint: disable=broad-except
             # Unhandled server exception
-            self.getLogger().exception('update() failed')
+            self._logger.exception('update() failed')
 
             response = self.errorResponse(
                 'Internal server error',
@@ -306,7 +306,7 @@ class ResourceAdapterConfigurationController(TortugaController):
                 code=self.getTortugaStatusCode(exc))
         except Exception:  # noqa pylint: disable=broad-except
             # Unhandled server exception
-            self.getLogger().exception('delete() failed')
+            self._logger.exception('delete() failed')
 
             response = self.errorResponse(
                 'Internal server error',

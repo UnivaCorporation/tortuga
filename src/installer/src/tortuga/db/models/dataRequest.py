@@ -12,13 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
+# pylint: disable=too-few-public-methods
+
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy.orm import relationship
+
+from .base import ModelBase
 
 
-class TortugaApi(object): \
-        # pylint: disable=too-few-public-methods
-    """
-    Base tortuga api class.
-    
-    """
-    pass
+class DataRequest(ModelBase):
+    __tablename__ = 'data_requests'
+
+    id = Column(Integer, primary_key=True)
+    request = Column(Text, nullable=False)
+    timestamp = Column(DateTime)
+    state = Column(String(255), nullable=False, default='pending')
+    addHostSession = Column(String(36))

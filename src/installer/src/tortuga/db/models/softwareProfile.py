@@ -46,6 +46,7 @@ class SoftwareProfile(ModelBase):
     maxNodes = Column(Integer, default=-1)
     lockedState = Column(String(20), nullable=False, default='Unlocked')
     isIdle = Column(Boolean, nullable=False, default=False)
+    dataRoot = Column(String(255))
 
     admins = relationship(
         'Admin', backref='softwareprofiles',

@@ -39,7 +39,7 @@ class GetSoftwareProfileListCli(TortugaCli):
                                    verify=self._verify)
 
         for sp in api.getSoftwareProfileList(tags=self.getArgs().tags):
-            print('%s' % (sp))
+            print(sp)
 
 
 def main():

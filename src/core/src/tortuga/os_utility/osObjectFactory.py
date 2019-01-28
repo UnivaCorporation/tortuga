@@ -21,6 +21,7 @@ from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.abstractMethod import AbstractMethod
 from tortuga.exceptions.invalidApplicationModule import \
     InvalidApplicationModule
+from tortuga.logging import OS_NAMESPACE
 
 
 class OsObjectFactory:
@@ -29,12 +30,7 @@ class OsObjectFactory:
     """
 
     def __init__(self):
-        self._logger = logging.getLogger(
-            'tortuga.osObjectFactory.%s' % (self.__class__.__name__))
-
-    def getLogger(self):
-        """ Get logger for this class. """
-        return self._logger
+        self._logger = logging.getLogger(OS_NAMESPACE)
 
     # Factory hooks.
     def getOsFamily(self):
@@ -151,12 +147,6 @@ class OsObjectFactory:
         """Get manager for boothost"""
         raise AbstractMethod(
             'getOsBootHostManager() has to be overridden in the derived'
-            ' class.')
-
-    def getOsAddHostManager(self):
-        """Get manager for addhost"""
-        raise AbstractMethod(
-            'getOsAddHostManager() has to be overridden in the derived'
             ' class.')
 
     def getTortugawsManager(self):

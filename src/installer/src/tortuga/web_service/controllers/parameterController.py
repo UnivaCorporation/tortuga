@@ -75,7 +75,7 @@ class ParameterController(TortugaController):
                 'globalparameter': parameter.getCleanDict(),
             }
         except Exception as ex:
-            self.getLogger().error(str(ex))
+            self._logger.error(str(ex))
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -89,7 +89,7 @@ class ParameterController(TortugaController):
         Return all known parameters.
 
         """
-        self.getLogger().debug('Retrieving parameter list')
+        self._logger.debug('Retrieving parameter list')
 
         try:
             parameterList = self.app.parameter_api.getParameterList(
@@ -100,7 +100,7 @@ class ParameterController(TortugaController):
                 'globalparameters': parameterList.getCleanDict(),
             }
         except Exception as ex:
-            self.getLogger().error(str(ex))
+            self._logger.error(str(ex))
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -114,7 +114,7 @@ class ParameterController(TortugaController):
         Creates a parameter.
 
         """
-        self.getLogger().debug('Creating parameter')
+        self._logger.debug('Creating parameter')
 
         postdata = cherrypy.request.json
         parameter = Parameter.getFromDict(postdata)
@@ -137,7 +137,7 @@ class ParameterController(TortugaController):
             response = None
 
         except Exception as ex:
-            self.getLogger().error(str(ex))
+            self._logger.error(str(ex))
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -151,7 +151,7 @@ class ParameterController(TortugaController):
         Creates or updates a parameter.
 
         """
-        self.getLogger().debug('Creating/updating parameter: {}'.format(name))
+        self._logger.debug('Creating/updating parameter: {}'.format(name))
 
         postdata = cherrypy.request.json
         parameter = Parameter.getFromDict(postdata)
@@ -165,7 +165,7 @@ class ParameterController(TortugaController):
             response = None
 
         except Exception as ex:
-            self.getLogger().error(str(ex))
+            self._logger.error(str(ex))
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 
@@ -180,7 +180,7 @@ class ParameterController(TortugaController):
         Deletes a parameter.
 
         """
-        self.getLogger().debug('Deleting parameter: {}'.format(name))
+        self._logger.debug('Deleting parameter: {}'.format(name))
 
         try:
             self.app.parameter_api.deleteParameter(
@@ -188,7 +188,7 @@ class ParameterController(TortugaController):
             response = None
 
         except Exception as ex:
-            self.getLogger().error(str(ex))
+            self._logger.error(str(ex))
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 

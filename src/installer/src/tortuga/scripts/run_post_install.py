@@ -22,9 +22,10 @@ from tortuga.db.dbManager import DbManager
 from tortuga.exceptions.componentNotFound import ComponentNotFound
 from tortuga.kit.loader import load_kits
 from tortuga.kit.registry import get_kit_installer
+from tortuga.logging import CLI_NAMESPACE
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(CLI_NAMESPACE)
 
 
 def main():

@@ -24,10 +24,11 @@ from tortuga.events.types import DeleteNodeRequestComplete
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.exceptions.operationFailed import OperationFailed
 from tortuga.exceptions.tortugaException import TortugaException
+from tortuga.logging import DELETE_HOST_NAMESPACE
 from tortuga.node.nodeApi import NodeApi
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(DELETE_HOST_NAMESPACE)
 
 ahm = AddHostManager()
 

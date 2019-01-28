@@ -20,7 +20,6 @@ from tortuga.db.networkDevicesDbHandler import NetworkDevicesDbHandler
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
 from tortuga.exceptions.nicAlreadyExists import NicAlreadyExists
 from tortuga.exceptions.nicNotFound import NicNotFound
-
 from .models.nic import Nic
 
 
@@ -30,7 +29,7 @@ class NicsDbHandler(TortugaDbObjectHandler):
     """
 
     def __init__(self):
-        TortugaDbObjectHandler.__init__(self)
+        super().__init__()
 
         self._networkDevicesDbHandler = NetworkDevicesDbHandler()
 
@@ -41,7 +40,7 @@ class NicsDbHandler(TortugaDbObjectHandler):
         This method should be named 'getNicByMAC()'
         """
 
-        self.getLogger().debug(
+        self._logger.debug(
             'Retrieving NIC with MAC address [%s]' % (mac))
 
         try:
@@ -55,7 +54,7 @@ class NicsDbHandler(TortugaDbObjectHandler):
         Return nic.
         """
 
-        self.getLogger().debug('Retrieving NIC ID [%s]' % _id)
+        self._logger.debug('Retrieving NIC ID [%s]' % _id)
 
         dbNic = session.query(Nic).get(_id)
 
@@ -70,7 +69,7 @@ class NicsDbHandler(TortugaDbObjectHandler):
         """
 
         if nic.getMac():
-            self.getLogger().debug('Inserting NIC [%s]' % (nic))
+            self._logger.debug('Inserting NIC [%s]' % (nic))
 
             try:
                 self.getNic(session, nic.getMac())

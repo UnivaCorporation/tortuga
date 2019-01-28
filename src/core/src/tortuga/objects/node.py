@@ -38,7 +38,7 @@ class Node(TortugaObject): \
     # order.
 
     def __repr__(self):
-        return '%s' % (self.getName())
+        return self.getName()
 
     def setId(self, id_):
         """ Set node id."""
