@@ -135,7 +135,7 @@ class GetSoftwareProfileCli(TortugaCli):
         if self.getArgs().getDataRoot:
             optionDict['dataRoot'] = True
 
-        if self.getArgs().getDataRoot:
+        if self.getArgs().getDataRsync:
             optionDict['dataRsync'] = True
 
         swprofile = swprofileapi.getSoftwareProfile(name, optionDict)
