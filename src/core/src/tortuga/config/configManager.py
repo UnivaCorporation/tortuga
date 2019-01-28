@@ -12,12 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import configparser
 import os
 import shlex
 import socket
-from typing import Union
+from typing import Optional, Union
 
 from tortuga.objects.provisioningInfo import ProvisioningInfo
+from tortuga.utility.helper import str2bool
 
 
 # Defaults.
@@ -34,6 +36,7 @@ DEFAULT_TORTUGA_WEBSOCKET_PORT = 9443
 DEFAULT_TORTUGA_WEBSOCKET_SCHEME = 'wss'
 DEFAULT_TORTUGA_INT_WEBSERVICE_PORT = 8444
 DEFAULT_TORTUGA_ADMIN_SCHEME = 'https'
+DEFAULT_TORTUGA_INT_WEB_SCHEME = 'http'
 DEFAULT_TORTUGA_INT_WEB_PORT = 8008
 DEFAULT_TORTUGA_DNS_ZONE = 'localdomain'
 DEFAULT_TORTUGA_TIME_ZONE = 'GMT'
@@ -162,6 +165,7 @@ class ConfigManager(dict): \
         self['defaultWebsocketScheme'] = DEFAULT_TORTUGA_WEBSOCKET_SCHEME
         self['defaultWebsocketPort'] = DEFAULT_TORTUGA_WEBSOCKET_PORT
         self['defaultAdminScheme'] = DEFAULT_TORTUGA_ADMIN_SCHEME
+        self['defaultIntWebScheme'] = DEFAULT_TORTUGA_INT_WEB_SCHEME
         self['defaultIntWebPort'] = DEFAULT_TORTUGA_INT_WEB_PORT
         self['defaultDbPassword'] = DEFAULT_TORTUGA_DB_PASSWORD
         self['defaultDbPasswordFile'] = DEFAULT_TORTUGA_DB_PASSWORD_FILE
@@ -248,6 +252,9 @@ class ConfigManager(dict): \
             self['host'] = self.getProvisioningInfo().getNode().getName()
 
     def __setRootSubdirectories(self):
+        etc_dir = os.path.join(self.getRoot(), 'etc')
+        cfg_dir = os.path.join(self.getRoot(), 'config')
+
         self['reposDir'] = os.path.join(
             self.getRoot(), DEFAULT_TORTUGA_RELATIVE_REPOS_DIR)
         self['tortugaDepotDir'] = os.path.join(self.getRoot(), 'depot')
@@ -258,17 +265,17 @@ class ConfigManager(dict): \
         self['intWebRoot'] = os.path.join(
             self.getRoot(), DEFAULT_TORTUGA_WWW_INTERNAL)
         self['binDir'] = os.path.join(self.getRoot(), 'bin')
-        self['etcDir'] = os.path.join(self.getRoot(), 'etc')
-        self['kitConfigBase'] = os.path.join(self.getRoot(), 'config')
-        self['logConfigFile'] = os.path.join(
-            self.getKitConfigBase(), 'log.conf')
+        self['etcDir'] = etc_dir
+        self['kitConfigBase'] = cfg_dir
+        self['logConfigFile'] = os.path.join(cfg_dir, 'log.conf')
 
         self['tortugaRulesDir'] = os.path.join(
             self.getRoot(), DEFAULT_TORTUGA_RULES_SUBDIRECTORY)
 
-        self['dbPasswordFile'] = os.path.join(self.getEtcDir(), 'db.passwd')
-        self['redisPasswordFile'] = os.path.join(self.getEtcDir(),
-                                                 'redis.passwd')
+        self['dbPasswordFile'] = os.path.join(etc_dir, 'db.passwd')
+        self['redisPasswordFile'] = os.path.join(etc_dir, 'redis.passwd')
+
+        self['inifile'] = os.path.join(cfg_dir, 'tortuga.ini')
 
     def __initializeProvisioningInfo(self, envFile):
         if not os.path.exists(envFile):
@@ -495,6 +502,10 @@ class ConfigManager(dict): \
             url += path
 
         return url
+
+    def getIntWebScheme(self, default='__internal__'):
+        """Return scheme for internal web server."""
+        return self.__getKeyValue('intWebScheme', default)
 
     def setAdminScheme(self, adminScheme):
         """ Set admin scheme. """
@@ -725,8 +736,12 @@ class ConfigManager(dict): \
     def getIntWebPort(self, default='__internal__'):
         return int(self.__getKeyValue('intWebPort', default))
 
-    def getIntWebRootUrl(self, host):
-        return 'http://%s:%d' % (host, self.getIntWebPort())
+    def getIntWebRootUrl(self, host: Optional[str] = None):
+        installer_fqdn = host if host is not None else self.getInstaller()
+
+        return '{}://{}:{}'.format(
+            self.getIntWebScheme(), installer_fqdn, self.getIntWebPort()
+        )
 
     def getYumRoot(self):
         return os.path.join(self.getTortugaIntWebRoot(), 'repos')
@@ -739,3 +754,28 @@ class ConfigManager(dict): \
 
     def getYumKitUrl(self, host, name, vers, arch):
         return '%s/%s/%s/%s' % (self.getYumRootUrl(host), name, vers, arch)
+
+    def getIniFile(self):
+        return self['inifile']
+
+    def _get_cfg(self):
+        cfg = configparser.ConfigParser()
+        cfg.read(self.getIniFile())
+
+        return cfg
+
+    def get_database_engine(self) -> str:
+        cfg = self._get_cfg()
+
+        if not cfg.has_option('database', 'engine'):
+            return 'sqlite'
+
+        return cfg.get('database', 'engine')
+
+    def is_offline_installation(self) -> bool:
+        cfg = self._get_cfg()
+
+        if not cfg.has_option('installer', 'offline_installation'):
+            return False
+
+        return str2bool(cfg.get('installer', 'offline_installation'))

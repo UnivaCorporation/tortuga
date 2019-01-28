@@ -12,28 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-define add_package_source($baseurl, $cost=1000, $type='yum') {
-  # Currently, we only support writing a YUM repository configuration.
-
-  if $::osfamily == 'RedHat' {
-    if $type == 'yum' {
-      yumrepo { $name:
-        baseurl  => $baseurl,
-        descr    => "Repository for ${name}",
-        enabled  => 1,
-        gpgcheck => 0,
-        cost     => $cost,
-      }
-    }
-  }
-}
-
 class tortuga::packages (
   $repos = undef,
 ) {
   # This is necessary because this module is referenced as part of the
   # bootstrap before the ENC is available, so $::repos is undefined.
-
   if $repos == undef {
     $repos_arg = $::repos
   } else {
@@ -41,6 +24,10 @@ class tortuga::packages (
   }
 
   if $repos_arg != undef {
-    create_resources('add_package_source', $repos_arg)
+    $repos_arg.each |String $repo_name, Hash $repo_spec| {
+      tortuga::add_package_source { $repo_name:
+        baseurl => $repo_spec['baseurl'],
+      }
+    }
   }
 }

@@ -14,12 +14,14 @@
 
 # pylint: disable=no-member
 
+import logging
 import os.path
 import threading
 import time
 
 from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.commandFailed import CommandFailed
+from tortuga.logging import SYNC_NAMESPACE
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.os_utility.tortugaSubprocess import TortugaSubprocess
 from tortuga.utility import tortugaStatus
@@ -43,10 +45,11 @@ class SyncManager(TortugaObjectManager):
         self._isUpdateScheduled = False
         self._isUpdateRunning = False
         self._cm = ConfigManager()
+        self._logger = logging.getLogger(SYNC_NAMESPACE)
 
     def __runClusterUpdate(self):
         """ Run cluster update. """
-        self.getLogger().debug('Update timer running')
+        self._logger.debug('Update timer running')
 
         updateCmd = os.path.join(self._cm.getBinDir(),
                                  'run_cluster_update.sh')
@@ -56,7 +59,7 @@ class SyncManager(TortugaObjectManager):
         while self.__resetIsUpdateScheduled():
             self._isUpdateRunning = True
 
-            self.getLogger().debug(
+            self._logger.debug(
                 'New cluster update delay: %s seconds' % (delay))
 
             time.sleep(delay)
@@ -64,16 +67,16 @@ class SyncManager(TortugaObjectManager):
 
             # Log warning if timer has been running for too many times.
             updateCnt += 1
-            self.getLogger().debug(
+            self._logger.debug(
                 'Cluster update timer count: %s' % (updateCnt))
 
             if updateCnt > SyncManager.CLUSTER_UPDATE_WARNING_LIMIT:
-                self.getLogger().warning(
+                self._logger.warning(
                     'Cluster updated more than %s times using the same'
                     ' timer (possible configuration problem)' % (
                         SyncManager.CLUSTER_UPDATE_WARNING_LIMIT))
 
-            self.getLogger().debug(
+            self._logger.debug(
                 'Starting cluster update using: %s' % (updateCmd))
 
             # Since we might sleep for a while, we need to
@@ -87,11 +90,11 @@ class SyncManager(TortugaObjectManager):
             try:
                 p.run()
 
-                self.getLogger().debug('Cluster update successful')
+                self._logger.debug('Cluster update successful')
             except CommandFailed:
                 if p.getExitStatus() == tortugaStatus.\
                         TORTUGA_ANOTHER_INSTANCE_OWNS_LOCK_ERROR:
-                    self.getLogger().debug(
+                    self._logger.debug(
                         'Another cluster update is already running, will'
                         ' try to reschedule it')
 
@@ -103,16 +106,16 @@ class SyncManager(TortugaObjectManager):
 
                     break
                 else:
-                    self.getLogger().error(
+                    self._logger.error(
                         'Update command "%s" failed (exit status: %s):'
                         ' %s' % (
                             updateCmd, p.getExitStatus(), p.getStdErr()))
 
-            self.getLogger().debug('Done with cluster update')
+            self._logger.debug('Done with cluster update')
 
         self._isUpdateRunning = False
 
-        self.getLogger().debug('Update timer exiting')
+        self._logger.debug('Update timer exiting')
 
     def __resetIsUpdateScheduled(self):
         """ Reset cluster update flag, return old flag value. """
@@ -135,7 +138,7 @@ class SyncManager(TortugaObjectManager):
             # Start update timer if needed.
             self._isUpdateScheduled = True
             if not self._isUpdateRunning:
-                self.getLogger().debug(
+                self._logger.debug(
                     'Scheduling cluster update in %s seconds,'
                     ' reason: %s' % (delay, updateReason))
 
@@ -143,7 +146,7 @@ class SyncManager(TortugaObjectManager):
 
                 t.start()
             else:
-                self.getLogger().debug(
+                self._logger.debug(
                     'Will not schedule new update timer while the old'
                     ' timer is running')
         finally:

@@ -48,7 +48,7 @@ class NetworkDevice(TortugaObject): \
 
     def __repr__(self):
         """ Display info. """
-        return '%s' % (self.getName())
+        return self.getName()
 
     @staticmethod
     def getKeys():

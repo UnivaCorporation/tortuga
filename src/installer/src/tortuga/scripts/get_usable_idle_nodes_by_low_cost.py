@@ -80,7 +80,7 @@ ordered by cost.
             costNameList.sort()
 
             for node in costNameList:
-                print('%s' % (node[1]))
+                print(str(node[1]))
 
 
 def main():

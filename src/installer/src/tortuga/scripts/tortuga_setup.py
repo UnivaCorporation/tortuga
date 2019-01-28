@@ -22,6 +22,7 @@ from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.deployer import tortugaDeployer
 from tortuga.exceptions.invalidCliRequest import InvalidCliRequest
 from tortuga.exceptions.tortugaException import TortugaException
+from tortuga.logging import SETUP_NAMESPACE, ROOT_NAMESPACE
 
 
 class TortugaSetup(TortugaCli):
@@ -33,7 +34,7 @@ class TortugaSetup(TortugaCli):
         super(TortugaSetup, self).__init__()
 
         # Log all 'tortuga' APIs called during installation
-        logger = logging.getLogger('tortuga')
+        logger = logging.getLogger(ROOT_NAMESPACE)
         logger.setLevel(logging.DEBUG)
 
         # create console handler and set level to debug
@@ -51,7 +52,7 @@ class TortugaSetup(TortugaCli):
         # add ch to logger
         logger.addHandler(ch)
 
-        self._logger = logging.getLogger('tortuga.setup')
+        self._logger = logging.getLogger(SETUP_NAMESPACE)
         self._logger.setLevel(logging.DEBUG)
 
         self.addOption(
@@ -116,6 +117,7 @@ in order to configure the base cluster environment.
             self._logger.info('=' * 75)
             self._logger.info('Installation completed successfully')
             self._logger.info('=' * 75)
+
         except TortugaException:
             self._logger.info('=' * 75)
             self._logger.info('Installation failed')

@@ -49,8 +49,8 @@ def disable_DbManager(monkeypatch, dbm):
 
 
 @pytest.fixture(autouse=True)
-def mock_redis(monkeypatch, redis):
-    monkeypatch.setattr(objectstore_manager, 'Redis', lambda: redis)
+def mock_redis(monkeypatch):
+    monkeypatch.setattr(objectstore_manager, 'Redis', MockRedis)
 
 
 @pytest.fixture()
@@ -174,7 +174,7 @@ def dbm():
         # create 'base' kit
         kit = Kit()
         kit.name = 'base'
-        kit.version = '7.0.1'
+        kit.version = '7.0.2'
         kit.iteration = '0'
         kit.description = 'Sample base kit'
 

@@ -30,8 +30,8 @@ from typing import Any, Tuple
 
 import yaml
 from six import print_
-from sqlalchemy.orm.session import Session
 
+from sqlalchemy.orm.session import Session
 from tortuga.admin.api import AdminApi
 from tortuga.config.configManager import ConfigManager, getfqdn
 from tortuga.deployer import dbUtility
@@ -42,6 +42,7 @@ from tortuga.exceptions.invalidMachineConfiguration import \
     InvalidMachineConfiguration
 from tortuga.exceptions.kitNotFound import KitNotFound
 from tortuga.exceptions.softwareAlreadyDeployed import SoftwareAlreadyDeployed
+from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.helper.osHelper import getOsInfo
 from tortuga.kit.kitApi import KitApi
 from tortuga.kit.loader import load_kits
@@ -698,7 +699,7 @@ class TortugaDeployer: \
         except Exception:  # pylint: disable=broad-except
             self._logger.exception('Fatal error occurred during setup')
 
-            self.out('\nInstallation failed...\n')
+            raise TortugaException('Installation failed')
 
     def _generate_db_password(self):
         """
@@ -977,7 +978,7 @@ class TortugaDeployer: \
                 base_kit.getVersion(),
                 base_kit.getIteration(),
                 component.getName(), compVersion=component.getVersion(),
-                sync=False)
+            )
 
     def promptForAdminCredentials(self):
         # Get admin username and password for use with web service

@@ -50,7 +50,7 @@ class OsBootHostManagerCommon(OsObjectManager):
     def deletePuppetNodeCert(self, nodeName: str) -> None:
         # Remove the Puppet certificate when the node is reinstalled
 
-        self.getLogger().debug(
+        self._logger.debug(
             'deletePuppetNodeCert(node=[%s])' % (nodeName))
 
         puppetSslDir = '/etc/puppetlabs/puppet/ssl'
@@ -71,7 +71,7 @@ class OsBootHostManagerCommon(OsObjectManager):
                 os.unlink(fn)
             except OSError as exc:
                 if exc.errno != 2:
-                    self.getLogger().error(
+                    self._logger.error(
                         'Error attempting to remove %s (reason: %s)' % (
                             fn, exc))
 
@@ -80,7 +80,7 @@ class OsBootHostManagerCommon(OsObjectManager):
             shutil.rmtree(fn)
         except OSError as exc:
             if exc.errno != 2:
-                self.getLogger().error(
+                self._logger.error(
                     'Error attempting to remove %s (reason: %s)' % (
                         fn, exc))
 

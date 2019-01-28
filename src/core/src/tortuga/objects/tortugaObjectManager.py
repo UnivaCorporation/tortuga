@@ -12,16 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
-
 
 class TortugaObjectManager(object):
         # pylint: disable=too-many-public-methods
-    """Base tortuga object manager class."""
+    """
+    Base tortuga object manager class.
 
-    def __init__(self):
-        self._logger = logging.getLogger(
-            'tortuga.%s' % (self.__class__.__name__))
-
-    def getLogger(self):
-        return self._logger
+    """
+    pass

@@ -11,16 +11,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import logging
 import os
 import shutil
-import logging
 import urllib.error
 import urllib.parse
 import urllib.request
-from typing import Optional, Dict
-from tortuga.objects import osInfo
-from tortuga.helper import osHelper
 from http.client import HTTPResponse
+from typing import Optional, Dict
+
+from tortuga.helper import osHelper
+from tortuga.logging import BOOT_NAMESPACE
+from tortuga.objects import osInfo
 
 
 class DistributionPrimitivesBase(dict):
@@ -85,9 +87,7 @@ class DistributionBase(object):
 
         self._source_uri: urllib.parse.ParseResult = urllib.parse.urlparse(self._source_path)
 
-        self._logger: logging.Logger = logging.getLogger(
-            'tortuga.boot.distro.{}'.format(self.__class__.__name__)
-        )
+        self._logger: logging.Logger = logging.getLogger(BOOT_NAMESPACE)
 
         self._primitives: Optional[DistributionPrimitivesBase] = None
 

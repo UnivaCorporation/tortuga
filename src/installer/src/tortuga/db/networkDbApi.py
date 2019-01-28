@@ -47,7 +47,7 @@ class NetworkDbApi(TortugaDbApi):
         Get list of networks from the db.
         """
 
-        self.getLogger().debug('getNetworkList()')
+        self._logger.debug('getNetworkList()')
 
         try:
             dbList = self._networksDbHandler.getNetworkList(session)
@@ -56,7 +56,7 @@ class NetworkDbApi(TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def getNetwork(self, session: Session, address: str, netmask: str):
@@ -64,7 +64,7 @@ class NetworkDbApi(TortugaDbApi):
         Get a network from the db.
         """
 
-        self.getLogger().debug(
+        self._logger.debug(
             'Retrieving network [%s/%s]' % (address, netmask))
 
         try:
@@ -75,7 +75,7 @@ class NetworkDbApi(TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def getNetworkById(self, session: Session, id_):
@@ -83,7 +83,7 @@ class NetworkDbApi(TortugaDbApi):
         Get a network by id from the db.
         """
 
-        self.getLogger().debug('Retrieving network ID [%s]' % (id_))
+        self._logger.debug('Retrieving network ID [%s]' % (id_))
 
         try:
             network = self._networksDbHandler.getNetworkById(session, id_)
@@ -92,7 +92,7 @@ class NetworkDbApi(TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def addNetwork(self, session: Session, network):
@@ -105,7 +105,7 @@ class NetworkDbApi(TortugaDbApi):
                 NetworkAlreadyExists
         """
 
-        self.getLogger().debug('Adding network [%s]' % network)
+        self._logger.debug('Adding network [%s]' % network)
 
         try:
             try:
@@ -123,7 +123,7 @@ class NetworkDbApi(TortugaDbApi):
 
             session.commit()
 
-            self.getLogger().info('Added network [%s]' % (network))
+            self._logger.info('Added network [%s]' % (network))
 
             return dbNetwork.id
         except TortugaException:
@@ -133,7 +133,7 @@ class NetworkDbApi(TortugaDbApi):
         except Exception as ex:
             session.rollback()
 
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
 
             raise
 
@@ -153,7 +153,7 @@ class NetworkDbApi(TortugaDbApi):
                 raise InvalidArgument(
                     'Network id not set: unable to identify network')
 
-            self.getLogger().debug('Updating network [%s]' % (network))
+            self._logger.debug('Updating network [%s]' % (network))
 
             dbNetwork = self._networksDbHandler.getNetworkById(
                 session, network.getId())
@@ -164,7 +164,7 @@ class NetworkDbApi(TortugaDbApi):
 
             session.commit()
 
-            self.getLogger().info('Updated network [%s]' % (network))
+            self._logger.info('Updated network [%s]' % (network))
 
             return newNetwork
         except TortugaException:
@@ -174,7 +174,7 @@ class NetworkDbApi(TortugaDbApi):
         except Exception as ex:
             session.rollback()
 
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
 
             raise
 
@@ -194,7 +194,7 @@ class NetworkDbApi(TortugaDbApi):
             dbNetwork = \
                 self._networksDbHandler.getNetworkById(session, id_)
 
-            self.getLogger().debug(
+            self._logger.debug(
                 'Attempting to delete network [%s/%s]' % (
                     dbNetwork.address, dbNetwork.netmask))
 
@@ -216,7 +216,7 @@ class NetworkDbApi(TortugaDbApi):
 
             session.commit()
 
-            self.getLogger().info(
+            self._logger.info(
                 'Deleted network [%s/%s]' % (
                     dbNetwork.address, dbNetwork.netmask))
         except TortugaException:
@@ -228,7 +228,7 @@ class NetworkDbApi(TortugaDbApi):
         except Exception as ex:
             session.rollback()
 
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
 
             raise
 

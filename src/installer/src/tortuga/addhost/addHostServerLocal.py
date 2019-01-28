@@ -36,6 +36,7 @@ from tortuga.exceptions.invalidMacAddress import InvalidMacAddress
 from tortuga.exceptions.macAddressAlreadyExists import MacAddressAlreadyExists
 from tortuga.exceptions.networkNotFound import NetworkNotFound
 from tortuga.exceptions.nicNotFound import NicNotFound
+from tortuga.logging import ADD_HOST_NAMESPACE
 from tortuga.resourceAdapter.utility import get_provisioning_nics
 from tortuga.utility.tortugaApi import TortugaApi
 
@@ -49,13 +50,14 @@ session_nodes: List[Node] = []
 # session.
 reservedIps: List[str] = []
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(ADD_HOST_NAMESPACE)
 
 
 class AddHostServerLocal(TortugaApi):
     def __init__(self):
         super(AddHostServerLocal, self).__init__()
         self._nodesDbHandler = NodesDbHandler()
+        self._logger = logging.getLogger(ADD_HOST_NAMESPACE)
 
     @staticmethod
     def clear_session_nodes(nodes: List[Node]) -> None:
@@ -137,7 +139,7 @@ class AddHostServerLocal(TortugaApi):
                                                bValidateIp=bValidateIp,
                                                bGenerateIp=bGenerateIp)
 
-            self.getLogger().debug(
+            self._logger.debug(
                 'initializeNode(): initialized new node [%s]' % (
                     dbNode.name))
         except Exception:
@@ -333,7 +335,7 @@ class AddHostServerLocal(TortugaApi):
                     dbNic.ip = self.generate_provisioning_ip_address(
                         dbHardwareProfileNetwork.network)
 
-                    self.getLogger().debug(
+                    self._logger.debug(
                         'Generated IP [%s] for node [%s]' % (
                             dbNic.ip, dbNode.name))
 
@@ -486,7 +488,7 @@ class AddHostServerLocal(TortugaApi):
 
             reservedIps.append(ip.exploded)
 
-        self.getLogger().debug(
+        self._logger.debug(
             'Assigning IP address [%s] on network [%s]' % (
                 ip.exploded, str(n)))
 

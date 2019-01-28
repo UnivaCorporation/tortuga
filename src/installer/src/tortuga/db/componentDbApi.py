@@ -57,7 +57,7 @@ class ComponentDbApi(TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def getBestMatchComponent(self, session: Session, name, version, osInfo,
@@ -88,7 +88,7 @@ class ComponentDbApi(TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def addComponentToSoftwareProfile(self, session: Session, componentId,
@@ -115,7 +115,7 @@ class ComponentDbApi(TortugaDbApi):
             raise
         except Exception as ex:
             session.rollback()
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def deleteComponentFromSoftwareProfile(self, session: Session,
@@ -144,7 +144,7 @@ class ComponentDbApi(TortugaDbApi):
             raise
         except Exception as ex:
             session.rollback()
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def getComponentList(self, session: Session, softwareProfile=None):
@@ -154,11 +154,11 @@ class ComponentDbApi(TortugaDbApi):
                     session, softwareProfile).components
 
             # List all components
-            self.getLogger().debug('Retrieving component list')
+            self._logger.debug('Retrieving component list')
 
             dbComps = self._componentsDbHandler.getComponentList(session)
 
             return self.getTortugaObjectList(Component, dbComps)
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise

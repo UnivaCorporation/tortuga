@@ -16,6 +16,7 @@ import logging
 from typing import Dict
 
 from tortuga.exceptions.invalidDbRelation import InvalidDbRelation
+from tortuga.logging import DATABASE_NAMESPACE
 from tortuga.objects.tortugaObject import TortugaObjectList
 
 
@@ -25,12 +26,7 @@ class TortugaDbApi:
     """
 
     def __init__(self):
-        self._logger = logging.getLogger(
-            'tortuga.db.%s' % (self.__class__.__name__))
-
-    def getLogger(self):
-        """ Logger for this class. """
-        return self._logger
+        self._logger = logging.getLogger(DATABASE_NAMESPACE)
 
     def loadRelation(self, dbObject, relationName): \
             # pylint: disable=no-self-use
@@ -58,7 +54,7 @@ class TortugaDbApi:
                 try:
                     self.loadRelation(dbObject, k)
                 except InvalidDbRelation:
-                    self.getLogger().exception(
+                    self._logger.exception(
                         'Relation [{}] not valid'.format(k))
 
                     raise

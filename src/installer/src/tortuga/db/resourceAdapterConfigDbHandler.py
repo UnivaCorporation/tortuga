@@ -18,7 +18,6 @@ from sqlalchemy.orm.session import Session
 
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
 from tortuga.exceptions.resourceNotFound import ResourceNotFound
-
 from .models.resourceAdapter import ResourceAdapter
 from .models.resourceAdapterConfig import ResourceAdapterConfig
 
@@ -26,8 +25,8 @@ from .models.resourceAdapterConfig import ResourceAdapterConfig
 class ResourceAdapterConfigDbHandler(TortugaDbObjectHandler):
     """
     Low-level API for managing resource adapter credentials
+    
     """
-
     def get(self, session: Session, resadapter_name: str, name: str) \
             -> ResourceAdapterConfig:
         """
@@ -38,7 +37,7 @@ class ResourceAdapterConfigDbHandler(TortugaDbObjectHandler):
             ResourceAdapterNotFound
         """
 
-        self.getLogger().debug(
+        self._logger.debug(
             'ResourceAdapterConfigDbHandler.get(resadapter_name=[{}],'
             ' name=[{}]'.format(resadapter_name, name))
 

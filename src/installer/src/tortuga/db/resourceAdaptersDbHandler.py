@@ -19,7 +19,6 @@ from sqlalchemy.orm.exc import NoResultFound
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
 from tortuga.exceptions.resourceAdapterInUse import ResourceAdapterInUse
 from tortuga.exceptions.resourceAdapterNotFound import ResourceAdapterNotFound
-
 from .models.resourceAdapter import ResourceAdapter
 
 
@@ -36,7 +35,7 @@ class ResourceAdaptersDbHandler(TortugaDbObjectHandler):
         """
 
         try:
-            self.getLogger().debug(
+            self._logger.debug(
                 'Retrieving resource adapter [%s]' % (name))
 
             # Resource adapters are named uniquely

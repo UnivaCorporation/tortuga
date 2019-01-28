@@ -13,7 +13,6 @@
 # limitations under the License.
 
 # pylint: disable=not-callable,multiple-statements,no-member
-
 from typing import Dict, List, Optional
 
 from sqlalchemy import and_, or_
@@ -36,13 +35,11 @@ from tortuga.exceptions.softwareUsesHardwareAlreadyExists import \
 from tortuga.exceptions.softwareUsesHardwareNotFound import \
     SoftwareUsesHardwareNotFound
 from tortuga.objects.partition import Partition as PartitionObject
-
 from .models.component import Component
 from .models.hardwareProfile import HardwareProfile
 from .models.kit import Kit
 from .models.partition import Partition
 from .models.softwareProfile import SoftwareProfile
-
 
 Tags = Dict[str, Optional[str]]
 
@@ -66,7 +63,7 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
             SoftwareProfileNotFound
         """
 
-        self.getLogger().debug('Retrieving software profile [%s]', name)
+        self._logger.debug('Retrieving software profile [%s]', name)
 
         try:
             return session.query(SoftwareProfile).filter(
@@ -84,7 +81,7 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
             SoftwareProfileNotFound
         """
 
-        self.getLogger().debug(
+        self._logger.debug(
             'Retrieving software profile ID [%s]', _id)
 
         dbSoftwareProfile = session.query(SoftwareProfile).get(_id)
@@ -102,7 +99,7 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
         Get list of softwareProfiles from the db.
 
         """
-        self.getLogger().debug('Retrieving software profile list')
+        self._logger.debug('Retrieving software profile list')
 
         q = session.query(SoftwareProfile)
 
@@ -136,7 +133,7 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
         Get list of idle softwareProfiles from the db.
         """
 
-        self.getLogger().debug('Retrieving idle software profile list')
+        self._logger.debug('Retrieving idle software profile list')
 
         return session.query(SoftwareProfile).filter(
             SoftwareProfile.isIdle == 1).all()
@@ -162,7 +159,7 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
             SoftwareUsesHardwareAlreadyExists
         """
 
-        self.getLogger().debug(
+        self._logger.debug(
             'Adding hardware profile [%s] to software profile [%s]',
             hardwareProfileName, softwareProfileName
         )
@@ -194,7 +191,7 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
                 ' profile [%s]' % (
                     hardwareprofile.name, softwareprofile.name))
 
-        self.getLogger().debug(
+        self._logger.debug(
             'Deleting mapping of software profile [%s] to hardware'
             ' profile [%s]' % (softwareprofile.name, hardwareprofile.name))
 
@@ -237,7 +234,7 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
     def _addComponent(
             self, dbComponent: Component,
             dbSoftwareProfile: SoftwareProfile) -> None:
-        self.getLogger().debug(
+        self._logger.debug(
             'Adding component [%s] to software profile [%s]' % (
                 '%s-%s' % (dbComponent.name, dbComponent.version),
                 dbSoftwareProfile.name))
@@ -286,7 +283,7 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
 
         compDescr = '%s-%s' % (dbComponent.name, dbComponent.version)
 
-        self.getLogger().debug(
+        self._logger.debug(
             'Deleting component [%s] from software profile [%s]' % (
                 compDescr, dbSoftwareProfile))
 
@@ -297,7 +294,7 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
 
         dbSoftwareProfile.components.remove(dbComponent)
 
-        self.getLogger().debug(
+        self._logger.debug(
             'Deleted component [%s] from software profile [%s]' % (
                 compDescr, dbSoftwareProfile.name))
 
@@ -313,7 +310,7 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
         Add partition to software profile.
         """
 
-        self.getLogger().debug(
+        self._logger.debug(
             'Adding partition [%s] to software profile [%s]' % (
                 partition.getName(), softwareProfileName))
 
@@ -357,7 +354,7 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
             PartitionNotFound
         """
 
-        self.getLogger().debug(
+        self._logger.debug(
             'Deleting partition [%s] from software profile [%s]' % (
                 partitionName, softwareProfileName))
 
@@ -371,7 +368,7 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
                 'Partition [%s] does not exist for software profile'
                 ' [%s]' % (partitionName, softwareProfileName))
 
-        self.getLogger().debug(
+        self._logger.debug(
             'Deleted partition [%s] from software profile [%s]' % (
                 partitionName, softwareProfileName))
 

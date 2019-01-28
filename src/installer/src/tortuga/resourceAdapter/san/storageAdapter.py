@@ -17,6 +17,7 @@
 import re
 import logging
 from tortuga.exceptions.unsupportedOperation import UnsupportedOperation
+from tortuga.logging import STORAGE_ADAPTER_NAMESPACE
 from tortuga.os_utility.tortugaSubprocess import executeCommand
 from tortuga.exceptions.internalError import InternalError
 
@@ -29,9 +30,7 @@ class StorageAdapter(object):
     '''
 
     def __init__(self):
-        self._logger = logging.\
-            getLogger('tortuga.resourceAdapter.san.%s' % (
-                self.__class__.__name__))
+        self._logger = logging.getLogger(STORAGE_ADAPTER_NAMESPACE)
 
     def allocateVolume(self, sizeInMB, nameFormat=None):
         '''Allocate a volume of the given size'''
@@ -82,9 +81,6 @@ class StorageAdapter(object):
             '-- (pass) %s::%s %s %s' % (
                 self.__class__.__name__, funcname, pargs, kargs))
 
-    def getLogger(self):
-        return self._logger
-
     def parseConfig(self, resourceAdapterConfig):
         if resourceAdapterConfig:
             configList = resourceAdapterConfig.split(';')
@@ -114,7 +110,7 @@ class StorageAdapter(object):
 
         initiator = match.group(1).strip()
 
-        self.getLogger().debug(
+        self._logger.debug(
             'Target [%s] iSCSI initiator name: [%s]' % (target, initiator))
 
         return initiator

@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from logging import getLogger
+import logging
 
-from .base import KitActionBase
+from tortuga.logging import KIT_NAMESPACE
 from tortuga.os_utility import tortugaSubprocess
+from .base import KitActionBase
 
-
-logger = getLogger(__name__)
+logger = logging.getLogger(KIT_NAMESPACE)
 
 
 class UninstallPuppetModulesAction(KitActionBase):

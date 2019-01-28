@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import argparse
+
 from tortuga.cli.tortugaCli import TortugaCli
 from tortuga.wsapi.nodeWsApi import NodeWsApi
 from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
@@ -66,8 +68,7 @@ class ComponentCli(TortugaCli):
 
         self.addOption('--no-sync', dest='sync', action='store_false',
                        default=True,
-                       help=_('Disable Puppet sync after component state'
-                              ' change'))
+                       help=argparse.SUPPRESS)
 
         self.addOption('args', nargs='*')
 

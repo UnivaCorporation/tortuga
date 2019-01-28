@@ -16,10 +16,11 @@
 
 import logging
 from tortuga.config.configManager import ConfigManager
+from tortuga.logging import STORAGE_ADAPTER_NAMESPACE
 
 
 def get_api(moduleName):
-    Logger = logging.getLogger(__name__)
+    logger = logging.getLogger(STORAGE_ADAPTER_NAMESPACE)
 
     # Add the module's directory to PYTHONPATH
     cm = ConfigManager()
@@ -31,7 +32,7 @@ def get_api(moduleName):
     try:
         mod = __import__(moduleName)
     except Exception as msg:
-        Logger.error("Can't import module [%s]; %s" % (moduleName, msg))
+        logger.error("Can't import module [%s]; %s" % (moduleName, msg))
         raise
 
     # Create the class
@@ -40,7 +41,7 @@ def get_api(moduleName):
     try:
         klass = getattr(mod, className)
     except Exception as msg:
-        Logger.error(
+        logger.error(
             "Can't create class [%s] from module [%s]; %s" % (
                 className, moduleName, msg))
 
@@ -50,7 +51,7 @@ def get_api(moduleName):
     try:
         obj = klass()
     except Exception as msg:
-        Logger.error(
+        logger.error(
             "Can't create object of class [%s] from module [%s]; %s" % (
                 className, moduleName, msg))
 

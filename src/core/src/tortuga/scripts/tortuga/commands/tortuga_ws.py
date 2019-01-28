@@ -14,17 +14,13 @@
 
 import argparse
 import configparser
-from logging import getLogger
 import os
 from typing import List, Dict
 
-from tortuga.config.configManager import ConfigManager
-from tortuga.wsapi_v2.client import TortugaWsApiClient
 from tortuga.cli.base import Argument, RootCommand, Command
 from tortuga.cli.utils import pretty_print
-
-
-logger = getLogger(__name__)
+from tortuga.config.configManager import ConfigManager
+from tortuga.wsapi_v2.client import TortugaWsApiClient
 
 
 class ListCommand(Command):
@@ -217,7 +213,6 @@ def get_web_service_config(args: argparse.Namespace):
         verify = args.verify
 
     if username is None and password is None:
-        logger.debug('Using built-in user credentials')
         cm = ConfigManager()
         username = cm.getCfmUser()
         password = cm.getCfmPassword()

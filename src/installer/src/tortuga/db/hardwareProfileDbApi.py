@@ -15,9 +15,8 @@
 from typing import Dict, List, Optional
 
 import sqlalchemy.exc
-from sqlalchemy.orm.session import Session
-
 import tortuga.objects.nic
+from sqlalchemy.orm.session import Session
 from tortuga.config.configManager import ConfigManager
 from tortuga.db.adminsDbHandler import AdminsDbHandler
 from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
@@ -100,7 +99,7 @@ class HardwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def getHardwareProfileById(
@@ -128,7 +127,7 @@ class HardwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def getHardwareProfileList(
@@ -165,7 +164,7 @@ class HardwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def setIdleSoftwareProfile(
@@ -197,7 +196,7 @@ class HardwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def addHardwareProfile(
@@ -232,14 +231,14 @@ class HardwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
             self._set_tags(dbHardwareProfile, hardwareProfile.getTags())
             session.commit()
 
-            self.getLogger().info(
+            self._logger.info(
                 'Added hardware profile [%s]' % (dbHardwareProfile.name))
         except TortugaException:
             session.rollback()
             raise
         except Exception as ex:
             session.rollback()
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def deleteHardwareProfile(self, session: Session, name: str) -> None:
@@ -260,13 +259,13 @@ class HardwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
 
             if hwProfile.nodes:
                 raise TortugaException(
-                    'Unable to remove hardware profile with associated'
-                    ' nodes')
+                    'Unable to delete hardware profile with associated nodes'
+                )
 
             # First delete the mappings
             hwProfile.mappedsoftwareprofiles = []
 
-            self.getLogger().debug(
+            self._logger.debug(
                 'Marking hardware profile [%s] for deletion' % (name))
 
             session.delete(hwProfile)
@@ -277,7 +276,7 @@ class HardwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
             raise
         except Exception as ex:
             session.rollback()
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def copyHardwareProfile(self, session: Session,
@@ -344,7 +343,7 @@ class HardwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
             raise
         except Exception as ex:
             session.rollback()
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def deleteAdmin(
@@ -376,7 +375,7 @@ class HardwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
             raise
         except Exception as ex:
             session.rollback()
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def updateHardwareProfile(
@@ -402,7 +401,7 @@ class HardwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
 
         except Exception as ex:
             session.rollback()
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def __getInstallerNode(self, session: Session) -> Node:
@@ -492,7 +491,7 @@ class HardwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
         if hardwareProfile.getDefaultResourceAdapterConfig():
             adapter_cfg = None
 
-            self.getLogger().debug(
+            self._logger.debug(
                 'Setting default resource adapter config: {}'.format(
                     hardwareProfile.getDefaultResourceAdapterConfig())
             )
@@ -603,13 +602,13 @@ class HardwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
             session.commit()
         except sqlalchemy.exc.IntegrityError as ex:
             # Entry for this hwProfile/nicId already exists, ignore
-            self.getLogger().debug(
+            self._logger.debug(
                 'setProvisioningNic(): entry already exists for'
                 ' hwProfile=%s, nicId=%d' % (hardwareProfileName, nicId))
         except TortugaException:
             raise
         except Exception as ex:
-            self.getLogger().exception('%s' % ex)
+            self._logger.exception(str(ex))
             raise
 
     def getProvisioningNicForNetwork(
@@ -633,8 +632,8 @@ class HardwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
                     ' netmask [%s]' % (network, netmask))
 
             return tortuga.objects.nic.Nic.getFromDbDict(nics[0].__dict__)
-        except TortugaException as exc:
-            self.getLogger().exception('%s' % exc)
+        except TortugaException as ex:
+            self._logger.exception(str(ex))
             raise
 
 

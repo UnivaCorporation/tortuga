@@ -15,15 +15,16 @@
 .TH "disable-component" "8" "7.0" "Univa" "Tortuga"
 .SH "NAME"
 .LP
-disable-component - Disable a component that is currently associated with a software profile.
+disable-component - Disable a component that is currently enabled on a software profile.
 .SH "SYNTAX"
 .LP
 \fBdisable-component --software-profile=\fISOFTWAREPROFILENAME\fB --kit-name=\fIKITNAME\fB --kit-version=\fIKITVER\fB --kit-iteration=\fIKITITER\fB --comp-name=\fICOMPNAME\fB --comp-version=\fICOMPVER\fB
 .TP
 \fBdisable-component --software-profile=\fISOFTWAREPROFILENAME\fB \fIKITNAME\fB-\fIKITVER\fB-\fIKITITER\fB \fICOMPNAME\fB-\fICOMPVER\fB
+.TP
 .SH "DESCRIPTION"
 .LP
-The disable-component tool is used to remove an association between a component and a software profile.  After running disable-component and cfmsync the components software should be removed from the machines belonging to the specified software profile.
+The disable-component tool is used to disable a component from a software profile.
 .LP
 .SH "OPTIONS"
 .LP

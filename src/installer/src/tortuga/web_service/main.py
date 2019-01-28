@@ -26,7 +26,8 @@ import cherrypy
 from cherrypy.process import plugins
 
 from tortuga.kit.loader import load_kits
-
+from tortuga.logging import KIT_NAMESPACE, ROOT_NAMESPACE, \
+    WEBSERVICE_NAMESPACE
 from . import controllers, controllers_v2, rootRouteMapper
 from .app import app
 from .auth import methods as auth_methods
@@ -36,17 +37,16 @@ from .plugins.database import DatabasePlugin
 from .plugins.websocket import WebsocketPlugin
 from .tools.database import DatabaseTool
 
-
 # read logging configuration
 log_conf_file = Path(app.cm.getEtcDir()) / 'tortugawsd.log.conf'
 if log_conf_file.exists():
     logging.config.fileConfig(str(log_conf_file))
 
 # Log everything 'tortuga.*'
-root_logger = logging.getLogger('tortuga')
+root_logger = logging.getLogger(ROOT_NAMESPACE)
 
 # and everything 'tortuga_kits.*'
-tortuga_kits_logger = logging.getLogger('tortuga_kits')
+tortuga_kits_logger = logging.getLogger(KIT_NAMESPACE)
 
 if not log_conf_file.exists():
     # in the absence of a `tortugawsd` logging configuration, use
@@ -72,7 +72,7 @@ if not log_conf_file.exists():
     tortuga_kits_logger.addHandler(ch)
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(WEBSERVICE_NAMESPACE)
 
 
 def prepare_server():

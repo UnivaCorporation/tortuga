@@ -22,9 +22,7 @@ from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
 from tortuga.exceptions.hardwareProfileNotFound import HardwareProfileNotFound
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.softwareProfileNotIdle import SoftwareProfileNotIdle
-
 from .models.hardwareProfile import HardwareProfile
-
 
 Tags = Dict[str, Optional[str]]
 
@@ -32,14 +30,14 @@ Tags = Dict[str, Optional[str]]
 class HardwareProfilesDbHandler(TortugaDbObjectHandler):
     """
     This class handles hardwareProfiles table.
+    
     """
-
     def getHardwareProfile(self, session, name):
         """
         Return hardwareProfile.
         """
 
-        self.getLogger().debug('Retrieving hardware profile [%s]' % (name))
+        self._logger.debug('Retrieving hardware profile [%s]' % (name))
 
         try:
             return session.query(HardwareProfile).filter(
@@ -53,7 +51,7 @@ class HardwareProfilesDbHandler(TortugaDbObjectHandler):
         Return hardwareProfile.
         """
 
-        self.getLogger().debug(
+        self._logger.debug(
             'Retrieving hardware profile ID [%s]' % (_id))
 
         dbHardwareProfile = session.query(HardwareProfile).get(_id)
@@ -70,7 +68,7 @@ class HardwareProfilesDbHandler(TortugaDbObjectHandler):
         Get list of hardwareProfiles from the db.
         """
 
-        self.getLogger().debug('Retrieving hardware profile list')
+        self._logger.debug('Retrieving hardware profile list')
 
         searchspec = []
 

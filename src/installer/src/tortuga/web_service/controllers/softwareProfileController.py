@@ -234,7 +234,7 @@ class SoftwareProfileController(TortugaController):
         settingsDict = postdata['settingsDict'] \
             if 'settingsDict' in postdata else {}
 
-        self.getLogger().debug(
+        self._logger.debug(
             '[%s] createSoftwareProfile(): softwareProfile=[%s]' % (
                 self.__module__, postdata['softwareProfile']))
 
@@ -246,7 +246,7 @@ class SoftwareProfileController(TortugaController):
                 cherrypy.request.db,
                 swProfileSpec, settingsDict=settingsDict)
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'software profile WS API createSoftwareProfile() failed')
 
             self.handleException(ex)
@@ -263,7 +263,7 @@ class SoftwareProfileController(TortugaController):
 
         response = None
 
-        # self.getLogger().debug('deleteSoftwareProfile()')
+        # self._logger.debug('deleteSoftwareProfile()')
 
         try:
             SoftwareProfileApi().deleteSoftwareProfile(
@@ -273,7 +273,7 @@ class SoftwareProfileController(TortugaController):
             code = self.getTortugaStatusCode(ex)
             response = self.notFoundErrorResponse(str(ex), code)
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'software profile WS API deleteSoftwareProfile() failed')
 
             self.handleException(ex)
@@ -310,7 +310,7 @@ class SoftwareProfileController(TortugaController):
             code = self.getTortugaStatusCode(ex)
             response = self.notFoundErrorResponse(str(ex), code)
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'software profile WS API getSoftwareProfile() failed')
 
             self.handleException(ex)
@@ -340,7 +340,7 @@ class SoftwareProfileController(TortugaController):
             self._softwareProfileManager.updateSoftwareProfile(
                 cherrypy.request.db, swProfile)
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'software profile WS API updateSoftwareProfile() failed')
 
             self.handleException(ex)
@@ -355,7 +355,7 @@ class SoftwareProfileController(TortugaController):
     def getEnabledComponents(self, softwareProfileName):
         """ Return list of all enabled components. """
 
-        # self.getLogger().debug(
+        # self._logger.debug(
         #     'Retrieving enabled component list for [%s]' % (
         #         softwareProfileName))
 
@@ -366,7 +366,7 @@ class SoftwareProfileController(TortugaController):
 
             response = {'components': componentList.getCleanDict()}
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'software profile WS API getEnabledComponents() failed')
 
             self.handleException(ex)
@@ -390,7 +390,7 @@ class SoftwareProfileController(TortugaController):
             self._softwareProfileManager.addUsableHardwareProfileToSoftwareProfile(
                 cherrypy.request.db, hardwareProfileName, softwareProfileName)
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'software profile WS API'
                 ' addUsableHardwareProfileToSoftwareProfile() failed')
 
@@ -414,7 +414,7 @@ class SoftwareProfileController(TortugaController):
             self._softwareProfileManager.deleteUsableHardwareProfileFromSoftwareProfile(
                 cherrypy.request.db, hardwareProfileName, softwareProfileName)
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'software profile WS API'
                 ' deleteUsableHardwareProfileFromSoftwareProfile() failed')
 
@@ -434,7 +434,7 @@ class SoftwareProfileController(TortugaController):
             self._softwareProfileManager.addAdmin(
                 cherrypy.request.db, softwareProfileName, adminUsername)
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'software profile WS API addAdmin() failed')
 
             self.handleException(ex)
@@ -453,7 +453,7 @@ class SoftwareProfileController(TortugaController):
 
             response = None
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'software profile WS API deleteAdmin() failed')
 
             self.handleException(ex)
@@ -484,15 +484,13 @@ class SoftwareProfileController(TortugaController):
             componentName = component['componentName']
             componentVersion = component['componentVersion']
 
-            puppet_sync = str2bool(postdata['sync']) \
-                if 'sync' in postdata else True
-
             self._softwareProfileManager.enableComponent(
                 cherrypy.request.db, softwareProfileName, kitName,
                 kitVersion, kitIteration, componentName,
-                comp_version=componentVersion, sync=puppet_sync)
+                comp_version=componentVersion,
+            )
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'software profile WS API enableComponent() failed')
 
             self.handleException(ex)
@@ -523,15 +521,12 @@ class SoftwareProfileController(TortugaController):
             componentName = component['componentName']
             componentVersion = component['componentVersion']
 
-            puppet_sync = str2bool(postdata['sync']) \
-                if 'sync' in postdata else True
-
             self._softwareProfileManager.disableComponent(
                 cherrypy.request.db, softwareProfileName, kitName,
                 kitVersion, kitIteration, componentName, componentVersion,
-                sync=puppet_sync)
+            )
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'software profile WS API disableComponent() failed')
 
             self.handleException(ex)
@@ -550,7 +545,7 @@ class SoftwareProfileController(TortugaController):
                 cherrypy.request.db, srcSoftwareProfileName,
                 dstSoftwareProfileName)
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'software profile WS API copySoftwareProfile() failed')
 
             self.handleException(ex)
@@ -569,7 +564,7 @@ class SoftwareProfileController(TortugaController):
 
             response = {'nodes': nodeList.getCleanDict()}
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'software profile WS API getUsableNodes() failed')
 
             self.handleException(ex)
@@ -590,7 +585,7 @@ class SoftwareProfileController(TortugaController):
                 'nodes': nodeList,
             }
         except Exception as ex:
-            self.getLogger().exception(
+            self._logger.exception(
                 'software profile WS API getNodes() failed')
 
             self.handleException(ex)

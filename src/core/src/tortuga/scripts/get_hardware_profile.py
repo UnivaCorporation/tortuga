@@ -166,7 +166,7 @@ class GetHardwareProfileCli(TortugaCli):
             print(' ' * 6 + '- Default configuration profile: {}'.format(
                 hwprofile.getDefaultResourceAdapterConfig()
                 if hwprofile.getDefaultResourceAdapterConfig() else
-                'default'))
+                'Default'))
 
         if self.getArgs().getAdmins:
             if hwprofile.getAdmins():
