@@ -224,6 +224,12 @@ class SoftwareProfile(TortugaObject): \
     def setDataRoot(self, value):
         self['dataRoot'] = value
 
+    def getDataRsync(self):
+        return self.get('dataRsync')
+
+    def setDataRsync(self, value):
+        self['dataRsync'] = value
+
     @staticmethod
     def getKeys():
         return [
@@ -242,6 +248,7 @@ class SoftwareProfile(TortugaObject): \
             'metadata',
             'tags',
             'dataRoot',
+            'dataRsync',
         ]
 
     @classmethod

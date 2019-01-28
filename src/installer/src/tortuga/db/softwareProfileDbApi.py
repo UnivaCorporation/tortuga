@@ -665,6 +665,7 @@ class SoftwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
         dbSoftwareProfile.lockedState = softwareProfile.getLockedState()
         dbSoftwareProfile.isIdle = softwareProfile.getIsIdle()
         dbSoftwareProfile.dataRoot = softwareProfile.getDataRoot()
+        dbSoftwareProfile.dataRsync = softwareProfile.getDataRsync()
 
         # Add partitions
         partitions: Dict[Tuple[str, str], Partition] = {}
@@ -773,7 +774,8 @@ class SoftwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
             maxNodes=src_swprofile.maxNodes,
             lockedState=src_swprofile.lockedState,
             isIdle=src_swprofile.isIdle,
-            dataRoot=src_swprofile.dataRoot
+            dataRoot=src_swprofile.dataRoot,
+            dataRsync=src_swprofile.dataRsync
         )
 
         # os
