@@ -336,6 +336,10 @@ Commands listed in this "Quickstart" section are intended to be run as the
     instances already have an operating system installed, it is not necessary to
     define the installation media.
 
+    **Note:** Software profiles are created with a default max nodes setting
+    of 25. To change or remove this limit, please read the section on
+    software profiles.
+
 1. Create hardware profile for compute nodes
 
     This hardware profile will used to represent compute nodes in the
@@ -1431,8 +1435,8 @@ update-software-profile --name NAME --unlock
 
 ##### Software profile minimum and maximum nodes
 
-Software profiles do not have imposed minimums or maximums. That is, all
-software profiles may have an unlimited number of software profiles.
+Software profiles do not have imposed minimums but will by default not allow
+for more than a maximum of 25 nodes.
 
 The following command imposes a software profile minimum:
 
@@ -1468,6 +1472,12 @@ update-software-profile --name NAME --max-nodes none
 ```shell
 update-software-profile --name NAME --min-nodes none --max-nodes none
 ```
+
+Having no maximum implies that an unlimited number of nodes can be created
+for a software profile. **Use this setting with caution, especially when using
+automation rules for scaling up clusters.** If you have no maximum set and
+your scaling rules have a bug, you could end-up with an (unintentionally) very
+high bill for cloud services.
 
 #### Deleting software profiles
 
