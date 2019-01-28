@@ -25,6 +25,7 @@ import tortuga.objects.resourceAdapter
 from tortuga.exceptions.configurationError import ConfigurationError
 from tortuga.objects.tortugaObject import TortugaObject, TortugaObjectList
 from tortuga.utility.helper import str2bool
+from .validators import RegexValidator
 
 
 class HardwareProfile(TortugaObject): \
@@ -35,6 +36,10 @@ class HardwareProfile(TortugaObject): \
     INST_TYPE_IMAGED_UNMANAGED = 'imaged-unmanaged'
 
     ROOT_TAG = 'hardwareprofile'
+
+    validators = {
+        'name': RegexValidator(pattern='[a-zA-Z0-9-_]+')
+    }
 
     def __init__(self, name=None):
         TortugaObject.__init__(self, {

@@ -27,12 +27,17 @@ import tortuga.objects.osInfo
 import tortuga.objects.partition
 from tortuga.objects.tortugaObject import TortugaObject, TortugaObjectList
 from tortuga.utility.helper import str2bool
+from .validators import RegexValidator
 
 
 class SoftwareProfile(TortugaObject): \
         # pylint: disable=too-many-public-methods
 
     ROOT_TAG = 'softwareprofile'
+
+    validators = {
+        'name': RegexValidator(pattern='[a-zA-Z0-9-_]+')
+    }
 
     def __init__(self, name=None):
         TortugaObject.__init__(
