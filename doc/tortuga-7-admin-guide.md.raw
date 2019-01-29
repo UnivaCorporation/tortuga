@@ -23,7 +23,7 @@ All trademarks mentioned within this document are the property of their respecti
 
 \newpage
 
-## Tortuga Quickstart {#quickstart}
+## Tortuga Quickstart
 
 ### Manual quickstart installation
 
@@ -76,7 +76,7 @@ Commands listed in this "Quickstart" section are intended to be run as the
     CentOS AMIs on Amazon EC2.
 
     If hosting the Tortuga installer on Amazon Web Services (AWS), refer
-    to [Tortuga AWS Identity &amp; Access Management (IAM) role policy requirements](#iam_policy).
+    to Tortuga AWS Identity &amp; Access Management (IAM) role policy requirements.
 
 * Disable SELinux
 
@@ -188,7 +188,7 @@ Commands listed in this "Quickstart" section are intended to be run as the
 
     **Note:** if attempting to install Tortuga on a server where Tortuga
     (any version) has been previously installed, please refer to [Appendix
-    C: Uninstalling Tortuga](#appendix_c) before proceeding! It is
+    C: Uninstalling Tortuga](#appendix-c-uninstalling-tortuga) before proceeding! It is
     *strongly recommended* to install Tortuga on a fresh installation of
     RHEL/CentOS.
 
@@ -453,7 +453,7 @@ Commands listed in this "Quickstart" section are intended to be run as the
         group must allow unrestricted access to all instances within the
         same security group (ie. installer and compute instances.
         Alternatively, specific ports may be opened as documented in
-        [Firewall Configuration](#firewall) below.
+        [Firewall Configuration](#firewall-configuration) below.
 
         Use one of the following values for `user_data_script_template`:
 
@@ -902,7 +902,7 @@ requires Internet access. Additional software kits may require Internet
 access during their installation and configuration to resolve dependencies,
 however.
 
-#### Firewall Configuration {#firewall}
+#### Firewall Configuration
 
 It is recommended that any system-level firewall be disabled on both the
 Tortuga installer and compute nodes during the initial installation. Once a
@@ -3754,7 +3754,7 @@ under the License.
 
 \newpage
 
-## Appendix C: Uninstalling Tortuga {#appendix_c}
+## Appendix C: Uninstalling Tortuga
 
 Tortuga itself is contained within the `/opt/tortuga` directory, however
 there are configuration and support files elsewhere within the filesystem.
