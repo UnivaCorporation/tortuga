@@ -1230,15 +1230,6 @@ The following arguments are optional:
 -   `--os <name-version-arch>` -- If provisioning is enabled and
     multiple OS kits are installed, this selects the OS for the profile.
     If unspecified, the OS running on the installer node is used.
--   `--idleSoftwareProfile <PROFILENAME>` -- Used for physical nodes. If
-    a node is idled using the `idle-node` command, it is forced into
-    this software profile.
-
-Idle profiles are useful when a software profile (see below) includes an
-application with an "expensive" or limited license. When the node is
-idled, the idle profile eliminates the application from the node,
-freeing up the license. This is generally unnecessary for virtual
-machine nodes, which are deleted entirely instead of idled.
 
 The nodes using a given hardware profile do not actually need to have
 *identical* hardware. They must, however, be interchangeable in terms of
@@ -2331,55 +2322,6 @@ As with `add-nodes`, `delete-node` also runs asynchronously and will
 return immediately after it is run. Use the CLI `get-node-requests` to
 check the status of a `delete-node` request.
 
-### Idling and activating nodes
-
-**Note:** this is a deprecated feature and is only supported by
-on-premises compute nodes.
-
-An "idle" node is one that is known by Tortuga but is currently
-inactive. This state may be useful if the software associated with a
-given profile uses an expensive license, and that license must be freed.
-
-Idled nodes are reinstalled/reprovisioned once (re)activated. Copy any
-important data from the local disk before idling.
-
-For example, to idle the node "compute-01.private":
-
-``` {.shell}
-idle-node --node compute-01.private
-```
-
-To activate an idled node and bring it back to the installed state, use
-the command
-`activate-node --node <nodespec> --software-profile <SWP NAME>`. The
-software profile must be specified as part of the activation sequence
-because the node does not retain a history of previous software profiles
-used.
-
-For example, to reactivate the idle node "compute-01.private" in the
-software profile Compute:
-
-``` {.shell}
-activate-node --node compute-01.private --software-profile Compute
-```
-
-(Re)activating a node requires a reprovision, and will take the same
-amount of time as provisioning the node initially.
-
-#### Idle/activate semantics
-
-Node idle/activate semantics vary across resource adapters and are
-typically useful only for Tortuga hybrid cluster installations.
-
-For example, for Amazon EC2-based compute nodes within a Tortuga hybrid
-cluster, idle nodes maintain presence in Tortuga, however have no
-"backing" instance in Amazon EC2.
-
-Idle/activate on VMware vSphere simply means stopping a virtual machine
-(for idle), and (re)starting that VM (for activate).
-
-Idle/activate semantics *do not* apply to physical nodes.
-
 ### Shutting down and Starting up Nodes
 
 The `shutdown-node` command will issue an OS shutdown command via the
@@ -2403,40 +2345,6 @@ previously shut down. In most cases, this is useful for virtual nodes in
 a local cloud. The `--destination` option can be used, if supported, to
 select a hypervisor to run the virtual node.
 
-### Transferring nodes between software profiles
-
-**Note:** this is a deprecated feature for on-premises nodes only!
-
-Any node, regardless of whether it is physical or virtual, may have its
-software profile changed using the `transfer-node` CLI. This command
-will re-provision (as necessary) the node to bring into compliance with
-the new software profile.
-
-Transfer node (in *Installed* state) to new software profile:
-
-``` {.shell}
-transfer-node --node <node name> --software-profile <dest software profile>
-```
-
-For example, to transfer 1 node:
-
-``` {.shell}
-transfer-node --count 1 --software-profile <dest software profile>
-```
-
-**Note:** the "destination" software profile must already have been
-mapped to use the node's hardware profile.
-
-Transfer 6 nodes from source software profile:
-
-``` {.shell}
-transfer-node --count 6 --src-software-profile execd \
-    --software-profile Compute
-```
-
-Tortuga does its best to make an intelligent determination of which
-nodes to transfer, favoring idle and unused nodes when possible.
-
 ### Node states
 
 The output of `get-node-status` can reveal nodes in Tortuga can exist in
@@ -2455,8 +2363,9 @@ one of several different states:
                                       'Installed' state.
 
   Expired                             Existing node is being reinstalled.
-                                      Only nodes that have been idled and
-                                      (re)activated or reinstalled will
+                                      Only on-premises nodes that are
+                                      reinstalled (with
+                                      `reboot-node --reinstall`) will
                                       ever be in this state.
 
   Deleted                             Tortuga is in the process of

@@ -44,9 +44,6 @@ class ComponentInstaller(ComponentInstallerBase):
                 if node.name == installer:
                     continue
 
-                if node.isIdle:
-                    continue
-
                 if node.state == 'Deleted':
                     continue
 

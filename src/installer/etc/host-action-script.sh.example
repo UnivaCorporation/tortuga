@@ -15,8 +15,7 @@
 # limitations under the License.
 
 #
-# This script is called whenever hosts are added, deleted, idled, activated,
-# or transferred.
+# This script is called whenever hosts are added or deleted
 #
 
 TEMP=`getopt -o -- --long action:,software-profiles:,nodes: -- "$@"`

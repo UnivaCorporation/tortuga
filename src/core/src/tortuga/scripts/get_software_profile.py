@@ -181,10 +181,6 @@ class GetSoftwareProfileCli(TortugaCli):
 
         buf = swprofile.getType()
 
-        if swprofile.getType() == 'compute':
-            if swprofile.getIsIdle():
-                buf += ' (idle software profile)'
-
         print('  - Type: {0}'.format(buf))
 
         if self.getArgs().getNodes:

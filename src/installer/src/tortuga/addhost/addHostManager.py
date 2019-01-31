@@ -20,12 +20,11 @@ import uuid
 from typing import List, Optional
 
 from sqlalchemy.orm.session import Session
-
 from tortuga.db.hardwareProfilesDbHandler import HardwareProfilesDbHandler
 from tortuga.db.models.nodeTag import NodeTag
 from tortuga.db.nodeDbApi import NodeDbApi
-from tortuga.db.tagsDbApiMixin import TagsDbApiMixin
 from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
+from tortuga.db.tagsDbApiMixin import TagsDbApiMixin
 from tortuga.exceptions.notFound import NotFound
 from tortuga.exceptions.resourceAdapterNotFound import ResourceAdapterNotFound
 from tortuga.kit.actions import KitActionsManager
@@ -105,23 +104,22 @@ class AddHostManager(TagsDbApiMixin, TortugaObjectManager):
 
         # Only perform post-add operations if we actually added a node
         if newNodes:
-            if dbSoftwareProfile and not dbSoftwareProfile.isIdle:
-                self._logger.info(
-                    'Node(s) added to software profile [%s] and'
-                    ' hardware profile [%s]' % (
-                        dbSoftwareProfile.name
-                        if dbSoftwareProfile else 'None',
-                        dbHardwareProfile.name))
+            self._logger.info(
+                'Node(s) added to software profile [%s] and'
+                ' hardware profile [%s]',
+                dbSoftwareProfile.name if dbSoftwareProfile else 'None',
+                dbHardwareProfile.name,
+            )
 
-                newNodeNames = [tmpNode.name for tmpNode in newNodes]
+            newNodeNames = [tmpNode.name for tmpNode in newNodes]
 
-                resourceAdapter.hookAction('add', newNodeNames)
+            resourceAdapter.hookAction('add', newNodeNames)
 
-                self.postAddHost(
-                    session, dbHardwareProfile.name, softwareProfileName,
-                    addHostRequest['addHostSession'])
+            self.postAddHost(
+                session, dbHardwareProfile.name, softwareProfileName,
+                addHostRequest['addHostSession'])
 
-                resourceAdapter.hookAction('start', newNodeNames)
+            resourceAdapter.hookAction('start', newNodeNames)
 
         self._logger.debug('Add host workflow complete')
 

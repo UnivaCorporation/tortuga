@@ -153,8 +153,6 @@ setup(
             'get-tortuga-node=tortuga.scripts.get_tortuga_node:main',
             'get-usable-hardware-profile-list=tortuga.scripts.get_usable_hardware_profile_list:main',
             'get-usable-hardware-profiles=tortuga.scripts.get_usable_hardware_profiles:main',
-            'get-usable-idle-nodes=tortuga.scripts.get_usable_idle_nodes:main',
-            'get-usable-idle-nodes-by-low-cost=tortuga.scripts.get_usable_idle_nodes_by_low_cost:main',
             'get-usable-nodes=tortuga.scripts.get_usable_nodes:main',
             'install-kit=tortuga.scripts.install_kit:main',
             'install-os-kit=tortuga.scripts.install_os_kit:main',

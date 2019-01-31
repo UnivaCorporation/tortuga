@@ -24,7 +24,6 @@ from tortuga.softwareprofile.softwareProfileApi import SoftwareProfileApi
 from tortuga.softwareprofile.softwareProfileManager import \
     SoftwareProfileManager
 from tortuga.types.application import Application
-from tortuga.utility.helper import str2bool
 from tortuga.web_service.auth.decorators import authentication_required
 
 from .common import make_options_from_query_string, parse_tag_query_string
@@ -67,12 +66,6 @@ class SoftwareProfileController(TortugaController):
             'name': 'getUsableNodes',
             'path': '/v1/softwareprofiles/:(softwareProfileName)/usable',
             'action': 'getUsableNodes',
-            'method': ['GET'],
-        },
-        {
-            'name': 'getIdleSoftwareProfiles',
-            'path': '/v1/idleSoftwareProfiles',
-            'action': 'getIdleSoftwareProfiles',
             'method': ['GET'],
         },
         {
@@ -200,21 +193,6 @@ class SoftwareProfileController(TortugaController):
                 if isinstance(ex, SoftwareProfileNotFound) else 400
 
             response = self.errorResponse(str(ex), http_status=http_status)
-
-        return self.formatResponse(response)
-
-    @authentication_required()
-    @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
-    def getIdleSoftwareProfiles(self):
-        idleSoftwareProfiles = \
-            self._softwareProfileManager.getIdleSoftwareProfileList(
-                cherrypy.request.db
-            )
-
-        response = {
-            'softwareprofiles': idleSoftwareProfiles.getCleanDict(),
-        }
 
         return self.formatResponse(response)
 

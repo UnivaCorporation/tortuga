@@ -27,6 +27,7 @@ import tortuga.objects.osInfo
 import tortuga.objects.partition
 from tortuga.objects.tortugaObject import TortugaObject, TortugaObjectList
 from tortuga.utility.helper import str2bool
+
 from .validators import RegexValidator
 
 
@@ -175,12 +176,6 @@ class SoftwareProfile(TortugaObject): \
 
     def getNodes(self):
         return self.get('nodes')
-
-    def setIsIdle(self, val):
-        self['isIdle'] = str2bool(val)
-
-    def getIsIdle(self):
-        return str2bool(self.get('isIdle'))
 
     def setUsableHardwareProfiles(self, val):
         self['hardwareprofiles'] = val

@@ -18,7 +18,6 @@ from typing import Dict, Optional, Tuple
 
 from sqlalchemy import func
 from sqlalchemy.orm.session import Session
-
 from tortuga.db.adminsDbHandler import AdminsDbHandler
 from tortuga.db.componentsDbHandler import ComponentsDbHandler
 from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
@@ -168,63 +167,6 @@ class SoftwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
             self._logger.exception(str(ex))
             raise
 
-    def getIdleSoftwareProfileList(self, session: Session):
-        """
-        Get list of all available idle softwareProfiles from the db.
-
-            Returns:
-                [idle softwareProfile]
-            Throws:
-                DbError
-        """
-
-        try:
-            dbSoftwareProfileList = \
-                self._softwareProfilesDbHandler.getIdleSoftwareProfileList(
-                    session)
-
-            result = TortugaObjectList()
-
-            for software_profile in dbSoftwareProfileList:
-                self.__get_software_profile_obj(software_profile)
-
-            return result
-        except TortugaException:
-            raise
-        except Exception as ex:
-            self._logger.exception(str(ex))
-            raise
-
-    def setIdleState(
-            self, session: Session, softwareProfileName: str,
-            state: str) -> None:
-        """
-        Set idle state of a software profile
-
-            Returns:
-                -none-
-            Throws:
-                DbError
-        """
-
-        try:
-            dbSoftwareProfile = \
-                self._softwareProfilesDbHandler.getSoftwareProfile(
-                    session, softwareProfileName)
-
-            self._logger.debug(
-                'Setting idle state [%s] on software profile [%s]' % (
-                    state, dbSoftwareProfile.name))
-
-            dbSoftwareProfile.isIdle = state
-
-            session.commit()
-        except TortugaException:
-            raise
-        except Exception as ex:
-            self._logger.exception(str(ex))
-            raise
-
     def addSoftwareProfile(
             self, session: Session,
             softwareProfile: SoftwareProfile) -> SoftwareProfileModel:
@@ -292,22 +234,6 @@ class SoftwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
                 raise TortugaException(
                     'Unable to delete software profile with'
                     ' associated nodes')
-
-            if dbSwProfile.isIdle:
-                # Ensure this software profile is not associated with
-                # a hardware profile
-
-                if dbSwProfile.hwprofileswithidle:
-                    # This software profile is associated with one
-                    # or more hardware profiles
-                    raise TortugaException(
-                        'Unable to delete software profile.'
-                        '  This software profile is associated'
-                        ' with one or more hardware profiles: [%s]'
-                        % (' '.join(
-                            [hwprofile.name
-                             for hwprofile in dbSwProfile.
-                             hwprofileswithidle])))
 
             # Proceed with software profile deletion
             self._logger.debug(
@@ -663,7 +589,6 @@ class SoftwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
         dbSoftwareProfile.minNodes = softwareProfile.getMinNodes()
         dbSoftwareProfile.maxNodes = softwareProfile.getMaxNodes()
         dbSoftwareProfile.lockedState = softwareProfile.getLockedState()
-        dbSoftwareProfile.isIdle = softwareProfile.getIsIdle()
         dbSoftwareProfile.dataRoot = softwareProfile.getDataRoot()
         dbSoftwareProfile.dataRsync = softwareProfile.getDataRsync()
 
@@ -773,7 +698,6 @@ class SoftwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
             minNodes=src_swprofile.minNodes,
             maxNodes=src_swprofile.maxNodes,
             lockedState=src_swprofile.lockedState,
-            isIdle=src_swprofile.isIdle,
             dataRoot=src_swprofile.dataRoot,
             dataRsync=src_swprofile.dataRsync
         )
@@ -804,10 +728,6 @@ class SoftwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
         # hardwareprofiles
         for hwprofile in src_swprofile.hardwareprofiles:
             dst_swprofile.hardwareprofiles.append(hwprofile)
-
-        # idle hardware profiles
-        for hwprofileswithidle in src_swprofile.hwprofileswithidle:
-            dst_swprofile.hwprofileswithidle.append(hwprofileswithidle)
 
         session.add(dst_swprofile)
 

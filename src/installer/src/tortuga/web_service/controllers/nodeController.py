@@ -19,7 +19,6 @@ from marshmallow import Schema, ValidationError, fields, validates
 import cherrypy
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.nodeNotFound import NodeNotFound
-from tortuga.exceptions.nodeTransferNotValid import NodeTransferNotValid
 from tortuga.exceptions.operationFailed import OperationFailed
 from tortuga.node.task import enqueue_delete_hosts_request
 from tortuga.objects.tortugaObject import TortugaObjectList
@@ -41,13 +40,6 @@ class UpdateNodeRequestSchema(Schema):
             raise ValidationError(
                 'bootFrom must be 0 (disk) or 1 (network)'
             )
-
-
-class TransferNodesRequestSchema(Schema):
-    srcSoftwareProfile = fields.String(255)
-    dstSoftwareProfile = fields.String(255, required=True)
-    count = fields.Integer()
-    bForce = fields.Boolean(default=False)
 
 
 class NodeController(TortugaController):
@@ -73,18 +65,6 @@ class NodeController(TortugaController):
             'path': '/v1/nodes/:(node_id)',
             'action': 'getNodeById',
             'method': ['GET']
-        },
-        {
-            'name': 'idleNode',
-            'path': '/v1/nodes/:nodeName/idle',
-            'action': 'idleNode',
-            'method': ['GET'],
-        },
-        {
-            'name': 'activateNode',
-            'path': '/v1/nodes/:nodeName/activate',
-            'action': 'activateNode',
-            'method': ['POST'],
         },
         {
             'name': 'startupNode',
@@ -122,12 +102,6 @@ class NodeController(TortugaController):
             'path': '/v1/identify-node',
             'action': 'getNodeByIpRequest',
             'method': ['GET']
-        },
-        {
-            'name': 'transferNodes',
-            'path': '/v1/transfer-nodes/',
-            'action': 'transferNodes',
-            'method': ['PUT'],
         },
     ]
 
@@ -300,52 +274,6 @@ class NodeController(TortugaController):
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     @authentication_required()
-    def idleNode(self, nodeName):
-        """
-        Idle an active node
-        """
-
-        try:
-            response = self.app.node_api.idleNode(
-                cherrypy.request.db, nodeName)
-        except NodeNotFound as ex:
-            self.handleException(ex)
-            code = self.getTortugaStatusCode(ex)
-            response = self.notFoundErrorResponse(str(ex), code)
-        except Exception as ex:  # noqa pylint: disable=broad-except
-            self._logger.exception('node WS API idleNode() failed')
-            self.handleException(ex)
-            response = self.errorResponse(str(ex))
-
-        return self.formatResponse(response)
-
-    @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
-    @authentication_required()
-    def activateNode(self, nodeName):
-        """
-        Activate an idle node
-        """
-
-        postdata = cherrypy.request.json
-
-        softwareProfileName = postdata['softwareProfileName'] \
-            if 'softwareProfileName' in postdata else None
-
-        try:
-            response = self.app.node_api.activateNode(
-                cherrypy.request.db, nodeName, softwareProfileName)
-
-        except Exception as ex:  # noqa pylint: disable=broad-except
-            self._logger.exception('node WS API activateNode() failed')
-            self.handleException(ex)
-            response = self.errorResponse(str(ex))
-
-        return self.formatResponse(response)
-
-    @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
-    @authentication_required()
     def startupNode(self, nodeName, nodeString, bootMethod):
         response = None
 
@@ -407,48 +335,6 @@ class NodeController(TortugaController):
             response = self.notFoundErrorResponse(str(ex), code)
         except Exception as ex:  # noqa pylint: disable=broad-except
             self._logger.exception('node WS API rebootNode() failed')
-            self.handleException(ex)
-            response = self.errorResponse(str(ex))
-
-        return self.formatResponse(response)
-
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
-    @authentication_required()
-    def transferNodes(self, **kwargs):
-        try:
-            request_data, errors = \
-                TransferNodesRequestSchema().load(cherrypy.request.json)
-            if errors:
-                buf = 'Invalid argument(s): '
-
-                for field, messages in errors.items():
-                    buf += '%s: %s' % (field, ', '.join(messages))
-
-                raise InvalidArgument(buf)
-
-            nodespec = kwargs.get('nodespec')
-
-            self.app.node_api.transferNodes(
-                cherrypy.request.db,
-                request_data['dstSoftwareProfile'],
-                count=request_data['count'] if not nodespec else None,
-                bForce=request_data.get('bForce', False),
-                nodespec=nodespec,
-                srcSoftwareProfile=request_data.get('srcSoftwareProfile'),
-            )
-
-            response = None
-        except NodeNotFound as ex:
-            self.handleException(ex)
-            code = self.getTortugaStatusCode(ex)
-            response = self.notFoundErrorResponse(str(ex), code)
-        except NodeTransferNotValid as ex:
-            self.handleException(ex)
-            code = self.getTortugaStatusCode(ex)
-            response = self.errorResponse(str(ex))
-        except Exception as ex:  # noqa pylint: disable=broad-except
-            self._logger.exception(str(ex))
             self.handleException(ex)
             response = self.errorResponse(str(ex))
 

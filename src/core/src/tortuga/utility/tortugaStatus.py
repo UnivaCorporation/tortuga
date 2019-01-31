@@ -59,9 +59,6 @@ TORTUGA_NODE_SOFTWARE_PROFILE_LOCKED_ERROR = 49
 TORTUGA_NODE_TRANSFER_NOT_VALID_ERROR = 50
 TORTUGA_INVALID_APPLICATION_MODULE_ERROR = 51
 TORTUGA_INTERNAL_ERROR = 52
-TORTUGA_SOFTWARE_PROFILE_NOT_IDLE_ERROR = 53
-TORTUGA_NODE_ALREADY_ACTIVE_ERROR = 54
-TORTUGA_NODE_ALREADY_IDLE_ERROR = 55
 TORTUGA_XML_RPC_FAILED_ERROR = 56
 TORTUGA_NO_PARENT_NODE_ERROR = 57
 TORTUGA_INVALID_PARTITION_SCHEME = 58
@@ -218,17 +215,9 @@ exceptionMap = {
         '.SoftwareUsesHardwareNotFound',
     TORTUGA_NODE_SOFTWARE_PROFILE_LOCKED_ERROR:
         'exceptions.nodeSoftwareProfileLocked.NodeSoftwareProfileLocked',
-    TORTUGA_NODE_TRANSFER_NOT_VALID_ERROR:
-        'exceptions.nodeTransferNotValid.NodeTransferNotValid',
     TORTUGA_INVALID_APPLICATION_MODULE_ERROR:
         'exceptions.invalidApplicationModule.InvalidApplicationModule',
     TORTUGA_INTERNAL_ERROR: 'exceptions.internalError.InternalError',
-    TORTUGA_SOFTWARE_PROFILE_NOT_IDLE_ERROR:
-        'exceptions.softwareProfileNotIdle.SoftwareProfileNotIdle',
-    TORTUGA_NODE_ALREADY_ACTIVE_ERROR:
-        'exceptions.nodeAlreadyActive.NodeAlreadyActive',
-    TORTUGA_NODE_ALREADY_IDLE_ERROR:
-        'exceptions.nodeAlreadyIdle.NodeAlreadyIdle',
     TORTUGA_XML_RPC_FAILED_ERROR: 'exceptions.xmlRpcFailed.XmlRpcFailed',
     TORTUGA_NO_PARENT_NODE_ERROR: 'exceptions.noParentNode.NoParentNode',
     TORTUGA_INVALID_PARTITION_SCHEME:
@@ -236,8 +225,6 @@ exceptionMap = {
     TORTUGA_INVALID_PROFILE_CREATION_TEMPLATE_ERROR:
         'exceptions.invalidProfileCreationTemplate'
         '.InvalidProfileCreationTemplate',
-    TORTUGA_SOFTWARE_PROFILE_NOT_ACTIVE_ERROR:
-        'exceptions.softwareProfileNotActive.SoftwareProfileNotActive',
     TORTUGA_SOFTWARE_ALREADY_DEPLOYED_ERROR:
         'exceptions.softwareAlreadyDeployed.SoftwareAlreadyDeployed',
     TORTUGA_INVALID_MACHINE_CONFIGURATION_ERROR:
