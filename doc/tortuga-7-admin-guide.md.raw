@@ -1859,7 +1859,7 @@ software profile of the node.
 Before this can happen, however, Tortuga needs to copy the necessary files
 to boot and install the OS.
 
-By default, the default Kickstart file tempate assigns a random `root`
+By default, the default Kickstart file template assigns a random `root`
 password to all compute nodes for security purposes.
 
 ## Networking Requirements
@@ -2076,7 +2076,7 @@ ucparam set Timezone_zone America/New_York
 ```
 
 Please note, the Tortuga configuration setting `Timezone_utc` is not currently
-used in the default Kickstarte template file. Set this manually in the
+used in the default Kickstart template file. Set this manually in the
 Kickstart file template as appropriate.
 
 Use `ucparam list` to display list of Tortuga configuration settings.
