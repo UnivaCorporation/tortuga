@@ -435,7 +435,7 @@ the `root` user on the Tortuga installer node.
 
         ``` {.shell}
         adapter-mgmt create --resource-adapter AWS \
-            --profile default \
+            --profile Default \
             --setting region=<AWS region name> \
             --setting awsAccessKey=<AWS access key> \
             --setting awsSecretKey=<AWS secret key> \
@@ -456,7 +456,7 @@ the `root` user on the Tortuga installer node.
 
         ``` {.shell}
         adapter-mgmt create --resource-adapter AWS \
-            --profile default \
+            --profile Default \
             <settings from above..>
             --setting subnet_id=<subnet-XXXXXXXX>
         ```
@@ -3483,7 +3483,7 @@ adapter configurations may be imported as follows:
 adapter-mgmt import --resource-adapter AWS --adapter-config <filename>
 ```
 
-This will create a `default` resource adapter configuration profile for
+This will create a `Default` resource adapter configuration profile for
 the specific resource adapter as well as individual configuration
 profiles for all sections listed in the adapter configuration file.
 
@@ -3502,7 +3502,7 @@ To display all settings for a specific resource adapter configuration
 profile:
 
 ``` {.shell}
-adapter-mgmt show --resource-adapter AWS --profile default
+adapter-mgmt show --resource-adapter AWS --profile Default
 ```
 
 All "secret" information (ie. AWS access/secret keys, passwords, etc.)
@@ -3510,7 +3510,7 @@ will be hidden from the output of `adapter-mgmt show` by default. To
 display *all* information, add the `--all` argument. For example:
 
 ``` {.shell}
-adapter-mgmt show --all --resource-adapter AWS --profile default
+adapter-mgmt show --all --resource-adapter AWS --profile Default
 ```
 
 #### Deleting resource adapter configuration profiles
@@ -3538,10 +3538,10 @@ adapter configuration profile is used. If this profile does not exist,
 an error will be displayed. If the profile specified does not contain
 the full set of resource adapter configuration settings (ie.
 credentials), the system will automatically use the "missing" values
-from the `default` resource adapter configuration profile.
+from the `Default` resource adapter configuration profile.
 
 If the default resource adapter configuration profile is not set (as
-described above), the `default` resource adapter configuration profile
+described above), the `Default` resource adapter configuration profile
 is used.
 
 **Note:** it is also possible to override the hardware profile default
