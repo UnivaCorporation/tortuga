@@ -126,7 +126,18 @@ class Default(ResourceAdapter):
         tortugaSubprocess.executeCommandAndIgnoreFailure(cmd)
 
     def deleteNode(self, nodes: List[Node]) -> None:
+        """Remove boot configuration for deleted nodes
+        """
+        for node in nodes:
+            self.__delete_boot_configuration(node)
+
         self.hookAction('delete', [node.name for node in nodes])
+
+    def __delete_boot_configuration(self, node: Node) -> None:
+        """Remove PXE boot files and DHCP configuration
+        """
+        self._bhm.rmPXEFile(node)
+        self._bhm.removeDhcpLease(node)
 
     def rebootNode(self, nodes: List[Node],
                    bSoftReset: Optional[bool] = False):

@@ -588,14 +588,6 @@ class NodeManager(TortugaObjectManager): \
             # Iterate over all nodes in hardware profile, completing the
             # delete operation.
             for dbNode in hwprofile_nodes:
-                # Remove PXE boot file and remove lease from dhcp server
-                if hwprofile.location == 'local':
-                    # Only attempt to remove local boot configuration for
-                    # nodes that are marked as 'local'
-
-                    self._bhm.rmPXEFile(dbNode)
-                    self._bhm.removeDhcpLease(dbNode)
-
                 for tag in dbNode.tags:
                     if len(tag.nodes) == 1 and \
                             not tag.softwareprofiles and \
