@@ -73,16 +73,6 @@ class UpdateHardwareProfileCli(TortugaCli):
                        help=_('Allow software profile override of'
                               ' kernel and initrd values.'))
 
-        self.addOption('--idle-software-profile',
-                       dest='idleProfile',
-                       help=_('Idle software profile.'))
-
-        self.addOption('--unset-idle-software-profile',
-                       dest='bUnsetIdleProfile', action='store_true',
-                       default=False,
-                       help=_('Remove currently idle software profile'
-                              ' association'))
-
         self.addOption('--location',
                        dest='location',
                        help=_('Physical location of nodes in this'
@@ -206,20 +196,6 @@ class UpdateHardwareProfileCli(TortugaCli):
                 raise InvalidCliRequest(
                     _('--software-override-allowed must be either "true" or'
                       ' "false".'))
-
-        if self.getArgs().idleProfile is not None and \
-           self.getArgs().bUnsetIdleProfile:
-            raise InvalidCliRequest(
-                _('Conflicting options --idle-software-profile and'
-                  ' --unset-idle-software-profile'))
-
-        if self.getArgs().idleProfile is not None:
-            sp = spApi.getSoftwareProfile(self.getArgs().idleProfile)
-
-            hp.setIdleSoftwareProfileId(sp.getId())
-
-        if self.getArgs().bUnsetIdleProfile:
-            hp.setIdleSoftwareProfileId(None)
 
         if self.getArgs().location is not None:
             hp.setLocation(self.getArgs().location)

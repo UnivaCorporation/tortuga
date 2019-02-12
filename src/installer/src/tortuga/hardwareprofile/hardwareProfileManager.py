@@ -61,16 +61,6 @@ class HardwareProfileManager(TortugaObjectManager):
         return self._hpDbApi.getHardwareProfileList(
             session, optionDict=optionDict, tags=tags)
 
-    def setIdleSoftwareProfile(self, session: Session,
-                               hardwareProfileName: str,
-                               softwareProfileName: Optional[Union[str, None]] = None):
-        """
-        Set idle software profile
-        """
-
-        return self._hpDbApi.setIdleSoftwareProfile(
-            session, hardwareProfileName, softwareProfileName)
-
     def getHardwareProfile(self, session: Session, name: str,
                            optionDict: Optional[Union[dict, None]] = None):
         return self._hpDbApi.getHardwareProfile(session, name, optionDict)
@@ -219,18 +209,6 @@ class HardwareProfileManager(TortugaObjectManager):
 
                     network.setNetworkDevice(
                         NetworkDevice(name=networkDevice))
-
-        if hwProfileSpec.getIdleSoftwareProfile():
-            # <idleSoftwareProfileId>...</idleSoftwareProfileId> is always
-            # contained within the output of get-hardwareprofile.  If the
-            # command-line option '--idleSoftwareProfile' is specified, it
-            # overrides the
-            # <idleSoftwareProfileId>...</idleSoftwareProfileId> element
-            idleSoftwareProfile = self._spDbApi.getSoftwareProfile(
-                session, hwProfileSpec.getIdleSoftwareProfile().getName())
-
-            hwProfileSpec.setIdleSoftwareProfileId(
-                idleSoftwareProfile.getId())
 
         if not osInfo:
             osInfo = installerNode.getSoftwareProfile().getOsInfo()

@@ -128,7 +128,7 @@ class TestSoftwareProfilesDbHandler(unittest.TestCase):
         assert result1
 
         result2 = SoftwareProfilesDbHandler().get_software_profiles_with_component(
-            self.session, 'base', 'core', kit_version='7.0.2'
+            self.session, 'base', 'core', kit_version='7.0.3'
         )
 
         assert result2

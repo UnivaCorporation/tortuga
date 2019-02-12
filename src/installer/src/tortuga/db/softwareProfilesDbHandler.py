@@ -127,17 +127,6 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
 
         return q.filter(or_(*searchspec)).order_by(SoftwareProfile.name).all()
 
-    def getIdleSoftwareProfileList(self, session: Session) \
-            -> List[SoftwareProfile]:
-        """
-        Get list of idle softwareProfiles from the db.
-        """
-
-        self._logger.debug('Retrieving idle software profile list')
-
-        return session.query(SoftwareProfile).filter(
-            SoftwareProfile.isIdle == 1).all()
-
     def __getHardwareProfile(
             self, session: Session, hardwareProfileName: str): \
             # pylint: disable=no-self-use

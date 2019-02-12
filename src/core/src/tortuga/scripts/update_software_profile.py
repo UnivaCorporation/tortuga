@@ -166,7 +166,10 @@ class UpdateSoftwareProfileCli(TortugaCli):
                        help='Name of tags to remove')
 
         self.addOption('--data-root', dest='dataRoot',
-                       help=_('(optional) Root directory for user data.'))
+                       help=_('(optional) Root directories for user data.'))
+
+        self.addOption('--data-rsync', dest='dataRsync',
+                       help=_('(optional) Rsync configuration.'))
 
         self.getParser().add_argument(
             'name', metavar='NAME',
@@ -443,6 +446,9 @@ Updates software profile in the Tortuga system.
 
         if self.getArgs().dataRoot is not None:
             sp.setDataRoot(self.getArgs().dataRoot)
+
+        if self.getArgs().dataRsync is not None:
+            sp.setDataRsync(self.getArgs().dataRsync)
 
         api.updateSoftwareProfile(sp)
 

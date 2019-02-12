@@ -18,7 +18,6 @@ import shutil
 from typing import Dict, Optional
 
 from sqlalchemy.orm.session import Session
-
 from tortuga.config.configManager import ConfigManager
 from tortuga.db.componentDbApi import ComponentDbApi
 from tortuga.db.globalParameterDbApi import GlobalParameterDbApi
@@ -71,15 +70,6 @@ class SoftwareProfileManager(TortugaObjectManager): \
 
         return results
 
-    def getIdleSoftwareProfileList(self, session: Session):
-        """ Return all of the idle softwareprofiles """
-        return self._sp_db_api.getIdleSoftwareProfileList(session)
-
-    def setIdleState(self, session: Session, softwareProfileName, state):
-        """ Sets the  idle state of a softwareprofile """
-        return self._sp_db_api.setIdleState(
-            session, softwareProfileName, state)
-
     def addAdmin(self, session: Session, softwareProfileName, adminUsername):
         """
         Add an admin as an authorized user.
@@ -122,7 +112,6 @@ class SoftwareProfileManager(TortugaObjectManager): \
         # Set parameters that we will not allow updating
         softwareProfileObject.setOsInfo(existingProfile.getOsInfo())
         softwareProfileObject.setOsId(existingProfile.getOsId())
-        softwareProfileObject.setIsIdle(existingProfile.getIsIdle())
         softwareProfileObject.setType(existingProfile.getType())
 
         self._sp_db_api.updateSoftwareProfile(session, softwareProfileObject)

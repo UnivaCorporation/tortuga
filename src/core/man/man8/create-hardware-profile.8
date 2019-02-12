@@ -20,12 +20,12 @@ create-hardware-profile - Create a new hardware profile from a template.
 .LP
 \fBcreate-hardware-profile --list-templates
 .TP
-\fBcreate-hardware-profile --xml-file \fIPATH\fB [--name=\fINAME\fB] [--description=\fIDESCRIPTION\fB] [--os=\fIname-version-arch\fB] [--idle=\fISOFTWAREPROFILENAME\fB]
+\fBcreate-hardware-profile --xml-file \fIPATH\fB [--name=\fINAME\fB] [--description=\fIDESCRIPTION\fB] [--os=\fIname-version-arch\fB]
 .TP
-\fBcreate-hardware-profile --name=\fINAME\fB [--description=\fIDESCRIPTION\fB] [--os=\fIname-version-arch\fB] [--idle=\fISOFTWAREPROFILENAME\fB]
+\fBcreate-hardware-profile --name=\fINAME\fB [--description=\fIDESCRIPTION\fB] [--os=\fIname-version-arch\fB]
 .SH "DESCRIPTION"
 .LP
-The create-hardware-profile tool either lists the paths of available templates or creates a hardware profile from an existing template.  When creating a hardware profile the description, os, and idle software profile specified in the template can be overridden by providing the appropriate command line options.
+The create-hardware-profile tool creates a hardware profile from an existing template. When creating a hardware profile the description and os specified in the template can be overridden by providing the appropriate command line options.
 .LP
 If \fI--xml-file\fR argument is not specified, the default template (found in
 $TORTUGA_ROOT/share/templates/hardware/defaultHardwareProfile.tmpl.xml) will be used.
@@ -47,9 +47,6 @@ Description for hardware profile
 .TP
 \fB--os=\fIname-version-arch
 Operating system (default: Operating System of installer)
-.TP
-\fB--idle=\fISOFTWAREPROFILENAME
-Specify idle software profile
 .LP
 .SH "Common Tortuga Options"
 .LP

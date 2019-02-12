@@ -26,6 +26,8 @@ from tortuga.exceptions.configurationError import ConfigurationError
 from tortuga.objects.tortugaObject import TortugaObject, TortugaObjectList
 from tortuga.utility.helper import str2bool
 
+from .validators import RegexValidator
+
 
 class HardwareProfile(TortugaObject): \
         # pylint: disable=too-many-public-methods
@@ -35,6 +37,10 @@ class HardwareProfile(TortugaObject): \
     INST_TYPE_IMAGED_UNMANAGED = 'imaged-unmanaged'
 
     ROOT_TAG = 'hardwareprofile'
+
+    validators = {
+        'name': RegexValidator(pattern='[a-zA-Z0-9-_]+')
+    }
 
     def __init__(self, name=None):
         TortugaObject.__init__(self, {
@@ -152,20 +158,6 @@ class HardwareProfile(TortugaObject): \
     def getSoftwareOverrideAllowed(self):
         """ Return hardware profile override allowed flag. """
         return str2bool(self.get('softwareOverrideAllowed'))
-
-    def setIdleSoftwareProfileId(self, swId):
-        """ Set idle software profile ID. """
-        self['idleSoftwareProfileId'] = swId
-
-    def getIdleSoftwareProfileId(self):
-        """ Return idle software profile ID. """
-        return self.get('idleSoftwareProfileId')
-
-    def setIdleSoftwareProfile(self, idleSoftwareProfile):
-        self['idleSoftwareProfile'] = idleSoftwareProfile
-
-    def getIdleSoftwareProfile(self):
-        return self.get('idleSoftwareProfile')
 
     def setLocation(self, location):
         """ Set location. """
@@ -331,11 +323,6 @@ class HardwareProfile(TortugaObject): \
             hardwareProfile.setDefaultResourceAdapterConfig(
                 defaultResourceAdapterConfig.name
             )
-
-        if _dict.get('idlesoftwareprofile'):
-            hardwareProfile.setIdleSoftwareProfile(
-                tortuga.objects.softwareProfile.SoftwareProfile.getFromDbDict(
-                    _dict.get('idlesoftwareprofile').__dict__))
 
         # hardwareprofilenetworks (relation)
         hardwareProfileNetworks = _dict.get('hardwareprofilenetworks')

@@ -263,47 +263,6 @@ class NodeWsApi(TortugaWsApi):
         except Exception as ex:
             raise TortugaException(exception=ex)
 
-    def idleNode(self, nodespec):
-        """
-        idle node
-        """
-
-        url = 'nodes/%s/idle' % (urllib.parse.quote_plus(nodespec))
-
-        try:
-            responseDict = self.get(url)
-
-            return responseDict
-
-        except TortugaException:
-            raise
-
-        except Exception as ex:
-            raise TortugaException(exception=ex)
-
-    def activateNode(self, nodeName, softwareProfileName):
-        """
-        activate node
-        """
-
-        url = 'nodes/%s/activate' % (nodeName)
-
-        postdata = {}
-
-        if softwareProfileName:
-            postdata['softwareProfileName'] = softwareProfileName
-
-        try:
-            responseDict = self.post(url, postdata)
-
-            return responseDict
-
-        except TortugaException:
-            raise
-
-        except Exception as ex:
-            raise TortugaException(exception=ex)
-
     def startupNode(self, nodespec: str,
                     remainingNodeList: Optional[Union[List[str], None]] = None,
                     bootMethod: str = 'n'):
@@ -382,45 +341,3 @@ class NodeWsApi(TortugaWsApi):
 
         except Exception as ex:
             raise TortugaException(exception=ex)
-
-    def transferNode(self, nodespec: str, softwareProfileName: str,
-                     bForce: bool = False):
-        """
-        Transfer nodes matching nodespec
-        """
-
-        return self.transferNodes(
-            softwareProfileName, nodespec=nodespec, bForce=bForce)
-
-    def transferNodes(self, dstSoftwareProfile: str, *,
-                      srcSoftwareProfile: Optional[str] = None,
-                      count: Optional[int] = None,
-                      bForce: bool = False,
-                      nodespec: Optional[str] = None):
-        """
-        Transfer node(s) between software profiles
-        """
-
-        url = 'transfer-nodes/'
-
-        if nodespec:
-            url += '?nodespec=%s' % urllib.parse.quote(nodespec)
-
-        request = {
-            'dstSoftwareProfile': dstSoftwareProfile,
-            'bForce': bForce,
-        }
-
-        if count is not None:
-            request['count'] = count
-
-        if srcSoftwareProfile:
-            request['srcSoftwareProfile'] = srcSoftwareProfile
-
-        try:
-            return self.put(url, request)
-
-        except Exception as exc:  # noqa pylint: disable=broad-except
-            if not isinstance(exc, TortugaException):
-                raise TortugaException(exception=exc)
-            raise

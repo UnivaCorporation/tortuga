@@ -15,9 +15,9 @@
 
 # pylint: disable=no-member
 
+import argparse
 import ipaddress
 import itertools
-import argparse
 import os.path
 import sys
 
@@ -41,13 +41,6 @@ class AddNodes(TortugaCli): \
             metavar='NAME',
             dest='hardwareProfileName',
             help=_('Add nodes based on this hardware profile.'))
-
-        self.addOptionToGroup(
-            mainGroup, '--idle',
-            action='store_true',
-            dest='isIdle',
-            default=False,
-            help=_('Create new idle nodes.'))
 
         self.addOptionToGroup(
             mainGroup, '--extra-arg', '-e',
@@ -159,7 +152,6 @@ class AddNodes(TortugaCli): \
         )
 
         addNodesRequest = {
-            'isIdle': self.getArgs().isIdle,
             'force': self.getArgs().force,
         }
 

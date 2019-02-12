@@ -28,11 +28,17 @@ import tortuga.objects.partition
 from tortuga.objects.tortugaObject import TortugaObject, TortugaObjectList
 from tortuga.utility.helper import str2bool
 
+from .validators import RegexValidator
+
 
 class SoftwareProfile(TortugaObject): \
         # pylint: disable=too-many-public-methods
 
     ROOT_TAG = 'softwareprofile'
+
+    validators = {
+        'name': RegexValidator(pattern='[a-zA-Z0-9-_]+')
+    }
 
     def __init__(self, name=None):
         TortugaObject.__init__(
@@ -171,12 +177,6 @@ class SoftwareProfile(TortugaObject): \
     def getNodes(self):
         return self.get('nodes')
 
-    def setIsIdle(self, val):
-        self['isIdle'] = str2bool(val)
-
-    def getIsIdle(self):
-        return str2bool(self.get('isIdle'))
-
     def setUsableHardwareProfiles(self, val):
         self['hardwareprofiles'] = val
 
@@ -219,6 +219,12 @@ class SoftwareProfile(TortugaObject): \
     def setDataRoot(self, value):
         self['dataRoot'] = value
 
+    def getDataRsync(self):
+        return self.get('dataRsync')
+
+    def setDataRsync(self, value):
+        self['dataRsync'] = value
+
     @staticmethod
     def getKeys():
         return [
@@ -237,6 +243,7 @@ class SoftwareProfile(TortugaObject): \
             'metadata',
             'tags',
             'dataRoot',
+            'dataRsync',
         ]
 
     @classmethod

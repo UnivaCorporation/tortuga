@@ -167,38 +167,6 @@ class HardwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
             self._logger.exception(str(ex))
             raise
 
-    def setIdleSoftwareProfile(
-            self, session: Session, hardwareProfileName: str,
-            softwareProfileName: Optional[str] = None) -> None:
-        """
-        Sets the idle software profile
-
-        Returns:
-            -none-
-
-        Raises:
-            SoftwareProfileNotFound
-            SoftwareProfileNotIdle
-        """
-
-        try:
-            dbSoftwareProfile = SoftwareProfilesDbHandler().\
-                getSoftwareProfile(session, softwareProfileName) \
-                if softwareProfileName else None
-
-            dbHardwareProfile = self._hardwareProfilesDbHandler.\
-                getHardwareProfile(session, hardwareProfileName)
-
-            self._hardwareProfilesDbHandler.setIdleSoftwareProfile(
-                dbHardwareProfile, dbSoftwareProfile)
-
-            session.commit()
-        except TortugaException:
-            raise
-        except Exception as ex:
-            self._logger.exception(str(ex))
-            raise
-
     def addHardwareProfile(
             self, session: Session,
             hardwareProfile: HardwareProfile) -> None:
@@ -442,12 +410,6 @@ class HardwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
             raise ConfigurationError(
                 'Hardware profile requires name format field.')
 
-        # Handle the special case of a hardware profile not having an
-        # associated idle software profile (ie. Installer hardware
-        # profile)
-        idleSoftwareProfileId = hardwareProfile.getIdleSoftwareProfileId() \
-            if hardwareProfile.getIdleSoftwareProfileId else None
-
         if dbHardwareProfile is None:
             dbHardwareProfile = HardwareProfileModel()
 
@@ -474,7 +436,7 @@ class HardwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
 
         dbHardwareProfile.softwareOverrideAllowed = hardwareProfile.\
             getSoftwareOverrideAllowed()
-        dbHardwareProfile.idleSoftwareProfileId = idleSoftwareProfileId
+
         dbHardwareProfile.location = hardwareProfile.getLocation()
 
         dbHardwareProfile.cost = hardwareProfile.getCost()

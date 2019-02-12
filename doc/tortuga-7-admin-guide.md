@@ -1,10 +1,12 @@
-# Tortuga 7.0 Installation and Administration Guide
+Tortuga 7.0 Installation and Administration Guide
+=================================================
 
-Univa Corporation \<support@univa.com\>
+Univa Corporation \<support\@univa.com\>
 
-December 2018 - Version 1.3
+January 2019 -- Version 1.4
 
-## About This Guide
+About This Guide
+----------------
 
 This guide contains information for IT staff and end-users who will be
 installing, configuring, and managing Tortuga 7.0. Information about
@@ -14,7 +16,7 @@ For detailed information on any Tortuga command, consult the standard
 manual pages using `man <command>`. Manual pages are automatically
 installed as part of the Tortuga software installation.
 
-For those eager to get started, consult the “Quickstart” section for a
+For those eager to get started, consult the "Quickstart" section for a
 quick run-through a sample installation.
 
 © 2008-2018 Univa Corporation. All rights reserved. This manual or parts
@@ -26,7 +28,8 @@ written consent of Univa Corporation.
 All trademarks mentioned within this document are the property of their
 respective owners.
 
-## Tortuga Quickstart
+Tortuga Quickstart
+------------------
 
 ### Manual quickstart installation
 
@@ -47,385 +50,392 @@ appropriate cloud provider resource adapter.
 It is *strongly recommended* to read this manual prior to performing the
 steps in this section.
 
-Commands listed in this “Quickstart” section are intended to be run as
+Commands listed in this "Quickstart" section are intended to be run as
 the `root` user on the Tortuga installer node.
 
 ### Prerequisites
 
 #### General
 
-  - CPU/RAM requirements
-    
+-   CPU/RAM requirements
+
     The Tortuga installer requires a minimum of 8GB RAM and a modern
     64-bit CPU. A single-core is sufficient. Additional RAM and/or cores
     will offer increased Tortuga throughput and performance.
-    
+
     For Amazon EC2-based installation, the instance type `m4.large` (or
     equivalent) is the suggested minimum.
 
-  - Disk space requirements
-    
+-   Disk space requirements
+
     Not including the OS installation media (required only for
     on-premise compute node provisioning), Tortuga requires \<300MB of
     disk space.
-    
+
     For installations supporting on-premise compute node provisioning
     *and* locally hosted OS installation media, the disk requirements
     increase to \<8GB.
 
-  - Supported operating system
-    
-    Red Hat Enterprise Linux (RHEL) or CentOS 6.x or 7.x.
-    
-    RHEL/CentOS 7.x is *recommended*
-    
-    Tortuga installation has been validated tested on “official” RHEL
-    and CentOS AMIs on Amazon EC2.
-    
-    If hosting the Tortuga installer on Amazon Web Services (AWS), refer
-    to [Tortuga AWS Identity & Access Management (IAM) role policy
-    requirements](#iam_policy).
+-   Supported operating system
 
-  - Disable SELinux
-    
+    Red Hat Enterprise Linux (RHEL) or CentOS 6.x or 7.x.
+
+    RHEL/CentOS 7.x is *recommended*
+
+    Tortuga installation has been validated tested on "official" RHEL
+    and CentOS AMIs on Amazon EC2.
+
+    If hosting the Tortuga installer on Amazon Web Services (AWS), refer
+    to Tortuga AWS Identity & Access Management (IAM) role policy
+    requirements.
+
+-   Disable SELinux
+
     At the present time, Tortuga requires SELinux to be in *permissive*
     mode or disabled completely.
 
-  - Synchronize system clock
-    
+-   Synchronize system clock
+
     Tortuga depends on an accurate system clock during installation when
     SSL/TLS certificates for Puppet, HTTPs, etc. are created. Failure to
     sync the system clock may result in unexpected behaviour.
-    
-    ``` shell
+
+    ``` {.shell}
     yum -y install ntpdate
     ```
-    
+
     Sync using a well-known time server. For example:
-    
-    ``` shell
+
+    ``` {.shell}
     ntpdate 0.centos.pool.ntp.org
     ```
 
-  - (recommended) Refresh YUM package cache
-    
+-   (recommended) Refresh YUM package cache
+
     It is recommended to run `yum makecache fast` prior to installing
     Tortuga to ensure YUM package repositories are validated.
 
 #### Installation specific requirements
 
-  - On-premise installation
-    
-      - Dedicated server or virtual machine for Tortuga installer node
-        
-          - 1 (or more) servers or virtual machines for Tortuga compute
+-   On-premise installation
+
+    -   Dedicated server or virtual machine for Tortuga installer node
+
+        -   1 (or more) servers or virtual machines for Tortuga compute
             node(s)
-        
-          - Compute nodes *must* be connected to Tortuga installer node
+
+        -   Compute nodes *must* be connected to Tortuga installer node
             through a *private* network
 
-  - Hybrid (on-premise + cloud) installation
-    
-      - (*optional*) VPN connection from on-premise to Amazon EC2
-        
+-   Hybrid (on-premise + cloud) installation
+
+    -   (*optional*) VPN connection from on-premise to Amazon EC2
+
         Although not strictly necessary, it is recommended to have an
         externally managed, persistent VPN connection between on-premise
         network and Amazon.
-        
+
         **Note:** Tortuga does not automatically set up or configure a
         VPN.
 
-  - Amazon EC2-based installation
-    
-      - Amazon EC2 authorization and credentials
-        
+-   Amazon EC2-based installation
+
+    -   Amazon EC2 authorization and credentials
+
         Amazon EC2 credentials are required when configuring the AWS
         resource adapter. These are used to allow Tortuga to manage AWS
         resources.
-        
+
         The credentials used to configure the AWS resource adapter must
         be authorized to create/delete AWS resources (minimally Amazon
         EC2 and Amazon VPC).
-        
-          - (*optional*) Amazon Virtual Private Cloud (VPC)
-            
+
+        -   (*optional*) Amazon Virtual Private Cloud (VPC)
+
             Using an Amazon VPC allows the Tortuga installation to use
             an isolated section of the AWS cloud. Advanced features,
             such as the use of externally managed DNS server, require
             the use of an Amazon VPC.
-        
-          - (*optional*) Enable ‘optional’ repository on RHEL
-            
+
+        -   (*optional*) Enable 'optional' repository on RHEL
+
             When installing on Red Hat Enterprise Linux 6 or 7 (RHEL),
-            it is necessary to enable the ‘optional’ repository to
+            it is necessary to enable the 'optional' repository to
             satisfy package dependencies.
-            
-              - RHEL
-                6
-                
-                ``` shell
+
+            -   RHEL 6
+
+                ``` {.shell}
                 yum-config-manager --enable rhui-REGION-rhel-server-releases-optional
                 ```
-            
-              - RHEL
-                7
-                
-                ``` shell
+
+            -   RHEL 7
+
+                ``` {.shell}
                 yum-config-manager --enable rhui-REGION-rhel-server-optional
                 ```
-            
-              - RHEL 7 on
-                AWS
-                
-                ``` shell
+
+            -   RHEL 7 on AWS
+
+                ``` {.shell}
                 yum-config-manager --enable rhui-REGION-rhel-server-rhscl
                 ```
 
 ### Quickstart Installation
 
 1.  Extract Tortuga distribution tarball
-    
+
     Copy Tortuga distribution to dedicated Tortuga server/instance and
     extract the Tortuga distribution tarball into the current directory:
-    
-    ``` shell
+
+    ``` {.shell}
     tar jxf tortuga*tar.bz2
     ```
-    
+
     It may be necessary to install `bzip2` to extract the tarball:
-    
-    ``` shell
+
+    ``` {.shell}
     yum -y install bzip2
     ```
 
 2.  Install Tortuga
-    
+
     **Note:** if attempting to install Tortuga on a server where Tortuga
     (any version) has been previously installed, please refer to
-    [Appendix C: Uninstalling Tortuga](#appendix_c) before proceeding\!
-    It is *strongly recommended* to install Tortuga on a fresh
-    installation of RHEL/CentOS.
-    
+    [Appendix C: Uninstalling Tortuga](#appendix-c-uninstalling-tortuga)
+    before proceeding! It is *strongly recommended* to install Tortuga
+    on a fresh installation of RHEL/CentOS.
+
     The base installation of Tortuga is performed in two steps. The
     first step performed by the `install-tortuga.sh` script creates the
     installation directory (`/opt/tortuga`; the installation directory
     currently cannot be changed. This will be addressed in a future
     Tortuga release)
-    
-    ``` shell
+
+    ``` {.shell}
     cd tortuga* && ./install-tortuga.sh
     ```
-    
+
     The second step of Tortuga installation is the set up and
     configuration. This includes initializing the database, installation
     of default kit(s), initializing Puppet, etc.
-    
+
     Assuming `install-tortuga.sh` ran without error, next run
     `tortuga-setup.sh` as follow:
-    
-    ``` shell
+
+    ``` {.shell}
     /opt/tortuga/bin/tortuga-setup --defaults
     ```
-    
+
     **Note:** If the default network port settings used by Tortuga
     conflict with other service(s) in your installation environment, run
     `tortuga-setup` without the `--defaults` option and answer the
     prompts.
-    
+
     **Hint:** if the installation fails for any reason, it can be
     restarted by specifying the `--force` option as follows:
-    
-    ``` shell
+
+    ``` {.shell}
     /opt/tortuga/bin/tortuga-setup <options> --force
     ```
-    
+
     This will cause the installer to skip all checks and (hopefully)
     proceed without error. Typically the main reason why the setup might
     fail is due to network connectivity problems attempting to connect
     to the required YUM package repositories.
-    
+
     At this point, the Tortuga installation is complete and ready to be
     configured.
-    
+
     Before proceeding, apply environment changes as a result of the
     Tortuga installation:
-    
-    ``` shell
+
+    ``` {.shell}
     exec -l $SHELL
     ```
-    
+
     This command will add all Tortuga CLIs and `puppet`, et al., to the
     system PATH as a result of files being added to `/etc/profile.d`.
 
 3.  (*optional*) Enable local DNS server
-    
+
     *On-premise/hybrid/custom cloud-based installations only*
-    
+
     DNS services are provided on Tortuga using the
     [Dnsmasq](http://www.thekelleys.org.uk/dnsmasq/doc.html "Dnsmasq")
     DNS server.
-    
+
     Enable the built-in Dnsmasq DNS server to resolve host names of
     Tortuga managed compute nodes.
-    
-    ``` shell
+
+    ``` {.shell}
     enable-component -p --no-sync dns
     /opt/puppetlabs/bin/puppet agent --verbose --onetime --no-daemonize
     ```
-    
+
     While not required, it is also possible to enable local DNS name
     resolution to provide support for custom DNS domain names when
     Tortuga is hosted on EC2.
 
 4.  (*optional*) Enable DHCP/TFTP server for PXE booting compute nodes
-    
+
     *Required only for provisioning on-premise compute nodes*
-    
+
     DHCP/TFTP is required to PXE boot on-premise compute nodes to use
     the Anaconda/Kickstart node provisioning mechanism.
-    
-    ``` shell
+
+    ``` {.shell}
     enable-component --no-sync -p dhcpd
     /opt/puppetlabs/bin/puppet agent --verbose --onetime --no-daemonize
     ```
 
 5.  (*optional*) Add provisioning network interface
-    
-    *For installations with Tortuga-managed on-premises nodes only\!*
-    
+
+    *For installations with Tortuga-managed on-premises nodes only!*
+
     If enabling support for provisioning on-premises compute nodes, it
     is also necessary to add a provisioning network interface. Compute
     nodes will be provisioned using this interface to isolate traffic
-    from the ‘public’ LAN.
-    
+    from the 'public' LAN.
+
     The argument to the `--nic` option is the network interface
     connected to the provsioning network. The provisioning network must
     be configured prior to adding nodes.
-    
-    ``` shell
+
+    ``` {.shell}
     add-nic --nic=eth1
     ```
-    
+
     Use the `update-network` command to change provisioning network
     related settings.
 
 6.  (*optional*) Install operating system media
-    
+
     *Required only for provisioning on-premise compute nodes*
-    
+
     Tortuga requires access to operating system media to install
     on-premise compute nodes.
-    
+
     For example, to install CentOS mirror URL:
-    
-    ``` shell
+
+    ``` {.shell}
     install-os-kit --mirror --media http://<url to CentOS mirror>
     /opt/puppetlabs/bin/puppet agent --verbose --onetime --no-daemonize
     ```
-    
+
     This will instruct Tortuga to proxy HTTP access to the provided
     CentOS mirror from Tortuga-managed compute nodes on the provisioning
     network without the need to enable NAT or have the provisioning
     network routed to the Internet.
-    
+
     It is often desirable to create a local CentOS repository mirror for
     bandwidth and performance issues.
 
 7.  Create software profile for compute nodes
-    
+
     This software profile will be used to represent compute nodes in the
     Tortuga/Grid Engine cluster. The software profile name can be
     arbitrary.
-    
+
     For on-premise compute nodes:
-    
-    ``` shell
+
+    ``` {.shell}
     create-software-profile --name execd
     ```
-    
+
     For cloud-based compute nodes:
-    
-    ``` shell
+
+    ``` {.shell}
     create-software-profile --name execd --no-os-media-required
     ```
-    
+
     The option `--no-os-media-required` allows creation of a software
     profile without an association to (local) installation media. Since
     cloud-based instances already have an operating system installed, it
     is not necessary to define the installation media.
 
+    **Note**: Software profiles are created with a default max nodes
+    setting of 25. To change or remove this limit:
+
+    ``` {.shell}
+    update-software-profile --name execd --max-nodes XX
+    ```
+
+    Where `XX` is the maximum number of nodes you want to allow. To
+    remove the limit altogether, use `none`. See the section on software
+    profiles below for more information.
+
 8.  Create hardware profile for compute nodes
-    
+
     This hardware profile will used to represent compute nodes in the
     Tortuga/Grid Engine cluster. The hardware profile name is arbitrary.
-    
+
     For on-premise nodes and cloud-based nodes in a hybrid installation:
-    
-    ``` shell
+
+    ``` {.shell}
     create-hardware-profile --name execd --defaults
     ```
-    
+
     The `--defaults` option instructs Tortuga to use the provisioning
     network when adding nodes to this hardware profile.
-    
+
     For cloud-based installations:
-    
-    ``` shell
+
+    ``` {.shell}
     create-hardware-profile --name execd
     ```
 
 9.  Map software and hardware profiles
-    
+
     Profiles must be mapped in order for Tortuga to identify a valid
-    compute node provisioning
-    configuration.
-    
-    ``` shell
+    compute node provisioning configuration.
+
+    ``` {.shell}
     set-profile-mapping --software-profile execd --hardware-profile execd
     ```
 
 10. (*optional*) Configure Anaconda/Kickstart file template
-    
+
     *On-premise compute nodes only*
-    
+
     Prior to adding compute nodes, it is recommended to configure the
     root password in the Kickstart file template
     (`$TORTUGA_ROOT/config/kickstart.tmpl`).
-    
+
     The root password setting is found under `rootpw` in the Anaconda
     Kickstart template file.
-    
+
     Kickstart Syntax Reference can be found in the Red Hat Enterprise
     Linux Installation Guide. Several configuration options can be set
     in the Kickstart file template which will affect all Tortuga
     provisioned physical/virtual compute nodes.
 
 11. (*optional*) Install AWS resource adapter
-    
+
     *Hybrid and EC2-based installations only*
-    
+
     If using an alternate cloud provider, substitute the appropriate
     resource adapter kit here, along with resource adapter
     configuration.
-    
+
     Installing the AWS resource adapter allows provisioning of compute
     nodes on Amazon EC2.
-    
-    ``` shell
+
+    ``` {.shell}
     install-kit --i-accept-the-eula kit-awsadapter-*.tar.bz2
-    enable-component -p --no-sync awsadapter-7.0.2-0 management-7.0.2
+    enable-component -p --no-sync awsadapter-7.0.3-0 management-7.0.3
     ```
-    
+
     1.  Configure AWS resource adapter
-        
+
         The `adapter-mgmt` command is used to manage resource adapter
         configuration profiles for all Tortuga supported resource
         adapters. In this example, we are configuring the `AWS` resource
         adapter:
-        
-        ``` shell
+
+        ``` {.shell}
         adapter-mgmt create --resource-adapter AWS \
-            --profile default \
+            --profile Default \
             --setting region=<AWS region name> \
             --setting awsAccessKey=<AWS access key> \
             --setting awsSecretKey=<AWS secret key> \
@@ -435,124 +445,124 @@ the `root` user on the Tortuga installer node.
             --setting user_data_script_template=<bootstrap script template> \
             --setting securitygroup=<AWS security group>
         ```
-        
+
         When using IAM (AWS-specific), the settings `awsAccessKey` and
         `awsSecretKey` can be omitted as the credentials to manage
         instances will be automatically provided through the current IAM
         profile.
-        
+
         If using Amazon VPC, the `subnet_id` in the desired VPC must be
         specified:
-        
-        ``` shell
+
+        ``` {.shell}
         adapter-mgmt create --resource-adapter AWS \
-            --profile default \
+            --profile Default \
             <settings from above..>
             --setting subnet_id=<subnet-XXXXXXXX>
         ```
-        
+
         The AWS region setting (`region`) defaults to `us-east-1` if not
         provided.
-        
+
         The list of available regions can be obtained from
         <https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html>
         or from the AWS CLI using `aws ec2 describe-regions`.
-        
+
         **Note:** settings for `ami` and `securitygroup`, and
         `subnet_id` (if applicable) are dependent on the `region`
         setting. Ensure the specified `ami` and `subnet_id` are in the
         specified region.
-        
+
         If the Tortuga installer is hosted on EC2, the specified
         security group must allow unrestricted access to all instances
         within the same security group (ie. installer and compute
         instances. Alternatively, specific ports may be opened as
-        documented in [Firewall Configuration](#firewall) below.
-        
+        documented in [Firewall Configuration](#firewall-configuration)
+        below.
+
         Use one of the following values for `user_data_script_template`:
-        
-          - `bootstrap.tmpl` for RHEL/CentOS 6 & 7 instances
-          - `bootstrap.python3.tmpl` for Fedora 23/24/25
-          - `bootstrap.amazonlinux.tmpl` for recent Amazon Linux
+
+        -   `bootstrap.tmpl` for RHEL/CentOS 6 & 7 instances
+        -   `bootstrap.python3.tmpl` for Fedora 23/24/25
+        -   `bootstrap.amazonlinux.tmpl` for recent Amazon Linux
             versions
-          - `bootstrap.debian.tmpl` for recent Debian/Ubuntu versions
-          - `bootstrap.suse.tmpl` for SUSE Linux/openSUSE versions
-    
-    `adapter-mgmt update` can be used to manage resource adapter
-    configuration profile settings. Erroneous/invalid settings can be
-    removed by using `adapter-mgmt update PROFILENAME --delete NAME`,
-    where `NAME` is the setting name.
-    
-    1.  Create hardware profile to represent EC2 nodes
-        
+        -   `bootstrap.debian.tmpl` for recent Debian/Ubuntu versions
+        -   `bootstrap.suse.tmpl` for SUSE Linux/openSUSE versions
+
+        `adapter-mgmt update` can be used to manage resource adapter
+        configuration profile settings. Erroneous/invalid settings can
+        be removed by using
+        `adapter-mgmt update PROFILENAME --delete NAME`, where `NAME` is
+        the setting name.
+
+    2.  Create hardware profile to represent EC2 nodes
+
         For EC2-based Tortuga installer:
-        
-        ``` shell
+
+        ``` {.shell}
         create-hardware-profile --name execd-aws
         ```
-        
+
         or for hybrid installation:
-        
-        ``` shell
+
+        ``` {.shell}
         create-hardware-profile --name execd-aws --defaults
         ```
-        
+
         The `--defaults` argument requires the provisioning network
         being set up in an earlier steps.
-        
+
         Configure newly created hardware profile for use with Amazon
         EC2:
-        
-        ``` shell
+
+        ``` {.shell}
         update-hardware-profile --name execd-aws \
             --resource-adapter AWS --location remote
         ```
-        
+
         When running with an EC2-based Tortuga installer, it is *also*
         necessary to set the hardware profile name format so
         EC2-assigned host names are used:
-        
-        ``` shell
+
+        ``` {.shell}
         update-hardware-profile --name execd-aws --name-format "*"
         ```
-    
-    2.  Map hardware and software profiles
-        
-        Because the software profile “execd” was previously created and
+
+    3.  Map hardware and software profiles
+
+        Because the software profile "execd" was previously created and
         can be shared between local nodes/virtual machines and EC2-based
         instances, it is not necessary to create another software
         profile.
-        
-        Map EC2 hardware profile to existing “execd” software profile:
-        
-        ``` shell
+
+        Map EC2 hardware profile to existing "execd" software profile:
+
+        ``` {.shell}
         set-profile-mapping --software-profile execd \
             --hardware-profile execd-aws
         ```
 
 12. Install Univa Grid Engine
-    
+
     Now that the Tortuga base installation is complete, it is necessary
     to install Univa Grid Engine.
-    
+
     In this example, the Grid Engine `qmaster` will be run on the
     Tortuga installer node.
-    
+
     1.  Install UGE kit
-    
-    <!-- end list -->
-    
-    ``` shell
-    install-kit kit-uge*.tar.bz2
-    ```
-    
-    1.  Create default Grid Engine cluster
-        
+
+        ``` {.shell}
+        install-kit kit-uge*.tar.bz2
+        ```
+
+    2.  Create default Grid Engine cluster
+
         The command `uge-cluster` is used to configure UGE clusters
         under Tortuga. In this example, the UGE cell/cluster is named
-        “default”.
-        
-        ``` shell
+        "default".
+
+        ``` {.shell}
         uge-cluster create default
         uge-cluster update default \
             --add-qmaster-swprofile Installer
@@ -560,118 +570,119 @@ the `root` user on the Tortuga installer node.
             --var sge_cell_netpath="%(qmaster)s:%(sge_root)s/%(cell_name)s"
         uge-cluster update default --var manage_nfs=false
         ```
-    
-    2.  Enable Grid Engine `qmaster` component on Tortuga installer.
-        
-        ``` shell
+
+    3.  Enable Grid Engine `qmaster` component on Tortuga installer.
+
+        ``` {.shell}
         enable-component -p --no-sync qmaster
         /opt/puppetlabs/bin/puppet agent --onetime --verbose --no-daemonize
         ```
-    
-    3.  Validate installation of `qmaster`
-        
+
+    4.  Validate installation of `qmaster`
+
         It is recommended to validate the installation of the `qmaster`.
-        
+
         Check the version of UGE kit that was installed, either by
-        looking for the version in the kit’s file name or by running
-        
-        ``` shell
+        looking for the version in the kit's file name or by running
+
+        ``` {.shell}
         ls -ld /opt/uge-*
         ```
-        
+
         For example, if the installed version is `8.6.4`, source the
         environment by running:
-        
-        ``` shell
+
+        ``` {.shell}
         . /opt/uge-8.6.4/default/common/settings.sh
         ```
-        
+
         **Hint:** Use the UGE `qhost` command to display list of hosts
         known to the UGE cluster.
-    
-    4.  NFS export the default Grid Engine spool directory
-        
+
+    5.  NFS export the default Grid Engine spool directory
+
         Install NFS support, if necessary:
-        
-        ``` shell
+
+        ``` {.shell}
         yum -y install nfs-utils
         ```
-        
+
         Ensure NFS server service is running:
-        
+
         RHEL/CentOS 6.x:
-        
-        ``` shell
+
+        ``` {.shell}
         service nfs restart
         ```
-        
+
         or RHEL/CentOS 7.x:
-        
-        ``` shell
+
+        ``` {.shell}
         systemctl restart nfs
         ```
-        
+
         Add the following entry to `/etc/exports`:
-        
-        ``` shell
+
+        ``` {.shell}
         /opt/uge-8.6.4 *(rw,async)
         ```
-        
+
         Finally, export the filesystem:
-        
-        ``` shell
+
+        ``` {.shell}
         exportfs -a
         ```
-    
-    5.  Enable `execd` component on software profile(s)
-        
-        Enabling the `execd` component will make nodes in the “execd”
+
+    6.  Enable `execd` component on software profile(s)
+
+        Enabling the `execd` component will make nodes in the "execd"
         software profile automatically part of the UGE cluster.
-        
-        ``` shell
+
+        ``` {.shell}
         enable-component --software-profile execd --no-sync execd
         ```
-    
-    6.  Update UGE cluster configuration
-        
-        ``` shell
+
+    7.  Update UGE cluster configuration
+
+        ``` {.shell}
         uge-cluster update default --add-execd-swprofile execd
         ```
 
 13. Adding compute nodes
-    
+
     To add nodes to the on-premise Tortuga/UGE cluster or physical nodes
     in hybrid installation use the `add-nodes` command as follows:
-    
-    ``` shell
+
+    ``` {.shell}
     add-nodes --count 3 \
         --software-profile execd --hardware-profile execd
     ```
-    
+
     Add nodes on EC2-based Tortuga installation:
-    
-    ``` shell
+
+    ``` {.shell}
     add-nodes --count 3 \
         --software-profile execd --hardware-profile execd-aws
     ```
-    
+
     Check status of newly added node(s) using the `get-node-status`
     command.
-    
+
     Once the node has reached **Installed** state, it is available to be
     used.
-    
+
     Nodes will be created momentarily and automatically added to the UGE
     cluster. Use `qhost` to display UGE cluster host list. It can take a
     few minutes until load values show up for newly added nodes.
 
-## About Tortuga
+About Tortuga
+-------------
 
-In today’s datacenter, it is no longer sufficient to simply install and
+In today's datacenter, it is no longer sufficient to simply install and
 configure systems, then hand them over to users. Maintenance and
 upgrades require frequent adjustments, hardware advances arrive faster
-than ever, and IT staff are expected to provide users with the “latest
-and greatest” technologies without interrupting their work.
+than ever, and IT staff are expected to provide users with the "latest
+and greatest" technologies without interrupting their work.
 
 In recent years, the adoption of *virtualization* and mainstream arrival
 of *cloud computing* have improved datacenter efficiently exponentially.
@@ -707,7 +718,7 @@ to handle complex software configuration management. Nodes can be
 reconfigured on the fly or pre-configured before installation, all
 on-demand.
 
-Software “kits” add the ability for Tortuga to automate almost any kind
+Software "kits" add the ability for Tortuga to automate almost any kind
 of decision based upon any criteria. Tortuga can reconfigure datacenters
 automatically, making adjustments based on customized metrics, cost, or
 performance. Tortuga can optimize resources as and when needed.
@@ -720,7 +731,7 @@ There is no need to know about different APIs or access mechanisms.
 
 On top of what it can already do, Tortuga is also an extensible
 platform. It supports new capabilities which are specific to an
-organization’s proprietary needs. Since Tortuga is written in
+organization's proprietary needs. Since Tortuga is written in
 [Python](http://python.org) and uses
 [Puppet](http://puppet.com "Puppet"), it is easy to create recipes and
 scripts to handle unique datacenter requirements.
@@ -729,22 +740,23 @@ Here are just a few examples of what Tortuga can do. Note that some of
 these examples require the installation of additional, optional software
 kits from Univa:
 
-  - Automatically install an operating system, then install and
+-   Automatically install an operating system, then install and
     configure application software on a physical computer over the
     network (OS and application software stack provisioning).
-  - Create and manage virtual machines on a local hypervisor in a
+-   Create and manage virtual machines on a local hypervisor in a
     datacenter.
-  - Request and manage nodes hosted in a public cloud service such as
+-   Request and manage nodes hosted in a public cloud service such as
     [Amazon EC2](https://aws.amazon.com/ec2/ "Amazon EC2") or a local
     cloud, such as [OpenStack](http://openstack.org "OpenStack").
-  - Integrate with application software and reconfigure systems based on
+-   Integrate with application software and reconfigure systems based on
     cost, current use, or any kind of end-user customized metric.
-  - Enable “cloud bursting” to get users’ the critical resources needed
+-   Enable "cloud bursting" to get users' the critical resources needed
     to complete a time-sensitive project on-time and on-budget,
     especially when the time and cost associated with traditional
     methods of purchasing and installing new hardware are impractical.
 
-## Supporting the Datacenter Lifecycle
+Supporting the Datacenter Lifecycle
+-----------------------------------
 
 Tortuga assists in performing common tasks supporting the lifecycle of a
 datacenter server.
@@ -755,14 +767,15 @@ software application stack.
 Tortuga abstracts complex virtualization APIs to *manage virtual
 machines* using a single, consistent interface.
 
-Tortuga performs *reallocation* of “compute” nodes from one task to
+Tortuga performs *reallocation* of "compute" nodes from one task to
 another.
 
 Tortuga obtains resources from clouds to *cloud burst*, virtually
 integrating public and private clouds into a single, unified, secure
 datacenter.
 
-## Understanding Tortuga Architecture
+Understanding Tortuga Architecture
+----------------------------------
 
 Tortuga treats datacenters, virtual machines, and cloud computing
 resources or *instances* as a *cluster*. Unlike the traditional use of
@@ -771,15 +784,15 @@ specific users, tasks, or functions.
 
 Clusters in Tortuga are collections of *nodes*. A node is simply a
 representation of a machine, be it a physical computer, a virtual
-machine, or a cloud resource. Nodes can even be ‘placeholders’ used to
+machine, or a cloud resource. Nodes can even be 'placeholders' used to
 pre-approve the allocation of cloud resources without actually starting
 them, avoiding usage charges.
 
 Most nodes in Tortuga are called *compute nodes*, regardless of what
 task they are performing. There is also a special node, called the
-*installer node* (also sometimes referred to as the “primary
-installer”), which is the node actually running the Tortuga software.
-It is responsible for managing the cluster, the software applications
+*installer node* (also sometimes referred to as the "primary
+installer"), which is the node actually running the Tortuga software. It
+is responsible for managing the cluster, the software applications
 running on nodes, and can also provision nodes.
 
 Nodes in Tortuga are managed through the definition of *hardware
@@ -787,7 +800,8 @@ profiles* and *software profiles*. These profiles tell Tortuga how nodes
 should be configured (or even if they should be managed by Tortuga at
 all), and are the building blocks used to manage a cluster.
 
-## Detailed Installation Guide
+Detailed Installation Guide
+---------------------------
 
 ### Hardware and Software Requirements
 
@@ -815,8 +829,8 @@ improves the efficiency of the installer.
 
 Tortuga officially supports the following operating systems:
 
-  - Red Hat Enterprise Linux x86-64 7.x and 6.x
-  - CentOS x86-64 7.x and 6.x
+-   Red Hat Enterprise Linux x86-64 7.x and 6.x
+-   CentOS x86-64 7.x and 6.x
 
 ### Network
 
@@ -845,18 +859,18 @@ documentation for configuring node provisioning for further details.
 
 Tortuga supports the following cloud and virtualization platforms:
 
-  - [Amazon Elastic Compute Cloud
+-   [Amazon Elastic Compute Cloud
     (EC2)](https://aws.amazon.com/ec2/ "Amazon EC2")
-  - [Google Compute
+-   [Google Compute
     Engine](https://cloud.google.com/compute "Google Compute Engine")
-  - [Microsoft Azure](https://azure.microsoft.com "Microsoft Azure")
-  - [OpenStack](http://openstack.org "OpenStack")
-  - VMware vSphere® versions 5.x
+-   [Microsoft Azure](https://azure.microsoft.com "Microsoft Azure")
+-   [OpenStack](http://openstack.org "OpenStack")
+-   VMware vSphere® versions 5.x
 
 Support for hypervisors/virtualization and public clouds is provided
-through the installation of additional software feature “kits”.
+through the installation of additional software feature "kits".
 
-Resource adapter “kits” are not automatically installed as part of the
+Resource adapter "kits" are not automatically installed as part of the
 base Tortuga software and may be installed after the base installation.
 
 Refer to the documentation for the kit for any additional requirements.
@@ -897,19 +911,19 @@ common resolutions include:
 
 1.  Adding an entry to `/etc/hosts` for the host name with the following
     format:
-    
-    ``` shell
+
+    ``` {.shell}
     a.b.c.d     hostname.domainname hostname
     ```
 
-2.  Defining the installer’s FQDN in `/etc/sysconfig/network` using the
+2.  Defining the installer's FQDN in `/etc/sysconfig/network` using the
     directive `HOSTNAME="..."`.
-    
+
     Note: changing this setting requires a system reboot in order for
     the change to take effect.
 
 3.  Configuring the DNS server specified in `/etc/resolv.conf` to
-    resolve the installer’s name as a fully-qualified DNS name.
+    resolve the installer's name as a fully-qualified DNS name.
 
 4.  Configuring the public DHCP server (if one is used) to issue the
     proper FQDN to the system when it requests its IP address.
@@ -936,7 +950,7 @@ possible to re-enable the firewall.
 To disable the firewall, run the following commands as `root` on
 RHEL/CentOS 6.x:
 
-``` shell
+``` {.shell}
 /etc/init.d/iptables save
 /etc/init.d/iptables stop
 chkconfig iptables off
@@ -944,29 +958,28 @@ chkconfig iptables off
 
 or on RHEL/CentOS 7.x:
 
-``` shell
+``` {.shell}
 systemctl stop firewalld
 systemctl disable firewalld
 ```
 
 The following ports *must* be open for ingress on the Tortuga installer
-and egress on the Tortuga-managed compute
-nodes:
+and egress on the Tortuga-managed compute nodes:
 
-|  Port | Protocol | Description                                                                                                                |
-| ----: | :------: | -------------------------------------------------------------------------------------------------------------------------- |
-|    22 |   tcp    | ssh                                                                                                                        |
-|    53 | udp/tcp  | DNS                                                                                                                        |
-|    67 | udp/tcp  | DHCP (only req’d for on-premises node provisioning)                                                                        |
-|    68 | udp/tcp  | DHCP (only req’d for on-premises node provisioning)                                                                        |
-|   111 | udp/tcp  | rpcbind (req’d for NFS)                                                                                                    |
-|  2049 | udp/tcp  | NFS                                                                                                                        |
-|  6444 |   tcp    | Grid Engine qmaster *default*                                                                                              |
-|  6445 |   tcp    | Grid Engine execd *default*                                                                                                |
-|  8008 |   tcp    | Tortuga “internal” web server                                                                                              |
-|  8140 |   tcp    | Puppet server                                                                                                              |
-|  8443 |   tcp    | Tortuga web service                                                                                                        |
-| 61614 |   tcp    | [ActiveMQ](http://activemq.apache.org/ "ActiveMQ") (req’d by [MCollective](https://puppet.com/mcollective/ "MCollective")) |
+     Port  Protocol  Description
+  ------- ---------- ----------------------------------------------------------------------------------------------------------------------------
+       22    tcp     ssh
+       53  udp/tcp   DNS
+       67  udp/tcp   DHCP (only req'd for on-premises node provisioning)
+       68  udp/tcp   DHCP (only req'd for on-premises node provisioning)
+      111  udp/tcp   rpcbind (req'd for NFS)
+     2049  udp/tcp   NFS
+     6444    tcp     Grid Engine qmaster *default*
+     6445    tcp     Grid Engine execd *default*
+     8008    tcp     Tortuga "internal" web server
+     8140    tcp     Puppet server
+     8443    tcp     Tortuga web service
+    61614    tcp     [ActiveMQ](http://activemq.apache.org/ "ActiveMQ") (req'd by [MCollective](https://puppet.com/mcollective/ "MCollective"))
 
 **Note:** it may be necessary to open additional ports depending on
 system configuration and/or applications in use.
@@ -1014,39 +1027,39 @@ including `kernel.x86_64`, the OS package repositories are not
 configured correctly and Tortuga installation will fail.
 
 [Red Hat Enterprise Linux](#red-hat-enterprise-linux) (RHEL) users must
-ensure the “optional” repository is enabled. Assuming the node has been
+ensure the "optional" repository is enabled. Assuming the node has been
 registered with Red Hat Network, this repository can be enabled using
 `yum-config-manager` (from the `yum-utils` package):
 
 RHEL 7 Server:
 
-``` shell
+``` {.shell}
 yum-config-manager --enable rhel-7-server-optional-rpms
 ```
 
 RHEL 7 Server on AWS:
 
-``` shell
+``` {.shell}
 yum-config-manager --enable rhui-REGION-rhel-server-optional
 ```
 
 RHEL 6 Server:
 
-``` shell
+``` {.shell}
 yum-config-manager --enable rhel-6-server-optional-rpms
 ```
 
 RHEL 6 Server on AWS:
 
-``` shell
+``` {.shell}
 yum-config-manager --enable rhui-REGION-rhel-server-releases-optional
 ```
 
 #### SELinux
 
-Tortuga is **not** compatible with SELinux when in “Enforcing” mode.
+Tortuga is **not** compatible with SELinux when in "Enforcing" mode.
 
-Please ensure SELinux is in “Permissive” mode or disabled entirely.
+Please ensure SELinux is in "Permissive" mode or disabled entirely.
 
 The file `/etc/sysconfig/selinux` contains the configuration for
 SELinux.
@@ -1064,14 +1077,14 @@ setting persist after reboot.
 Tortuga is distributed as a `bzip2` compressed tar file. Install `bzip2`
 as follows, if necessary:
 
-``` shell
+``` {.shell}
 yum install bzip2
 ```
 
 Unpack the software and change to the directory containing the software
 as follows:
 
-``` shell
+``` {.shell}
 tar xjf tortuga-*.tar.bz2
 cd tortuga-*
 ```
@@ -1079,7 +1092,7 @@ cd tortuga-*
 Begin the installation process by running the installation script in
 that directory:
 
-``` shell
+``` {.shell}
 ./install-tortuga.sh
 ```
 
@@ -1089,13 +1102,13 @@ database.
 The installer accepts a few options, which can be viewed by running
 `./install-tortuga.sh --help`. The important options are:
 
-  - `--verbose` or `-v` to enable more detailed output.
-  - `--force` to force the installer to run even if the `$TORTUGA_ROOT`
+-   `--verbose` or `-v` to enable more detailed output.
+-   `--force` to force the installer to run even if the `$TORTUGA_ROOT`
     directory already exists; this should only be used if an error
     occurred and the installer now refuses to run.
 
 Installing Tortuga takes several minutes. The actual time required
-depends on the speed of the installer’s Internet connection and what
+depends on the speed of the installer's Internet connection and what
 dependencies must be installed.
 
 **NOTE:** [EPEL](https://fedoraproject.org/wiki/EPEL "EPEL") and
@@ -1107,7 +1120,7 @@ repositories respond.
 
 #### Running `tortuga-setup`
 
-*NOTE: tortuga-setup **must** be run as the ‘root’ user*
+*NOTE: tortuga-setup **must** be run as the 'root' user*
 
 `tortuga-setup` configures Tortuga to run on the installer. Setup times
 are dependent upon system speed, and generally range from 5-15 minutes.
@@ -1118,7 +1131,7 @@ new shells or terminals.
 
 To run setup:
 
-``` shell
+``` {.shell}
 /opt/tortuga/bin/tortuga-setup
 ```
 
@@ -1129,7 +1142,7 @@ following questions:
     `/opt/tortuga/depot`)
 2.  What administrative username and password should be used?
 
-The ‘depot directory’ is used by Tortuga to store (mostly package) files
+The 'depot directory' is used by Tortuga to store (mostly package) files
 required by compute nodes provisioned by Tortuga. Multiple YUM
 repositories will be created in this directory. The disk space required
 depends on the number of operating systems installed for provisioning,
@@ -1146,9 +1159,11 @@ as administrators of specific hardware and software profiles. The
 default Tortuga installation has a single administrator. Tortuga users
 can be added, deleted, and passwords changed, after setup is complete.
 
-## Tortuga Fundamentals
+Tortuga Fundamentals
+--------------------
 
-## Command-line interface
+Command-line interface
+----------------------
 
 Tortuga offers a command-line interface usable for scripting, with all
 commands contained in the directory `$TORTUGA_ROOT/bin`. The
@@ -1157,11 +1172,11 @@ Linux `man <command>` syntax.
 
 Useful options accepted by all Tortuga commands include:
 
-  - `-h`, `-?`, or `--help` – display a summary of options supported by
+-   `-h`, `-?`, or `--help` -- display a summary of options supported by
     the command
-  - `-v` – print the version of the Tortuga command and exit
-  - `--username USERNAME` – Specifies a Tortuga username
-  - `--password PASSWORD` – Specifies a Tortuga password
+-   `-v` -- print the version of the Tortuga command and exit
+-   `--username USERNAME` -- Specifies a Tortuga username
+-   `--password PASSWORD` -- Specifies a Tortuga password
 
 ### Software and Hardware profiles
 
@@ -1180,7 +1195,7 @@ what virtualization or cloud provider might be used.
 Hardware profiles also specify the default operating system kernel.
 Since public cloud providers frequently bundle hardware information with
 a base software image, this allows Tortuga to properly manage them. For
-example, Amazon EC2 specifies an ‘AMI’ which not only dictates things
+example, Amazon EC2 specifies an 'AMI' which not only dictates things
 like disk storage, but also a complete image of the root filesystem and
 kernel.
 
@@ -1198,7 +1213,7 @@ command.
 For example, to create a hardware profile using the default hardware
 profile template:
 
-``` shell
+``` {.shell}
 create-hardware-profile --name LocalIron
 ```
 
@@ -1207,23 +1222,14 @@ nodes.
 
 The following arguments are optional:
 
-  - `--name <NAME>` – The name of the hardware profile. Best kept to a
-    short descriptive name such as “LocalIron” or “Mfg\_model\_500”.
-  - `--description <DESCRIPTION>` – A human-readable description of the
+-   `--name <NAME>` -- The name of the hardware profile. Best kept to a
+    short descriptive name such as "LocalIron" or "Mfg\_model\_500".
+-   `--description <DESCRIPTION>` -- A human-readable description of the
     intended use for the hardware profile. Stored, but not interpreted,
     by Tortuga. The description may contain spaces, if quoted.
-  - `--os <name-version-arch>` – If provisioning is enabled and multiple
-    OS kits are installed, this selects the OS for the profile. If
-    unspecified, the OS running on the installer node is used.
-  - `--idleSoftwareProfile <PROFILENAME>` – Used for physical nodes. If
-    a node is idled using the `idle-node` command, it is forced into
-    this software profile.
-
-Idle profiles are useful when a software profile (see below) includes an
-application with an “expensive” or limited license. When the node is
-idled, the idle profile eliminates the application from the node,
-freeing up the license. This is generally unnecessary for virtual
-machine nodes, which are deleted entirely instead of idled.
+-   `--os <name-version-arch>` -- If provisioning is enabled and
+    multiple OS kits are installed, this selects the OS for the profile.
+    If unspecified, the OS running on the installer node is used.
 
 The nodes using a given hardware profile do not actually need to have
 *identical* hardware. They must, however, be interchangeable in terms of
@@ -1231,7 +1237,7 @@ how they can be managed (created, deleted, turned on or off, etc) at the
 hardware level.
 
 Virtual machines which will be created and managed outside of Tortuga
-should be treated as physical machines. Tortuga does not ‘detect’ if a
+should be treated as physical machines. Tortuga does not 'detect' if a
 node is physical or virtual.
 
 ##### Network Settings
@@ -1249,9 +1255,9 @@ For example, when provisioning VMware vSphere-based compute nodes, if
 the provisioning NIC (that is, the NIC connected to the
 provisioning/management network on the Tortuga installer) has an IP
 address `10.0.0.1` and the provisioning/management network is
-“10.0.0.0/255.255.255.0”, the following command-line would be used:
+"10.0.0.0/255.255.255.0", the following command-line would be used:
 
-``` shell
+``` {.shell}
 update-hardware-profile --name PROFILE --add-provisioning-nic 10.0.0.1 \
     --add-network 10.0.0.0/255.255.255.0/eth0
 ```
@@ -1282,12 +1288,12 @@ kernel, and name format) will only take effect for *future* nodes, not
 The following command changes the host name format of the hardware
 profile `Rack2`:
 
-``` shell
+``` {.shell}
 update-hardware-profile --name Rack2 --name-format rack2-#NN
 ```
 
 Nodes not provisioned and/or managed by Tortuga can be added by setting
-the hardware profile location to be “remote”, using the command
+the hardware profile location to be "remote", using the command
 `update-hardware-profile --name <NAME> --location remote`. This is
 useful in cases where Tortuga must be aware of, but not necessarily
 manage, a node. For example, this allows the addition of externally
@@ -1298,7 +1304,7 @@ software profile. The relationship of (hardware profile) virtual
 machine, hosted by a (software profile) hypervisor, running on a
 (hardware profile) physical machine, is configured using:
 
-``` shell
+``` {.shell}
 update-hardware-profile --name <NAME> --hypervisor-profile PROFILE
 ```
 
@@ -1317,7 +1323,7 @@ Hardware profiles can be deleted using the `delete-hardware-profile`
 command. Hardware profiles cannot be deleted until associated nodes
 nodes are first deleted.
 
-``` shell
+``` {.shell}
 delete-hardware-profile --name Rack2
 ```
 
@@ -1325,7 +1331,7 @@ delete-hardware-profile --name Rack2
 
 ##### Software Profiles Overview
 
-A *software profile* describes the software “stack” or configuration
+A *software profile* describes the software "stack" or configuration
 (applications + operating system), as well as the disk setup for a
 managed node.
 
@@ -1336,7 +1342,7 @@ Nodes are added to software profiles when they are added to the cluster.
 Unlike the associated hardware profile, the software profile associated
 with a node can be changed at any time. When the software profile of a
 node is changed, the entire node, including the operating system, is
-reinstalled to ensure the software configuration is “clean”.
+reinstalled to ensure the software configuration is "clean".
 
 The software profile `Installer` is automatically created when Tortuga
 is first installed. This profile is specifically reserved for use by the
@@ -1364,16 +1370,16 @@ Create software profiles using the \`create-software-profile command.
 
 The following arguments are optional:
 
-  - `--template <PATH>` – Full path to JSON software profile template
-  - `--name <NAME>` – The name of the software profile. Best kept to a
-    short descriptive name such as “AppName” or “Engineering\_Dept”.
-  - `--description <DESCRIPTION>` – A human-readable description of the
+-   `--template <PATH>` -- Full path to JSON software profile template
+-   `--name <NAME>` -- The name of the software profile. Best kept to a
+    short descriptive name such as "AppName" or "Engineering\_Dept".
+-   `--description <DESCRIPTION>` -- A human-readable description of the
     intended use for the software profile. Stored, but not interpreted,
     by Tortuga. The description may contain spaces, if quoted.
-  - `--os <name-version-arch>` – If provisioning is enabled and multiple
-    OS kits are installed, this selects the default OS for the profile.
-    This option requires that the hardware profile used allows the
-    software profile to override the OS spec.
+-   `--os <name-version-arch>` -- If provisioning is enabled and
+    multiple OS kits are installed, this selects the default OS for the
+    profile. This option requires that the hardware profile used allows
+    the software profile to override the OS spec.
 
 If the JSON software profile template is not specified, a barebones
 software profile is created. **Note:** the barebones software profile
@@ -1385,7 +1391,7 @@ on-premise/physical).
 The following command will create a software profile named `Compute`
 provisioned with the same operating system as the Tortuga installer:
 
-``` shell
+``` {.shell}
 create-software-profile --name Compute
 ```
 
@@ -1394,7 +1400,7 @@ systems (assuming the OS kit has already been installed. See below for
 more details). This command would set the operating system of nodes
 created in the `Compute` software profile to RHEL 7.5 x86\_64:
 
-``` shell
+``` {.shell}
 create-software-profile --name Compute --os rhel-7.5-x86_64
 ```
 
@@ -1405,7 +1411,7 @@ When creating software profiles to represent cloud-based nodes, the
 argument `--no-os-media-required` can be used to avoid the need to
 install OS installation media:
 
-``` shell
+``` {.shell}
 create-software-profile --name Compute --no-os-media-required
 ```
 
@@ -1417,13 +1423,13 @@ image defined and a pre-existing operating system installation.
 
 Dump an existing software profile to a JSON file:
 
-``` shell
+``` {.shell}
 get-software-profile --name execd --json >mytemplate.json
 ```
 
 Use the template to create new software profile(s):
 
-``` shell
+``` {.shell}
 create-software-profile --name newexecd --template mytemplate.json
 ```
 
@@ -1440,7 +1446,7 @@ existing nodes the next time the cluster is updated.
 
 Software profiles can be edited using the following command:
 
-``` shell
+``` {.shell}
 update-software-profile --name <NAME> ...
 ```
 
@@ -1456,38 +1462,38 @@ removing nodes. This feature is useful for applications where only a
 fixed set of nodes is supported.
 
 The default lock state of a newly created software profile is
-“Unlocked”.
+"Unlocked".
 
-Set the locked state to “SoftLocked” with the following command:
+Set the locked state to "SoftLocked" with the following command:
 
-``` shell
+``` {.shell}
 update-software-profile --name NAME --soft-locked
 ```
 
-This will “soft lock” the software profile such that nodes cannot be
+This will "soft lock" the software profile such that nodes cannot be
 added and/or removed without the use of the `--force` argument specified
 to `add-nodes` or `delete-node`, respectively.
 
-Use `update-software-profile --name NAME --hard-locked` to “hard lock”
+Use `update-software-profile --name NAME --hard-locked` to "hard lock"
 the software profile which prevents all `add-nodes` or `delete-node`
 operations, regardless of the usage of the `--force` flag. In order to
 add or delete nodes from a hard locked software profile, it is necessary
-to first revert the lock to “soft locked” or disable it entirely.
+to first revert the lock to "soft locked" or disable it entirely.
 
 Clear (or remove) any software profile lock with the following command:
 
-``` shell
+``` {.shell}
 update-software-profile --name NAME --unlock
 ```
 
 ##### Software profile minimum and maximum nodes
 
-Software profiles do not have imposed minimums or maximums. That is, all
-software profiles may have an unlimited number of software profiles.
+Software profiles do not have imposed minimums but will by default not
+allow for more than a maximum of 25 nodes.
 
 The following command imposes a software profile minimum:
 
-``` shell
+``` {.shell}
 update-software-profile --name NAME --min-nodes 16
 ```
 
@@ -1498,7 +1504,7 @@ irrespective of any software profile locks.
 Conversely, it is also possible to impose a maximum number of nodes
 within a software profile:
 
-``` shell
+``` {.shell}
 update-software-profile --name NAME --max-nodes 16
 ```
 
@@ -1508,17 +1514,23 @@ will be rejected.
 Clear minimum or maximum limits by specifying `none` as the argument to
 `--min-nodes` or `--max-nodes` respectively:
 
-``` shell
+``` {.shell}
 update-software-profile --name NAME --min-nodes none
 ```
 
-``` shell
+``` {.shell}
 update-software-profile --name NAME --max-nodes none
 ```
 
-``` shell
+``` {.shell}
 update-software-profile --name NAME --min-nodes none --max-nodes none
 ```
+
+Having no maximum implies that an unlimited number of nodes can be
+created for a software profile. **Use this setting with caution,
+especially when using automation rules for scaling up clusters.** If you
+have no maximum set and your scaling rules have a bug, you could end-up
+with an (unintentionally) very high bill for cloud services.
 
 #### Deleting software profiles
 
@@ -1530,7 +1542,7 @@ profile.
 
 Example:
 
-``` shell
+``` {.shell}
 delete-software-profile --name Compute
 ```
 
@@ -1545,7 +1557,7 @@ virtual node.
 
 The Tortuga administrator can create mappings using the command:
 
-``` shell
+``` {.shell}
 set-profile-mapping --hardware-profile <HWPROFILE> \
     --software-profile <SWPROFILE>
 ```
@@ -1575,7 +1587,7 @@ Kits distributed are as bzip2 compressed archive files.
 
 The kit filename has the following format:
 
-``` shell
+``` {.shell}
 kit-<name>-<version>-<iteration>.tar.bz2
 ```
 
@@ -1584,21 +1596,21 @@ kit-<name>-<version>-<iteration>.tar.bz2
 The `get-kit-list` command will display all installed kits (application
 + operating system):
 
-``` shell
+``` {.shell}
 [root@tortuga ~]# get-kit-list
-awsadapter-7.0.2-0
-base-7.0.2-0
+awsadapter-7.0.3-0
+base-7.0.3-0
 centos-7.0-0
 ganglia-3.7.2-1
-gceadapter-7.0.2-0
-simple_policy_engine-7.0.2-0
-snmp-7.0.2-0
+gceadapter-7.0.3-0
+simple_policy_engine-7.0.3-0
+snmp-7.0.3-0
 uge-8.6.4-0
 ```
 
 To display operating system kits only, use the `--os` argument:
 
-``` shell
+``` {.shell}
 get-kit-list --os
 ```
 
@@ -1606,13 +1618,13 @@ get-kit-list --os
 
 Kits are installed using the following command:
 
-``` shell
+``` {.shell}
 install-kit kit-sample-1.0-0.tar.bz2
 ```
 
 #### Components
 
-Kits contain one or more *components*. Components are logical “packages”
+Kits contain one or more *components*. Components are logical "packages"
 providing the Puppet recipes and integration logic needed to use the
 software in the kit.
 
@@ -1627,21 +1639,21 @@ what those components do, and how to configure them.
 
 Use `get-component-list` to display all available components.
 
-``` shell
+``` {.shell}
 [root@tortuga ~]# get-component-list
-snmp-7.0.2-0 snmpd-7.0.2
-base-7.0.2-0 core-7.0.2
-base-7.0.2-0 installer-7.0.2
-base-7.0.2-0 dhcpd-7.0.2
-base-7.0.2-0 dns-7.0.2
-awsadapter-7.0.2-0 management-7.0.2
-gceadapter-7.0.2-0 management-7.0.2
+snmp-7.0.3-0 snmpd-7.0.3
+base-7.0.3-0 core-7.0.3
+base-7.0.3-0 installer-7.0.3
+base-7.0.3-0 dhcpd-7.0.3
+base-7.0.3-0 dns-7.0.3
+awsadapter-7.0.3-0 management-7.0.3
+gceadapter-7.0.3-0 management-7.0.3
 uge-8.6.4-0 qmaster-8.6.4
 uge-8.6.4-0 execd-8.6.4
-simple_policy_engine-7.0.2-0 engine-7.0.2
+simple_policy_engine-7.0.3-0 engine-7.0.3
 ganglia-3.7.2-1 gmetad-3.7.2
 ganglia-3.7.2-1 gmond-3.7.2
-centos-7.0-0 centos-7.0-x86_64-7.0.2
+centos-7.0-0 centos-7.0-x86_64-7.0.3
 ```
 
 #### Display list of enabled components
@@ -1652,22 +1664,22 @@ specified software profile will be displayed.
 
 For example, to display the components enabled on the Tortuga installer:
 
-``` shell
+``` {.shell}
 [root@tortuga ~]# get-component-list --software-profile Installer
-base-7.0.2-0 installer-7.0.2
-base-7.0.2-0 dns-7.0.2
+base-7.0.3-0 installer-7.0.3
+base-7.0.3-0 dns-7.0.3
 uge-8.6.4-0 qmaster-8.6.4
 ```
 
 or using the shortcut:
 
-``` shell
+``` {.shell}
 get-component-list -p
 ```
 
-To display the components enabled on software profile “Compute”:
+To display the components enabled on software profile "Compute":
 
-``` shell
+``` {.shell}
 get-component-list --software-profile Compute
 ```
 
@@ -1677,14 +1689,14 @@ Components are enabled per software profile using the `enable-component`
 command. For example, to enable the `pdsh` component on the Tortuga
 installer:
 
-``` shell
-enable-component -p base-7.0.2-0 pdsh-7.0.2
+``` {.shell}
+enable-component -p base-7.0.3-0 pdsh-7.0.3
 ```
 
-**Hint:** Since it is unlikely to be another component named “pdsh”, use
+**Hint:** Since it is unlikely to be another component named "pdsh", use
 the command-line shortcut:
 
-``` shell
+``` {.shell}
 enable-component -p pdsh
 ```
 
@@ -1695,16 +1707,16 @@ compute nodes, it is **highly recommended** to reinstall/reprovision
 compute nodes after changing the enabled components.
 
 The `schedule-update` command must be used after components have been
-enabled/disable to synchronize the cluster. See the “Cluster
-Synchronization” section.
+enabled/disable to synchronize the cluster. See the "Cluster
+Synchronization" section.
 
 #### Removing Kits
 
 Kits are removed using the `delete-kit` command. A kit may not be
 deleted if any of its components are enabled on a software profile. The
-‘base’ and ‘clonezilla’ kits may not be deleted at all.
+'base' and 'clonezilla' kits may not be deleted at all.
 
-``` shell
+``` {.shell}
 delete-kit --name badkit --version 7.0 --iteration 0
 ```
 
@@ -1731,7 +1743,7 @@ depends on the number of nodes affected, and the scope of the changes.
 
 #### Base Kit
 
-The “base” kit is a special kit which is included automatically when you
+The "base" kit is a special kit which is included automatically when you
 install Tortuga. It contains components to manage built-in Tortuga
 features.
 
@@ -1740,8 +1752,8 @@ features.
 The following components in the base kit are internally used by Tortuga
 and should never be explicitly enabled or disabled:
 
-  - `core`
-  - `installer`
+-   `core`
+-   `installer`
 
 ##### Base component: dhcpd
 
@@ -1749,14 +1761,14 @@ The `dhcpd` component can be enabled only on the `Installer` software
 profile.
 
 If enabled, the installer node will configure and manage a DHCP server
-running on any “provisioning” networks defined in Tortuga.
+running on any "provisioning" networks defined in Tortuga.
 
 This component must be enabled to provision *local* (non-cloud) nodes.
 
 Enable the `dhcpd` component with the command:
 
-``` shell
-enable-component -p base-7.0.2-0 dhcpd-7.0.2
+``` {.shell}
+enable-component -p base-7.0.3-0 dhcpd-7.0.3
 ```
 
 `/opt/puppetlabs/bin/puppet agent --onetime --no-daemonize` is used to
@@ -1780,8 +1792,8 @@ system to its associated IP address.
 
 Enable the `dns` component with the command:
 
-``` shell
-enable-component -p base-7.0.2-0 dns-7.0.2
+``` {.shell}
+enable-component -p base-7.0.3-0 dns-7.0.3
 ```
 
 ###### Configuring Tortuga private DNS domain
@@ -1791,20 +1803,20 @@ compute node host name when provisioning on-premise physical or virtual
 machines or when *optionally* enabled in resource adapter(s) using the
 `override_dns_domain` resource adapter configuration setting.
 
-On Tortuga 7.0.2 (and later), the `set-private-dns-zone` command-line is
-used to display the current “private” DNS zone by calling it without an
+On Tortuga 7.0.3 (and later), the `set-private-dns-zone` command-line is
+used to display the current "private" DNS zone by calling it without an
 argument:
 
-``` shell
+``` {.shell}
 [root@tortuga ~]# set-private-dns-zone
 cloud.univa.com
 ```
 
-On Tortuga versions prior to 7.0.2, use `ucparam` to get the current
+On Tortuga versions prior to 7.0.3, use `ucparam` to get the current
 (private) DNS domain. The Tortuga default private DNS domain is
 `private`.
 
-``` shell
+``` {.shell}
 [root@tortuga ~]# ucparam get DNSZone
 cloud.univa.com
 ```
@@ -1812,7 +1824,7 @@ cloud.univa.com
 Use `set-private-dns-zone <DOMAIN>` to set (private) DNS domain. For
 example:
 
-``` shell
+``` {.shell}
 set-private-dns-zone cloud.mydomain.com
 ```
 
@@ -1849,13 +1861,13 @@ service as follows:
 
 RHEL/CentOS 6:
 
-``` shell
+``` {.shell}
 service dnsmasq restart
 ```
 
 RHEL/CentOS 7:
 
-``` shell
+``` {.shell}
 systemctl restart dnsmasq
 ```
 
@@ -1890,7 +1902,7 @@ specified.
 
 The commands `add-admin`, `delete-admin`, `get-admin`, `get-admin-list`,
 and `update-admin` manage Tortuga-specific users. Compute nodes in the
-cluster are accessed “normally” using the standard access method(s) for
+cluster are accessed "normally" using the standard access method(s) for
 their operating systems.
 
 The commands `add-admin-to-profile` and `delete-admin-from-profile` set
@@ -1913,22 +1925,23 @@ by the software profile of the node.
 Before this can happen, however, Tortuga needs to copy the necessary
 files to boot and install the OS.
 
-By default, the default Kickstart file tempate assigns a random `root`
+By default, the default Kickstart file template assigns a random `root`
 password to all compute nodes for security purposes.
 
-## Networking Requirements
+Networking Requirements
+-----------------------
 
 Tortuga requires a private network for provisioning. This network will
 be managed by the installer node. This network does not require Internet
 access, and may be implemented with a VLAN.
 
 Example 1: The installer has two NICs: `eth0` and `eth1`. The `eth0`
-interface is connected to the ‘public’ network. The `eth1` interface is
+interface is connected to the 'public' network. The `eth1` interface is
 connected only to the systems in the datacenter as nodes and
 hypervisors, and carries the provisioning network.
 
 Example 2: The installer has a single NIC, `eth0`. The `eth0` interface
-is connected to the ‘public’ network. An `eth0.10` sub-interface is
+is connected to the 'public' network. An `eth0.10` sub-interface is
 defined in the OS for use as a tagged VLAN, and the switch port is set
 to allow tagged traffic for VLAN 10. The `eth0` interfaces of the
 systems in the datacenter serving as nodes and hypervisors are connected
@@ -1939,7 +1952,7 @@ to ports on the switch set to place all untagged traffic on VLAN 10.
 Provisioning network(s) are registered with Tortuga using the `add-nic`
 utility. For example:
 
-``` shell
+``` {.shell}
 add-nic --nic <interface>
 ```
 
@@ -1947,14 +1960,14 @@ A typical dual-homed Tortuga installer may have the private/provisioning
 network connected to the `eth1` device. The follow command-line would be
 used to register the private/provisioning network:
 
-``` shell
+``` {.shell}
 add-nic --nic eth1
 ```
 
 If the interface is associated with a VLAN (in this example, VLAN ID
 100), the command-line would be as follows:
 
-``` shell
+``` {.shell}
 add-nic --nic eth1.100
 ```
 
@@ -1967,8 +1980,8 @@ specified network interface can also be manually overridden. See
 `add-nic` command usage (`add-nic --help`) for more information.
 
 *Important firewall note:* If a firewall is running on the Tortuga
-installer, please see the section “Firewall Configuration” under
-“Planning for Installation” to verify proper configuration. Incorrect
+installer, please see the section "Firewall Configuration" under
+"Planning for Installation" to verify proper configuration. Incorrect
 firewall configurations will cause provisioning failures.
 
 #### Multiple Provisioning NICs
@@ -1979,7 +1992,7 @@ For example, if `eth1` and `eth2` on the Tortuga installer were
 connected to private/provisioning network subnets, the provisioning NICs
 would be added successively as follows:
 
-``` shell
+``` {.shell}
 add-nic --nic=eth1
 add-nic --nic=eth2
 ```
@@ -1990,7 +2003,7 @@ configure Tortuga to uniquely identify the provisioning subnets.
 Add the following to the `[dns]` section in the DNS component
 configuration file (`$TORTUGA_ROOT/config/base/dns-component.conf`):
 
-``` shell
+``` {.shell}
 [dns]
 ...
 enable_interface_aliases = True
@@ -2005,23 +2018,24 @@ subnet.
 nodes, the existing compute nodes will need to be refreshed. Run
 `schedule-update` to synchronize DNS changes.
 
-## Enabling Tortuga Components for Provisioning
+Enabling Tortuga Components for Provisioning
+--------------------------------------------
 
 Enable the following base components on the installer for provisioning:
 
-  - `dhcpd`
-      - Enables ISC DHCP daemon on provisioning network
-  - `dns`
-      - Enables DNS services on provisioning network
-  - `pdsh` (*optional*)
-      - Parallel distributed shell for performing batch operations on
+-   `dhcpd`
+    -   Enables ISC DHCP daemon on provisioning network
+-   `dns`
+    -   Enables DNS services on provisioning network
+-   `pdsh` (*optional*)
+    -   Parallel distributed shell for performing batch operations on
         many nodes
 
 These components are enabled using `enable-component`. For example:
 
-``` shell
-enable-component -p base-7.0.2-0 dhcpd-7.0.2
-enable-component -p base-7.0.2-0 dns-7.0.2
+``` {.shell}
+enable-component -p base-7.0.3-0 dhcpd-7.0.3
+enable-component -p base-7.0.3-0 dns-7.0.3
 ```
 
 Use `get-component-list` to see the exact name of the components and
@@ -2038,7 +2052,7 @@ the installer configuration.
 
 #### Installing an OS Kit
 
-An OS “kit” is a special kind of software kit. Instead of an archive
+An OS "kit" is a special kind of software kit. Instead of an archive
 file, it is installed using the installation CD/DVD of an operating
 system. The only component of an OS kit is the OS itself, and this
 component cannot be enabled or disabled on any profile, and is treated
@@ -2050,10 +2064,10 @@ You *must* install an OS kit in order to provision compute nodes.
 To install an OS kit, use the `install-os-kit` command. This command has
 several special flags:
 
-  - `--media` – specifies the location of the OS media, which should be
+-   `--media` -- specifies the location of the OS media, which should be
     the location of the installation DVDs for that OS; see below for
     supported types
-  - `--symlinks` – specifies that symbolic links should be used instead
+-   `--symlinks` -- specifies that symbolic links should be used instead
     of copying files, to save space
 
 The media accepted includes file directories, such as the mount point of
@@ -2068,7 +2082,7 @@ always available after a reboot, so this option should only be used if
 you have a permanent copy of the files on the local system, or you
 automatically mount it upon every reboot. If these files are not present
 when you attempt to provision a node, it will fail and your only
-indication will be at the node’s attached terminal screen.
+indication will be at the node's attached terminal screen.
 
 The files copied when you install an OS kit are placed into the depot
 directory, selected during installation, defaulting to
@@ -2080,21 +2094,20 @@ location.
 
 ##### Installing OS kit Examples
 
-Install (proxy) OS media through a
-mirror:
+Install (proxy) OS media through a mirror:
 
-``` shell
+``` {.shell}
 install-os-kit --mirror --media http://<CentOS mirror URL>/centos-6.4-x86_64/
 ```
 
 If using this method of installing OS media, it is *highly recommended*
 that the URL is for a host on your local network due to performance
-reasons. Specifying a remote URL, for example that of a “true” CentOS
+reasons. Specifying a remote URL, for example that of a "true" CentOS
 mirror, will result in much slower compute node provisioning time.
 
 Install OS media from locally mounted media:
 
-``` shell
+``` {.shell}
 install-os-kit --media /media/disc1,/media/disc2
 ```
 
@@ -2103,7 +2116,7 @@ This copies the contents of the OS media found in subdirectories
 
 Install (symlink) OS media from locally mounted media:
 
-``` shell
+``` {.shell}
 install-os-kit --media /media/disc1,/media/disc2 --symlinks
 ```
 
@@ -2112,7 +2125,7 @@ specified paths.
 
 Install OS media from ISOs:
 
-``` shell
+``` {.shell}
 install-os-kit --media /isos/centos1.iso,/isos/centos2.iso
 ```
 
@@ -2121,24 +2134,25 @@ install-os-kit --media /isos/centos1.iso,/isos/centos2.iso
 As an example, the `$timezone` variable in the default `kickstart.tmpl`
 is set using `ucparam` as follows:
 
-``` shell
+``` {.shell}
 ucparam set Timezone_zone <TZSPEC>
 ```
 
 where `<TZSPEC>` is the exact time zone specification as output by
 `timedatectl list-timezones`. For example,
 
-``` shell
+``` {.shell}
 ucparam set Timezone_zone America/New_York
 ```
 
 Please note, the Tortuga configuration setting `Timezone_utc` is not
-currently used in the default Kickstarte template file. Set this
+currently used in the default Kickstart template file. Set this
 manually in the Kickstart file template as appropriate.
 
 Use `ucparam list` to display list of Tortuga configuration settings.
 
-## Special Configurations
+Special Configurations
+----------------------
 
 After completing the steps in this section, you may in some cases need
 to change the provisioning network parameters. You can view the network
@@ -2154,14 +2168,14 @@ pre-allocated and placed systems on the provisioning network which will
 of the network 10.2.0.0/255.255.255.0 to 10.2.0.3, the following command
 can be used:
 
-``` shell
+``` {.shell}
 update-network --network 10.2.0.0/255.255.255.0 --start-ip 10.2.0.3
 ```
 
 The `--increment` option allows you to reserve multiple IP addresses for
 each node which is provisioned, if needed:
 
-``` shell
+``` {.shell}
 update-network --network 10.2.0.0/255.255.255.0 --increment 2
 ```
 
@@ -2179,24 +2193,25 @@ nodes:
 
 ### Enable IP forwarding on the Tortuga installer
 
-``` shell
+``` {.shell}
 echo 1 > /proc/sys/net/ipv4/ip_forward
 ```
 
 ### Enable NAT
 
 In this example, it is assumed `eth0` on the Tortuga installer is
-connected to the “public” network and `eth1` is the private or
+connected to the "public" network and `eth1` is the private or
 provisioning network.
 
-``` shell
+``` {.shell}
 /sbin/iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 /sbin/iptables -A FORWARD -i eth0 -o eth1 -m state \
     --state RELATED,ESTABLISHED -j ACCEPT
 /sbin/iptables -A FORWARD -i eth1 -o eth0 -j ACCEPT
 ```
 
-## Managing Clusters
+Managing Clusters
+-----------------
 
 Managing a cluster in Tortuga essentially means just a few things. Nodes
 can be added and removed, and configured (as well as transitioned
@@ -2206,10 +2221,9 @@ between configurations).
 
 Nodes are added to a Tortuga cluster using the `add-nodes` command.
 
-The `add-nodes` command has the basic
-syntax:
+The `add-nodes` command has the basic syntax:
 
-``` shell
+``` {.shell}
 add-nodes --count <NUMBER> --hardware-profile XXXX --software-profile YYYY
 ```
 
@@ -2227,7 +2241,7 @@ Use the `--mac-addr` argument to `add-nodes` when adding physical
 
 For example:
 
-``` shell
+``` {.shell}
 add-nodes --mac-addr AA:BB:CC:DD:EE:FF \
     --software-profile XXXX --hardware-profile YYYY
 ```
@@ -2240,14 +2254,14 @@ node to be provisioned accordingly.
 To add a node not provisioned by Tortuga, but may be managed (such as a
 node which is a pre-installed hypervisor), use the following syntax:
 
-``` shell
+``` {.shell}
 add-nodes --hardware-porofile XXXX --software-profile YYYY \
     --host-name <HOSTNAME> [--mac-addr <MAC ADDRESS> \
     --ip-address <IP ADDRESS>]
 ```
 
 If a node to be added is *not* on the provisioning network, the hardware
-profile (see the associated section) *must* have it’s location set to
+profile (see the associated section) *must* have it's location set to
 `remote`, or Tortuga will attempt to reserve an IP address on the
 provisioning network and use it for the node.
 
@@ -2262,7 +2276,7 @@ interface.
 
 For example:
 
-``` shell
+``` {.shell}
 reboot-node --node <nodespec>
 ```
 
@@ -2271,14 +2285,14 @@ force a reinstallation (where it makes sense; for example, on physical
 nodes). When supported by the resource adapter, nodes will be
 automatically reset to initiate the reprovisioning.
 
-``` shell
+``` {.shell}
 reboot-node --node <nodespec> --reinstall
 ```
 
 ### Deleting nodes
 
 Nodes are deleted using the `delete-node --node <nodespec>` command. The
-“nodespec” parameter may be a comma-separated list of nodes, and may
+"nodespec" parameter may be a comma-separated list of nodes, and may
 include wildcards. The asterisk (\*) wildcard must be quoted to avoid
 shell interpretation, but a percentage sign (%) may be used as an
 alternative without the need for escaping/quoting.
@@ -2290,15 +2304,15 @@ hosting other nodes.
 
 Example:
 
-Delete node named “compute-01”:
+Delete node named "compute-01":
 
-``` shell
+``` {.shell}
 delete-node compute-01
 ```
 
-Delete all nodes matching the wildcard "compute\*":
+Delete all nodes matching the wildcard \"compute\*\":
 
-``` shell
+``` {.shell}
 delete-node "compute*"
 ```
 
@@ -2308,65 +2322,17 @@ As with `add-nodes`, `delete-node` also runs asynchronously and will
 return immediately after it is run. Use the CLI `get-node-requests` to
 check the status of a `delete-node` request.
 
-### Idling and activating nodes
-
-**Note:** this is a deprecated feature and is only supported by
-on-premises compute nodes.
-
-An “idle” node is one that is known by Tortuga but is currently
-inactive. This state may be useful if the software associated with a
-given profile uses an expensive license, and that license must be freed.
-
-Idled nodes are reinstalled/reprovisioned once (re)activated. Copy any
-important data from the local disk before idling.
-
-For example, to idle the node “compute-01.private”:
-
-``` shell
-idle-node --node compute-01.private
-```
-
-To activate an idled node and bring it back to the installed state, use
-the command `activate-node --node <nodespec> --software-profile <SWP
-NAME>`. The software profile must be specified as part of the activation
-sequence because the node does not retain a history of previous software
-profiles used.
-
-For example, to reactivate the idle node “compute-01.private” in the
-software profile Compute:
-
-``` shell
-activate-node --node compute-01.private --software-profile Compute
-```
-
-(Re)activating a node requires a reprovision, and will take the same
-amount of time as provisioning the node initially.
-
-#### Idle/activate semantics
-
-Node idle/activate semantics vary across resource adapters and are
-typically useful only for Tortuga hybrid cluster installations.
-
-For example, for Amazon EC2-based compute nodes within a Tortuga hybrid
-cluster, idle nodes maintain presence in Tortuga, however have no
-“backing” instance in Amazon EC2.
-
-Idle/activate on VMware vSphere simply means stopping a virtual machine
-(for idle), and (re)starting that VM (for activate).
-
-Idle/activate semantics *do not* apply to physical nodes.
-
 ### Shutting down and Starting up Nodes
 
 The `shutdown-node` command will issue an OS shutdown command via the
 resource adapter.
 
 This is useful for nodes which should no longer be running at all, but
-should remain “known” to the cluster.
+should remain "known" to the cluster.
 
-For example, to shutdown the node “vm-01”:
+For example, to shutdown the node "vm-01":
 
-``` shell
+``` {.shell}
 shutdown-node --node vm-01
 ```
 
@@ -2379,56 +2345,51 @@ previously shut down. In most cases, this is useful for virtual nodes in
 a local cloud. The `--destination` option can be used, if supported, to
 select a hypervisor to run the virtual node.
 
-### Transferring nodes between software profiles
-
-**Note:** this is a deprecated feature for on-premises nodes only\!
-
-Any node, regardless of whether it is physical or virtual, may have its
-software profile changed using the `transfer-node` CLI. This command
-will re-provision (as necessary) the node to bring into compliance with
-the new software profile.
-
-Transfer node (in *Installed* state) to new software
-profile:
-
-``` shell
-transfer-node --node <node name> --software-profile <dest software profile>
-```
-
-For example, to transfer 1 node:
-
-``` shell
-transfer-node --count 1 --software-profile <dest software profile>
-```
-
-**Note:** the “destination” software profile must already have been
-mapped to use the node’s hardware profile.
-
-Transfer 6 nodes from source software profile:
-
-``` shell
-transfer-node --count 6 --src-software-profile execd \
-    --software-profile Compute
-```
-
-Tortuga does its best to make an intelligent determination of which
-nodes to transfer, favoring idle and unused nodes when possible.
-
 ### Node states
 
 The output of `get-node-status` can reveal nodes in Tortuga can exist in
-one of several different
-states:
+one of several different states:
 
-| State       | Description                                                                                                                                                                               |
-| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Installed   | Node is available and ready to use.                                                                                                                                                       |
-| Provisioned | Node has been added to Tortuga and is in the process of being bootstrapped. Nodes in the ‘Provisioned’ state should successfully transition to ‘Installed’ state.                         |
-| Expired     | Existing node is being reinstalled. Only nodes that have been idled and (re)activated or reinstalled will ever be in this state.                                                          |
-| Deleted     | Tortuga is in the process of removing this node. The backing instance has been terminated/destroyed and database cleanup will eventually remove the node record entirely.                 |
-| Error       | Consult `/var/log/tortugawsd` (or `get-node-requests`) to determine the cause of the node error state.                                                                                    |
-| Launching   | Tortuga has received and begun processing the add nodes request. This state is typically associated with cloud-backed node instances where there is a delay caused by the cloud platform. |
-| Allocated   | Tortuga has created node record(s) and is in the process of launching the backing instance.                                                                                               |
+  -----------------------------------------------------------------------
+  State                               Description
+  ----------------------------------- -----------------------------------
+  Installed                           Node is available and ready to use.
+
+  Provisioned                         Node has been added to Tortuga and
+                                      is in the process of being
+                                      bootstrapped. Nodes in the
+                                      'Provisioned' state should
+                                      successfully transition to
+                                      'Installed' state.
+
+  Expired                             Existing node is being reinstalled.
+                                      Only on-premises nodes that are
+                                      reinstalled (with
+                                      `reboot-node --reinstall`) will
+                                      ever be in this state.
+
+  Deleted                             Tortuga is in the process of
+                                      removing this node. The backing
+                                      instance has been
+                                      terminated/destroyed and database
+                                      cleanup will eventually remove the
+                                      node record entirely.
+
+  Error                               Consult `/var/log/tortugawsd` (or
+                                      `get-node-requests`) to determine
+                                      the cause of the node error state.
+
+  Launching                           Tortuga has received and begun
+                                      processing the add nodes request.
+                                      This state is typically associated
+                                      with cloud-backed node instances
+                                      where there is a delay caused by
+                                      the cloud platform.
+
+  Allocated                           Tortuga has created node record(s)
+                                      and is in the process of launching
+                                      the backing instance.
+  -----------------------------------------------------------------------
 
 ### Resource tagging
 
@@ -2441,19 +2402,19 @@ profiles) tagging, similar to what is offered by cloud providers.
 
 Add node tag:
 
-``` shell
+``` {.shell}
 uc-tag add --node <node name> --tag <key>=<value>
 ```
 
 Add software profile tag:
 
-``` shell
+``` {.shell}
 uc-tag add --software-profile <swprofile name> --tag <key>=<value>
 ```
 
 Add hardware profile tag:
 
-``` shell
+``` {.shell}
 uc-tag add --hardware-profile <hwprofile name> --tag <key>=<value>
 ```
 
@@ -2461,19 +2422,19 @@ uc-tag add --hardware-profile <hwprofile name> --tag <key>=<value>
 
 Remove tag from node:
 
-``` shell
+``` {.shell}
 uc-tag remove --node <node name> --tag <key>
 ```
 
 Remove tag from software profile:
 
-``` shell
+``` {.shell}
 uc-tag remove --software-profile <swprofile name> --tag <key>
 ```
 
 Remove tag from hardware profile:
 
-``` shell
+``` {.shell}
 uc-tag remove --hardware-profile <hwprofile name> --tag <key>
 ```
 
@@ -2482,13 +2443,13 @@ uc-tag remove --hardware-profile <hwprofile name> --tag <key>
 The `uc-tag delete` command removes (unregisters) tag and removes it
 from all resources.
 
-``` shell
+``` {.shell}
 uc-tag delete --force --tag <key>
 ```
 
 ##### List all tags/values
 
-``` shell
+``` {.shell}
 uc-tag list
 ```
 
@@ -2496,29 +2457,30 @@ uc-tag list
 
 ##### Nodes
 
-``` shell
+``` {.shell}
 get-node-status --tag <key>
 ```
 
-``` shell
+``` {.shell}
 get-node-list --tag <key>
 ```
 
 ##### Tagging Software profiles
 
-``` shell
+``` {.shell}
 get-software-profile-list --tag <key>
 ```
 
 ##### Tagging Hardware profiles
 
-``` shell
+``` {.shell}
 get-hardware-profile-list --tag <key>
 ```
 
-## Advanced Topics
+Advanced Topics
+---------------
 
-### “Off-line” installation
+### "Off-line" installation
 
 The process for installing Tortuga in an environment that is entirely
 off-line is completed in two steps. The first step is to download the
@@ -2546,9 +2508,9 @@ the local directory.
 ##### Create tar from artifacts
 
 This step is not necessary, however it makes it easier to move the
-dependencies to the "disconnected’ Tortuga server as a single file.
+dependencies to the \"disconnected' Tortuga server as a single file.
 
-``` shell
+``` {.shell}
 tar czf tortuga-deps.tar.gz tortuga-deps/
 ```
 
@@ -2559,7 +2521,7 @@ Tortuga is to be installed.
 
 #### Tortuga Installation
 
-The Tortuga installation on the “disconnected” server must reference the
+The Tortuga installation on the "disconnected" server must reference the
 previously downloaded dependencies.
 
 ##### Prerequisites
@@ -2577,7 +2539,7 @@ details.
 
 Extract the dependencies tarball from the previous step.
 
-``` shell
+``` {.shell}
 tar zxf tortuga-deps.tar.gz -C /tmp
 ```
 
@@ -2589,7 +2551,7 @@ Run the Tortuga installation script `install-tortuga.sh` with the
 `--dependencies-dir` argument, otherwise it will use the internet to
 download dependencies.
 
-``` shell
+``` {.shell}
 install-tortuga.sh --dependencies-dir=/tmp/tortuga-deps ...
 ```
 
@@ -2613,44 +2575,43 @@ available to the compute nodes.
 
 **Note:** only one of the following mechanisms is required.
 
-##### 1\. Locally hosted OS distribution repository
+##### 1. Locally hosted OS distribution repository
 
 The following steps will serve the OS distribution repository from the
 Tortuga installer:
 
-  - Remove the default directory as set up by Tortuga
-    
-    ``` shell
+-   Remove the default directory as set up by Tortuga
+
+    ``` {.shell}
     rm -rf $TORTUGA_ROOT/www_int/compute-os-repo
     ```
 
-  - Copy or loopback mount the distribution ISO locally
-    
+-   Copy or loopback mount the distribution ISO locally
+
     The goal here is making the OS distribution repository available in
     a well-known location within the Tortuga environment.
-    
-      - Copy contents of OS distribution ISO to
+
+    -   Copy contents of OS distribution ISO to
         `$TORTUGA_ROOT/www_int/compute-os-repo`
-        
-        ``` shell
+
+        ``` {.shell}
         rsync -av /media/cdrom/ $TORTUGA_ROOT/www_int/compute-os-repo
         ```
-    
+
     or:
-    
-      - Loopback mount OS distribution ISO into local filesystem on
-        Tortuga
-        installer.
-        
-        ``` shell
+
+    -   Loopback mount OS distribution ISO into local filesystem on
+        Tortuga installer.
+
+        ``` {.shell}
         mount -ro loop <distribution ISO> $TORTUGA_ROOT/www_int/compute-os-repo
         ```
-        
+
         This will serve the contents of the specified OS distribution
         ISO in a common location under the Tortuga internal web server
         accessible to compute nodes.
 
-##### 2\. Proxying to an external OS distribution repository
+##### 2. Proxying to an external OS distribution repository
 
 Configure Squid (or other proxy) to proxy to an upstream OS repository
 and modify the offline bootstrap script (ie.
@@ -2665,7 +2626,7 @@ The filename of this repository is
 off-line bootstrap script. Modify the value of `baseurl` to point to the
 proxied URL on the Tortuga installer.\`
 
-##### 3\. Install OS distribution “kit” using Tortuga
+##### 3. Install OS distribution "kit" using Tortuga
 
 Install the desired OS distribution using `install-os-kit`. This will
 automatically configure the repository on Tortuga compute nodes.
@@ -2677,10 +2638,10 @@ The AWS resource adapter includes a bootstrap script
 and OS repositories. It is *expected* that the end-user will need to
 modify this for their particular environment.
 
-Use `adapter-mgmt update -r AWS -p Default -s
-user_data_script_template=aws-bootstrap-offline.tmpl` to enable this for
-offline compute nodes in the AWS environment. Other resource
-adapters/cloud providers will require similar configuration.
+Use
+`adapter-mgmt update -r AWS -p Default -s user_data_script_template=aws-bootstrap-offline.tmpl`
+to enable this for offline compute nodes in the AWS environment. Other
+resource adapters/cloud providers will require similar configuration.
 
 ### Compute Node Proxy Support
 
@@ -2708,13 +2669,13 @@ automated using the built-in Puppet server. See the section
 
 The following proxy settings are available:
 
-  - `tortuga::config::puppet_proxy_http_host`
-  - `tortuga::config::puppet_proxy_http_port`
-  - `tortuga::config::puppet_proxy_http_user` (*optional*)
-  - `tortuga::config::puppet_proxy_http_password` (*optional*)
-  - `tortuga::config::proxy_uri`
-  - `tortuga::config::proxy_user` (*optional*)
-  - `tortuga::config::proxy_password` (*optional*)
+-   `tortuga::config::puppet_proxy_http_host`
+-   `tortuga::config::puppet_proxy_http_port`
+-   `tortuga::config::puppet_proxy_http_user` (*optional*)
+-   `tortuga::config::puppet_proxy_http_password` (*optional*)
+-   `tortuga::config::proxy_uri`
+-   `tortuga::config::proxy_user` (*optional*)
+-   `tortuga::config::proxy_password` (*optional*)
 
 The settings with the `puppet_` prefix apply specifically to the Puppet
 client run on the compute nodes. The settings with the `proxy_` prefix
@@ -2723,7 +2684,7 @@ as accessing the Tortuga webservice and internal HTTP server.
 
 #### Example Proxy configuration
 
-For example, to apply these settings to the “Compute” software profile,
+For example, to apply these settings to the "Compute" software profile,
 add the proxy configuration to
 `/etc/puppetlabs/code/environments/production/data/tortuga-Compute.yaml`.
 
@@ -2733,7 +2694,7 @@ add the proxy configuration to
 Port 3128 is the default port used by the Squid proxy. If using an
 alternate proxy, this value is likely to be different.
 
-``` yaml
+``` {.yaml}
 ---
 version: 5
 
@@ -2776,7 +2737,7 @@ For most users, this would be the downloadable DVD OS media for major
 release versions of CentOS.
 
 Between each major release, the CentOS team releases update packages
-available from the ‘updates’ repository. It is these updated packages
+available from the 'updates' repository. It is these updated packages
 that present an issue.
 
 As part of the Tortuga installation procedure, the installer downloads
@@ -2784,7 +2745,7 @@ and caches dependent packages later required when provisioning compute
 nodes. This includes packages such as Puppet, MCollective, and their
 dependencies. These packages are subsequently dependent on core OS
 packages (ie. python-devel, ruby, and others). Therein lies the
-“problem”- if the patchlevel of the OS on the installer is different
+"problem"- if the patchlevel of the OS on the installer is different
 than that of the OS media, the cached packages will have dependencies on
 OS packages newer than what is available on the OS media.
 
@@ -2806,24 +2767,24 @@ The Tortuga installer is fixed at the patchlevel of the OS media used to
 provision compute nodes.
 
 For example, if the installer is running CentOS 7.4, it stays at CentOS
-7.4 for its lifetime. In other words, the ‘updates’ repository (defined
-in ‘/etc/yum.repos.d/CentOS-Base.repo’) must be disabled.
+7.4 for its lifetime. In other words, the 'updates' repository (defined
+in '/etc/yum.repos.d/CentOS-Base.repo') must be disabled.
 
 **Note: No patched packages can be installed on the installer prior to
-installation of Tortuga\!**
+installation of Tortuga!**
 
 All compute nodes will be provisioned from the CentOS 7.4 OS media as
 supplied by the administrator.
 
 Pros:
 
-  - simplest configuration
+-   simplest configuration
 
 Cons:
 
-  - no OS patches. This is *not recommended* for Internet connected
+-   no OS patches. This is *not recommended* for Internet connected
     nodes or outward facing nodes
-  - may present issues for certain applications requiring OS patches
+-   may present issues for certain applications requiring OS patches
 
 ##### Scenario 2: Automatic patches through connected compute nodes
 
@@ -2838,25 +2799,25 @@ enable external network access from Tortuga compute nodes.
 
 Pros:
 
-  - all OS patches, including security patches, are available to all
+-   all OS patches, including security patches, are available to all
     nodes in the cluster
 
 Cons:
 
-  - compute nodes require access to ‘updates’ package repository
+-   compute nodes require access to 'updates' package repository
 
 #### Scenario 3: Manually managed patches
 
 When a compute node is provisioned by Tortuga, it installs the base
-operating system from the OS media as provided by ‘install-os-kit’.
-Packages which constitute the Tortuga “base” kit are installed from
-‘/opt/tortuga/depot/kits/base/7.0.2-0/noarch’.
+operating system from the OS media as provided by 'install-os-kit'.
+Packages which constitute the Tortuga "base" kit are installed from
+'/opt/tortuga/depot/kits/base/7.0.3-0/noarch'.
 
 Updated packages can be dropped into this directory and will be
 automatically available to Tortuga provisioned compute nodes.
 
 **Note: after updating packages in
-`/opt/tortuga/depot/kits/base/7.0.2-0/noarch`, it is required to run
+`/opt/tortuga/depot/kits/base/7.0.3-0/noarch`, it is required to run
 `createrepo` to update the Tortuga **base\*\* kit YUM repository
 metadata.\*\*
 
@@ -2865,11 +2826,11 @@ dependencies.
 
 Pros:
 
-  - flexibility
+-   flexibility
 
 Cons:
 
-  - manual package dependency management
+-   manual package dependency management
 
 ### Puppet & MCollective
 
@@ -2881,15 +2842,15 @@ installer node.
 The end-user can manually trigger [Puppet](http://puppet.com "Puppet")
 runs using the MCollective command `mco puppet ...`. For example, the
 following command will trigger a Puppet run on the node
-“`compute-01.private`”:
+"`compute-01.private`":
 
-``` shell
+``` {.shell}
 mco puppet runonce -I compute-01.private
 ```
 
 Multiple nodes can be specified:
 
-``` shell
+``` {.shell}
 mco puppet runonce -I compute-01.private -I compute-02.private
 ```
 
@@ -2900,13 +2861,13 @@ calls.
 It is also possible to do basic troubleshooting using the MCollective
 `ping` plugin:
 
-``` shell
+``` {.shell}
 mco ping
 ```
 
 Sample output from the `mco ping` command on a 5 node cluster:
 
-``` shell
+``` {.shell}
 [root@tortuga ~]# mco ping
 compute-03.private                       time=131.10 ms
 compute-01.private                       time=132.27 ms
@@ -2958,11 +2919,11 @@ The Puppet command-line interface includes functionality to generate a
 boilerplate Puppet module framework using the `puppet module generate`
 command as follows:
 
-``` shell
+``` {.shell}
 puppet module generate --skip-interview mycompany/mymodule
 ```
 
-This generates a Puppet module named “mymodule” in a subdirectory named
+This generates a Puppet module named "mymodule" in a subdirectory named
 `mymodule` in the current working directory.
 
 Make modifications to `mymodule/manifests/init.pp` (such as examples
@@ -2971,18 +2932,17 @@ from below).
 Compile this module using `puppet module build mymodule` and install it
 as follows:
 
-``` shell
+``` {.shell}
 puppet module install mymodule/pkg/mycompany-mymodule-0.1.0.tar.gz
 ```
 
-The Puppet module “mymodule” can now be used in the context of Tortuga.
+The Puppet module "mymodule" can now be used in the context of Tortuga.
 
-**Note:** any modifications to the module “source” code must be compiled
+**Note:** any modifications to the module "source" code must be compiled
 and installed. If the module already exists, add the `--force` flag to
-the `puppet module install` command-line as
-follows:
+the `puppet module install` command-line as follows:
 
-``` shell
+``` {.shell}
 puppet module install --force mymodule/pkg/mycompany-mymodule-0.1.0.tar.gz
 ```
 
@@ -2993,7 +2953,7 @@ Tortuga installer, edit the file
 `/etc/puppetlabs/code/environments/production/data/tortuga-extra.yaml`
 and define the `classes` value as follows:
 
-``` yaml
+``` {.yaml}
 ---
 version: 5
 
@@ -3003,7 +2963,7 @@ classes:
 
 or using the example module `mymodule` from above:
 
-``` yaml
+``` {.yaml}
 ---
 version: 5
 
@@ -3018,11 +2978,11 @@ Tortuga environment, including the Tortuga installer.
 
 Create a YAML file
 `/etc/puppetlabs/code/environments/production/data/tortuga-<NAME>.yaml`,
-where “NAME” is the software profile name where the Puppet
+where "NAME" is the software profile name where the Puppet
 module/classes are to be applied. Please note, this filename is case
 sensitive.
 
-For example, to add the module “docker” to the software profile “execd”,
+For example, to add the module "docker" to the software profile "execd",
 create a file named
 `/etc/puppetlabs/code/environments/%{environment}/data/tortuga-execd.yaml`.
 The contents of this standard YAML formatted file would appear as
@@ -3030,10 +2990,10 @@ follows:
 
 **Note:** this assumes the Puppet module module is previously installed.
 Modify `metadata.json` in your custom Puppet module to add a dependency
-on the “docker” module to have it automatically installed when
-“mymodule” is installed.
+on the "docker" module to have it automatically installed when
+"mymodule" is installed.
 
-``` yaml
+``` {.yaml}
 ---
 version: 5
 
@@ -3043,7 +3003,7 @@ classes:
 
 or using the `mymodule` example above:
 
-``` yaml
+``` {.yaml}
 ---
 version: 5
 
@@ -3051,15 +3011,15 @@ classes:
   - mymodule
 ```
 
-`mymodule` would only apply to nodes in the software profile “execd”.
+`mymodule` would only apply to nodes in the software profile "execd".
 
 #### Simple Puppet Recipes
 
 The examples below are simplistic in nature, however having many Puppet
 type references configuring many applications and/or configuration files
 or users/groups will result in a large amount of code. Refer to the
-Puppet “[Language:
-Basics](https://docs.puppet.com/puppet/latest/lang_summary.html)” guide
+Puppet "[Language:
+Basics](https://docs.puppet.com/puppet/latest/lang_summary.html)" guide
 for further information on creating Puppet classes, organizing Puppet
 files/modules/classes, and general tips on coding for Puppet in an
 efficient and maintainable manner.
@@ -3077,7 +3037,7 @@ In this very basic example, an `/etc/hosts` entry for the host
 `myhost.example.com` is created and associated with the IP address
 `1.2.3.4`
 
-``` puppet
+``` {.puppet}
 host { 'myhost.example.com':
     ensure       => present,
     host_aliases => [
@@ -3093,7 +3053,7 @@ If creating an environment where each node will have users/groups
 managed manually (ie. with the assistance of a directory service like
 NIS or LDAP), the following code can be used:
 
-``` puppet
+``` {.puppet}
 group { 'engineers':
     gid => 1234,
 }
@@ -3139,7 +3099,7 @@ them.
 
 For example, modify `mymodule/manifests/init.pp` as follows:
 
-``` puppet
+``` {.puppet}
 class mymodule {
   contain mymodule::groups
   contain mymodule::users
@@ -3163,7 +3123,7 @@ If the service is already known to the system (ie. `systemctl` or
 `chkconfig --list` shows the service), it can be managed by the
 following:
 
-``` puppet
+``` {.puppet}
 service { 'myservicename':
     ensure => running,
     enable => true,
@@ -3174,7 +3134,7 @@ service { 'myservicename':
 
 Package repositories can be added using the `yumrepo` type:
 
-``` puppet
+``` {.puppet}
 yumrepo { 'my_yum_repo':
     ensure        => present,
     baseurl       => 'http://url.to.yum.repo',
@@ -3187,7 +3147,7 @@ yumrepo { 'my_yum_repo':
 
 Packages can be added using the `package` type:
 
-``` puppet
+``` {.puppet}
 package { 'mypackage':
     ensure => installed,
 }
@@ -3196,7 +3156,7 @@ package { 'mypackage':
 If installing from a custom repository, ensure the package resource has
 a dependency on the module:
 
-``` puppet
+``` {.puppet}
 package { 'custompkg':
     ...
     require => Yumrepo['customrepo'],
@@ -3208,7 +3168,7 @@ package { 'custompkg':
 
 ###### NFS
 
-``` puppet
+``` {.puppet}
 mount { '/my/local/mountpoint':
     ensure  => mounted,
     atboot  => true,
@@ -3221,7 +3181,7 @@ mount { '/my/local/mountpoint':
 
 ###### Local Volumes
 
-``` puppet
+``` {.puppet}
 mount { '/my/local/mountpoint':
     ensure  => mounted,
     atboot  => true,
@@ -3244,8 +3204,8 @@ using the Puppet `exec` type.
 
 Scripts and commands are called using the Puppet `exec` resource. A key
 point here is that an `exec` will be called every time Puppet runs. This
-can make it sometimes necessary to use “marker” files or check for the
-existence of other files/directories to ensure the script isn’t run
+can make it sometimes necessary to use "marker" files or check for the
+existence of other files/directories to ensure the script isn't run
 multiple times. Tortuga will run Puppet on all compute nodes for each
 cluster to maintain coherency.
 
@@ -3254,7 +3214,7 @@ creates a file `/tmp/marker_file.txt`. Puppet is aware of this file
 through the `creates` attribute and if this file exists on successive
 runs, the script will *not* be run again.
 
-``` puppet
+``` {.puppet}
 exec { '/usr/local/bin/myscript.sh':
     creates   => '/tmp/marker_file.txt',
     logoutput => true,
@@ -3273,7 +3233,7 @@ in this example because the fully-qualfiied path to `acommand` was not
 provided, nor was the path to `test`. Puppet will automatically search
 the specified path for the commands `acommand` and `test`.
 
-``` puppet
+``` {.puppet}
 exec { 'acommand':
     path   => ['/bin', '/usr/local/bin', '/usr/bin'],
     unless => 'test -f /tmp/marker_file.txt',
@@ -3283,7 +3243,7 @@ exec { 'acommand':
 Applications can be installed from tarballs using `exec` resources. For
 example:
 
-``` puppet
+``` {.puppet}
 exec { 'tar zxf mytarball.tar.gz -C /opt/install_directory':
     path   => ['/bin', '/usr/bin', '/usr/local/bin'],
     unless => 'test -d /opt/install_directory',
@@ -3300,7 +3260,7 @@ be changed to properly test for its existence instead.
 Third-party Puppet modules can be easily referenced from within the
 example integration module as follows:
 
-``` puppet
+``` {.puppet}
 class mymodule {
     ...
     include mysql::server
@@ -3316,13 +3276,13 @@ the Puppet module has been previously installed.
 Install third-party modules from [Puppet
 Forge](https://forge.puppet.com/ "Puppet Forge") as follows:
 
-``` shell
+``` {.shell}
 puppet module install <modulename>
 ```
 
-For example, to install the most popular “docker” module:
+For example, to install the most popular "docker" module:
 
-``` shell
+``` {.shell}
 puppet module install garethr/docker
 ```
 
@@ -3349,7 +3309,7 @@ example, if using a Tortuga-based operating system package repository,
 it is essential that this is configured prior to attempting to install
 packages from it.
 
-``` puppet
+``` {.puppet}
 class mymodule {
     # Ensure 'tortuga::packages' resource is "run" before this class
     require tortuga::packages
@@ -3359,9 +3319,9 @@ class mymodule {
 ```
 
 In the above example, the `require tortuga::packages` line would ensure
-the Tortuga “tortuga::packages” class is “called” prior to the package
+the Tortuga "tortuga::packages" class is "called" prior to the package
 `vim-enhanced` is installed. In this particular instance, the Puppet
-class “tortuga::packages” performs the initial configuration of YUM
+class "tortuga::packages" performs the initial configuration of YUM
 package repositories on compute nodes.
 
 For more information, consult the [Language: Relationships and
@@ -3388,20 +3348,20 @@ restarting the affected services.
 
 Place the certificate (or certificate chain) for your CA here:
 
-``` shell
+``` {.shell}
 /opt/tortuga/etc/CA/ca.pem
 ```
 
 Put the key for your certificate here. Please note that it is important
 than your key *not* be password protected:
 
-``` shell
+``` {.shell}
 /opt/tortuga/etc/certs/apache/server.key
 ```
 
 Put your signed certificate here:
 
-``` shell
+``` {.shell}
 /opt/tortuga/etc/certs/apache/server.crt
 ```
 
@@ -3409,14 +3369,14 @@ Some services require the CA certificate chain and signed certificate to
 be combined into a single file. It is important that the server
 certificate come before the CA certificate chain in the file:
 
-``` shell
+``` {.shell}
 /opt/tortuga/etc/certs/apache/server-bundle.crt
 ```
 
 The combined file described above can be created using the following
 command:
 
-``` shell
+``` {.shell}
 cat /opt/tortuga/etc/certs/apache/server.crt \
     /opt/tortuga/etc/CA/ca.pem > /opt/tortuga/etc/certs/apache/server-bundle.crt
 ```
@@ -3426,15 +3386,16 @@ cat /opt/tortuga/etc/certs/apache/server.crt \
 Assuming the files in the previous section are in place, the following
 services need to be restarted:
 
-``` shell
+``` {.shell}
 systemctl restart tortugawsd
 systemctl restart celery
 systemctl restart apache
 ```
 
-## Resource Adapters
+Resource Adapters
+-----------------
 
-Resource adapters are the “connectors” between Tortuga and
+Resource adapters are the "connectors" between Tortuga and
 virtualization and cloud platforms.
 
 ### Resource adapter configuration profiles
@@ -3445,7 +3406,7 @@ operating system image, networking configuration, etc.
 
 Tortuga supports multiple resource adapter configuration profiles to
 allow custom tailored cloud provider configuration per groups of nodes.
-The “Default” resource adapter configuration profile would usually
+The "Default" resource adapter configuration profile would usually
 contain access credentials and default configuration. Resource adapter
 configuration profiles can be created that only override or add specific
 settings to eliminate the need for duplicating common settings.
@@ -3462,19 +3423,19 @@ end-user independently.
 
 #### Creating a resource adapter configuration profile
 
-Create a resource adapter configuration profile named “example” for the
-“AWS” resource adapter:
+Create a resource adapter configuration profile named "example" for the
+"AWS" resource adapter:
 
-``` shell
+``` {.shell}
 adapter-mgmt create --resource-adapter AWS --profile example \
     --setting key=value
 ```
 
-**Hint:** `-r NAME` and `-p NAME` are shortcuts for `--resource-adapter
-NAME` and `--profile NAME` arguments, respectively.
+**Hint:** `-r NAME` and `-p NAME` are shortcuts for
+`--resource-adapter NAME` and `--profile NAME` arguments, respectively.
 
 This command creates a resource adapter configuration profile named
-“example” with one setting (*key=value*).
+"example" with one setting (*key=value*).
 
 Using the `-A example` option when running `add-nodes` would instruct
 Tortuga to obtain resource adapter configuration from this profile.
@@ -3484,7 +3445,7 @@ Tortuga to obtain resource adapter configuration from this profile.
 Use the following command-line syntax to specify a default resource
 adapter configuration profile:
 
-``` shell
+``` {.shell}
 update-hardware-profile --name aws \
     --default-resource-adapter-configuration-profile nondefault
 ```
@@ -3504,7 +3465,7 @@ the `aws` hardware profile.
 It is also possible to specify `-A profilename` to override the default
 resource adapter configuration profile:
 
-``` shell
+``` {.shell}
 add-nodes ... --hardware-profile aws -A otherprofile
 ```
 
@@ -3518,20 +3479,20 @@ For users of Tortuga versions prior to 7.0, the resource adapter
 configuration was contained within a file. These existing resource
 adapter configurations may be imported as follows:
 
-``` shell
+``` {.shell}
 adapter-mgmt import --resource-adapter AWS --adapter-config <filename>
 ```
 
-This will create a `default` resource adapter configuration profile for
+This will create a `Default` resource adapter configuration profile for
 the specific resource adapter as well as individual configuration
 profiles for all sections listed in the adapter configuration file.
 
 #### List all resource adapter configuration profiles
 
 For example, to list all resource adapter configuration profiles for the
-“AWS” resource adapter, use the following command-line:
+"AWS" resource adapter, use the following command-line:
 
-``` shell
+``` {.shell}
 adapter-mgmt list --resource-adapter AWS
 ```
 
@@ -3540,24 +3501,24 @@ adapter-mgmt list --resource-adapter AWS
 To display all settings for a specific resource adapter configuration
 profile:
 
-``` shell
-adapter-mgmt show --resource-adapter AWS --profile default
+``` {.shell}
+adapter-mgmt show --resource-adapter AWS --profile Default
 ```
 
-All “secret” information (ie. AWS access/secret keys, passwords, etc.)
+All "secret" information (ie. AWS access/secret keys, passwords, etc.)
 will be hidden from the output of `adapter-mgmt show` by default. To
 display *all* information, add the `--all` argument. For example:
 
-``` shell
-adapter-mgmt show --all --resource-adapter AWS --profile default
+``` {.shell}
+adapter-mgmt show --all --resource-adapter AWS --profile Default
 ```
 
 #### Deleting resource adapter configuration profiles
 
-Delete the resource adapter configuration profile “example” from the
-“AWS” resource adapter:
+Delete the resource adapter configuration profile "example" from the
+"AWS" resource adapter:
 
-``` shell
+``` {.shell}
 adapter-mgmt delete --resource-adapter AWS --profile example
 ```
 
@@ -3567,7 +3528,7 @@ Use `--resource-adapter-configuration-profile` (or its preferred
 shortcut `-A`) to specify the resource adapter configuration profile
 used when adding nodes:
 
-``` shell
+``` {.shell}
 add-nodes --count N \
     --hardware-profile aws --software-profile execd -A profilename
 ```
@@ -3576,18 +3537,19 @@ If the option `-A <profilename>` is provided, the specified resource
 adapter configuration profile is used. If this profile does not exist,
 an error will be displayed. If the profile specified does not contain
 the full set of resource adapter configuration settings (ie.
-credentials), the system will automatically use the “missing” values
-from the `default` resource adapter configuration profile.
+credentials), the system will automatically use the "missing" values
+from the `Default` resource adapter configuration profile.
 
 If the default resource adapter configuration profile is not set (as
-described above), the `default` resource adapter configuration profile
+described above), the `Default` resource adapter configuration profile
 is used.
 
 **Note:** it is also possible to override the hardware profile default
 resource adapter configuration using `--resource-adapter-configuration`
 on the `add-nodes` command-line
 
-## Troubleshooting
+Troubleshooting
+---------------
 
 ### Troubleshooting Overview
 
@@ -3601,7 +3563,7 @@ through the standard Tortuga logging mechanism. An example of this is
 network traffic blocked by a firewall or misconfiguration in no network
 connectivity, and others.
 
-When such symptoms of “total failure” occur (i.e. nothing is working),
+When such symptoms of "total failure" occur (i.e. nothing is working),
 it is necessary to resort to primitive TCP/IP debugging procedures to
 ensure basic connectivity.
 
@@ -3619,8 +3581,8 @@ will appear in brackets before the log message.
 
 ### Installation and setup logging
 
-There are several “stages” to a Tortuga installation. Each of these
-installation and setup “stages” generates and/or updates log files.
+There are several "stages" to a Tortuga installation. Each of these
+installation and setup "stages" generates and/or updates log files.
 
 The first stage is `install-tortuga.sh`, which is run after unarchiving
 the distribution tarball. This operation creates and updates the log
@@ -3635,10 +3597,10 @@ The next stage is setting up Tortuga after installation. Running
 `tortuga-setup` to complete the installation process results in multiple
 log files generated:
 
-  - `/tmp/bootstrap.log` - output of the serverless Puppet bootstrapping
+-   `/tmp/bootstrap.log` - output of the serverless Puppet bootstrapping
     process automatically run during the initial Tortuga setup.
 
-  - `/tmp/tortuga_setup.log` - another Puppet run output to apply
+-   `/tmp/tortuga_setup.log` - another Puppet run output to apply
     Tortuga installer changes made during the setup process.
 
 The main Tortuga log file `/var/log/tortuga` is also created and updated
@@ -3647,8 +3609,8 @@ during the execution of `tortuga-setup`.
 The creation of the Tortuga Certificate Authority (CA) generates two
 files in `/tmp`:
 
-  - `/tmp/tortuga-ca.log.*`
-  - `/tmp/tortuga-server.log.*`
+-   `/tmp/tortuga-ca.log.*`
+-   `/tmp/tortuga-server.log.*`
 
 Other log files, such as those created/updated by
 [ActiveMQ](http://activemq.apache.org/ "ActiveMQ"),
@@ -3678,20 +3640,20 @@ The current Tortuga distribution has DEBUG level logging enabled by
 default. This causes additional logging, which can be useful during
 initial installation and setup.
 
-Note: changing to “trace” log level will result in much more logging and
+Note: changing to "trace" log level will result in much more logging and
 may hinder Tortuga performance because of API level logging.
 
 #### Comprehensive List of Log Files
 
-  - `/tmp/install-tortuga.sh` (\*)
-  - `/tmp/bootstrap.log` (\*)
-  - `/tmp/tortuga_setup.log` (\*)
-  - `/var/log/tortugawsd`
-  - `/tmp/tortuga-ca.log.*` (\*)
-  - `/tmp/tortuga-server.log.*` (\*)
-  - `/var/log/httpd/tortugaint_{access,error}_log` (*Apache HTTP
+-   `/tmp/install-tortuga.sh` (\*)
+-   `/tmp/bootstrap.log` (\*)
+-   `/tmp/tortuga_setup.log` (\*)
+-   `/var/log/tortugawsd`
+-   `/tmp/tortuga-ca.log.*` (\*)
+-   `/tmp/tortuga-server.log.*` (\*)
+-   `/var/log/httpd/tortugaint_{access,error}_log` (*Apache HTTP
     Server*)
-  - `/var/log/httpd/tortugaws_{access,error}_log` (*Apache HTTP Server*)
+-   `/var/log/httpd/tortugaws_{access,error}_log` (*Apache HTTP Server*)
 
 \* denotes log files that are created once and never further updated.
 They typically include raw command output and are strictly for debugging
@@ -3700,70 +3662,71 @@ purposes.
 The following system log files will also contain output as a result of
 Tortuga being installed and running:
 
-  - `/var/log/messages`
-  - `/var/log/activemq/*`
-  - `/var/log/mcollective`
-  - `/var/log/httpd/*`
-  - `/var/log/mysqld.log`
+-   `/var/log/messages`
+-   `/var/log/activemq/*`
+-   `/var/log/mcollective`
+-   `/var/log/httpd/*`
+-   `/var/log/mysqld.log`
 
 ### Troubleshooting failed Tortuga installation
 
 There are several reasons why Tortuga may fail to install successfully:
 
 1.  Intermittent networking
-    
+
     Surprisingly, not all corporate LANs are created equally and
     intermittent networking may cause temporary outage and and Internet
     accessibility issues. The Tortuga installation process depends on
     reliable Internet access to retrieve package dependencies.
-    
+
     If the Tortuga installation (`install-tortuga.sh`) succeeds, and the
     setup stage fails (`tortuga-setup`), it is possible to retry the
     setup simply by calling `tortuga-setup --force ...`.
-    
+
     Consult log `/tmp/install-tortuga.sh` if the installation failure
     occurred during `install-tortuga.sh`, and logs `/tmp/bootstrap.log`,
     `/tmp/tortuga_setup.log` if the installation failure occurred during
     `tortuga-setup`.
 
 2.  Lack of general Internet access
-    
+
     Some sites do not permit open access to the Internet, which results
     in an immediate, failed Tortuga installation.
-    
+
     The Tortuga installation procedure depends on unrestricted access to
     HTTP (port 80) and HTTPS (port 443) services on various remote sites
     to retrieve package dependencies. The installer does not explicitly
     disable proxies, and *should* adhere to any system-wide proxy
     settings.
-    
-    Please contact support@univa.com for further support when installing
-    Tortuga in an environment where Internet access is unavailable.
+
+    Please contact support\@univa.com for further support when
+    installing Tortuga in an environment where Internet access is
+    unavailable.
 
 3.  Misconfigured/malfunctioning DNS
-    
+
     The host name returned by the command `hostname --fqdn` must be a
     fully-qualified, DNS resolvable host name.
-    
+
     This host name may be the host name of the public network interface
     (ie. interface connected to the corporate LAN) or the host name of
     the private network interface (ie. interface connected to
     private/provisioning network managed by Tortuga).
-    
+
     Whatever the host name may be, the Tortuga installer **must** be
     able to resolve its own host name via DNS or `/etc/hosts`. Ensure
     the following `ping` command succeeds:
-    
-    ``` shell
+
+    ``` {.shell}
     ping -c5 `hostname --fqdn`
     ```
-    
+
     During the installation process, Tortuga invokes Puppet to perform
     configuration management of the installer node. Part of the Puppet
     initial bootstrap process requires creating a certificate containing
     the fully-qualified domain name (FQDN) of the Tortuga installer
     node.
-    
+
     It should be noted that, when enabled, Tortuga will also maintain
     its own DNS server (serving DNS requests to private/provisioning
     networks), however the initial Tortuga installation needs functional
@@ -3779,14 +3742,14 @@ There is usually one cause for failed compute node provisioning and that
 is network connectivity, or lack thereof.
 
 1.  No (private) network connectivity
-    
+
     Ensure the private/provisioning network interface on the Tortuga
     installer (*eth1*, for many) is connected to the same network as the
     proposed compute nodes. In demo/trial environments using virtual
     machines, this is usually as a result of the Tortuga installer VM
     not being connected to the same (virtual) network as the compute
     node VM(s).
-    
+
     As suggested in the Quickstart section above, it is recommended when
     using Anaconda/Kickstart-based compute node provisioning, to set the
     root password of the compute node(s) to a known value. This will
@@ -3794,48 +3757,50 @@ is network connectivity, or lack thereof.
     result of misconfiguration of the Tortuga installer.
 
 2.  Service (DHCP/DNS) conflicts on private network
-    
+
     In some cases, when the private/provisioning network is being used
     for other nodes and/or services within a datacenter, this can result
     in DHCP/DNS services conflicting with those managed by Tortuga.
-    
+
     A typical symptom here would be a compute node receving a DHCP
     address that is not the same as that assigned by Tortuga.
-    
+
     Tortuga **cannot** function correctly in such an environment and
-    must “own” exclusive access to the DHCP and DNS services on the
+    must "own" exclusive access to the DHCP and DNS services on the
     private network it is managing.
 
-## Appendix A: Tortuga End-User License Agreement (EULA)
+Appendix A: Tortuga End-User License Agreement (EULA)
+-----------------------------------------------------
 
 Copyright 2008-2018 Univa Corporation
 
-Licensed under the Apache License, Version 2.0 (the “License”); you may
+Licensed under the Apache License, Version 2.0 (the "License"); you may
 not use this file except in compliance with the License. You may obtain
 a copy of the License at
 
 http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an “AS IS” BASIS,
+distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-## Appendix C: Uninstalling Tortuga
+Appendix C: Uninstalling Tortuga
+--------------------------------
 
 Tortuga itself is contained within the `/opt/tortuga` directory, however
 there are configuration and support files elsewhere within the
 filesystem.
 
 **Note**: make a backup of of the entire filesystem prior to performing
-these uninstallation steps\!
+these uninstallation steps!
 
 If you are installing Tortuga 7.0 on top of an existing Tortuga 6.1.x
 installation, the following operations should be performed on
 RHEL/CentOS 7:
 
-``` shell
+``` {.shell}
 service sgemaster.tortuga stop
 service activemq stop
 systemctl stop httpd

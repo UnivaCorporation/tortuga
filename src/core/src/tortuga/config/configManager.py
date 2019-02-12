@@ -143,16 +143,6 @@ class ConfigManager(dict): \
         cm['myKey'] = 'myValue'
         value = cm.get('myKey')
     """
-
-    def __init_system_user(self):
-        import platform
-
-        if platform.system() != 'Windows':
-            import pwd
-            self['user'] = pwd.getpwuid(os.getuid())[0]
-        else:
-            self['user'] = os.getenv('USERNAME')
-
     def __init_defaults(self):
         self['defaultRoot'] = DEFAULT_TORTUGA_ROOT
         self['defaultCaBundle'] = DEFAULT_TORTUGA_CA_BUNDLE
@@ -227,8 +217,6 @@ class ConfigManager(dict): \
 
     def __init__(self):
         super(ConfigManager, self).__init__()
-
-        self.__init_system_user()
 
         self.__init_defaults()
 
@@ -342,10 +330,6 @@ class ConfigManager(dict): \
 
     def getIpAddress(self):
         return lookup_ipaddress(self.getHost())
-
-    def getUser(self):
-        """ Get user. """
-        return self['user']
 
     def setRoot(self, root):
         """ Set root. """

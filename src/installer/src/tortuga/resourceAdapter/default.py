@@ -23,7 +23,6 @@ from tortuga.db.models.hardwareProfile import HardwareProfile
 from tortuga.db.models.node import Node
 from tortuga.db.models.softwareProfile import SoftwareProfile
 from tortuga.db.nodesDbHandler import NodesDbHandler
-from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
 from tortuga.exceptions.commandFailed import CommandFailed
 from tortuga.exceptions.nodeAlreadyExists import NodeAlreadyExists
 from tortuga.exceptions.nodeNotFound import NodeNotFound
@@ -125,50 +124,6 @@ class Default(ResourceAdapter):
         cmd += ' %s' % (nodeArg)
 
         tortugaSubprocess.executeCommandAndIgnoreFailure(cmd)
-
-    def transferNode(self, nodeIdSoftwareProfileTuples,
-                     newSoftwareProfileName): \
-            # pylint: disable=unused-argument
-        """
-        Raises:
-            NodeNotFound
-        """
-
-        for dbNode, _ in nodeIdSoftwareProfileTuples:
-            # Ensure PXE files are properly in place before triggering
-            # the reboot.
-            self._bhm.setNodeForNetworkBoot(self.session, dbNode)
-
-        self.rebootNode([dbNode for dbNode, _ in nodeIdSoftwareProfileTuples])
-
-    def suspendActiveNode(self, node: Node) -> bool: \
-            # pylint: disable=no-self-use,unused-argument
-        # not supported
-        return False
-
-    def idleActiveNode(self, nodes: List[Node]) -> str:
-        # Shutdown nodes
-        self.shutdownNode(nodes)
-
-        return 'Discovered'
-
-    def activateIdleNode(self, node: Node, softwareProfileName: str,
-                         softwareProfileChanged: bool):
-            # pylint: disable=no-self-use
-        softwareprofile: Optional[SoftwareProfile] = None
-
-        if softwareProfileChanged:
-            softwareprofile = \
-                SoftwareProfilesDbHandler().getSoftwareProfile(
-                    self.session, softwareProfileName)
-
-            # Mark node for network boot if software profile changed
-            node.bootFrom = 0
-
-        self._bhm.writePXEFile(
-            self.session, node, localboot=not softwareProfileChanged,
-            softwareprofile=softwareprofile
-        )
 
     def deleteNode(self, nodes: List[Node]) -> None:
         self.hookAction('delete', [node.name for node in nodes])

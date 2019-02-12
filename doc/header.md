@@ -1,5 +1,6 @@
-# Tortuga 7.0 Installation and Administration Guide
+Tortuga 7.0 Installation and Administration Guide
+=================================================
 
 Univa Corporation &lt;support@univa.com&gt;
 
-December 2018 -- Version 1.3
+January 2019 -- Version 1.4

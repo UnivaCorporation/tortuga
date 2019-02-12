@@ -56,10 +56,6 @@ class CreateHardwareProfileCli(TortugaCli):
                               dest='os',
                               help=_('Hardware profile operating system'))
 
-        self.addOptionToGroup(option_group_name, '--idleSoftwareProfile',
-                              dest='idleSoftwareProfile',
-                              help=_('Hardware profile idle software profile'))
-
         self.addOptionToGroup(option_group_name, '--name-format',
                               dest='nameFormat',
                               help=_('Host name format'))
@@ -124,11 +120,6 @@ class CreateHardwareProfileCli(TortugaCli):
                 'name': getattr(self.getArgs(), 'osInfo').getName(),
                 'version': getattr(self.getArgs(), 'osInfo').getVersion(),
                 'arch': getattr(self.getArgs(), 'osInfo').getArch(),
-            }
-
-        if self.getArgs().idleSoftwareProfile:
-            tmpl_dict['idleSoftwareProfile'] = {
-                'name': self.getArgs().idleSoftwareProfile,
             }
 
         if self.getArgs().nameFormat:

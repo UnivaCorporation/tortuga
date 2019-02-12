@@ -22,6 +22,5 @@ class ValidationError(TortugaException):
 
     """
     def __init__(self, error="", **kwargs):
-        TortugaException.__init__(
-            self, error, tortugaStatus.TORTUGA_USER_ABORTED_ERROR,
-            **kwargs)
+        super().__init__(error, tortugaStatus.TORTUGA_VALIDATION_ERROR,
+                         **kwargs)
