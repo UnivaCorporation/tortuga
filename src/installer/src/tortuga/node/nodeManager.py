@@ -204,7 +204,8 @@ class NodeManager(TortugaObjectManager): \
             )
         )
 
-    def __populate_nodes(self, session: Session, nodes: List[Node]) -> List[Node]:
+    def __populate_nodes(self, session: Session, nodes: List[Node]) \
+            -> List[Node]:
         """
         Expand non-database fields in Node objects
 
@@ -499,8 +500,8 @@ class NodeManager(TortugaObjectManager): \
                 continue
 
             if software_profile.minNodes and \
-                    len(software_profile.nodes) - num_nodes_deleted < \
-                        software_profile.minNodes:
+                    len(software_profile.nodes) - \
+                    num_nodes_deleted < software_profile.minNodes:
                 if force and software_profile.lockedState == 'SoftLocked':
                     # allow deletion of nodes when force is set and profile
                     # is soft locked
@@ -736,8 +737,8 @@ class NodeManager(TortugaObjectManager): \
             self._logger.exception(str(ex))
             raise
 
-    def shutdownNode(self, session, nodespec: str, bSoftShutdown: bool = False) \
-            -> None:
+    def shutdownNode(self, session, nodespec: str,
+                     bSoftShutdown: bool = False) -> None:
         """
         Raises:
             NodeNotFound
