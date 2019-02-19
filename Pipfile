@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-tortuga-core = {editable = true,file = "file:///Users/mfrisch/Devel/tortuga/src/core"}
+tortuga-core = {editable = true,file = "src/core"}
 mock = "*"
 pylint = "*"
 pyflakes = "*"
