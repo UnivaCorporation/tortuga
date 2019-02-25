@@ -19,9 +19,10 @@ import json
 import logging
 import time
 from collections import defaultdict
-from typing import Any, Dict, List, Optional
+from typing import Any, DefaultDict, Dict, List, Optional, Tuple
 
 from sqlalchemy.orm.session import Session
+
 from tortuga.addhost.addHostManager import AddHostManager
 from tortuga.addhost.addHostServerLocal import AddHostServerLocal
 from tortuga.config.configManager import ConfigManager
@@ -29,6 +30,7 @@ from tortuga.db.models.hardwareProfile import \
     HardwareProfile as HardwareProfileModel
 from tortuga.db.models.node import Node as NodeModel
 from tortuga.db.models.nodeRequest import NodeRequest
+from tortuga.db.models.nodeTag import NodeTag as NodeTagModel
 from tortuga.db.models.softwareProfile import \
     SoftwareProfile as SoftwareProfileModel
 from tortuga.db.nodeDbApi import NodeDbApi
@@ -45,6 +47,7 @@ from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.os_utility import osUtility
 from tortuga.resourceAdapter import resourceAdapterFactory
+from tortuga.schema import NodeSchema
 from tortuga.softwareprofile.softwareProfileManager import \
     SoftwareProfileManager
 from tortuga.sync.syncApi import SyncApi
@@ -204,7 +207,8 @@ class NodeManager(TortugaObjectManager): \
             )
         )
 
-    def __populate_nodes(self, session: Session, nodes: List[Node]) -> List[Node]:
+    def __populate_nodes(self, session: Session, nodes: List[Node]) \
+            -> List[Node]:
         """
         Expand non-database fields in Node objects
 
@@ -385,87 +389,37 @@ class NodeManager(TortugaObjectManager): \
 
         return result
 
-    def __process_nodeErrorDict(self, nodeErrorDict):
-        result = {}
-        nodes_deleted = []
-
-        for key, nodeList in nodeErrorDict.items():
-            result[key] = [dbNode.name for dbNode in nodeList]
-
-            if key == 'NodesDeleted':
-                for node in nodeList:
-                    node_deleted = {
-                        'name': node.name,
-                        'hardwareprofile': node.hardwareprofile.name,
-                        'addHostSession': node.addHostSession,
-                    }
-
-                    if node.softwareprofile:
-                        node_deleted['softwareprofile'] = \
-                            node.softwareprofile.name
-
-                    nodes_deleted.append(node_deleted)
-
-        return result, nodes_deleted
-
-    def deleteNode(self, session, nodespec: str, force: bool = False):
+    def __get_nodes_for_deletion(self, session: Session, nodespec: str,
+                                 force: bool) -> List[NodeModel]:
         """
-        Delete node by nodespec
-
-        Raises:
-            NodeNotFound
+        :raises NodeNotFound:
         """
-
-        kitmgr = KitActionsManager()
-        kitmgr.session = session
-
-        try:
-            nodes = self._nodesDbHandler.expand_nodespec(
-                session, nodespec, include_installer=False)
-            if not nodes:
-                raise NodeNotFound(
-                    'No nodes matching nodespec [%s]' % (nodespec))
-
-            self.__validate_delete_nodes_request(nodes, force)
-
-            self.__preDeleteHost(kitmgr, nodes)
-
-            nodeErrorDict = self.__delete_node(session, nodes)
-
-            # REALLY!?!? Convert a list of Nodes objects into a list of
-            # node names so we can report the list back to the end-user.
-            # This needs to be FIXED!
-
-            result, nodes_deleted = self.__process_nodeErrorDict(nodeErrorDict)
-
-            session.commit()
-
-            # ============================================================
-            # Perform actions *after* node deletion(s) have been committed
-            # to database.
-            # ============================================================
-
-            self.__postDeleteHost(kitmgr, nodes_deleted)
-
-            addHostSessions = set(
-                [tmpnode['addHostSession'] for tmpnode in nodes_deleted]
+        nodes = self._nodesDbHandler.expand_nodespec(
+            session, nodespec, include_installer=False)
+        if not nodes:
+            raise NodeNotFound(
+                'No nodes matching nodespec [%s]', nodespec
             )
 
-            if addHostSessions:
-                self._addHostManager.delete_sessions(addHostSessions)
+        # ensure nodes aren't locked
+        self.__validate_delete_nodes_request(nodes, force)
 
-            for nodeName in result['NodesDeleted']:
-                # Remove the Puppet cert
-                self._bhm.deletePuppetNodeCert(nodeName)
+        return nodes
 
-                self._bhm.nodeCleanup(nodeName)
+    def deleteNode(self, session, nodespec: str, force: bool = False):
+        """Delete nodes by nodespec
 
-                self._logger.info('Node [%s] deleted' % (nodeName))
+        :raises NodeNotFound: no matching nodes for nodespec
+        """
 
-            # Schedule a cluster update
-            self.__scheduleUpdate()
+        try:
+            nodes = self.__get_nodes_for_deletion(session, nodespec, force)
 
-            return result
+            kitmgr = KitActionsManager()
+            kitmgr.session = session
+
+            # perform actual node deletion
+            self.__delete_nodes(session, kitmgr, nodes)
         except Exception:
             session.rollback()
 
@@ -499,8 +453,8 @@ class NodeManager(TortugaObjectManager): \
                 continue
 
             if software_profile.minNodes and \
-                    len(software_profile.nodes) - num_nodes_deleted < \
-                        software_profile.minNodes:
+                    len(software_profile.nodes) - \
+                    num_nodes_deleted < software_profile.minNodes:
                 if force and software_profile.lockedState == 'SoftLocked':
                     # allow deletion of nodes when force is set and profile
                     # is soft locked
@@ -527,81 +481,111 @@ class NodeManager(TortugaObjectManager): \
         if errors:
             raise OperationFailed('\n'.join(errors))
 
-    def __delete_node(self, session: Session, dbNodes: List[NodeModel]) \
-            -> Dict[str, List[NodeModel]]:
+    def __delete_nodes(self, session: Session, kitmgr: KitActionsManager,
+                       nodes: List[NodeModel]) -> None:
         """
-        Raises:
-            DeleteNodeFailed
+        :raises DeleteNodeFailed:
         """
 
-        result: Dict[str, list] = {
-            'NodesDeleted': [],
-            'DeleteNodeFailed': [],
-            'SoftwareProfileLocked': [],
-            'SoftwareProfileHardLocked': [],
-        }
+        hwprofile_nodes = self.__pre_delete_nodes(kitmgr, nodes)
 
-        nodes: Dict[HardwareProfileModel, List[NodeModel]] = {}
-        events_to_fire: List[dict] = []
+        # commit node state changes to database
+        session.commit()
+
+        for hwprofile, node_data_dicts in hwprofile_nodes.items():
+            # build list of NodeModels
+            node_objs: List[NodeModel] = [
+                node_data_dict['node'] for node_data_dict in node_data_dicts
+            ]
+
+            # Call resource adapter deleteNode() entry point
+            self.__get_resource_adapter(
+                session, hwprofile
+            ).deleteNode(node_objs)
+
+            # Perform delete node action for each node in hwprofile
+            for node_data_dict in node_data_dicts:
+                # get JSON object for node record
+                node_dict = NodeSchema(
+                    only=('hardwareprofile', 'softwareprofile', 'name',
+                          'state'),
+                    exclude=('softwareprofile.metadata',)
+                ).dump(node_data_dict['node']).data
+
+                # Delete the Node
+                self._logger.debug('Deleting node [%s]', node_dict['name'])
+
+                #
+                # Fire node state change events
+                #
+                NodeStateChanged.fire(
+                    node=node_dict,
+                    previous_state=node_data_dict['previous_state']
+                )
+
+                self.__delete_last_tag(session, node_data_dict['node'].tags)
+
+                session.delete(node_data_dict['node'])
+
+                self.__post_delete(kitmgr, node_dict)
+
+                self._logger.info('Node [%s] deleted', node_dict['name'])
+
+            # clean up add host session cache
+            self._addHostManager.delete_sessions(set([
+                node.addHostSession for node in node_objs
+                if node.addHostSession
+            ]))
+
+        self.__scheduleUpdate()
+
+    def __pre_delete_nodes(self, kitmgr: KitActionsManager,
+                           nodes: List[NodeModel]) \
+            -> DefaultDict[HardwareProfileModel, List[NodeModel]]:
+        """Collect nodes being deleted, call pre-delete kit action,
+        mark them for deletion, and return dict containing nodes
+        keyed by hardware profile.
+        """
+
+        hwprofile_nodes = defaultdict(list)
 
         #
         # Mark node states as deleted in the database
         #
-        for dbNode in dbNodes:
+        for node in nodes:
+            # call pre-delete host kit action
+            kitmgr.pre_delete_host(
+                node.hardwareprofile.name,
+                get_node_swprofile_name(node),
+                nodes=[node.name]
+            )
+
             #
             # Capture previous state and node data as a dict for firing
             # the event later on
             #
-            event_data = {
-                'previous_state': dbNode.state,
-                'node': Node.getFromDbDict(dbNode.__dict__).getCleanDict()
-            }
+            hwprofile_nodes[node.hardwareprofile].append({
+                'node': node,
+                'previous_state': node.state
+            })
 
-            dbNode.state = state.NODE_STATE_DELETED
-            event_data['node']['state'] = 'Deleted'
+            # mark node deleted
+            node.state = state.NODE_STATE_DELETED
 
-            if dbNode.hardwareprofile not in nodes:
-                nodes[dbNode.hardwareprofile] = [dbNode]
-            else:
-                nodes[dbNode.hardwareprofile].append(dbNode)
+        return hwprofile_nodes
 
-        session.commit()
+    def __delete_last_tag(self, session: Session,
+                          tags: List[NodeTagModel]) -> None:
+        """If the last node associated with the tag is deleted, delete th
+        tag.
+        """
+        for tag in tags:
+            if len(tag.nodes) == 1 and \
+                    not tag.softwareprofiles and \
+                    not tag.hardwareprofiles:
+                self._logger.info('Deleting tag [%s]', tag.name)
 
-        #
-        # Fire node state change events
-        #
-        for event in events_to_fire:
-            NodeStateChanged.fire(node=event['node'],
-                                  previous_state=event['previous_state'])
-
-        #
-        # Call resource adapter with batch(es) of node lists keyed on
-        # hardware profile.
-        #
-        for hwprofile, hwprofile_nodes in nodes.items():
-            # Get the ResourceAdapter
-            adapter = self.__get_resource_adapter(session, hwprofile)
-
-            # Call the resource adapter
-            adapter.deleteNode(hwprofile_nodes)
-
-            # Iterate over all nodes in hardware profile, completing the
-            # delete operation.
-            for dbNode in hwprofile_nodes:
-                for tag in dbNode.tags:
-                    if len(tag.nodes) == 1 and \
-                            not tag.softwareprofiles and \
-                            not tag.hardwareprofiles:
-                        session.delete(tag)
-
-                # Delete the Node
-                self._logger.debug('Deleting node [%s]' % (dbNode.name))
-
-                session.delete(dbNode)
-
-                result['NodesDeleted'].append(dbNode)
-
-        return result
+                session.delete(tag)
 
     def __get_resource_adapter(self, session: Session,
                                hardwareProfile: HardwareProfileModel):
@@ -648,43 +632,28 @@ class NodeManager(TortugaObjectManager): \
 
         return result, nodes_deleted
 
-    def __preDeleteHost(self, kitmgr: KitActionsManager, nodes):
-        self._logger.debug(
-            '__preDeleteHost(): nodes=[%s]' % (
-                ' '.join([node.name for node in nodes])))
+    def __post_delete(self, kitmgr: KitActionsManager, node: dict):
+        """Call post-delete kit action for deleted node and clean up node
+        state files (ie. Puppet certificate, etc.).
 
-        for node in nodes:
-            kitmgr.pre_delete_host(
-                node.hardwareprofile.name,
-                node.softwareprofile.name if node.softwareprofile else None,
-                nodes=[node.name])
+        'node' is a JSON object representing the deleted node.
+        """
 
-    def __postDeleteHost(self, kitmgr, nodes_deleted):
-        # 'nodes_deleted' is a list of dicts of the following format:
-        #
-        # {
-        #     'name': 'compute-01',
-        #     'softwareprofile': 'Compute',
-        #     'hardwareprofile': 'LocalIron',
-        # }
-        #
-        # if the node does not have an associated software profile, the
-        # dict does not contain the key 'softwareprofile'.
+        kitmgr.post_delete_host(
+            node['hardwareprofile']['name'],
+            node['softwareprofile']['name']
+            if node['softwareprofile'] else None,
+            nodes=[node['name']]
+        )
 
-        self._logger.debug(
-            '__postDeleteHost(): nodes_deleted=[%s]' % (nodes_deleted))
+        # remove Puppet cert, etc.
+        self.__cleanup_node_state_files(node)
 
-        if not nodes_deleted:
-            self._logger.debug('No nodes deleted in this operation')
+    def __cleanup_node_state_files(self, node_dict: dict):
+        # Remove the Puppet cert
+        self._bhm.deletePuppetNodeCert(node_dict['name'])
 
-            return
-
-        for node_dict in nodes_deleted:
-            kitmgr.post_delete_host(
-                node_dict['hardwareprofile'],
-                node_dict['softwareprofile']
-                if 'softwareprofile' in node_dict else None,
-                nodes=[node_dict['name']])
+        self._bhm.nodeCleanup(node_dict['name'])
 
     def __scheduleUpdate(self):
         self._syncApi.scheduleClusterUpdate()
@@ -736,8 +705,8 @@ class NodeManager(TortugaObjectManager): \
             self._logger.exception(str(ex))
             raise
 
-    def shutdownNode(self, session, nodespec: str, bSoftShutdown: bool = False) \
-            -> None:
+    def shutdownNode(self, session, nodespec: str,
+                     bSoftShutdown: bool = False) -> None:
         """
         Raises:
             NodeNotFound
@@ -909,3 +878,7 @@ def init_async_node_request(action: str, data: Any, *,
     )
 
     return request
+
+
+def get_node_swprofile_name(node: NodeModel) -> Optional[str]:
+    return node.softwareprofile.name if node.softwareprofile else None

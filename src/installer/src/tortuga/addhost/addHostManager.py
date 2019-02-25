@@ -17,9 +17,10 @@
 import logging
 import threading
 import uuid
-from typing import List, Optional
+from typing import Iterable, List, Optional
 
 from sqlalchemy.orm.session import Session
+
 from tortuga.db.hardwareProfilesDbHandler import HardwareProfilesDbHandler
 from tortuga.db.models.nodeTag import NodeTag
 from tortuga.db.nodeDbApi import NodeDbApi
@@ -220,21 +221,30 @@ class AddHostManager(TagsDbApiMixin, TortugaObjectManager):
     def delete_session(self, session_id: str) -> None:
         """TODO: currently a no-op"""
 
-    def delete_sessions(self, session_ids: List[str]) -> None:
+    def delete_sessions(self, session_ids: Iterable[str]) -> None:
         """Bulk session deletion
 
         Currently only called when deleting nodes
         """
 
-        self._logger.debug('delete_sessions()')
+        if not session_ids:
+            self._logger.debug(
+                'delete_sessions() called with empty session_ids list'
+            )
+
+            return
+
+        self._logger.debug(
+            'delete_sessions(): session_ids=[%s]', ' '.join(session_ids))
 
         with self._addHostLock:
             for session_id in session_ids:
-                if self._sessions.exists(session_id):
-                    self._logger.debug(
-                        'Deleting session [{0}]'.format(session_id))
+                if not self._sessions.exists(session_id):
+                    continue
 
-                    self._sessions.delete(session_id)
+                self._logger.debug('Deleting addhost session [%s]', session_id)
+
+                self._sessions.delete(session_id)
 
     def update_session(
             self, session_id: str, running: Optional[bool] = None):
