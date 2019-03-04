@@ -689,6 +689,7 @@ class NodeManager(TortugaObjectManager): \
             for dbHardwareProfile, detailsDict in nodes_dict.items():
                 # Get the ResourceAdapter
                 adapter = self.__getResourceAdapter(dbHardwareProfile)
+                adapter.session = session
 
                 # Call startup action extension
                 adapter.startupNode(
@@ -724,6 +725,7 @@ class NodeManager(TortugaObjectManager): \
             for dbHardwareProfile, detailsDict in d.items():
                 # Get the ResourceAdapter
                 adapter = self.__getResourceAdapter(dbHardwareProfile)
+                adapter.session = session
 
                 # Call shutdown action extension
                 adapter.shutdownNode(detailsDict['nodes'], bSoftShutdown)
