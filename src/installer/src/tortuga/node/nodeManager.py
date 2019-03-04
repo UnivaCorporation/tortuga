@@ -47,6 +47,7 @@ from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from tortuga.os_utility import osUtility
 from tortuga.resourceAdapter import resourceAdapterFactory
+from tortuga.resourceAdapter.resourceAdapter import ResourceAdapter
 from tortuga.schema import NodeSchema
 from tortuga.softwareprofile.softwareProfileManager import \
     SoftwareProfileManager
@@ -258,7 +259,10 @@ class NodeManager(TortugaObjectManager): \
             # Call resource adapter
             # self._nodesDbHandler.updateNode(session, node, updateNodeRequest)
 
-            adapter = self.__getResourceAdapter(node.hardwareprofile)
+            adapter = self.__getResourceAdapter(
+                session,
+                node.hardwareprofile
+            )
 
             adapter.updateNode(session, node, updateNodeRequest)
 
@@ -688,7 +692,10 @@ class NodeManager(TortugaObjectManager): \
 
             for dbHardwareProfile, detailsDict in nodes_dict.items():
                 # Get the ResourceAdapter
-                adapter = self.__getResourceAdapter(dbHardwareProfile)
+                adapter = self.__getResourceAdapter(
+                    session,
+                    dbHardwareProfile
+                )
 
                 # Call startup action extension
                 adapter.startupNode(
@@ -723,7 +730,10 @@ class NodeManager(TortugaObjectManager): \
 
             for dbHardwareProfile, detailsDict in d.items():
                 # Get the ResourceAdapter
-                adapter = self.__getResourceAdapter(dbHardwareProfile)
+                adapter = self.__getResourceAdapter(
+                    session,
+                    dbHardwareProfile
+                )
 
                 # Call shutdown action extension
                 adapter.shutdownNode(detailsDict['nodes'], bSoftShutdown)
@@ -757,7 +767,7 @@ class NodeManager(TortugaObjectManager): \
                 self.__processNodeList(nodes).items():
             # iterate over hardware profile/nodes dict to reboot each
             # node
-            adapter = self.__getResourceAdapter(dbHardwareProfile)
+            adapter = self.__getResourceAdapter(session, dbHardwareProfile)
 
             # Call reboot action extension
             adapter.rebootNode(detailsDict['nodes'], bSoftReset)
@@ -828,7 +838,9 @@ class NodeManager(TortugaObjectManager): \
 
         return d
 
-    def __getResourceAdapter(self, hardwareProfile: HardwareProfileModel):
+    def __getResourceAdapter(self, session: Session,
+                             hardwareProfile: HardwareProfileModel) \
+            -> Optional[ResourceAdapter]:
         """
         Raises:
             OperationFailed
@@ -839,9 +851,16 @@ class NodeManager(TortugaObjectManager): \
                 'Hardware profile [%s] does not have an associated'
                 ' resource adapter' % (hardwareProfile.name))
 
-        return resourceAdapterFactory.get_api(
+        adapter = resourceAdapterFactory.get_api(
             hardwareProfile.resourceadapter.name) \
             if hardwareProfile.resourceadapter else None
+
+        if not adapter:
+            return None
+
+        adapter.session = session
+
+        return adapter
 
 
 def get_default_relations(relations: Optional[OptionDict]):
