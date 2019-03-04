@@ -39,6 +39,8 @@ class StartupNodeCli(TortugaCli):
                               dest='bootMethod', default='n',
                               help=_('Boot method'))
 
+        super().parseArgs(usage=usage)
+
     def runCommand(self):
         self.parseArgs()
 
