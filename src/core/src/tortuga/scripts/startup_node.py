@@ -52,7 +52,7 @@ class StartupNodeCli(TortugaCli):
 
         try:
             NodeWsApi(username=self.getUsername(),
-                      password=self.getPasword(),
+                      password=self.getPassword(),
                       baseurl=self.getUrl(),
                       verify=self._verify).startupNode(
                 self.getArgs().nodeName, destinationList,
