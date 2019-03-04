@@ -21,13 +21,21 @@ class tortuga_kit_base::core::certificate_authority {
 
   if $::osfamily == 'RedHat' {
     $ca_path = '/etc/pki/ca-trust/source/anchors'
+
+    $cmd = 'update-ca-trust'
+
+    $dest_ca_cert = 'tortuga-ca.pem'
   } elsif $::osfamily == 'Debian' {
     $ca_path = '/usr/local/share/ca-certificates'
+
+    $cmd = '/usr/sbin/update-ca-certificates'
+
+    $dest_ca_cert = 'tortuga-ca.crt'
   }
 
   file { 'ca-pem':
     ensure => file,
-    path   => "${ca_path}/tortuga-ca.pem",
+    path   => "${ca_path}/${dest_ca_cert}",
     owner  => root,
     group  => root,
     source => "http://${::primary_installer_hostname}:${tortuga::config::int_web_port}/ca.pem",
@@ -35,10 +43,23 @@ class tortuga_kit_base::core::certificate_authority {
   }
 
   exec { 'update-ca-trust':
-    command     => 'update-ca-trust',
+    command     => $cmd,
     path        => ['/bin', '/usr/bin'],
     require     => File['ca-pem'],
     refreshonly => true,
   }
 
+  # this is a workaround for Ubuntu/Debian where the default CA bundle path
+  # differs from RHEL/CentOS
+  if $::facts['os']['family'] == 'Debian' {
+    file { ['/etc/pki', '/etc/pki/tls', '/etc/pki/tls/certs']:
+      ensure => directory,
+    }
+
+    file { '/etc/pki/tls/certs/ca-bundle.crt':
+      ensure  => symlink,
+      target  => '/etc/ssl/certs/ca-certificates.crt',
+      require => File['/etc/pki/tls/certs'],
+    }
+  }
 }
