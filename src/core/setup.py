@@ -14,8 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: skip-file
-
 import os
 import subprocess
 from pathlib import Path
@@ -25,10 +23,7 @@ import setuptools.command.sdist
 from setuptools import find_packages, setup
 
 
-srcRoot = 'tortuga'
-module_name = 'tortuga-core'
-
-version = '7.0.3'
+VERSION = '7.0.3'
 
 if os.getenv('RELEASE'):
     requirements_file = 'requirements.txt'
@@ -51,23 +46,9 @@ def get_git_revision():
 
 
 git_revision = get_git_revision()
-
-module_version = f'{version}+rev{git_revision}'
-
-
+module_version = f'{VERSION}+rev{git_revision}'
 if os.getenv('CI_PIPELINE_ID'):
     module_version += '.{}'.format(os.getenv('CI_PIPELINE_ID'))
-
-
-def walkfiles(d):
-    for f in d.iterdir():
-        if f.is_dir():
-            for item in walkfiles(f):
-                yield item
-
-            continue
-        else:
-            yield f
 
 
 def generate_release_file(build_identifier=None):
@@ -83,8 +64,8 @@ class CommonBuildStep(object):
 class BuildPyCommand(setuptools.command.build_py.build_py, CommonBuildStep):
     """
     Override 'build_py' command to generate files before build
-    """
 
+    """
     def run(self):
         self.pre_build()
 
@@ -99,8 +80,8 @@ class SdistCommand(setuptools.command.sdist.sdist, CommonBuildStep):
 
 
 setup(
-    name=module_name,
-    version=module_version,
+    name='tortuga-core',
+    version=VERSION,
     description='Tortuga core component',
     author='Univa Corporation',
     author_email='engineering@univa.com',
