@@ -201,7 +201,7 @@ marshmallow-sqlalchemy==0.15.0
 more-itertools==4.3.0
 oic==0.14.0
 passlib==1.7.1
-git+https://github.com/UnivaCorporation/pip2pi.git@univa-stable#egg=pip2pi-0.8.0
+pip2pi @ git+https://github.com/UnivaCorporation/pip2pi.git@univa-stable#egg=pip2pi-0.8.0
 portend==2.3
 pyasn1==0.4.4
 pycparser==2.19
@@ -233,7 +233,7 @@ ENDL
 
     python3 -m venv tmp-venv
 
-    tmp-venv/bin/pip install --pre pip2pi
+    tmp-venv/bin/pip install --upgrade pip
 
     tmp-venv/bin/pip2pi ${dstdir}/python -r requirements.txt
 }
