@@ -96,7 +96,7 @@ setup(
     ],
     install_requires=requirements,
     dependency_links=[
-        "git+ssh://git@github.com/EmmEff/pip2pi.git@pip-10-fix#egg=pip2pi-0.7.0"
+        "git+https://github.com/UnivaCorporation/pip2pi.git@univa-stable#egg=pip2pi-0.8.0"
     ],
     zip_safe=False,
     namespace_packages=['tortuga'],

@@ -201,7 +201,7 @@ marshmallow-sqlalchemy==0.15.0
 more-itertools==4.3.0
 oic==0.14.0
 passlib==1.7.1
-pip2pi==0.7.0
+git+https://github.com/UnivaCorporation/pip2pi.git@univa-stable#egg=pip2pi-0.8.0
 portend==2.3
 pyasn1==0.4.4
 pycparser==2.19
