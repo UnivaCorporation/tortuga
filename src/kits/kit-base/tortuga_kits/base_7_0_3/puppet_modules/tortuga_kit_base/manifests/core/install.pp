@@ -33,11 +33,17 @@ class tortuga_kit_base::core::install::virtualenv::package {
       ensure_packages($pkgs, {'ensure' => 'installed'})
     }
   } elsif $facts['os']['name'] == 'Ubuntu' {
-
-      $pkgs = [
-        'python3.6',
-        'python3.6-venv',
-      ]
+      if versioncmp($::facts['os']['release']['full'], '18.04') < 0 {
+        $pkgs = [
+          'python3.6',
+          'python3.6-venv',
+        ]
+      } else {
+        $pkgs = [
+          'python3',
+          'python3-venv',
+        ]
+      }
   } elsif $::osfamily == 'Debian' {
       $pkgs = [
         'python3',
@@ -66,11 +72,15 @@ class tortuga_kit_base::core::install::virtualenv::pre_install {
     # offline mode.
 
     if $facts['os']['name'] == 'Ubuntu' {
-      include apt
+      if versioncmp($::facts['os']['release']['full'], '18.04') < 0 {
+        include apt
 
-      # install PPA containing Python 3.6
-      apt::ppa { 'ppa:deadsnakes/ppa':
-        ensure => present,
+        # install PPA containing Python 3.6
+        apt::ppa { 'ppa:deadsnakes/ppa':
+          ensure => present,
+        }
+      } else {
+        ensure_packages(['python3'], {'ensure' => 'installed'})
       }
     } elsif $facts['os']['name'] == 'Redhat' {
       # enable rhscl repository on RHEL
@@ -139,6 +149,18 @@ class tortuga_kit_base::core::install::create_tortuga_instroot {
           "${tortuga::config::instroot}/var/tmp"]:
     ensure  => directory,
     require => Exec['create_tortuga_base'],
+  }
+
+  if $::facts['os']['name'] == 'Ubuntu' and
+      versioncmp($::facts['os']['release']['full'], '18.04') >= 0 {
+    $pipcmd = "${tortuga::config::instroot}/bin/pip"
+
+    exec { 'update pip':
+      path    => ['/bin', '/usr/bin'],
+      command => "${pipcmd} install --upgrade pip",
+      unless  => "${pipcmd} list -o | grep pip",
+      require => Exec['create_tortuga_base'],
+    }
   }
 }
 

@@ -13,22 +13,24 @@
 # limitations under the License.
 
 import cherrypy
-
 from tortuga.kit.registry import get_all_kit_installers
+
+from ..app import app
 from .addHostController import AddHostController
 from .adminController import AdminController
 from .authController import AuthController
 from .hardwareProfileController import HardwareProfileController
 from .kitController import KitController
+from .metadataController import MetadataController
 from .networkController import NetworkController
 from .nodeController import NodeController
 from .parameterController import ParameterController
-from .registry import register_ws_controller, get_all_ws_controllers
+from .registry import get_all_ws_controllers, register_ws_controller
 from .resourceAdapterConfigurationController import \
     ResourceAdapterConfigurationController
 from .softwareProfileController import SoftwareProfileController
 from .updateController import UpdateController
-from ..app import app
+
 
 #
 # Register web service controllers
@@ -44,6 +46,7 @@ register_ws_controller(ParameterController)
 register_ws_controller(ResourceAdapterConfigurationController)
 register_ws_controller(SoftwareProfileController)
 register_ws_controller(UpdateController)
+register_ws_controller(MetadataController)
 
 
 def setup_routes():

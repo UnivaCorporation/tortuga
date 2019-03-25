@@ -19,6 +19,8 @@ import json
 import xml.etree.cElementTree as ET
 from typing import Iterable, Optional
 
+from .validators import ValidatorMixin
+
 
 def indent(elem, level=0):
     i = "\n" + level * "  "
@@ -36,13 +38,13 @@ def indent(elem, level=0):
             elem.tail = i
 
 
-class TortugaObject(dict): \
+class TortugaObject(ValidatorMixin, dict): \
         # pylint: disable=too-many-public-methods
 
     """
     Base tortuga object class.
+    
     """
-
     def __init__(self, _dict=None, attributeList=None, rootTag=None,
                  encodedKeyTypeDict=None):
         """

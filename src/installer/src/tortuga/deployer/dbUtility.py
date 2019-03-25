@@ -18,7 +18,6 @@ import time
 from typing import Any, Dict
 
 from sqlalchemy.orm.session import Session
-
 from tortuga.db.globalParametersDbHandler import GlobalParametersDbHandler
 from tortuga.db.models.hardwareProfile import HardwareProfile
 from tortuga.db.models.node import Node
@@ -41,7 +40,6 @@ def primeDb(session: Session, settings: Dict[str, Any]):
     node.lastUpdate = time.strftime(
         '%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
     node.bootFrom = 1
-    node.isIdle = False
 
     # Create Installer Software Profile
     node.softwareprofile = SoftwareProfile(

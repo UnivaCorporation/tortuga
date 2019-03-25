@@ -23,7 +23,7 @@ CONFIG_FILE = '/etc/hosts.pdsh'
 
 class ComponentInstaller(ComponentInstallerBase):
     name = 'pdsh'
-    version = '7.0.2'
+    version = '7.0.3'
     os_list = [
         {'family': 'rhel', 'version': '6', 'arch': 'x86_64'},
         {'family': 'rhel', 'version': '7', 'arch': 'x86_64'},
@@ -42,9 +42,6 @@ class ComponentInstaller(ComponentInstallerBase):
 
             for node in NodesDbHandler().getNodeList(self.session):
                 if node.name == installer:
-                    continue
-
-                if node.isIdle:
                     continue
 
                 if node.state == 'Deleted':

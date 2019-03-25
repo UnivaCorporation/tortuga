@@ -102,12 +102,6 @@ class Node(TortugaObject): \
     def getLockedState(self):
         return self.get('lockedState')
 
-    def setIsIdle(self, val):
-        self['isIdle'] = val
-
-    def getIsIdle(self):
-        return self.get('isIdle')
-
     def setDestSPId(self, val):
         self['destSPId'] = val
 

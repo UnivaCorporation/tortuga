@@ -109,41 +109,6 @@ class SoftwareProfileApi(TortugaApi): \
             self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
-    def getIdleSoftwareProfileList(self, session: Session):
-        """
-        Get software profile information
-
-            Returns:
-               idle softwareProfile list
-            Throws:
-                TortugaException
-        """
-        try:
-            return self._softwareProfileManager.getIdleSoftwareProfileList(session)
-        except TortugaException as ex:
-            raise
-        except Exception as ex:
-            self._logger.exception(str(ex))
-            raise TortugaException(exception=ex)
-
-    def setIdleState(self, session: Session, softwareProfileName, state):
-        """
-        Get idle state information
-
-            Returns:
-               -none-
-            Throws:
-                TortugaException
-        """
-        try:
-            self._softwareProfileManager.setIdleState(
-                session, softwareProfileName, state)
-        except TortugaException as ex:
-            raise
-        except Exception as ex:
-            self._logger.exception(str(ex))
-            raise TortugaException(exception=ex)
-
     def getEnabledComponentList(self, session: Session, name):
         """
         Get enabled component list..

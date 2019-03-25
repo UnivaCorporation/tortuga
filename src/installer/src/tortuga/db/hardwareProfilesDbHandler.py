@@ -17,12 +17,12 @@ from typing import Dict, Optional
 
 from sqlalchemy import and_, or_
 from sqlalchemy.orm.exc import NoResultFound
-
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
 from tortuga.exceptions.hardwareProfileNotFound import HardwareProfileNotFound
 from tortuga.exceptions.invalidArgument import InvalidArgument
-from tortuga.exceptions.softwareProfileNotIdle import SoftwareProfileNotIdle
+
 from .models.hardwareProfile import HardwareProfile
+
 
 Tags = Dict[str, Optional[str]]
 
@@ -30,7 +30,7 @@ Tags = Dict[str, Optional[str]]
 class HardwareProfilesDbHandler(TortugaDbObjectHandler):
     """
     This class handles hardwareProfiles table.
-    
+
     """
     def getHardwareProfile(self, session, name):
         """
@@ -90,19 +90,3 @@ class HardwareProfilesDbHandler(TortugaDbObjectHandler):
 
         return session.query(HardwareProfile).filter(
             or_(*searchspec)).order_by(HardwareProfile.name).all()
-
-    def setIdleSoftwareProfile(self, dbHardwareProfile,
-                               dbSoftwareProfile=None): \
-            # pylint: disable=no-self-use
-        if dbSoftwareProfile and not dbSoftwareProfile.isIdle:
-            # Don't allow a non-idle software profile to be used as an
-            # idle profile
-
-            raise SoftwareProfileNotIdle(
-                'Software profile [%s] not an idle profile' % (
-                    dbSoftwareProfile.name))
-
-        if not dbHardwareProfile:
-            raise InvalidArgument('Hardware profile must not be None')
-
-        dbHardwareProfile.idlesoftwareprofile = dbSoftwareProfile

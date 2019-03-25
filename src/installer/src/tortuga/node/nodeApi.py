@@ -194,66 +194,6 @@ class NodeApi(TortugaApi):
 
             raise TortugaException(exception=ex)
 
-    def transferNodes(self, session: Session,
-                      dstSoftwareProfile: str,
-                      *,
-                      count: Optional[int] = None,
-                      srcSoftwareProfile: Optional[str] = None,
-                      bForce: Optional[bool] = False,
-                      nodespec: Optional[str] = None) -> dict:
-        try:
-            if nodespec:
-                return self._nodeManager.transferNode(
-                    session, nodespec, dstSoftwareProfile, bForce=bForce
-                )
-
-            if srcSoftwareProfile is None:
-                raise TypeError(
-                    'transferNodes() missing required keyword-only'
-                    ' argument: \'srcSoftwareProfile\'')
-
-            return self._nodeManager.transferNodes(
-                session, srcSoftwareProfile, dstSoftwareProfile, count,
-                bForce=bForce
-            )
-        except TortugaException:
-            raise
-        except Exception as ex:
-            if nodespec:
-                excmsg = 'Fatal error transferring nodes matching nodespec'
-                ' [{}]'.format(nodespec)
-            else:
-                excmsg = 'Fatal error transferring nodes'
-
-            self._logger.exception(excmsg)
-
-            raise TortugaException(exception=ex)
-
-    def idleNode(self, session: Session, nodespec: str):
-        try:
-            return self._nodeManager.idleNode(session, nodespec)
-        except TortugaException:
-            raise
-        except Exception as ex:
-            self._logger.exception(
-                'Fatal error idling nodes matching nodespec [{}]'.format(
-                    nodespec))
-
-            raise TortugaException(exception=ex)
-
-    def activateNode(self, session: Session, nodeName: str,
-                     softwareProfileName: str):
-        try:
-            return self._nodeManager.activateNode(
-                session, nodeName, softwareProfileName)
-        except TortugaException:
-            raise
-        except Exception as ex:
-            self._logger.exception(
-                'Fatal error activating node [{}]'.format(nodeName))
-
-            raise TortugaException(exception=ex)
-
     def startupNode(self, session: Session, nodespec: str,
                     remainingNodeList: Optional[list] = None,
                     bootMethod: Optional[str] = 'n') -> None:

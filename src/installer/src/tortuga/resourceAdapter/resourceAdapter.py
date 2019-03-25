@@ -21,9 +21,8 @@ import sys
 import traceback
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy.orm.session import Session
-
 import gevent
+from sqlalchemy.orm.session import Session
 from tortuga.addhost.addHostManager import AddHostManager
 from tortuga.config.configManager import ConfigManager
 from tortuga.db.models.hardwareProfile import HardwareProfile
@@ -179,32 +178,8 @@ class ResourceAdapter(UserDataMixin): \
             # pylint: disable=unused-argument
         self.__trace(session, node, updateNodeRequest)
 
-    def suspendActiveNode(self, node: Node) -> bool:
-        """
-        Change the given active node to an idle node
-        """
-
-        self.__trace(node)
-
-    def idleActiveNode(self, nodes: List[Node]) -> str:
-        """
-        Change the given active node to an idle node
-        """
-
-        self.__trace(nodes)
-
-    def activateIdleNode(self, node: Node, softwareProfileName: str,
-                         softwareProfileChanged: bool):
-        """
-        Change the given idle node to an active node
-        """
-
-        self.__trace(node, softwareProfileName, softwareProfileChanged)
-
     def deleteNode(self, nodes: List[Node]) -> None:
-        """
-        Remove the given node (active or idle) from the system
-        """
+        """Remove the given node(s) from the system"""
 
         self.__trace(nodes)
 
@@ -223,11 +198,6 @@ class ResourceAdapter(UserDataMixin): \
 
         # TODO: implement timeout
         gevent.joinall(greenlets)
-
-    def transferNode(self, nodeIdSoftwareProfileTuples,
-                     newSoftwareProfileName: str):
-        """Transfer the given idle node"""
-        self.__trace(nodeIdSoftwareProfileTuples, newSoftwareProfileName)
 
     def startupNode(self, nodes: List[Node],
                     remainingNodeList: Optional[str] = None,

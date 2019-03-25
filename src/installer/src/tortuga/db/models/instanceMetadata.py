@@ -33,3 +33,8 @@ class InstanceMetadata(ModelBase):
 
     instance = relationship('InstanceMapping',
                             back_populates='instance_metadata')
+
+    def __repr__(self):
+        return ('<InstanceMetadata(key=[{}], value=[{}],'
+                ' instance_id=[[}])>'.format(
+                    self.key, self.value, self.instance_id))

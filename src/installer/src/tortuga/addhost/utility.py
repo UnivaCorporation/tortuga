@@ -65,12 +65,6 @@ def validate_addnodes_request(session: Session, addNodesRequest: Dict[str, Any])
     sp = spapi.getSoftwareProfile(
         session, softwareProfileName) if softwareProfileName else None
 
-    if sp and not sp.isIdle and 'isIdle' in addNodesRequest and \
-            addNodesRequest['isIdle']:
-        raise InvalidArgument(
-            'Software profile [%s] is not idle software profile' % (
-                softwareProfileName))
-
     # Make sure that if a software profile is given that it is allowed
     # to be used with the given hardware profile
     if sp is not None and hp is not None:
@@ -88,7 +82,7 @@ def validate_addnodes_request(session: Session, addNodesRequest: Dict[str, Any])
                     softwareProfileName))
 
         hp = sp.hardwareprofiles[0]
-    elif hp is not None and sp is None and not addNodesRequest['isIdle']:
+    elif hp is not None and sp is None:
         if not hp.mappedsoftwareprofiles:
             raise InvalidArgument(
                 'Hardware profile [{0}] is not mapped to any software'

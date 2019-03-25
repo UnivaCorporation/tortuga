@@ -17,7 +17,7 @@ from tortuga.kit.installer import ComponentInstallerBase
 
 class ComponentInstaller(ComponentInstallerBase):
     name = 'core'
-    version = '7.0.2'
+    version = '7.0.3'
     os_list = [
         {'family': 'rhel', 'version': '6', 'arch': 'x86_64'},
         {'family': 'rhel', 'version': '7', 'arch': 'x86_64'},
@@ -26,7 +26,7 @@ class ComponentInstaller(ComponentInstallerBase):
     compute_only = True
 
     def action_get_puppet_args(self, db_software_profile,
-                               db_hardware_profile):
+                               db_hardware_profile, *args, **kwargs):
 
         if self.kit_installer.config_manager.is_offline_installation():
             return {

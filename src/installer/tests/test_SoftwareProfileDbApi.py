@@ -86,13 +86,6 @@ def test_getSoftwareProfileList(dbm):
         assert SoftwareProfileDbApi().getSoftwareProfileList(session)
 
 
-def test_getIdleSoftwareProfileList(dbm):
-    with dbm.session() as session:
-        assert isinstance(
-            SoftwareProfileDbApi().getIdleSoftwareProfileList(session),
-            TortugaObjectList)
-
-
 # def test_addSoftwareProfile():
 #     name = 'testprofile'
 

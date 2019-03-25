@@ -67,7 +67,11 @@ class GetSoftwareProfileCli(TortugaCli):
 
         self.addOptionToGroup(
             softwareProfileAttrGroup, '--data-root', action='store_true',
-            dest='getDataRoot', default=False, help=_('get root directory for user data'))
+            dest='getDataRoot', default=False, help=_('get root directories for user data'))
+
+        self.addOptionToGroup(
+            softwareProfileAttrGroup, '--data-rsync', action='store_true',
+            dest='getDataRsync', default=False, help=_('get rsync configuration'))
 
         outputAttrGroup = _('Output formatting options')
 
@@ -131,6 +135,9 @@ class GetSoftwareProfileCli(TortugaCli):
         if self.getArgs().getDataRoot:
             optionDict['dataRoot'] = True
 
+        if self.getArgs().getDataRsync:
+            optionDict['dataRsync'] = True
+
         swprofile = swprofileapi.getSoftwareProfile(name, optionDict)
 
         if self.getArgs().json:
@@ -173,10 +180,6 @@ class GetSoftwareProfileCli(TortugaCli):
             if swprofile.getMaxNodes() != -1 else '<NONE>'))
 
         buf = swprofile.getType()
-
-        if swprofile.getType() == 'compute':
-            if swprofile.getIsIdle():
-                buf += ' (idle software profile)'
 
         print('  - Type: {0}'.format(buf))
 
@@ -288,9 +291,15 @@ class GetSoftwareProfileCli(TortugaCli):
 
         if self.getArgs().getDataRoot:
             if swprofile.getDataRoot():
-                print('  - Data Root: {0}'.format(swprofile.getDataRoot()))
+                print('  - Data Roots: {0}'.format(swprofile.getDataRoot()))
             else:
-                print('  - Data Root: (none)')
+                print('  - Data Roots: (none)')
+
+        if self.getArgs().getDataRsync:
+            if swprofile.getDataRsync():
+                print('  - Rsync config: {0}'.format(swprofile.getDataRsync()))
+            else:
+                print('  - Rsync config: (none)')
 
 
 def main():

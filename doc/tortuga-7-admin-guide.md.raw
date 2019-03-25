@@ -23,7 +23,7 @@ All trademarks mentioned within this document are the property of their respecti
 
 \newpage
 
-## Tortuga Quickstart {#quickstart}
+## Tortuga Quickstart
 
 ### Manual quickstart installation
 
@@ -76,7 +76,7 @@ Commands listed in this "Quickstart" section are intended to be run as the
     CentOS AMIs on Amazon EC2.
 
     If hosting the Tortuga installer on Amazon Web Services (AWS), refer
-    to [Tortuga AWS Identity &amp; Access Management (IAM) role policy requirements](#iam_policy).
+    to Tortuga AWS Identity &amp; Access Management (IAM) role policy requirements.
 
 * Disable SELinux
 
@@ -188,7 +188,7 @@ Commands listed in this "Quickstart" section are intended to be run as the
 
     **Note:** if attempting to install Tortuga on a server where Tortuga
     (any version) has been previously installed, please refer to [Appendix
-    C: Uninstalling Tortuga](#appendix_c) before proceeding! It is
+    C: Uninstalling Tortuga](#appendix-c-uninstalling-tortuga) before proceeding! It is
     *strongly recommended* to install Tortuga on a fresh installation of
     RHEL/CentOS.
 
@@ -336,6 +336,17 @@ Commands listed in this "Quickstart" section are intended to be run as the
     instances already have an operating system installed, it is not necessary to
     define the installation media.
 
+    **Note**: Software profiles are created with a default max nodes setting
+    of 25. To change or remove this limit:
+
+    ```shell
+    update-software-profile --name execd --max-nodes XX
+    ```
+
+    Where `XX` is the maximum number of nodes you want to allow. To remove
+    the limit altogether, use `none`. See the section on software profiles
+    below for more information.
+
 1. Create hardware profile for compute nodes
 
     This hardware profile will used to represent compute nodes in the
@@ -404,7 +415,7 @@ Commands listed in this "Quickstart" section are intended to be run as the
 
         ```shell
         adapter-mgmt create --resource-adapter AWS \
-            --profile default \
+            --profile Default \
             --setting region=<AWS region name> \
             --setting awsAccessKey=<AWS access key> \
             --setting awsSecretKey=<AWS secret key> \
@@ -424,7 +435,7 @@ Commands listed in this "Quickstart" section are intended to be run as the
 
         ```shell
         adapter-mgmt create --resource-adapter AWS \
-            --profile default \
+            --profile Default \
             <settings from above..>
             --setting subnet_id=<subnet-XXXXXXXX>
         ```
@@ -442,7 +453,7 @@ Commands listed in this "Quickstart" section are intended to be run as the
         group must allow unrestricted access to all instances within the
         same security group (ie. installer and compute instances.
         Alternatively, specific ports may be opened as documented in
-        [Firewall Configuration](#firewall) below.
+        [Firewall Configuration](#firewall-configuration) below.
 
         Use one of the following values for `user_data_script_template`:
 
@@ -452,10 +463,10 @@ Commands listed in this "Quickstart" section are intended to be run as the
         * `bootstrap.debian.tmpl` for recent Debian/Ubuntu versions
         * `bootstrap.suse.tmpl` for SUSE Linux/openSUSE versions
 
-    `adapter-mgmt update` can be used to manage resource adapter configuration
-    profile settings. Erroneous/invalid settings can be removed by using
-    `adapter-mgmt update PROFILENAME --delete NAME`, where `NAME` is the
-    setting name.
+        `adapter-mgmt update` can be used to manage resource adapter
+        configuration profile settings. Erroneous/invalid settings can be
+        removed by using `adapter-mgmt update PROFILENAME --delete NAME`,
+        where `NAME` is the setting name.
 
     1. Create hardware profile to represent EC2 nodes
 
@@ -512,9 +523,9 @@ Commands listed in this "Quickstart" section are intended to be run as the
 
     1. Install UGE kit
 
-    ```shell
-    install-kit kit-uge*.tar.bz2
-    ```
+        ```shell
+        install-kit kit-uge*.tar.bz2
+        ```
 
     1. Create default Grid Engine cluster
 
@@ -891,7 +902,7 @@ requires Internet access. Additional software kits may require Internet
 access during their installation and configuration to resolve dependencies,
 however.
 
-#### Firewall Configuration {#firewall}
+#### Firewall Configuration
 
 It is recommended that any system-level firewall be disabled on both the
 Tortuga installer and compute nodes during the initial installation. Once a
@@ -1168,15 +1179,6 @@ The following arguments are optional:
 * `--os <name-version-arch>` -- If provisioning is enabled and multiple OS
   kits are installed, this selects the OS for the profile. If unspecified,
   the OS running on the installer node is used.
-* `--idleSoftwareProfile <PROFILENAME>` -- Used for physical nodes.
-  If a node is idled using the `idle-node` command, it is forced into this
-  software profile.
-
-Idle profiles are useful when a software profile (see below) includes an
-application with an "expensive" or limited license. When the node is idled,
-the idle profile eliminates the application from the node, freeing up the
-license. This is generally unnecessary for virtual machine nodes, which are
-deleted entirely instead of idled.
 
 The nodes using a given hardware profile do not actually need to have
 *identical* hardware. They must, however, be interchangeable in terms of
@@ -1431,8 +1433,8 @@ update-software-profile --name NAME --unlock
 
 ##### Software profile minimum and maximum nodes
 
-Software profiles do not have imposed minimums or maximums. That is, all
-software profiles may have an unlimited number of software profiles.
+Software profiles do not have imposed minimums but will by default not allow
+for more than a maximum of 25 nodes.
 
 The following command imposes a software profile minimum:
 
@@ -1468,6 +1470,12 @@ update-software-profile --name NAME --max-nodes none
 ```shell
 update-software-profile --name NAME --min-nodes none --max-nodes none
 ```
+
+Having no maximum implies that an unlimited number of nodes can be created
+for a software profile. **Use this setting with caution, especially when using
+automation rules for scaling up clusters.** If you have no maximum set and
+your scaling rules have a bug, you could end-up with an (unintentionally) very
+high bill for cloud services.
 
 #### Deleting software profiles
 
@@ -1851,7 +1859,7 @@ software profile of the node.
 Before this can happen, however, Tortuga needs to copy the necessary files
 to boot and install the OS.
 
-By default, the default Kickstart file tempate assigns a random `root`
+By default, the default Kickstart file template assigns a random `root`
 password to all compute nodes for security purposes.
 
 ## Networking Requirements
@@ -2068,7 +2076,7 @@ ucparam set Timezone_zone America/New_York
 ```
 
 Please note, the Tortuga configuration setting `Timezone_utc` is not currently
-used in the default Kickstarte template file. Set this manually in the
+used in the default Kickstart template file. Set this manually in the
 Kickstart file template as appropriate.
 
 Use `ucparam list` to display list of Tortuga configuration settings.
@@ -2244,54 +2252,6 @@ As with `add-nodes`, `delete-node` also runs asynchronously and will return
 immediately after it is run. Use the CLI `get-node-requests` to check the
 status of a `delete-node` request.
 
-### Idling and activating nodes
-
-**Note:** this is a deprecated feature and is only supported by on-premises
-compute nodes.
-
-An "idle" node is one that is known by Tortuga but is currently inactive.
-This state may be useful if the software associated with a given profile
-uses an expensive license, and that license must be freed.
-
-Idled nodes are reinstalled/reprovisioned once (re)activated. Copy any
-important data from the local disk before idling.
-
-For example, to idle the node "compute-01.private":
-
-```shell
-idle-node --node compute-01.private
-```
-
-To activate an idled node and bring it back to the installed state, use the
-command `activate-node --node <nodespec> --software-profile <SWP NAME>`.
-The software profile must be specified as part of the activation sequence
-because the node does not retain a history of previous software profiles
-used.
-
-For example, to reactivate the idle node "compute-01.private" in the
-software profile Compute:
-
-```shell
-activate-node --node compute-01.private --software-profile Compute
-```
-
-(Re)activating a node requires a reprovision, and will take the same amount
-of time as provisioning the node initially.
-
-#### Idle/activate semantics
-
-Node idle/activate semantics vary across resource adapters and are
-typically useful only for Tortuga hybrid cluster installations.
-
-For example, for Amazon EC2-based compute nodes within a Tortuga hybrid
-cluster, idle nodes maintain presence in Tortuga, however have no "backing"
-instance in Amazon EC2.
-
-Idle/activate on VMware vSphere simply means stopping a virtual machine
-(for idle), and (re)starting that VM (for activate).
-
-Idle/activate semantics *do not* apply to physical nodes.
-
 ### Shutting down and Starting up Nodes
 
 The `shutdown-node` command will issue an OS shutdown command via the
@@ -2315,40 +2275,6 @@ previously shut down. In most cases, this is useful for virtual nodes in a
 local cloud. The `--destination` option can be used, if supported, to
 select a hypervisor to run the virtual node.
 
-### Transferring nodes between software profiles
-
-**Note:** this is a deprecated feature for on-premises nodes only!
-
-Any node, regardless of whether it is physical or virtual, may have its
-software profile changed using the `transfer-node` CLI. This command will
-re-provision (as necessary) the node to bring into compliance with the new
-software profile.
-
-Transfer node (in *Installed* state) to new software profile:
-
-```shell
-transfer-node --node <node name> --software-profile <dest software profile>
-```
-
-For example, to transfer 1 node:
-
-```shell
-transfer-node --count 1 --software-profile <dest software profile>
-```
-
-**Note:** the "destination" software profile must already have been mapped
-to use the node's hardware profile.
-
-Transfer 6 nodes from source software profile:
-
-```shell
-transfer-node --count 6 --src-software-profile execd \
-    --software-profile Compute
-```
-
-Tortuga does its best to make an intelligent determination of which nodes
-to transfer, favoring idle and unused nodes when possible.
-
 ### Node states
 
 The output of `get-node-status` can reveal nodes in Tortuga can exist in
@@ -2358,7 +2284,7 @@ one of several different states:
 |---|---|
 | Installed  | Node is available and ready to use. |
 | Provisioned | Node has been added to Tortuga and is in the process of being bootstrapped. Nodes in the 'Provisioned' state should successfully transition to 'Installed' state. |
-| Expired | Existing node is being reinstalled. Only nodes that have been idled and (re)activated or reinstalled will ever be in this state. |
+| Expired | Existing node is being reinstalled. Only on-premises nodes that are reinstalled (with `reboot-node --reinstall`) will ever be in this state. |
 | Deleted | Tortuga is in the process of removing this node. The backing instance has been terminated/destroyed and database cleanup will eventually remove the node record entirely. |
 | Error | Consult `/var/log/tortugawsd` (or `get-node-requests`) to determine the cause of the node error state.
 | Launching | Tortuga has received and begun processing the add nodes request. This state is typically associated with cloud-backed node instances where there is a delay caused by the cloud platform. |
@@ -3438,7 +3364,7 @@ configurations may be imported as follows:
 adapter-mgmt import --resource-adapter AWS --adapter-config <filename>
 ```
 
-This will create a `default` resource adapter configuration profile for the
+This will create a `Default` resource adapter configuration profile for the
 specific resource adapter as well as individual configuration profiles for
 all sections listed in the adapter configuration file.
 
@@ -3457,7 +3383,7 @@ To display all settings for a specific resource adapter configuration
 profile:
 
 ```shell
-adapter-mgmt show --resource-adapter AWS --profile default
+adapter-mgmt show --resource-adapter AWS --profile Default
 ```
 
 All "secret" information (ie. AWS access/secret keys, passwords, etc.) will
@@ -3465,7 +3391,7 @@ be hidden from the output of `adapter-mgmt show` by default. To display
 *all* information, add the `--all` argument. For example:
 
 ```shell
-adapter-mgmt show --all --resource-adapter AWS --profile default
+adapter-mgmt show --all --resource-adapter AWS --profile Default
 ```
 
 #### Deleting resource adapter configuration profiles
@@ -3492,11 +3418,11 @@ If the option `-A <profilename>` is provided, the specified resource
 adapter configuration profile is used. If this profile does not exist, an
 error will be displayed. If the profile specified does not contain the full
 set of resource adapter configuration settings (ie. credentials), the
-system will automatically use the "missing" values from the `default`
+system will automatically use the "missing" values from the `Default`
 resource adapter configuration profile.
 
 If the default resource adapter configuration profile is not set (as
-described above), the `default` resource adapter
+described above), the `Default` resource adapter
 configuration profile is used.
 
 **Note:** it is also possible to override the hardware profile default
@@ -3737,7 +3663,7 @@ under the License.
 
 \newpage
 
-## Appendix C: Uninstalling Tortuga {#appendix_c}
+## Appendix C: Uninstalling Tortuga
 
 Tortuga itself is contained within the `/opt/tortuga` directory, however
 there are configuration and support files elsewhere within the filesystem.

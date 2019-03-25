@@ -28,11 +28,6 @@ class GetNodeStatus(TortugaCli): \
     def __init__(self):
         super(GetNodeStatus, self).__init__()
 
-        self.__active_map: Dict[bool, str] = {
-            False: 'Active',
-            True: 'Inactive'
-        }
-
         self.__boot_map: Dict[int, str] = {
             0: 'Disk',
             1: 'Network'
@@ -51,20 +46,6 @@ class GetNodeStatus(TortugaCli): \
             default=False,
             help=_('Display node list by hardware profile'
                    ' (default is by software profile)'))
-
-        active_idle_excl_group = self.getParser().add_mutually_exclusive_group()
-
-        active_idle_excl_group.add_argument(
-            '--active',
-            dest='bActiveNodesOnly',
-            action='store_true',
-            help=_('Display only active nodes'))
-
-        active_idle_excl_group.add_argument(
-            '--idle',
-            dest='bIdleNodesOnly',
-            action='store_true',
-            help=_('Display only idle nodes'))
 
         installed_not_installed_excl_group = \
             self.getParser().add_mutually_exclusive_group()
@@ -158,12 +139,6 @@ class GetNodeStatus(TortugaCli): \
                     options.nodeName))
 
             sys.exit(1)
-
-        if options.bActiveNodesOnly:
-            nodes = self.__filter_nodes(nodes, 'isIdle', False)
-
-        if options.bIdleNodesOnly:
-            nodes = self.__filter_nodes(nodes, 'isIdle', True)
 
         if options.bInstalled:
             nodes = self.__filter_nodes(nodes, 'state', 'Installed')
@@ -275,8 +250,8 @@ class GetNodeStatus(TortugaCli): \
                     output.append(node['name'])
                 output.append('    Hardware Profile: {}'.format(node['hardwareprofile']['name']))
                 output.append('    Boot: {}'.format(self.__boot_map[node['bootFrom']]))
-                output.append('    Status: {}/{}, Locked: {}'.format(
-                    node['state'], self.__active_map[node['isIdle']], node['lockedState']
+                output.append('    Status: {}, Locked: {}'.format(
+                    node['state'], node['lockedState']
                 ))
                 output.append('')
 

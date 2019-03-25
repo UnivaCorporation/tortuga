@@ -29,10 +29,10 @@ class HardwareProfileApi(TortugaApi):
     """
     HardwareProfile API class.
     """
-    
+
     def __init__(self):
         super().__init__()
-        
+
         self._logger = logging.getLogger(HARDWARE_PROFILE_NAMESPACE)
 
     def getHardwareProfile(self, session: Session, hardwareProfileName,
@@ -230,17 +230,6 @@ class HardwareProfileApi(TortugaApi):
         try:
             return HardwareProfileManager().copyHardwareProfile(
                 session, srcHardwareProfileName, dstHardwareProfileName)
-        except TortugaException as ex:
-            raise
-        except Exception as ex:
-            self._logger.exception(str(ex))
-            raise TortugaException(exception=ex)
-
-    def setIdleSoftwareProfile(self, session: Session, hardware_profile_name,
-                               software_profile_name=None):
-        try:
-            HardwareProfileManager().setIdleSoftwareProfile(
-                session, hardware_profile_name, software_profile_name)
         except TortugaException as ex:
             raise
         except Exception as ex:
