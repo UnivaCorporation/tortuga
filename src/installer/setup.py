@@ -14,8 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: skip-file
-
 import os
 import subprocess
 from pathlib import Path
@@ -26,8 +24,7 @@ import setuptools.command.sdist
 from setuptools import find_packages, setup
 
 
-module_name = 'tortuga-installer'
-version = '7.0.3'
+VERSION = '7.0.3'
 
 if os.getenv('RELEASE'):
     requirements_file = 'requirements.txt'
@@ -37,25 +34,6 @@ else:
 
 with open(requirements_file) as fp:
     requirements = [buf.rstrip() for buf in fp.readlines()]
-
-
-def get_git_revision():
-    cmd = 'git rev-parse --short HEAD'
-
-    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
-    result, _ = p.communicate()
-    p.wait()
-
-    return result.decode().rstrip()
-
-
-git_revision = get_git_revision()
-
-module_version = f'{version}+rev{git_revision}'
-
-
-if os.getenv('CI_PIPELINE_ID'):
-    module_version += '.{}'.format(os.getenv('CI_PIPELINE_ID'))
 
 
 def walkfiles(d):
@@ -128,8 +106,8 @@ class SdistCommand(setuptools.command.sdist.sdist, CommonBuildStep):
 
 
 setup(
-    name=module_name,
-    version=module_version,
+    name='tortuga-installer',
+    version=VERSION,
     description='Tortuga installer component',
     author='Univa Corporation',
     author_email='engineering@univa.com',
