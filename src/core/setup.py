@@ -95,9 +95,6 @@ setup(
             str(fn) for fn in Path(Path('man') / Path('man8')).iterdir()]),
     ],
     install_requires=requirements,
-    dependency_links=[
-        "git+https://github.com/UnivaCorporation/pip2pi.git@univa-stable#egg=pip2pi-0.8.0"
-    ],
     zip_safe=False,
     namespace_packages=['tortuga'],
     cmdclass={
