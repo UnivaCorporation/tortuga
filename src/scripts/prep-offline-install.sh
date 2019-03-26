@@ -238,6 +238,8 @@ ENDL
     tmp-venv/bin/pip install --upgrade pip==19.0.3
 
     tmp-venv/bin/pip2pi ${dstdir}/python -r requirements.txt
+
+    tmp-venv/bin/dir2pi ${dstdir}/python
 }
 
 # create destination directory
