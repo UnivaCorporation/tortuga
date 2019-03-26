@@ -10,5 +10,4 @@ kombu
 marshmallow-sqlalchemy
 oic
 redis<3.0.0
-tortuga-core>=7.0.2
 websockets

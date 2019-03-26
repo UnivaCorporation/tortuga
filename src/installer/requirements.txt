@@ -10,5 +10,4 @@ kombu==4.2.1
 marshmallow-sqlalchemy==0.15.0
 oic==0.14.0
 redis==2.10.6
-tortuga-core>=7.0.2
 websockets==7.0
