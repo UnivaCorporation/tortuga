@@ -737,6 +737,7 @@ rh-python36-python-virtualenv \
 
 # Packages common to all RHEL versions
 pkgs="\
+git \
 puppetserver \
 rsync \
 "
