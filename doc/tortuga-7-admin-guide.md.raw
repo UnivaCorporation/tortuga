@@ -78,6 +78,13 @@ Commands listed in this "Quickstart" section are intended to be run as the
     If hosting the Tortuga installer on Amazon Web Services (AWS), refer
     to Tortuga AWS Identity &amp; Access Management (IAM) role policy requirements.
 
+    If installing on RHEL, make sure your Red Hat subscription has
+    been activated on the system prior to running the installation:
+
+    ```shell
+    subscription-manager register --username <username> --password <password>
+    ```
+
 * Disable SELinux
 
     At the present time, Tortuga requires SELinux to be in *permissive* mode
