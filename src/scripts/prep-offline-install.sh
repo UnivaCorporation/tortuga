@@ -261,6 +261,7 @@ ENDL
         echo
         echo "  - createrepo"
         echo "  - centos-release-scl"
+        echo "  - git"
         echo "  - rh-python36"
         echo
 
@@ -275,6 +276,7 @@ ENDL
 }
 
 rpm --query --quiet centos-release-scl || yum install -y centos-release-scl
+rpm --query --quiet git || yum install -y git
 
 mkdir -p ${dstdir}
 
