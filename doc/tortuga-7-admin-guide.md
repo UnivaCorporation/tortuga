@@ -89,6 +89,13 @@ the `root` user on the Tortuga installer node.
     to Tortuga AWS Identity & Access Management (IAM) role policy
     requirements.
 
+    If installing on RHEL, make sure your Red Hat subscription has
+    been activated on the system prior to running the installation:
+
+    ``` {.shell}
+    subscription-manager register --username <username> --password <password>
+    ```
+
 -   Disable SELinux
 
     At the present time, Tortuga requires SELinux to be in *permissive*
