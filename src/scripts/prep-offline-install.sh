@@ -236,6 +236,7 @@ ENDL
     python3 -m venv tmp-venv
 
     tmp-venv/bin/pip install --upgrade pip==19.0.3
+    tmp-venv/bin/pip install git+https://github.com/UnivaCorporation/pip2pi.git@univa-stable#egg=pip2pi-0.8.0
 
     tmp-venv/bin/pip2pi ${dstdir}/python -r requirements.txt
 
