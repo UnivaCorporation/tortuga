@@ -857,6 +857,12 @@ pip_install_cmd="${TORTUGA_ROOT}/bin/pip install ${pip_install_opts}"
 # Upgrade pip
 ${pip_install_cmd} --upgrade pip==19.0.3 >>/tmp/install-tortuga.log 2>&1
 
+[[ -n ${local_deps} ]] && {
+    # Install pip2pi manually so that tortuga-core does not try to
+    # download it from the internet
+    ${pip_install_cmd} pip2pi >>/tmp/install-tortuga.log 2>&1
+}
+
 # Install Tortuga Python packages
 for module in tortuga-core tortuga-installer; do
     echo -n "Installing ${module} Python package... " | \
