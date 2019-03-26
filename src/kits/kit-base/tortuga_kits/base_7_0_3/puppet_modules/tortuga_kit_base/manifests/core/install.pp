@@ -151,16 +151,12 @@ class tortuga_kit_base::core::install::create_tortuga_instroot {
     require => Exec['create_tortuga_base'],
   }
 
-  if $::facts['os']['name'] == 'Ubuntu' and
-      versioncmp($::facts['os']['release']['full'], '18.04') >= 0 {
-    $pipcmd = "${tortuga::config::instroot}/bin/pip"
-
-    exec { 'update pip':
-      path    => ['/bin', '/usr/bin'],
-      command => "${pipcmd} install --upgrade pip",
-      unless  => "${pipcmd} list -o | grep pip",
-      require => Exec['create_tortuga_base'],
-    }
+  $pipcmd = "${tortuga::config::instroot}/bin/pip"
+  exec { 'update pip':
+    path    => ['/bin', '/usr/bin'],
+    command => "${pipcmd} install --upgrade pip==19.0.3",
+    unless  => "${pipcmd} list -o | grep pip",
+    require => Exec['create_tortuga_base'],
   }
 }
 
