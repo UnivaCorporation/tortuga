@@ -855,7 +855,7 @@ echo "Performing Tortuga pre-installation... " | \
 pip_install_cmd="${TORTUGA_ROOT}/bin/pip install ${pip_install_opts}"
 
 # Upgrade pip
-${pip_install_cmd} --upgrade pip >>/tmp/install-tortuga.log 2>&1
+${pip_install_cmd} --upgrade pip==19.0.3 >>/tmp/install-tortuga.log 2>&1
 
 # Install Tortuga Python packages
 for module in tortuga-core tortuga-installer; do

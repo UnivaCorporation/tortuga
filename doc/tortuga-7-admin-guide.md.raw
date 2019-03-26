@@ -538,7 +538,7 @@ Commands listed in this "Quickstart" section are intended to be run as the
             --add-qmaster-swprofile Installer
         uge-cluster update default \
             --var sge_cell_netpath="%(qmaster)s:%(sge_root)s/%(cell_name)s"
-        uge-cluster update default --var manage_nfs=false
+        uge-cluster update default --var manage_nfs=true
         ```
 
     1. Enable Grid Engine `qmaster` component on Tortuga installer.
@@ -568,40 +568,6 @@ Commands listed in this "Quickstart" section are intended to be run as the
 
         **Hint:** Use the UGE `qhost` command to display list of hosts known
         to the UGE cluster.
-
-    1. NFS export the default Grid Engine spool directory
-
-        Install NFS support, if necessary:
-
-        ```shell
-        yum -y install nfs-utils
-        ```
-
-        Ensure NFS server service is running:
-
-        RHEL/CentOS 6.x:
-
-        ```shell
-        service nfs restart
-        ```
-
-        or RHEL/CentOS 7.x:
-
-        ```shell
-        systemctl restart nfs
-        ```
-
-        Add the following entry to `/etc/exports`:
-
-        ```shell
-        /opt/uge-8.6.4 *(rw,async)
-        ```
-
-        Finally, export the filesystem:
-
-        ```shell
-        exportfs -a
-        ```
 
     1. Enable `execd` component on software profile(s)
 
