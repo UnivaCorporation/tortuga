@@ -169,7 +169,7 @@ download_python_packages() {
 alabaster==0.7.12
 amqp==2.3.2
 asn1crypto==0.24.0
-awscli==1.16.54
+awscli==1.16.132
 backports.functools-lru-cache==1.5
 Beaker==1.10.0
 billiard==3.5.0.4
@@ -183,7 +183,7 @@ chardet==3.0.4
 cheroot==6.5.2
 CherryPy==18.0.1
 Click==7.0
-colorama==0.4.0
+colorama==0.3.9
 cryptography==2.4.1
 daemonize==2.4.7
 docutils==0.14
@@ -220,7 +220,7 @@ repoze.lru==0.7
 requests==2.20.1
 Routes==2.4.1
 rsa==3.4.2
-s3transfer==0.1.13
+s3transfer==0.2.0
 six==1.11.0
 SQLAlchemy==1.2.14
 tempora==1.14
