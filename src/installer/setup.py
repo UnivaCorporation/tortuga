@@ -26,14 +26,12 @@ from setuptools import find_packages, setup
 
 VERSION = '7.0.3'
 
-if os.getenv('RELEASE'):
-    requirements_file = 'requirements.txt'
-else:
-    requirements_file = 'requirements-dev.txt'
 
+def get_requirements():
+    with open('requirements.txt') as fp:
+        requirements = [buf.rstrip() for buf in fp.readlines()]
 
-with open(requirements_file) as fp:
-    requirements = [buf.rstrip() for buf in fp.readlines()]
+    return requirements
 
 
 def walkfiles(d):
@@ -118,7 +116,7 @@ setup(
     zip_safe=False,
     scripts=[str(fn) for fn in walkfiles(Path('bin'))],
     data_files=get_files(),
-    install_requires=requirements,
+    install_requires=get_requirements(),
     namespace_packages=['tortuga'],
     entry_points={
         'console_scripts': [
