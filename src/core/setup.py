@@ -25,14 +25,12 @@ from setuptools import find_packages, setup
 
 VERSION = '7.0.3'
 
-if os.getenv('RELEASE'):
-    requirements_file = 'requirements.txt'
-else:
-    requirements_file = 'requirements-dev.txt'
 
+def get_requirements():
+    with open('requirements.txt') as fp:
+        requirements = [buf.rstrip() for buf in fp.readlines()]
 
-with open(requirements_file) as fp:
-    requirements = [buf.rstrip() for buf in fp.readlines()]
+    return requirements
 
 
 def get_git_revision():
@@ -94,7 +92,7 @@ setup(
         ('man/man8', [
             str(fn) for fn in Path(Path('man') / Path('man8')).iterdir()]),
     ],
-    install_requires=requirements,
+    install_requires=get_requirements(),
     zip_safe=False,
     namespace_packages=['tortuga'],
     cmdclass={

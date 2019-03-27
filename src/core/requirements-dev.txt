@@ -1,7 +1,0 @@
-pyyaml>=4.2b1
-marshmallow
-passlib
-pip2pi @ git+https://github.com/UnivaCorporation/pip2pi.git@univa-stable#egg=pip2pi-0.8.0
-python-dateutil
-requests
-websockets
