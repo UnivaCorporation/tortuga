@@ -175,7 +175,7 @@ Beaker==1.10.0
 billiard==3.5.0.4
 boto==2.49.0
 boto3==1.9.46
-botocore==1.12.44
+botocore==1.12.122
 celery==4.2.1
 certifi==2018.10.15
 cffi==1.11.5
@@ -193,7 +193,7 @@ greenlet==0.4.15
 idna==2.7
 jaraco.functools==1.20
 Jinja2==2.10
-jmespath==0.9.3
+jmespath==0.9.4
 kombu==4.2.1
 Mako==1.0.7
 MarkupSafe==1.1.0
