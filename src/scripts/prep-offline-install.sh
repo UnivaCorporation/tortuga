@@ -213,7 +213,7 @@ pyOpenSSL==18.0.0
 python-dateutil==2.7.5
 python-hostlist==1.18
 pytz==2018.7
-PyYAML==4.2b1
+PyYAML==5.1
 pyzmq==17.1.0
 redis==2.10.6
 repoze.lru==0.7
