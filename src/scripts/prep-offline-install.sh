@@ -174,7 +174,7 @@ backports.functools-lru-cache==1.5
 Beaker==1.10.0
 billiard==3.5.0.4
 boto==2.49.0
-boto3==1.9.46
+boto3==1.9.122
 botocore==1.12.122
 celery==4.2.1
 certifi==2018.10.15
