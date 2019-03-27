@@ -205,7 +205,7 @@ passlib==1.7.1
 pip2pi @ git+https://github.com/UnivaCorporation/pip2pi.git@univa-stable#egg=pip2pi-0.8.0
 pip==19.0.3
 portend==2.3
-pyasn1==0.4.4
+pyasn1==0.4.5
 pycparser==2.19
 pycryptodomex==3.7.0
 pyjwkest==1.4.0
@@ -213,7 +213,7 @@ pyOpenSSL==18.0.0
 python-dateutil==2.7.5
 python-hostlist==1.18
 pytz==2018.7
-PyYAML==5.1
+PyYAML==3.13
 pyzmq==17.1.0
 redis==2.10.6
 repoze.lru==0.7

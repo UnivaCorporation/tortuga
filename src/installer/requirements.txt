@@ -1,6 +1,6 @@
 CherryPy==18.0.1
 Jinja2==2.10
-pyyaml==5.1
+pyyaml
 Routes==2.4.1
 SQLAlchemy==1.2.14
 celery==4.2.1
