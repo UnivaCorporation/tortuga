@@ -57,6 +57,7 @@ distver=$(rpm --query centos-release --queryformat "%{VERSION}")
 readonly pkgs="puppet-agent \
 puppetserver \
 activemq \
+git \
 rh-python36 \
 redis \
 zeromq3 \
@@ -168,32 +169,32 @@ download_python_packages() {
 alabaster==0.7.12
 amqp==2.3.2
 asn1crypto==0.24.0
-awscli==1.16.54
+awscli==1.16.132
 backports.functools-lru-cache==1.5
 Beaker==1.10.0
 billiard==3.5.0.4
 boto==2.49.0
-boto3==1.9.44
-botocore==1.12.44
-celery==4.1.0
+boto3==1.9.122
+botocore==1.12.122
+celery==4.2.1
 certifi==2018.10.15
 cffi==1.11.5
 chardet==3.0.4
 cheroot==6.5.2
-CherryPy==15.0.0
+CherryPy==18.0.1
 Click==7.0
-colorama==0.4.0
+colorama==0.3.9
 cryptography==2.4.1
 daemonize==2.4.7
 docutils==0.14
 future==0.17.1
-gevent==1.3.1
+gevent==1.3.7
 greenlet==0.4.15
 idna==2.7
 jaraco.functools==1.20
 Jinja2==2.10
-jmespath==0.9.3
-kombu==4.1.0
+jmespath==0.9.4
+kombu==4.2.1
 Mako==1.0.7
 MarkupSafe==1.1.0
 marshmallow==2.16.3
@@ -201,9 +202,10 @@ marshmallow-sqlalchemy==0.15.0
 more-itertools==4.3.0
 oic==0.14.0
 passlib==1.7.1
-pip2pi==0.7.0
+pip2pi @ git+https://github.com/UnivaCorporation/pip2pi.git@univa-stable#egg=pip2pi-0.8.0
+pip==19.0.3
 portend==2.3
-pyasn1==0.4.4
+pyasn1==0.4.5
 pycparser==2.19
 pycryptodomex==3.7.0
 pyjwkest==1.4.0
@@ -218,7 +220,7 @@ repoze.lru==0.7
 requests==2.20.1
 Routes==2.4.1
 rsa==3.4.2
-s3transfer==0.1.13
+s3transfer==0.2.0
 six==1.11.0
 SQLAlchemy==1.2.14
 tempora==1.14
@@ -233,9 +235,12 @@ ENDL
 
     python3 -m venv tmp-venv
 
-    tmp-venv/bin/pip install --pre pip2pi
+    tmp-venv/bin/pip install --upgrade pip==19.0.3
+    tmp-venv/bin/pip install git+https://github.com/UnivaCorporation/pip2pi.git@univa-stable#egg=pip2pi-0.8.0
 
     tmp-venv/bin/pip2pi ${dstdir}/python -r requirements.txt
+
+    tmp-venv/bin/dir2pi ${dstdir}/python
 }
 
 # create destination directory
@@ -259,6 +264,7 @@ ENDL
         echo
         echo "  - createrepo"
         echo "  - centos-release-scl"
+        echo "  - git"
         echo "  - rh-python36"
         echo
 
@@ -273,6 +279,7 @@ ENDL
 }
 
 rpm --query --quiet centos-release-scl || yum install -y centos-release-scl
+rpm --query --quiet git || yum install -y git
 
 mkdir -p ${dstdir}
 

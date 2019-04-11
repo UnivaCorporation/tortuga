@@ -28,11 +28,6 @@ class GetNodeStatus(TortugaCli): \
     def __init__(self):
         super(GetNodeStatus, self).__init__()
 
-        self.__active_map: Dict[bool, str] = {
-            False: 'Active',
-            True: 'Inactive'
-        }
-
         self.__boot_map: Dict[int, str] = {
             0: 'Disk',
             1: 'Network'
@@ -255,8 +250,8 @@ class GetNodeStatus(TortugaCli): \
                     output.append(node['name'])
                 output.append('    Hardware Profile: {}'.format(node['hardwareprofile']['name']))
                 output.append('    Boot: {}'.format(self.__boot_map[node['bootFrom']]))
-                output.append('    Status: {}/{}, Locked: {}'.format(
-                    node['state'], self.__active_map[node['isIdle']], node['lockedState']
+                output.append('    Status: {}, Locked: {}'.format(
+                    node['state'], node['lockedState']
                 ))
                 output.append('')
 

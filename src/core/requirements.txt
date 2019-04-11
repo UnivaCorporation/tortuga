@@ -1,7 +1,7 @@
-pyyaml>=4.2b1
+pyyaml
 marshmallow==2.16.3
 passlib==1.7.1
-pip2pi==0.7.0
+pip2pi @ git+https://github.com/UnivaCorporation/pip2pi.git@univa-stable#egg=pip2pi-0.8.0
 python-dateutil==2.7.5
 requests==2.20.1
 websockets==7.0

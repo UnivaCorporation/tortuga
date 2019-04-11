@@ -89,6 +89,13 @@ the `root` user on the Tortuga installer node.
     to Tortuga AWS Identity & Access Management (IAM) role policy
     requirements.
 
+    If installing on RHEL, make sure your Red Hat subscription has
+    been activated on the system prior to running the installation:
+
+    ``` {.shell}
+    subscription-manager register --username <username> --password <password>
+    ```
+
 -   Disable SELinux
 
     At the present time, Tortuga requires SELinux to be in *permissive*
@@ -568,7 +575,7 @@ the `root` user on the Tortuga installer node.
             --add-qmaster-swprofile Installer
         uge-cluster update default \
             --var sge_cell_netpath="%(qmaster)s:%(sge_root)s/%(cell_name)s"
-        uge-cluster update default --var manage_nfs=false
+        uge-cluster update default --var manage_nfs=true
         ```
 
     3.  Enable Grid Engine `qmaster` component on Tortuga installer.
@@ -599,41 +606,7 @@ the `root` user on the Tortuga installer node.
         **Hint:** Use the UGE `qhost` command to display list of hosts
         known to the UGE cluster.
 
-    5.  NFS export the default Grid Engine spool directory
-
-        Install NFS support, if necessary:
-
-        ``` {.shell}
-        yum -y install nfs-utils
-        ```
-
-        Ensure NFS server service is running:
-
-        RHEL/CentOS 6.x:
-
-        ``` {.shell}
-        service nfs restart
-        ```
-
-        or RHEL/CentOS 7.x:
-
-        ``` {.shell}
-        systemctl restart nfs
-        ```
-
-        Add the following entry to `/etc/exports`:
-
-        ``` {.shell}
-        /opt/uge-8.6.4 *(rw,async)
-        ```
-
-        Finally, export the filesystem:
-
-        ``` {.shell}
-        exportfs -a
-        ```
-
-    6.  Enable `execd` component on software profile(s)
+    5.  Enable `execd` component on software profile(s)
 
         Enabling the `execd` component will make nodes in the "execd"
         software profile automatically part of the UGE cluster.
@@ -642,7 +615,7 @@ the `root` user on the Tortuga installer node.
         enable-component --software-profile execd --no-sync execd
         ```
 
-    7.  Update UGE cluster configuration
+    6.  Update UGE cluster configuration
 
         ``` {.shell}
         uge-cluster update default --add-execd-swprofile execd

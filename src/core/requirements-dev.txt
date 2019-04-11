@@ -1,7 +1,0 @@
-pyyaml>=4.2b1
-marshmallow
-passlib
-pip2pi
-python-dateutil
-requests
-websockets

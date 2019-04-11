@@ -1,6 +1,6 @@
 CherryPy==18.0.1
 Jinja2==2.10
-pyyaml>=4.2b1
+pyyaml
 Routes==2.4.1
 SQLAlchemy==1.2.14
 celery==4.2.1
@@ -10,5 +10,4 @@ kombu==4.2.1
 marshmallow-sqlalchemy==0.15.0
 oic==0.14.0
 redis==2.10.6
-tortuga-core>=7.0.2
 websockets==7.0
