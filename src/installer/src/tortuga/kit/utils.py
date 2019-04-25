@@ -96,7 +96,7 @@ def is_requirements_empty(requirements_file_path):
     """
     fp = open(requirements_file_path)
     line_count = 0
-    for line in fp.readline():
+    for line in fp.readlines():
         line = line.strip()
         #
         # Skip blank lines, or comment lines
