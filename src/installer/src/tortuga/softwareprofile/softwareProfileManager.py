@@ -241,15 +241,11 @@ class SoftwareProfileManager(TortugaObjectManager): \
             OSError
         """
 
-        # Parse 'settingsDict'
-        if settingsDict:
-            # ... bOsMediaRequired; default is True
-            bOsMediaRequired = settingsDict['bOsMediaRequired'] \
-                if 'bOsMediaRequired' in settingsDict else True
+        if settingsDict == None:
+            settingsDict = {}
 
-            # ... unmanagedProfile; default is False
-            unmanagedProfile = settingsDict['unmanagedProfile'] \
-                if 'unmanagedProfile' in settingsDict else False
+        bOsMediaRequired = settingsDict.get('bOsMediaRequired', True)
+        unmanagedProfile = settingsDict.get('unmanagedProfile', False)
 
         # Validate software profile name
         validation.validateProfileName(swProfileSpec.getName())

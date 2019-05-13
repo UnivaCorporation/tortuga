@@ -156,10 +156,12 @@ class SoftwareProfileController(TortugaController):
         """
 
         try:
-            tagspec = []
+            tags = {}
 
             if 'tag' in kwargs and kwargs['tag']:
-                tagspec.extend(parse_tag_query_string(kwargs['tag']))
+                tags.update(
+                    dict(parse_tag_query_string(kwargs['tag']))
+                )
 
             if 'name' in kwargs and kwargs['name']:
                 default_options = [
@@ -181,7 +183,7 @@ class SoftwareProfileController(TortugaController):
             else:
                 softwareProfiles = \
                     self._softwareProfileManager.getSoftwareProfileList(
-                        cherrypy.request.db, tags=tagspec)
+                        cherrypy.request.db, tags=tags)
 
             response = {
                 'softwareprofiles': softwareProfiles.getCleanDict(),
