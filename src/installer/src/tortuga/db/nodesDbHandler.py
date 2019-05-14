@@ -237,7 +237,7 @@ class NodesDbHandler(TortugaDbObjectHandler):
         searchspec = []
 
         if tags:
-            for name, value in tags.items():
+            for name, value in dict(tags).items():
                 if value:
                     #
                     # Match both name and value
