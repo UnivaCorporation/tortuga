@@ -364,7 +364,7 @@ function install_puppetlabs_repo {
 
     # do not attempt to install 'puppet5-release' if already installed
     pkgexists ${puppetlabspkgname} || {
-        rpm_install http://yum.puppetlabs.com/puppet5/puppet5-release-el-${distmajversion}.noarch.rpm
+        rpm_install http://yum.puppetlabs.com/puppet5-release-el-${distmajversion}.noarch.rpm
 
         pkgexists ${puppetlabspkgname} || {
             echo "Error installing \"${puppetlabspkgname}\". Unable to proceed." >&2
