@@ -402,7 +402,7 @@ class NodeManager(TortugaObjectManager): \
             session, nodespec, include_installer=False)
         if not nodes:
             raise NodeNotFound(
-                'No nodes matching nodespec [%s]', nodespec
+                'No nodes matching nodespec [%s]' % nodespec
             )
 
         # ensure nodes aren't locked
@@ -527,8 +527,6 @@ class NodeManager(TortugaObjectManager): \
                     previous_state=node_data_dict['previous_state']
                 )
 
-                self.__delete_last_tag(session, node_data_dict['node'].tags)
-
                 session.delete(node_data_dict['node'])
 
                 self.__post_delete(kitmgr, node_dict)
@@ -577,19 +575,6 @@ class NodeManager(TortugaObjectManager): \
             node.state = state.NODE_STATE_DELETED
 
         return hwprofile_nodes
-
-    def __delete_last_tag(self, session: Session,
-                          tags: List[NodeTagModel]) -> None:
-        """If the last node associated with the tag is deleted, delete th
-        tag.
-        """
-        for tag in tags:
-            if len(tag.nodes) == 1 and \
-                    not tag.softwareprofiles and \
-                    not tag.hardwareprofiles:
-                self._logger.info('Deleting tag [%s]', tag.name)
-
-                session.delete(tag)
 
     def __get_resource_adapter(self, session: Session,
                                hardwareProfile: HardwareProfileModel):

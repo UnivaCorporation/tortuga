@@ -14,7 +14,7 @@
 
 # pylint: disable=too-few-public-methods
 
-from marshmallow import fields
+from marshmallow import fields, post_dump
 from marshmallow_sqlalchemy import ModelSchema
 
 from tortuga.db.models.component import Component as ComponentModel
@@ -194,6 +194,21 @@ class NodeSchema(ModelSchema):
                          only=('id', 'name', 'value'), many=True)
 
     instance = fields.Nested('InstanceMappingSchema')
+
+    # Post process tags so that the schema serialization matches our
+    # standard object serialization
+    @post_dump(pass_many=True, pass_original=True)
+    def fixTags(self, in_data, many, original):
+         if isinstance(in_data, list):
+             for i in range(0, len(in_data)):
+                 tagFunc = getattr(original[i], "getTags", None)
+                 if callable(tagFunc):
+                     in_data[i]['tags'] = tagFunc()
+         else:
+             tagFunc = getattr(original, "getTags", None)
+             if callable(tagFunc):
+                 in_data['tags'] = tagFunc()
+         return in_data
 
     class Meta:
         model = NodeModel
