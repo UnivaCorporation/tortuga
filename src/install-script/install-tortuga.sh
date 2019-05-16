@@ -375,7 +375,8 @@ function install_puppetlabs_repo {
 
     # install puppetlabs-release
     pkgexists puppetlabs-release || {
-        rpm_install http://yum.puppetlabs.com/puppetlabs-release-el-${distmajversion}.noarch.rpm
+        rpm_install http://release-archives.puppet.com/yum/el/${distmajversion}/products/x86_64/puppetlabs-release-22.0-2.noarch.rpm
+        sed -i 's,http://yum.puppetlabs.com,http://release-archives.puppet.com/yum,' /etc/yum.repos.d/puppetlabs.repo
 
         pkgexists puppetlabs-release || {
             echo "Error installing \"puppetlabs-release\". Unable to proceed." >&2
