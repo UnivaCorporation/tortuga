@@ -185,9 +185,19 @@ class tortuga_kit_base::core::install::install_tortuga_base {
 --trusted-host ${::primary_installer_hostname}"
   }
 
+  if $tortuga::config::proxy_uri {
+    $env = [
+      "https_proxy=${tortuga::config::proxy_uri}",
+      "http_proxy=${tortuga::config::proxy_uri}",
+    ]
+  } else {
+    $env = undef
+  }
+
   exec { 'install tortuga-core Python package':
     command => "${pipcmd} install ${pip_install_opts} tortuga-core",
     unless  => "${pipcmd} show tortuga-core",
+    environment => $env,
   }
 }
 
