@@ -277,8 +277,6 @@ class HardwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
         dstHardwareProfile.setResourceAdapter(
             srcHardwareProfile.getResourceAdapter())
 
-        dstHardwareProfile.setTags(srcHardwareProfile.getTags())
-
         self.addHardwareProfile(session, dstHardwareProfile)
 
     def addAdmin(

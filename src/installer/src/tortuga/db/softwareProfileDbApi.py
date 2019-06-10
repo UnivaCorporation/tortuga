@@ -717,10 +717,6 @@ class SoftwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
         for component in src_swprofile.components:
             dst_swprofile.components.append(component)
 
-        # tags
-        for tag in src_swprofile.tags:
-            dst_swprofile.tags.append(tag)
-
         # kitsources
         for kitsource in src_swprofile.kitsources:
             dst_swprofile.kitsources.append(kitsource)
