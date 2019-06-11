@@ -134,7 +134,8 @@ class AdapterMgmtCLI(TortugaCli):
         # import
         subparser_import = subparsers.add_parser(
             'import', parents=[common_args])
-        subparser_import.add_argument('--force', action='store_true')
+        subparser_import.add_argument('--force', action='store_true',
+            default=False, help="Delete existing profile of same name")
 
         group = subparser_import.add_mutually_exclusive_group(required=True)
 
@@ -528,16 +529,15 @@ class AdapterMgmtCLI(TortugaCli):
 
             profile_exists = True
         except ResourceNotFound:
-            # This is good!
-            pass
+            profile_exists = False
 
         try:
             if profile_exists and not args.force:
                 _raise_profile_already_exists(
                     args.resource_adapter, profile_name)
-
-            # Deleting existing profile
-            self.api.delete(args.resource_adapter, profile_name)
+            elif profile_exists:
+                # Deleting existing profile before importing
+                self.api.delete(args.resource_adapter, profile_name)
 
             self.api.create(
                 args.resource_adapter, profile_name, cfg['configuration'])
