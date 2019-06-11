@@ -42,7 +42,7 @@ from tortuga.kit.actions.manager import KitActionsManager
 from tortuga.logging import RESOURCE_ADAPTER_NAMESPACE
 from tortuga.objects.node import Node as TortugaNode
 from tortuga.parameter.parameterApi import ParameterApi
-from tortuga.resourceAdapterConfiguration.settings import BaseSetting
+from tortuga.resourceAdapterConfiguration import settings
 from tortuga.resourceAdapterConfiguration.validator import (ConfigurationValidator,
                                                             ValidationError)
 from tortuga.schema import ResourceAdapterConfigSchema
@@ -63,7 +63,15 @@ class ResourceAdapter(UserDataMixin): \
     subclass did not implement the action.
 
     """
-    settings: Dict[str, BaseSetting] = {}
+    settings: Dict[str, settings.BaseSetting] = {
+        'tags': settings.TagListSetting(
+            display_name='Tags',
+            description='A comma-separated list of tags in the form of '
+                        'key=value',
+            group='Instances',
+            group_order=0
+        ),
+    }
 
     __adaptername__ = None
 
@@ -164,7 +172,7 @@ class ResourceAdapter(UserDataMixin): \
             # use default resource adapter configuration, if set
             cfgname = dbHardwareProfile.default_resource_adapter_config.name \
                 if dbHardwareProfile.default_resource_adapter_config else \
-                'Default'
+                DEFAULT_CONFIGURATION_PROFILE_NAME
 
         # ensure addNodesRequest reflects resource adapter configuration
         # profile being used
@@ -246,7 +254,9 @@ class ResourceAdapter(UserDataMixin): \
             '-- (pass) %s::%s %s %s' % (
                 self.__adaptername__, funcname, pargs, kargs))
 
-    def validate_config(self, profile: str = 'Default') -> ConfigurationValidator:
+    def validate_config(self,
+                        profile: str = DEFAULT_CONFIGURATION_PROFILE_NAME
+                        ) -> ConfigurationValidator:
         """
         Validates the configuration profile.
 
@@ -274,7 +284,7 @@ class ResourceAdapter(UserDataMixin): \
         #
         # Load settings from a specific profile, if one was specified
         #
-        if profile and profile != 'Default':
+        if profile and profile != DEFAULT_CONFIGURATION_PROFILE_NAME:
             validator.load(self._load_config_from_database(profile))
 
         #
@@ -284,13 +294,13 @@ class ResourceAdapter(UserDataMixin): \
 
         return validator
 
-    def getResourceAdapterConfig(self,
-                                 sectionName: str = 'Default'
-                                 ) -> Dict[str, Any]:
+    def get_config(self,
+                   profile: str = DEFAULT_CONFIGURATION_PROFILE_NAME
+                   ) -> Dict[str, Any]:
         """
-        Gets the resource adatper configuration for the specified profile.
+        Gets the resource adapter configuration for the specified profile.
 
-        :param str sectionName: the reousrce adapter profile to get
+        :param str profile: the reousrce adapter profile to get
 
         :return Dict[str, Any]: the configuration
 
@@ -298,16 +308,14 @@ class ResourceAdapter(UserDataMixin): \
         :raises ResourceNotFound:
 
         """
-        self._logger.debug(
-            'getResourceAdapterConfig(sectionName=[{0}])'.format(
-                sectionName if sectionName else '(none)'))
+        self._logger.debug('get_config(profile={})'.format(profile))
 
         #
         # Validate the settings and dump the config with transformed
         # values
         #
         try:
-            validator = self.validate_config(sectionName)
+            validator = self.validate_config(profile)
             processed_config: Dict[str, Any] = validator.dump()
 
         except ValidationError as ex:
@@ -335,9 +343,10 @@ class ResourceAdapter(UserDataMixin): \
 
         return config
 
-    def _load_config_from_database(self,
-                                   profile: str = 'Default'
-                                   ) -> Dict[str, str]:
+    def _load_config_from_database(
+            self,
+            profile: str = DEFAULT_CONFIGURATION_PROFILE_NAME
+    ) -> Dict[str, str]:
         """
         Loads a configuration profile from the database.
 
@@ -373,6 +382,51 @@ class ResourceAdapter(UserDataMixin): \
 
         """
         pass
+
+    def get_tags(self, config: Dict[str, str], hwp: HardwareProfile,
+                 swp: SoftwareProfile) -> Dict[str, str]:
+        """
+        Returns the list of tags that should be applied to one or more
+        nodes.
+
+        :param Dict[str, str] config: the resource adapter profile config
+        :param HardwareProfile hwp:   the node hardware profile
+        :param SoftwareProfile swp:   the node software profile
+
+        :return Dict[str, str: the tags that should be applied
+
+        """
+        #
+        # Default tags for all nodes
+        #
+        tags: Dict[str, str] = {
+            'tortuga-softwareprofile': hwp.name,
+            'tortuga-hardwareprofile': swp.name,
+            'tortuga-installer_hostname': self.installer_public_hostname,
+            'tortuga-installer_ipaddress': self.installer_public_ipaddress,
+        }
+
+        #
+        # Add any tags provided via the resource adapter configuration
+        #
+        config_tags: Dict[str, str] = config.get('tags', {})
+        tags.update(config_tags)
+
+        return self.normalize_tag_keys(tags)
+
+    def normalize_tag_keys(self, tags: Dict[str, str]) -> Dict[str, str]:
+        """
+        Override this method in subclasses to normalize tag keys for
+        the specified resource adapter. Some cloud providers have restrictions
+        on what characters can be used in a tag key. Transform/normalize
+        the keys as required in this method.
+
+        :param Dict[str, str] tags: a dict of tags
+
+        :return Dict[str, str]: a dict of tags, with normalized/sanitized keys
+
+        """
+        return tags
 
     @property
     def addHostApi(self):
@@ -614,7 +668,7 @@ class ResourceAdapter(UserDataMixin): \
         override_config: Dict[str, Any] = {}
         if node.instance and \
                 node.instance.resource_adapter_configuration and \
-                node.instance.resource_adapter_configuration.name != 'Default':
+                node.instance.resource_adapter_configuration.name != DEFAULT_CONFIGURATION_PROFILE_NAME:
             for c in node.instance.resource_adapter_configuration.configuration:
                 override_config[c.key] = c.value
 
@@ -652,5 +706,5 @@ class ResourceAdapter(UserDataMixin): \
         return ResourceAdapterConfigDbHandler().get(
             session,
             self.__adaptername__,
-            name if name else 'Default',
+            name if name else DEFAULT_CONFIGURATION_PROFILE_NAME,
         )

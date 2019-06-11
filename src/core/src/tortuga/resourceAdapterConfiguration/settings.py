@@ -14,7 +14,7 @@
 
 import os.path
 import re
-from typing import Any, List, Union
+from typing import Dict, List, Union
 
 from marshmallow import fields, Schema
 
@@ -261,3 +261,69 @@ class IntegerSetting(BaseSetting):
 class StringSetting(BaseSetting):
     type = 'string'
     schema = BaseSettingSchema
+
+
+class TagListSetting(BaseSetting):
+    """
+    A convenience class for a tag list. A tag list is a setting that is
+    expected to be in the form of key1=value1,key2=value2... which is
+    converted to a Python dictionary.
+
+    """
+    type = 'tag_list'
+    schema = BaseSettingSchema
+    key_validation_regex = '[a-zA-Z0-9-_]+'
+
+    def __init__(self, **kwargs):
+        #
+        # Don't allow these to be set by the user, so we override them here
+        #
+        kwargs['list'] = True
+        kwargs['list_separator'] = ','
+        super().__init__(**kwargs)
+
+    def dump(self, value: str) -> Dict[str, str]:
+        tags: Dict[str, str] = {}
+
+        #
+        # we expect to get a list of key=value strings, but if for some reason
+        # we just get a string, turn it into a list first
+        #
+        kv_list = super().dump(value)
+        if isinstance(kv_list, str):
+            kv_list = [kv_list]
+
+        #
+        # turn a list of key=value strings into a dict
+        #
+        for tag in kv_list:
+            parts = tag.split('=')
+
+            #
+            # if we don't get a value, then set the value to an empty string
+            #
+            if len(parts) == 1:
+                parts[1] = ''
+
+            #
+            # If the key is empty, just skip this tag
+            #
+            if parts[0].strip() == '':
+                continue
+
+            tags[parts[0]] = parts[1]
+
+        return tags
+
+    def validate(self, value: str):
+        super().validate(value)
+
+        tags: Dict[str, str] = self.dump(value)
+
+        regex = re.compile(self.key_validation_regex)
+        for key in tags.keys():
+            if regex.fullmatch(key) is None:
+                raise SettingValidationError(
+                    'Tag keys must match pattern: {}'.format(
+                        self.key_validation_regex)
+                )
