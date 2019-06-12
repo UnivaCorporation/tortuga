@@ -272,7 +272,8 @@ class TagListSetting(BaseSetting):
     """
     type = 'tag_list'
     schema = BaseSettingSchema
-    key_validation_regex = '[a-zA-Z0-9-_]+'
+    key_validation_regex = '[a-z][a-z0-9-_]{0,62}'
+    value_validation_regex = '[a-z0-9-_]{0,63}'
 
     def __init__(self, **kwargs):
         #
@@ -320,10 +321,16 @@ class TagListSetting(BaseSetting):
 
         tags: Dict[str, str] = self.dump(value)
 
-        regex = re.compile(self.key_validation_regex)
-        for key in tags.keys():
-            if regex.fullmatch(key) is None:
+        k_regex = re.compile(self.key_validation_regex)
+        v_regex = re.compile(self.value_validation_regex)
+        for k, v in tags.items():
+            if k_regex.fullmatch(k) is None:
                 raise SettingValidationError(
                     'Tag keys must match pattern: {}'.format(
+                        self.key_validation_regex)
+                )
+            if v_regex.fullmatch(v) is None:
+                raise SettingValidationError(
+                    'Tag values must match pattern: {}'.format(
                         self.key_validation_regex)
                 )

@@ -400,10 +400,12 @@ class ResourceAdapter(UserDataMixin): \
         # Default tags for all nodes
         #
         tags: Dict[str, str] = {
-            'tortuga-softwareprofile': hwp.name,
-            'tortuga-hardwareprofile': swp.name,
-            'tortuga-installer_hostname': self.installer_public_hostname,
-            'tortuga-installer_ipaddress': self.installer_public_ipaddress,
+            'tortuga-softwareprofile': hwp.name.lower(),
+            'tortuga-hardwareprofile': swp.name.lower(),
+            'tortuga-installer_hostname':
+                self.installer_public_hostname.lower(),
+            'tortuga-installer_ipaddress':
+                self.installer_public_ipaddress.lower(),
         }
 
         #
@@ -412,20 +414,6 @@ class ResourceAdapter(UserDataMixin): \
         config_tags: Dict[str, str] = config.get('tags', {})
         tags.update(config_tags)
 
-        return self.normalize_tag_keys(tags)
-
-    def normalize_tag_keys(self, tags: Dict[str, str]) -> Dict[str, str]:
-        """
-        Override this method in subclasses to normalize tag keys for
-        the specified resource adapter. Some cloud providers have restrictions
-        on what characters can be used in a tag key. Transform/normalize
-        the keys as required in this method.
-
-        :param Dict[str, str] tags: a dict of tags
-
-        :return Dict[str, str]: a dict of tags, with normalized/sanitized keys
-
-        """
         return tags
 
     @property
