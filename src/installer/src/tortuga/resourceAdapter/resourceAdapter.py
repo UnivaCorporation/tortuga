@@ -63,7 +63,7 @@ class ResourceAdapter(UserDataMixin): \
     subclass did not implement the action.
 
     """
-    settings: Dict[str, settings.BaseSetting] = {
+    settings = {
         'tags': settings.TagListSetting(
             display_name='Tags',
             description='A comma-separated list of tags in the form of '
