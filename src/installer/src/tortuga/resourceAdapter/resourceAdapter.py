@@ -88,6 +88,9 @@ class ResourceAdapter(UserDataMixin): \
         self.__installer_public_ipaddress = None
         self.__private_dns_zone = None
 
+        # Tags provided by the add nodes request
+        self.__tags_requested = {}
+
         # Initialize caches
         self.__addHostApi = None
         self.__nodeApi = None
@@ -124,11 +127,8 @@ class ResourceAdapter(UserDataMixin): \
 
     def start(self, addNodesRequest: dict, dbSession: Session,
               dbHardwareProfile: HardwareProfile,
-              dbSoftwareProfile: Optional[SoftwareProfile] = None): \
-            # pylint: disable=unused-argument
-        self.__trace(
-            addNodesRequest, dbSession, dbHardwareProfile,
-            dbSoftwareProfile)
+              dbSoftwareProfile: Optional[SoftwareProfile] = None):
+        self.__tags_requested = addNodesRequest.get('tags', {})
 
     def fire_state_change_event(self, db_node: Node, previous_state: str):
         """
@@ -413,6 +413,11 @@ class ResourceAdapter(UserDataMixin): \
         #
         config_tags: Dict[str, str] = config.get('tags', {})
         tags.update(config_tags)
+
+        #
+        # Add any tags provided by the add nodes request
+        #
+        tags.update(self.__tags_requested)
 
         return tags
 
