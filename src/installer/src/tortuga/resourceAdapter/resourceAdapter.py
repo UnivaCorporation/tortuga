@@ -127,8 +127,10 @@ class ResourceAdapter(UserDataMixin): \
 
     def start(self, addNodesRequest: dict, dbSession: Session,
               dbHardwareProfile: HardwareProfile,
-              dbSoftwareProfile: Optional[SoftwareProfile] = None):
+              dbSoftwareProfile: Optional[SoftwareProfile] = None) -> List[Node]:
         self.__tags_requested = addNodesRequest.get('tags', {})
+
+        return []
 
     def fire_state_change_event(self, db_node: Node, previous_state: str):
         """
