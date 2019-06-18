@@ -272,10 +272,18 @@ class TagListSetting(BaseSetting):
     """
     type = 'tag_list'
     schema = BaseSettingSchema
+
+    #
+    # Default settings for validating keys and values
+    #
     key_validation_regex = '[a-z][a-z0-9-_]{0,62}'
     value_validation_regex = '[a-z0-9-_]{0,63}'
 
     def __init__(self, **kwargs):
+        self.key_validation_regex = kwargs.get('key_validation_regex',
+                                               self.key_validation_regex)
+        self.value_validation_regex = kwargs.get('value_validation_regex',
+                                                 self.value_validation_regex)
         #
         # Don't allow these to be set by the user, so we override them here
         #
@@ -332,5 +340,5 @@ class TagListSetting(BaseSetting):
             if v_regex.fullmatch(v) is None:
                 raise SettingValidationError(
                     'Tag values must match pattern: {}'.format(
-                        self.key_validation_regex)
+                        self.value_validation_regex)
                 )
