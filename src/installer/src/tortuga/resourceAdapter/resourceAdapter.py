@@ -17,6 +17,7 @@
 import csv
 import logging
 import os.path
+import re
 import sys
 import traceback
 from typing import Any, Dict, List, Optional
@@ -402,19 +403,18 @@ class ResourceAdapter(UserDataMixin): \
         # Default tags for all nodes
         #
         tags: Dict[str, str] = {
-            'tortuga-softwareprofile': hwp.name.lower(),
-            'tortuga-hardwareprofile': swp.name.lower(),
+            'tortuga-softwareprofile': self._sanitze_tag_value(hwp.name),
+            'tortuga-hardwareprofile': self._sanitze_tag_value(swp.name),
             'tortuga-installer_hostname':
-                self.installer_public_hostname.lower(),
+                self._sanitze_tag_value(self.installer_public_hostname),
             'tortuga-installer_ipaddress':
-                self.installer_public_ipaddress.lower(),
+                self._sanitze_tag_value(self.installer_public_ipaddress),
         }
 
         #
         # Add any tags provided via the resource adapter configuration
         #
-        config_tags: Dict[str, str] = config.get('tags', {})
-        tags.update(config_tags)
+        tags.update(config.get('tags', {}))
 
         #
         # Add any tags provided by the add nodes request
@@ -422,6 +422,19 @@ class ResourceAdapter(UserDataMixin): \
         tags.update(self.__tags_requested)
 
         return tags
+
+    def _sanitze_tag_value(self, value: str) -> str:
+        """
+        Performs a sanitation on a tag value so that it is suitable for use
+        all resource adapters (lowest common denominator).
+
+        :param str value: the value to be sanitized
+
+        :return str: the sanitized tag value
+
+        """
+        v = value.lower()
+        return re.sub('[^a-z0-9-_]+', '-', v)
 
     @property
     def addHostApi(self):
