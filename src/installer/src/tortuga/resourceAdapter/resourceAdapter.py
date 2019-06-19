@@ -68,9 +68,7 @@ class ResourceAdapter(UserDataMixin): \
         'tags': settings.TagListSetting(
             display_name='Tags',
             description='A comma-separated list of tags in the form of '
-                        'key=value',
-            group='Instances',
-            group_order=0
+                        'key=value'
         ),
     }
 
