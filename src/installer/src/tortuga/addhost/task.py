@@ -69,6 +69,7 @@ def enqueue_addnodes_request(session: Session, addNodesRequest: dict) -> str:
 
     return request.addHostSession
 
+
 def _init_data_request(data, addHostSession):
     request = DataRequest()
     request.request = data
