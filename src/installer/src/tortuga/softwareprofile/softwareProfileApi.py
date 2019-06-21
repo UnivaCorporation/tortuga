@@ -17,9 +17,11 @@ import logging
 
 from sqlalchemy.orm.session import Session
 
+from tortuga.events.types import SoftwareProfileTagsChanged
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.logging import SOFTWARE_PROFILE_NAMESPACE
 from tortuga.objects.tortugaObject import TortugaObjectList
+from tortuga.objects.softwareProfile import SoftwareProfile
 from tortuga.softwareprofile.softwareProfileManager import \
     SoftwareProfileManager
 from tortuga.utility.tortugaApi import TortugaApi
@@ -51,7 +53,7 @@ class SoftwareProfileApi(TortugaApi): \
         try:
             return self._softwareProfileManager.getSoftwareProfile(
                 session, softwareProfileName, optionDict)
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self._logger.exception(str(ex))
@@ -71,7 +73,7 @@ class SoftwareProfileApi(TortugaApi): \
         try:
             return self._softwareProfileManager.getSoftwareProfileById(
                 session, softwareProfileId, optionDict)
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self._logger.exception(str(ex))
@@ -90,7 +92,7 @@ class SoftwareProfileApi(TortugaApi): \
         try:
             self._softwareProfileManager.deleteSoftwareProfile(
                 session, softwareProfileName)
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self._logger.exception(str(ex))
@@ -103,7 +105,7 @@ class SoftwareProfileApi(TortugaApi): \
         try:
             return self._softwareProfileManager.getSoftwareProfileList(
                 session, tags=tags)
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self._logger.exception(str(ex))
@@ -122,7 +124,7 @@ class SoftwareProfileApi(TortugaApi): \
         try:
             return self._softwareProfileManager.getEnabledComponentList(
                 session, name)
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self._logger.exception(str(ex))
@@ -141,7 +143,7 @@ class SoftwareProfileApi(TortugaApi): \
         try:
             return self._softwareProfileManager.getPartitionList(
                 session, softwareProfileName)
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self._logger.exception(str(ex))
@@ -186,7 +188,7 @@ class SoftwareProfileApi(TortugaApi): \
         try:
             self._softwareProfileManager.deleteUsableHardwareProfileFromSoftwareProfile(
                 session, hardwareProfileName, softwareProfileName)
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self._logger.exception(str(ex))
@@ -205,7 +207,7 @@ class SoftwareProfileApi(TortugaApi): \
         """
         try:
             self._softwareProfileManager.addAdmin(session, softwareProfileName, adminUsername)
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self._logger.exception(str(ex))
@@ -225,7 +227,7 @@ class SoftwareProfileApi(TortugaApi): \
         try:
             self._softwareProfileManager.deleteAdmin(
                 session, softwareProfileName, adminUsername)
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self._logger.exception(str(ex))
@@ -243,21 +245,60 @@ class SoftwareProfileApi(TortugaApi): \
                 TortugaException
         """
         try:
+            #
+            # Get the current version from the db for later comparison
+            #
+            swp_name = softwareProfileObject.getName()
+            old_swp = self.getSoftwareProfile(session, swp_name)
+            #
+            # Do the actual update
+            #
             self._softwareProfileManager.updateSoftwareProfile(
                 session, softwareProfileObject)
-        except TortugaException as ex:
+            #
+            # Get the new version from the DB
+            #
+            new_swp = self.getSoftwareProfile(session, swp_name)
+            #
+            # If the tags have changed, fire the tags changed event
+            #
+            if old_swp.getTags() != new_swp.getTags():
+                SoftwareProfileTagsChanged.fire(
+                    software_profile=new_swp.getCleanDict(),
+                    previous_tags=old_swp.getTags()
+                )
+
+        except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
 
-    def createSoftwareProfile(self, session: Session, swProfileSpec,
+    def createSoftwareProfile(self, session: Session,
+                              swProfileSpec: SoftwareProfile,
                               settingsDict=None):
         try:
             self._softwareProfileManager.createSoftwareProfile(
                 session, swProfileSpec, settingsDict)
-        except TortugaException as ex:
+            #
+            # Fire the tags changed event for all creates that have tags
+            #
+            if swProfileSpec.getTags():
+                #
+                # Get the latest version from the db in case the create method
+                # added some embellishments
+                #
+                swp = self.getSoftwareProfile(
+                    session, swProfileSpec.getName())
+                SoftwareProfileTagsChanged.fire(
+                    software_profile=swp.getCleanDict(),
+                    previous_tags={}
+                )
+
+        except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
@@ -267,7 +308,7 @@ class SoftwareProfileApi(TortugaApi): \
             return self._softwareProfileManager.getNodeList(
                 session,
                 softwareProfileName)
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self._logger.exception(str(ex))
@@ -309,7 +350,7 @@ class SoftwareProfileApi(TortugaApi): \
                 compName,
                 compVersion,
             )
-        except TortugaException as ex:
+        except TortugaException:
             raise
         except Exception as ex:
             self._logger.exception(str(ex))
@@ -318,10 +359,21 @@ class SoftwareProfileApi(TortugaApi): \
     def copySoftwareProfile(self, session: Session, srcSoftwareProfileName,
                             dstSoftwareProfileName):
         try:
-            return self._softwareProfileManager.copySoftwareProfile(
+            swp = self._softwareProfileManager.copySoftwareProfile(
                 session, srcSoftwareProfileName, dstSoftwareProfileName)
-        except TortugaException as ex:
+            #
+            # Fire the tags changed event for all copies that have tags
+            #
+            if swp.getTags():
+                SoftwareProfileTagsChanged.fire(
+                    software_profile=swp.getCleanDict(),
+                    previous_tags={}
+                )
+            return swp
+
+        except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(str(ex))
             raise TortugaException(exception=ex)

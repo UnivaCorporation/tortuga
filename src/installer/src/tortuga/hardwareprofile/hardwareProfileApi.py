@@ -17,6 +17,7 @@ import logging
 from typing import Optional
 
 from sqlalchemy.orm.session import Session
+from tortuga.events.types import HardwareProfileTagsChanged
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.hardwareprofile.hardwareProfileManager import \
     HardwareProfileManager
@@ -49,8 +50,10 @@ class HardwareProfileApi(TortugaApi):
         try:
             return HardwareProfileManager().getHardwareProfile(
                 session, hardwareProfileName, optionDict or {})
-        except TortugaException as ex:
+
+        except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
@@ -68,8 +71,10 @@ class HardwareProfileApi(TortugaApi):
         try:
             return HardwareProfileManager().getHardwareProfileById(
                 session, id_, optionDict or {})
-        except TortugaException as ex:
+
+        except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
@@ -87,8 +92,10 @@ class HardwareProfileApi(TortugaApi):
         try:
             HardwareProfileManager().deleteHardwareProfile(
                 session, hardwareProfileName)
-        except TortugaException as ex:
+
+        except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
@@ -107,8 +114,10 @@ class HardwareProfileApi(TortugaApi):
         try:
             return HardwareProfileManager().getHardwareProfileList(
                 session, optionDict=optionDict, tags=tags)
+
         except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
@@ -127,8 +136,10 @@ class HardwareProfileApi(TortugaApi):
         try:
             HardwareProfileManager().addAdmin(
                 session, hardwareProfileName, adminUsername)
-        except TortugaException as ex:
+
+        except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
@@ -148,8 +159,10 @@ class HardwareProfileApi(TortugaApi):
         try:
             HardwareProfileManager().deleteAdmin(
                 session, hardwareProfileName, adminUsername)
-        except TortugaException as ex:
+
+        except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
@@ -168,11 +181,33 @@ class HardwareProfileApi(TortugaApi):
 
         """
         try:
+            #
+            # Get the current version from the db for later comparison
+            #
+            hwp_name = hardwareProfileObject.getName()
+            old_hwp = self.getHardwareProfile(session, hwp_name)
+            #
+            # Do the actual update
+            #
             HardwareProfileManager().updateHardwareProfile(
                 session,
                 hardwareProfileObject)
-        except TortugaException as ex:
+            #
+            # Get the new version from the DB
+            #
+            new_hwp = self.getHardwareProfile(session, hwp_name)
+            #
+            # If the tags have changed, fire the tags changed event
+            #
+            if old_hwp.getTags() != new_hwp.getTags():
+                HardwareProfileTagsChanged.fire(
+                    hardware_profile=new_hwp.getCleanDict(),
+                    previous_tags=old_hwp.getTags()
+                )
+
+        except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
@@ -192,8 +227,24 @@ class HardwareProfileApi(TortugaApi):
         try:
             HardwareProfileManager().createHardwareProfile(
                 session, hwProfileSpec, settingsDict=settingsDict)
-        except TortugaException as ex:
+            #
+            # Fire the tags changed event for all creates that have tags
+            #
+            if hwProfileSpec.getTags():
+                #
+                # Get the latest version from the db in case the create method
+                # added some embellishments
+                #
+                hwp = self.getHardwareProfile(
+                    session, hwProfileSpec.getName())
+                HardwareProfileTagsChanged.fire(
+                    hardware_profile=hwp.getCleanDict(),
+                    previous_tags={}
+                )
+
+        except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
@@ -209,8 +260,10 @@ class HardwareProfileApi(TortugaApi):
         try:
             HardwareProfileManager().setProvisioningNic(
                 session, hardwareProfileName, nicId)
+
         except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
@@ -219,8 +272,10 @@ class HardwareProfileApi(TortugaApi):
         try:
             HardwareProfileManager().getProvisioningNicForNetwork(
                 session, network, netmask)
+
         except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
@@ -228,10 +283,21 @@ class HardwareProfileApi(TortugaApi):
     def copyHardwareProfile(self, session: Session, srcHardwareProfileName,
                             dstHardwareProfileName):
         try:
-            return HardwareProfileManager().copyHardwareProfile(
+            hwp = HardwareProfileManager().copyHardwareProfile(
                 session, srcHardwareProfileName, dstHardwareProfileName)
-        except TortugaException as ex:
+            #
+            # Fire the tags changed event for all copies that have tags
+            #
+            if hwp.getTags():
+                HardwareProfileTagsChanged.fire(
+                    hardware_profile=hwp.getCleanDict(),
+                    previous_tags={}
+                )
+            return hwp
+
+        except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
@@ -240,8 +306,10 @@ class HardwareProfileApi(TortugaApi):
         try:
             HardwareProfileManager().getNodeList(
                 session, hardware_profile_name)
+
         except TortugaException:
             raise
-        except Exception as exc:
-            self._logger.exception(str(exc))
-            raise TortugaException(exception=exc)
+
+        except Exception as ex:
+            self._logger.exception(str(ex))
+            raise TortugaException(exception=ex)
