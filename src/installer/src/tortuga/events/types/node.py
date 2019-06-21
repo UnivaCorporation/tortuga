@@ -44,6 +44,39 @@ class NodeStateChanged(BaseEvent):
 
         """
         self.node: dict = node
-        self.previous_state: dict = previous_state
+        self.previous_state: str = previous_state
+
+        super().__init__(**kwargs)
+
+
+class NodeTagsChangedSchema(BaseEventSchema):
+    """
+    Schema for the NodeTagsChanged events.
+
+    """
+    node = fields.Dict()
+    previous_tags = fields.Dict()
+
+
+class NodeTagsChanged(BaseEvent):
+    """
+    Event that fires when a node tags are changed.
+
+    """
+    name = 'node-tags-changed'
+    schema = NodeTagsChangedSchema
+
+    def __init__(self, node: dict, previous_tags: dict, **kwargs):
+        """
+        Initializer.
+
+        :param dict node:          the current state of the nodeprofile
+        :param dict previous_tags: the previous version of the tags for the
+                                   node
+        :param kwargs:
+
+        """
+        self.node: dict = node
+        self.previous_node: dict = previous_tags
 
         super().__init__(**kwargs)
