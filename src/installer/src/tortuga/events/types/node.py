@@ -77,6 +77,6 @@ class NodeTagsChanged(BaseEvent):
 
         """
         self.node: dict = node
-        self.previous_node: dict = previous_tags
+        self.previous_tags: dict = previous_tags
 
         super().__init__(**kwargs)

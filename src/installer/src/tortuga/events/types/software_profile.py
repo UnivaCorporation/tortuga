@@ -47,6 +47,6 @@ class SoftwareProfileTagsChanged(BaseEvent):
 
         """
         self.software_profile: dict = software_profile
-        self.previous_software_profile: dict = previous_tags
+        self.previous_tags: dict = previous_tags
 
         super().__init__(**kwargs)

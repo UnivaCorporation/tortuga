@@ -23,6 +23,7 @@ from tortuga.db.hardwareProfileDbApi import HardwareProfileDbApi
 from tortuga.db.networkDbApi import NetworkDbApi
 from tortuga.db.nodeDbApi import NodeDbApi
 from tortuga.db.softwareProfileDbApi import SoftwareProfileDbApi
+from tortuga.events.types import HardwareProfileTagsChanged
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.networkNotFound import NetworkNotFound
 from tortuga.exceptions.nicNotFound import NicNotFound
@@ -120,18 +121,29 @@ class HardwareProfileManager(TortugaObjectManager):
             'Updating hardware profile [%s]' % (
                 hardwareProfileObject.getName()))
 
-        # First get the object from the db we are updating...
-        existingProfile = self.getHardwareProfileById(
+        existing_hwp = self.getHardwareProfileById(
             session, hardwareProfileObject.getId())
-
         if hardwareProfileObject.getInstallType() and \
             hardwareProfileObject.getInstallType() != \
-                existingProfile.getInstallType():
+                existing_hwp.getInstallType():
             raise InvalidArgument(
                 'Hardware profile installation type cannot be'
                 ' changed' % (hardwareProfileObject.getName()))
-
         self._hpDbApi.updateHardwareProfile(session, hardwareProfileObject)
+
+        #
+        # Get the new version from the DB
+        #
+        new_hwp = self.getHardwareProfileById(session,
+                                              hardwareProfileObject.getId())
+        #
+        # If the tags have changed, fire the tags changed event
+        #
+        if existing_hwp.getTags() != new_hwp.getTags():
+            HardwareProfileTagsChanged.fire(
+                hardware_profile=new_hwp.getCleanDict(),
+                previous_tags=existing_hwp.getTags()
+            )
 
     def createHardwareProfile(self, session: Session,
                               hwProfileSpec: HardwareProfile,
@@ -243,6 +255,19 @@ class HardwareProfileManager(TortugaObjectManager):
                 self.setProvisioningNic(
                     session, hwProfileSpec.getName(), provisioningNic.getId())
 
+        #
+        # Fire the tags changed event for all creates that have tags
+        #
+        # Get the latest version from the db in case the create method
+        # added some embellishments
+        #
+        hwp = self.getHardwareProfile(session, hwProfileSpec.getName())
+        if hwp.getTags():
+            HardwareProfileTagsChanged.fire(
+                hardware_profile=hwp.getCleanDict(),
+                previous_tags={}
+            )
+
     def deleteHardwareProfile(self, session: Session, name: str) -> None:
         """
         Delete hardwareprofile by name.
@@ -268,16 +293,24 @@ class HardwareProfileManager(TortugaObjectManager):
         return self._hpDbApi.getProvisioningNicForNetwork(
             session, network, netmask)
 
-    def copyHardwareProfile(self, session: Session, srcHardwareProfileName: str,
+    def copyHardwareProfile(self, session: Session,
+                            srcHardwareProfileName: str,
                             dstHardwareProfileName: str):
         validation.validateProfileName(dstHardwareProfileName)
-
         self._logger.info(
             'Copying hardware profile [%s] to [%s]' % (
                 srcHardwareProfileName, dstHardwareProfileName))
-
-        return self._hpDbApi.copyHardwareProfile(
+        self._hpDbApi.copyHardwareProfile(
             session, srcHardwareProfileName, dstHardwareProfileName)
+        #
+        # Fire the tags changed event for all copies that have tags
+        #
+        hwp = self.getHardwareProfile(session, dstHardwareProfileName)
+        if hwp.getTags():
+            HardwareProfileTagsChanged.fire(
+                hardware_profile=hwp.getCleanDict(),
+                previous_tags={}
+            )
 
     def getNodeList(self, session: Session, hardwareProfileName: str):
         return self._hpDbApi.getNodeList(session, hardwareProfileName)

@@ -47,6 +47,6 @@ class HardwareProfileTagsChanged(BaseEvent):
 
         """
         self.hardware_profile: dict = hardware_profile
-        self.previous_hardware_profile: dict = previous_tags
+        self.previous_tags: dict = previous_tags
 
         super().__init__(**kwargs)

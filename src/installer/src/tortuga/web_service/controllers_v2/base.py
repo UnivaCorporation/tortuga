@@ -113,7 +113,7 @@ class Controller(object):
                     response.append(obj)
 
         except Exception as ex:
-            logger.error(str(ex))
+            self._logger.error(str(ex))
             response = self.error_response(str(ex))
 
         return self.format_response(response)
@@ -137,7 +137,7 @@ class Controller(object):
                 response = obj
 
         except Exception as ex:
-            logger.error(str(ex))
+            self._logger.error(str(ex))
             response = self.error_response(str(ex))
 
         return self.format_response(response)
