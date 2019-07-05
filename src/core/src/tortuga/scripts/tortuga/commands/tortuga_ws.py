@@ -156,6 +156,20 @@ class EventsCommand(RootCommand):
     ]
 
 
+class NodesCommand(RootCommand):
+    """
+    This is a command for interacting with WS API endpoints.
+
+    """
+    name = 'nodes'
+    help = 'Tortuga nodes API'
+
+    sub_commands = [
+        ListCommand(),
+        ShowCommand()
+    ]
+
+
 def get_web_service_config(args: argparse.Namespace):
     """
     Gets url, username, and password for the Tortuga web service.

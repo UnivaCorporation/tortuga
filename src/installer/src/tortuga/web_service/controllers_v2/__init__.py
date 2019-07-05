@@ -17,12 +17,14 @@ import cherrypy
 from tortuga.kit.registry import get_all_kit_installers
 from .registry import register_ws_controller, get_all_ws_controllers
 from .events import EventController
+from .nodes import NodeController
 
 
 #
 # Register web service controllers
 #
 register_ws_controller(EventController)
+register_ws_controller(NodeController)
 
 
 def setup_routes():

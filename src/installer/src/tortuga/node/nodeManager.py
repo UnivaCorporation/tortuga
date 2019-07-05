@@ -30,7 +30,6 @@ from tortuga.db.models.hardwareProfile import \
     HardwareProfile as HardwareProfileModel
 from tortuga.db.models.node import Node as NodeModel
 from tortuga.db.models.nodeRequest import NodeRequest
-from tortuga.db.models.nodeTag import NodeTag as NodeTagModel
 from tortuga.db.models.softwareProfile import \
     SoftwareProfile as SoftwareProfileModel
 from tortuga.db.nodeDbApi import NodeDbApi

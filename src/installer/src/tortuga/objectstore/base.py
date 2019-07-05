@@ -180,7 +180,7 @@ class ObjectStore:
         called by the list() method, which is responsible for applying
         the limits and filters.
 
-        :param int order_by:     the name of the object attribue to order by
+        :param int order_by:     the name of the object attribute to order by
         :param bool order_desc:  sort in descending order
         :param bool order_alpha: order alphabetically (instead of numerically)
 
