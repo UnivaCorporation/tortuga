@@ -34,7 +34,7 @@ from tortuga.db.models.softwareProfile import \
     SoftwareProfile as SoftwareProfileModel
 from tortuga.db.nodeDbApi import NodeDbApi
 from tortuga.db.nodesDbHandler import NodesDbHandler
-from tortuga.events.types import NodeStateChanged
+from tortuga.events.types import NodeStateChanged, NodeTagsChanged
 from tortuga.exceptions.configurationError import ConfigurationError
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.exceptions.operationFailed import OperationFailed
@@ -121,7 +121,7 @@ class NodeManager(TortugaObjectManager): \
         # hardware profile in which host names are generated)
         self.__validateHostName(hostname, dbHardwareProfile.nameFormat)
 
-        node = NodeModel(name=hostname)
+        node: Node = NodeModel(name=hostname)
 
         if 'rack' in addNodeRequest:
             node.rack = addNodeRequest['rack']
@@ -137,10 +137,17 @@ class NodeManager(TortugaObjectManager): \
             bValidateIp=validateIp, bGenerateIp=bGenerateIp,
             dns_zone=dns_zone)
 
-        # Set hardware profile of new node
         node.hardwareprofile = dbHardwareProfile
-
         node.softwareprofile = dbSoftwareProfile
+
+        #
+        # Fire the tags changed event for all creates that have tags
+        #
+        if node.getTags():
+            NodeTagsChanged.fire(
+                node=node.getCleanDict(),
+                previous_tags={}
+            )
 
         # Return the new node
         return node
@@ -246,61 +253,54 @@ class NodeManager(TortugaObjectManager): \
         self._logger.debug('updateNode(): name=[{0}]'.format(nodeName))
 
         try:
-            node = self._nodesDbHandler.getNode(session, nodeName)
+            #
+            # Get the old version for comparison later
+            #
+            node_old: Node = self.getNode(session, nodeName)
 
+            db_node = self._nodesDbHandler.getNode(session, nodeName)
             if 'nics' in updateNodeRequest:
                 nic = updateNodeRequest['nics'][0]
-
                 if 'ip' in nic:
-                    node.nics[0].ip = nic['ip']
-                    node.nics[0].boot = True
-
-            # Call resource adapter
-            # self._nodesDbHandler.updateNode(session, node, updateNodeRequest)
+                    db_node.nics[0].ip = nic['ip']
+                    db_node.nics[0].boot = True
 
             adapter = self.__getResourceAdapter(
                 session,
-                node.hardwareprofile
+                db_node.hardwareprofile
             )
-
-            adapter.updateNode(session, node, updateNodeRequest)
-
+            adapter.updateNode(session, db_node, updateNodeRequest)
             run_post_install = False
-
-            #
-            # Capture previous state and node data as dict for firing the
-            # event later on
-            #
-            previous_state = node.state
-            node_dict = Node.getFromDbDict(node.__dict__).getCleanDict()
 
             if 'state' in updateNodeRequest:
                 run_post_install = \
-                    node.state == state.NODE_STATE_ALLOCATED and \
+                    db_node.state == state.NODE_STATE_ALLOCATED and \
                     updateNodeRequest['state'] == state.NODE_STATE_PROVISIONED
-
-                node.state = updateNodeRequest['state']
-                node_dict['state'] = updateNodeRequest['state']
+                db_node.state = updateNodeRequest['state']
 
             session.commit()
 
             #
-            # If the node state has changed, then fire the node state changed
-            # event
+            # Fire events as required
             #
-            if node_dict['state'] != previous_state:
-                NodeStateChanged.fire(node=node_dict,
-                                      previous_state=previous_state)
+            # Get the current/new state of the node from the DB
+            #
+            node: Node = self.getNode(session, nodeName)
+            if node.getState() != node_old.getState():
+                NodeStateChanged.fire(node=node.getCleanDict(),
+                                      previous_state=node_old.getState())
+            if node.getTags() != node_old.getTags():
+                NodeTagsChanged.fire(node=node.getCleanDict(),
+                                     previous_tags=node_old.getTags())
 
             if run_post_install:
                 self._logger.debug(
                     'updateNode(): run-post-install for node [{0}]'.format(
-                        node.name))
-
+                        db_node.name))
                 self.__scheduleUpdate()
+
         except Exception:
             session.rollback()
-
             raise
 
     def updateNodeStatus(self, session: Session, nodeName: str,
