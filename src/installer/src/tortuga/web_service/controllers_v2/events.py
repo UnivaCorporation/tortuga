@@ -33,5 +33,6 @@ class EventController(Controller):
         # to lookup the class type before unmarshalling
         #
         event_class = get_event_class(obj_dict['name'])
-        unmarshalled = event_class.schema().load(obj_dict)
+        scheam_class = event_class.get_schema_class()
+        unmarshalled = scheam_class().load(obj_dict)
         return event_class(**unmarshalled.data)

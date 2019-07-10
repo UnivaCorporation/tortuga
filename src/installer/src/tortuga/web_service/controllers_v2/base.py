@@ -14,6 +14,7 @@
 
 import http.client
 import logging
+import traceback
 from typing import Any, List
 
 import cherrypy
@@ -56,7 +57,7 @@ class Controller(object):
             #
             actions.append({
                 'name': '{}_get'.format(self.name),
-                'path': '/v2/{}/:(id)'.format(self.name),
+                'path': '/v2/{}/:(obj_id)'.format(self.name),
                 'method': ['GET'],
                 'action': 'get'
             })
@@ -78,7 +79,7 @@ class Controller(object):
             #
             actions.append({
                 'name': '{}_update'.format(self.name),
-                'path': '/v2/{}/:(id)'.format(self.name),
+                'path': '/v2/{}/:(obj_id)'.format(self.name),
                 'method': ['PUT'],
                 'action': 'update'
             })
@@ -89,7 +90,7 @@ class Controller(object):
             #
             actions.append({
                 'name': '{}_delete'.format(self.name),
-                'path': '/v2/{}/:(id)'.format(self.name),
+                'path': '/v2/{}/:(obj_id)'.format(self.name),
                 'method': ['DELETE'],
                 'action': 'delete'
             })
@@ -135,7 +136,8 @@ class Controller(object):
         :return dict: the marshalled data
 
         """
-        marshalled = obj.schema().dump(obj)
+        schema_class = self.type_store.type_class.get_schema_class()
+        marshalled = schema_class().dump(obj)
         return marshalled.data
 
     def unmarshall(self, obj_dict: dict) -> BaseType:
@@ -146,7 +148,8 @@ class Controller(object):
         :return BaseType: the unmarshalled obj
 
         """
-        unmarshalled = self.type_store.type_class.schema().load(obj_dict)
+        schema_class = self.type_store.type_class.get_schema_class()
+        unmarshalled = schema_class().load(obj_dict)
         return self.type_store.type_class(**unmarshalled.data)
 
     @authentication_required()
@@ -165,10 +168,10 @@ class Controller(object):
 
             response = []
             for obj in self.type_store.list(**params):
-                response.append(self.type_store.marshall(obj))
+                response.append(self.marshall(obj))
 
         except Exception as ex:
-            self._logger.error(str(ex))
+            self._logger.error(traceback.format_exc())
             response = self.error_response(str(ex))
 
         return self.format_response(response)
@@ -186,10 +189,10 @@ class Controller(object):
         """
         try:
             obj = self.type_store.get(obj_id)
-            response = self._marshall(obj)
+            response = self.marshall(obj)
 
         except Exception as ex:
-            self._logger.error(str(ex))
+            self._logger.error(traceback.format_exc())
             response = self.error_response(str(ex))
 
         return self.format_response(response)
@@ -205,12 +208,12 @@ class Controller(object):
 
         """
         try:
-            obj = self.type_store.unmarshall(cherrypy.request.json)
+            obj = self.unmarshall(cherrypy.request.json)
             obj = self.type_store.save(obj)
-            response = self._marshall(obj)
+            response = self.marshall(obj)
 
         except Exception as ex:
-            self._logger.error(str(ex))
+            self._logger.error(traceback.format_exc())
             response = self.error_response(str(ex))
 
         return self.format_response(response)
@@ -220,12 +223,12 @@ class Controller(object):
     @cherrypy.tools.json_out()
     def update(self, obj_id: str) -> dict:
         try:
-            obj = self.type_store.unmarshall(cherrypy.request.json)
+            obj = self.unmarshall(cherrypy.request.json)
             obj = self.type_store.save(obj)
-            response = self._marshall(obj)
+            response = self.marshall(obj)
 
         except Exception as ex:
-            self._logger.error(str(ex))
+            self._logger.error(traceback.format_exc())
             response = self.error_response(str(ex))
 
         return self.format_response(response)
@@ -237,7 +240,7 @@ class Controller(object):
             response = None
 
         except Exception as ex:
-            self._logger.error(str(ex))
+            self._logger.error(traceback.format_exc())
             response = self.error_response(str(ex))
 
         return self.format_response(response)

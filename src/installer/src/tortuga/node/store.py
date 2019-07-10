@@ -12,11 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-from typing import Iterator, Optional
+from typing import Dict, Iterator, Optional
 
 from sqlalchemy import desc
+from sqlalchemy.orm import Session, sessionmaker
 
 from tortuga.db.dbManager import DbManager
+from tortuga.db.models.node import Node as DbNode
+from tortuga.db.models.nodeTag import NodeTag
 from tortuga.objectstore.base import matches_filters
 from tortuga.typestore.base import TypeStore
 from .types import Node
@@ -34,7 +37,51 @@ class SqlalchemySessionNodeStore(TypeStore):
     type_class = Node
 
     def __init__(self, db_manager: DbManager):
-        self._db_manager = db_manager
+        self._Session = sessionmaker(bind=db_manager.engine)
+
+    def _to_db_node(self, node: Node, session: Session) -> Optional[DbNode]:
+        if node.id:
+            db_node = session.query(DbNode).filter(
+                DbNode.id == int(node.id)).first()
+            if not db_node:
+                return None
+        else:
+            raise Exception('Creating nodes is currently not supported')
+        db_node.name = node.name
+        db_node.public_hostname = node.public_hostname
+        db_node.softwareProfileId = int(node.softwareprofile_id)
+        db_node.hardwareProfileId = int(node.hardwareprofile_id)
+        db_node.state = node.state
+        db_node.lockedState = node.locked
+        self._set_db_node_tags(db_node, node.tags)
+        return db_node
+
+    def _set_db_node_tags(self, db_node: DbNode, tags: Dict[str, str]):
+        if not tags:
+            tags = {}
+        tags_to_delete = {tag.name: tag for tag in db_node.tags}
+        for name, value in tags.items():
+            if name in tags_to_delete.keys():
+                tag = tags_to_delete.pop(name)
+                tag.value = value
+            else:
+                db_node.tags.append(
+                    NodeTag(name=name, value=value)
+                )
+        for tag in tags_to_delete.values():
+            db_node.tags.remove(tag)
+
+    def _to_node(self, db_node: DbNode) -> Node:
+        return Node(
+            id=str(db_node.id),
+            name=db_node.name,
+            public_hostname=db_node.public_hostname,
+            softwareprofile_id=str(db_node.softwareProfileId),
+            hardwareprofile_id=str(db_node.hardwareProfileId),
+            state=db_node.state,
+            locked=db_node.lockedState,
+            tags={tag.name: tag.value for tag in db_node.tags}
+        )
 
     def list(
             self,
@@ -44,59 +91,53 @@ class SqlalchemySessionNodeStore(TypeStore):
             limit: Optional[int] = None,
             **filters) -> Iterator[Node]:
         logger.debug(
-            'list(order_by={}, order_desc={}, limit, filters={}) -> ...'.format(
-                order_by, order_desc, limit, filters
-            )
-        )
-        with self._db_manager.session() as session:
-            result = session.query(Node)
-            if order_by:
-                #
-                # Note: currently, order_alpha is ignored for SqlAlchemy,
-                #       as it is the default behavior for strings
-                #
-                if desc:
-                    result = result.order_by(desc(getattr(Node, order_by)))
-                else:
-                    result = result.order_by(getattr(Node, order_by))
-            count = 0
-            for _, node in result:
-                if matches_filters(node, filters):
-                    count += 1
-                    if limit and count == limit:
-                        yield node
-                        return
+            'list(order_by=%s, order_desc=%s, limit=%s, filters=%s) -> ...',
+            order_by, order_desc, limit, filters)
+        session = self._Session()
+        result = session.query(DbNode)
+        if order_by:
+            #
+            # Note: currently, order_alpha is ignored for SqlAlchemy,
+            #       as it is the default behavior for strings
+            #
+            if desc:
+                result = result.order_by(desc(getattr(DbNode, order_by)))
+            else:
+                result = result.order_by(getattr(DbNode, order_by))
+        count = 0
+        for db_node in result:
+            node = self._to_node(db_node)
+            if matches_filters(node, filters):
+                logger.debug('list(...) -> %s', node)
+                count += 1
+                if limit and count == limit:
                     yield node
+                    session.close()
+                    return
+                yield node
 
     def get(self, obj_id: str) -> Optional[Node]:
-        with self._db_manager.session() as session:
-            node = session.query(Node.id == int(obj_id)).one_or_none()
+        logger.debug('get(obj_id=%s) -> ...', obj_id)
+
+        session = self._Session()
+        db_node = session.query(DbNode).filter(
+            DbNode.id == int(obj_id)).first()
+        node = self._to_node(db_node)
+        session.close()
+
+        logger.debug('get(...) -> %s', node)
         return node
 
     def save(self, obj: Node) -> Node:
-        with self._db_manager.session() as session:
-            #
-            # If the obj does not have an ID, then it is a create...
-            #
-            if not obj.id:
-                session.add(obj)
-            #
-            # Otherwise it is an update
-            #
-            else:
-                #
-                # Dump the incoming object as a dict
-                #
-                obj_dict = obj.schema().dump(obj).data
-                #
-                # Lookup the existing instance
-                #
-                node = session.query(Node.id == obj.id).one()
-                #
-                # Load load the incoming data into the existing
-                # instance
-                #
-                node = self.type_class.schema().load(obj_dict,
-                                                     session=session,
-                                                     instance=node).data
+        logger.debug('save(obj=%s) -> ...', obj)
+
+        session = self._Session()
+        db_node = self._to_db_node(obj, session)
+        if not db_node:
+            raise Exception('Node ID not found: %s', obj.id)
+        session.commit()
+        node = self._to_node(db_node)
+        session.close()
+
+        logger.debug('save(...) -> %s', node)
         return node

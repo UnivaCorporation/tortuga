@@ -12,15 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tortuga.node.manager import NodeStoreManager
+from tortuga.softwareprofile.manager import SoftwareProfileStoreManager
 from .base import Controller
 
 
-class NodeController(Controller):
+class SoftwareProfileController(Controller):
     """
-    Node web service controller class.
+    SoftwareProfile web service controller class.
 
     """
-    name = 'nodes'
-    type_store = NodeStoreManager.get()
+    name = 'softwareprofiles'
+    type_store = SoftwareProfileStoreManager.get()
     methods = ['GET', 'PUT']

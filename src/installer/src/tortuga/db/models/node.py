@@ -12,25 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=too-few-public-methods
-from typing import Type
-
-from marshmallow import Schema
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.ext.indexable import index_property
 from sqlalchemy.orm import relationship
 
-from tortuga.types.base import BaseType
 from .base import ModelBase
 
 
-class Node(BaseType, ModelBase):
+class Node(ModelBase):
     __tablename__ = 'nodes'
-
-    #
-    # Required to fulfill BaseType
-    #
-    type = 'node'
 
     id = Column(Integer, primary_key=True)
     name = Column(String(255), unique=True, nullable=False)
@@ -65,14 +55,3 @@ class Node(BaseType, ModelBase):
 
     def __repr__(self):
         return 'Node(name={})'.format(self.name)
-
-    #
-    # Required to fulfill BaseType
-    #
-    @property
-    def schema(self) -> Type[Schema]:
-        #
-        # Import here to prevent circular imports
-        #
-        from tortuga.schema import NodeSchema
-        return NodeSchema

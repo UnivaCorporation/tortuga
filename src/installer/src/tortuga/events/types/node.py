@@ -32,7 +32,7 @@ class NodeStateChanged(BaseEvent):
 
     """
     name = 'node-state-changed'
-    schema = NodeStateChangedSchema
+    schema_class = NodeStateChangedSchema
 
     def __init__(self, node: dict, previous_state: str, **kwargs):
         """
@@ -43,7 +43,6 @@ class NodeStateChanged(BaseEvent):
         :param kwargs:
 
         """
-        self.node: dict = node
-        self.previous_state: dict = previous_state
-
         super().__init__(**kwargs)
+        self.node: dict = node
+        self.previous_state: str = previous_state

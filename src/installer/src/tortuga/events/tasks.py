@@ -38,7 +38,8 @@ def run_event_listener(listener_name: str, event_dict: dict):
     # Unmarshall the event
     #
     event_class = get_event_class(event_dict['name'])
-    unmarshalled = event_class.schema().load(event_dict)
+    schema_class = event_class.get_schema_class()
+    unmarshalled = schema_class().load(event_dict)
     event: BaseEvent = event_class(**unmarshalled.data)
 
     #

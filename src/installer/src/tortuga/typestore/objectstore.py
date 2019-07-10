@@ -16,28 +16,15 @@ class ObjectStoreTypeStore(TypeStore):
     """
     def __init__(self, object_store: ObjectStore):
         self._store = object_store
-    
-    def marshall(self, obj: BaseType) -> dict:
-        """
-        Marshalls a obj into a dict.
 
-        :param BaseType obj: the obj instance to marshall
-
-        :return dict: the marshalled data
-
-        """
-        marshalled = obj.schema().dump(obj)
+    def _marshall(self, obj: BaseType) -> dict:
+        schema_class = self.type_class.get_schema_class()
+        marshalled = schema_class().dump(obj)
         return marshalled.data
 
-    def unmarshall(self, obj_dict: dict) -> BaseType:
-        """
-        Unmarshalls an obj dict into an obj class instance.
-
-        :param dict obj_dict:
-        :return BaseType: the unmarshalled obj
-
-        """
-        unmarshalled = self.type_class.schema().load(obj_dict)
+    def _unmarshall(self, obj_dict: dict) -> BaseType:
+        schema_class = self.type_class.get_schema_class()
+        unmarshalled = schema_class().load(obj_dict)
         return self.type_class(**unmarshalled.data)
 
     def save(self, obj: BaseType) -> BaseType:
@@ -47,7 +34,7 @@ class ObjectStoreTypeStore(TypeStore):
         :param BaseType obj:
 
         """
-        self._store.set(obj.id, self.marshall(obj))
+        self._store.set(obj.id, self._marshall(obj))
         return self.get(obj.id)
 
     def get(self, obj_id: str) -> Optional[BaseType]:
@@ -62,7 +49,7 @@ class ObjectStoreTypeStore(TypeStore):
         obj_dict = self._store.get(obj_id)
         if obj_dict is None:
             return None
-        return self.unmarshall(obj_dict)
+        return self._unmarshall(obj_dict)
 
     def list(
             self,
@@ -87,7 +74,7 @@ class ObjectStoreTypeStore(TypeStore):
         for _, obj_dict in self._store.list_sorted(order_by=order_by,
                                                    order_desc=order_desc,
                                                    order_alpha=order_alpha):
-            obj = self.unmarshall(obj_dict)
+            obj = self._unmarshall(obj_dict)
             if matches_filters(obj, filters):
                 count += 1
                 if limit and count == limit:

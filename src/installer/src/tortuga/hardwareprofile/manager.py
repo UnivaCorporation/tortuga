@@ -14,28 +14,29 @@
 
 from tortuga.db.dbManager import DbManager
 from tortuga.typestore.base import TypeStore
-from .store import SqlalchemySessionNodeStore
+from .store import SqlalchemySessionHardwareProfileStore
 
 
-class NodeStoreManager:
+class HardwareProfileStoreManager:
     """
-    Node store manager
+    HardwareProfile store manager
 
     """
     _db_manager: DbManager = None
-    _node_store: TypeStore = None
+    _hwp_store: TypeStore = None
 
     @classmethod
     def get(cls) -> TypeStore:
         """
-        Get an instance of the node store.
+        Get an instance of the hwp store.
 
-        :return NodeStore:  the node store instance
+        :return HardwareProfileStore: the hwp store instance
 
         """
         if not cls._db_manager:
             from tortuga.web_service.database import dbm
             cls._db_manager = dbm
-        if not cls._node_store:
-            cls._node_store = SqlalchemySessionNodeStore(cls._db_manager)
-        return cls._node_store
+        if not cls._hwp_store:
+            cls._hwp_store = SqlalchemySessionHardwareProfileStore(
+                cls._db_manager)
+        return cls._hwp_store

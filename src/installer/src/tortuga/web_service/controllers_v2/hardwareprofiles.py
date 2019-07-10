@@ -12,15 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tortuga.node.manager import NodeStoreManager
+from tortuga.hardwareprofile.manager import HardwareProfileStoreManager
 from .base import Controller
 
 
-class NodeController(Controller):
+class HardwareProfileController(Controller):
     """
-    Node web service controller class.
+    HardwareProfile web service controller class.
 
     """
-    name = 'nodes'
-    type_store = NodeStoreManager.get()
+    name = 'hardwareprofiles'
+    type_store = HardwareProfileStoreManager.get()
     methods = ['GET', 'PUT']

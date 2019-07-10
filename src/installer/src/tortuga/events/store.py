@@ -75,11 +75,12 @@ class EventStore:
 class ObjectStoreEventStore(ObjectStoreTypeStore):
     type_class = BaseEvent
 
-    def unmarshall(self, obj_dict: dict) -> BaseEvent:
+    def _unmarshall(self, obj_dict: dict) -> BaseEvent:
         #
         # Since different event types have different classes, we have
         # to lookup the class type before unmarshalling
         #
         event_class = get_event_class(obj_dict['name'])
-        unmarshalled = event_class.schema().load(obj_dict)
+        schema_class = event_class.get_schema_class()
+        unmarshalled = schema_class().load(obj_dict)
         return event_class(**unmarshalled.data)
