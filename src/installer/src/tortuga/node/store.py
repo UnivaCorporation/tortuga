@@ -20,6 +20,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from tortuga.db.dbManager import DbManager
 from tortuga.db.models.node import Node as DbNode
 from tortuga.db.models.nodeTag import NodeTag
+from tortuga.events.types.node import NodeStateChanged, NodeTagsChanged
 from tortuga.objectstore.base import matches_filters
 from tortuga.typestore.base import TypeStore
 from .types import Node
@@ -131,6 +132,10 @@ class SqlalchemySessionNodeStore(TypeStore):
     def save(self, obj: Node) -> Node:
         logger.debug('save(obj=%s) -> ...', obj)
 
+        node_old = None
+        if obj.id:
+            node_old = self.get(obj.id)
+
         session = self._Session()
         db_node = self._to_db_node(obj, session)
         if not db_node:
@@ -139,5 +144,29 @@ class SqlalchemySessionNodeStore(TypeStore):
         node = self._to_node(db_node)
         session.close()
 
+        self._fire_events(node_old, node)
         logger.debug('save(...) -> %s', node)
         return node
+
+    def _marshall(self, node: Node) -> dict:
+        schema_class = Node.get_schema_class()
+        marshalled = schema_class().dump(node)
+        return marshalled.data
+
+    def _fire_events(self, node_old: Node, node: Node):
+        self._event_state_changed(node_old, node)
+        self._event_tags_changed(node_old, node)
+
+    def _event_state_changed(self, node_old: Node, node: Node):
+        if node_old.state != node.state:
+            NodeStateChanged(node=self._marshall(node),
+                             previous_state=node_old.state)
+
+    def _event_tags_changed(self, node_old: Node, node: Node):
+        if node_old.tags != node.tags:
+            NodeTagsChanged.fire(
+                node_id=str(node.id),
+                node_name=node.name,
+                tags=node.tags,
+                previous_tags=node_old.tags
+            )

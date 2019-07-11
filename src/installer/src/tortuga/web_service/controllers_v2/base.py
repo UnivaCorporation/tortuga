@@ -136,7 +136,7 @@ class Controller(object):
         :return dict: the marshalled data
 
         """
-        schema_class = self.type_store.type_class.get_schema_class()
+        schema_class = obj.get_schema_class()
         marshalled = schema_class().dump(obj)
         return marshalled.data
 

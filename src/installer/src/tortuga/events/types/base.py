@@ -57,7 +57,7 @@ class EventMeta(type):
         #
         # Don't attempt to load the base installer
         #
-        if name == 'BaseEvent':
+        if name == 'base-event':
             return
 
         EVENT_TYPES[cls.name] = cls
@@ -70,7 +70,6 @@ class BaseEventSchema(BaseTypeSchema):
     """
     name: fields.Field = fields.String(dump_only=True)
     timestamp: fields.Field = fields.DateTime()
-    message: fields.Field = fields.String(required=False)
 
 
 class BaseEvent(BaseType, metaclass=EventMeta):
@@ -80,11 +79,14 @@ class BaseEvent(BaseType, metaclass=EventMeta):
 
     """
     #
-    # A name for the event type
+    # Requirements for BaseType
     #
+    type = 'event'
+    schema_class = BaseEventSchema
+
     name: str = 'base-event'
 
-    def __init__(self, message=None, **kwargs):
+    def __init__(self, **kwargs):
         """
         Initialization.
 
@@ -93,7 +95,6 @@ class BaseEvent(BaseType, metaclass=EventMeta):
 
         """
         super().__init__(**kwargs)
-        self.message = message
         self.timestamp: datetime.datetime = kwargs.get('timestamp', None)
 
 

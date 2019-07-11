@@ -141,7 +141,9 @@ class HardwareProfileManager(TortugaObjectManager):
         #
         if existing_hwp.getTags() != new_hwp.getTags():
             HardwareProfileTagsChanged.fire(
-                hardware_profile=new_hwp.getCleanDict(),
+                hardwareprofile_id=str(new_hwp.getId()),
+                hardwareprofile_name=new_hwp.getName(),
+                tags=new_hwp.getTags(),
                 previous_tags=existing_hwp.getTags()
             )
 
@@ -264,7 +266,9 @@ class HardwareProfileManager(TortugaObjectManager):
         hwp = self.getHardwareProfile(session, hwProfileSpec.getName())
         if hwp.getTags():
             HardwareProfileTagsChanged.fire(
-                hardware_profile=hwp.getCleanDict(),
+                hardwareprofile_id=str(hwp.getId()),
+                hardwareprofile_name=hwp.getName(),
+                tags=hwp.getTags(),
                 previous_tags={}
             )
 
@@ -308,7 +312,9 @@ class HardwareProfileManager(TortugaObjectManager):
         hwp = self.getHardwareProfile(session, dstHardwareProfileName)
         if hwp.getTags():
             HardwareProfileTagsChanged.fire(
-                hardware_profile=hwp.getCleanDict(),
+                hardwareprofile_id=str(hwp.getId()),
+                hardwareprofile_name=hwp.getName(),
+                tags=hwp.getTags(),
                 previous_tags={}
             )
 

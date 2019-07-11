@@ -20,6 +20,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from tortuga.db.dbManager import DbManager
 from tortuga.db.models.softwareProfile import SoftwareProfile as DbSoftwareProfile
 from tortuga.db.models.softwareProfileTag import SoftwareProfileTag
+from tortuga.events.types.software_profile import SoftwareProfileTagsChanged
 from tortuga.objectstore.base import matches_filters
 from tortuga.typestore.base import TypeStore
 from .types import SoftwareProfile
@@ -133,6 +134,10 @@ class SqlalchemySessionSoftwareProfileStore(TypeStore):
     def save(self, obj: SoftwareProfile) -> SoftwareProfile:
         logger.debug('save(obj=%s) -> ...', obj)
 
+        swp_old = None
+        if obj.id:
+            swp_old = self.get(obj.id)
+
         session = self._Session()
         db_swp = self._to_db_swp(obj, session)
         if not db_swp:
@@ -141,5 +146,24 @@ class SqlalchemySessionSoftwareProfileStore(TypeStore):
         swp = self._to_swp(db_swp)
         session.close()
 
+        self._fire_events(swp_old, swp)
         logger.debug('save(...) -> %s', swp)
         return swp
+
+    def _marshall(self, swp: SoftwareProfile) -> dict:
+        schema_class = SoftwareProfile.get_schema_class()
+        marshalled = schema_class().dump(swp)
+        return marshalled.data
+
+    def _fire_events(self, swp_old: SoftwareProfile, swp: SoftwareProfile):
+        self._event_tags_changed(swp_old, swp)
+
+    def _event_tags_changed(self, swp_old: SoftwareProfile,
+                            swp: SoftwareProfile):
+        if swp_old.tags != swp.tags:
+            SoftwareProfileTagsChanged.fire(
+                softwareprofile_id=str(swp.id),
+                softwareprofile_name=swp.name,
+                tags=swp.tags,
+                previous_tags=swp_old.tags
+            )

@@ -22,7 +22,9 @@ class SoftwareProfileTagsChangedSchema(BaseEventSchema):
     Schema for the SoftwareProfileTagsChanged events.
 
     """
-    software_profile = fields.Dict()
+    softwareprofile_id = fields.String()
+    softwareprofile_name = fields.String()
+    tags = fields.Dict()
     previous_tags = fields.Dict()
 
 
@@ -32,10 +34,10 @@ class SoftwareProfileTagsChanged(BaseEvent):
 
     """
     name = 'software-profile-tags-changed'
-    schema = SoftwareProfileTagsChangedSchema
+    schema_class = SoftwareProfileTagsChangedSchema
 
-    def __init__(self, software_profile: dict, previous_tags: dict,
-                 **kwargs):
+    def __init__(self, softwareprofile_id: str, softwareprofile_name: str,
+                 tags: dict, previous_tags: dict, **kwargs):
         """
         Initializer.
 
@@ -46,7 +48,8 @@ class SoftwareProfileTagsChanged(BaseEvent):
         :param kwargs:
 
         """
-        self.software_profile: dict = software_profile
-        self.previous_tags: dict = previous_tags
-
         super().__init__(**kwargs)
+        self.softwareprofile_id = softwareprofile_id
+        self.softwareprofile_name = softwareprofile_name
+        self.tags = tags
+        self.previous_tags = previous_tags

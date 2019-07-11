@@ -20,6 +20,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from tortuga.db.dbManager import DbManager
 from tortuga.db.models.hardwareProfile import HardwareProfile as DbHardwareProfile
 from tortuga.db.models.hardwareProfileTag import HardwareProfileTag
+from tortuga.events.types.hardware_profile import HardwareProfileTagsChanged
 from tortuga.objectstore.base import matches_filters
 from tortuga.typestore.base import TypeStore
 from .types import HardwareProfile
@@ -127,6 +128,10 @@ class SqlalchemySessionHardwareProfileStore(TypeStore):
     def save(self, obj: HardwareProfile) -> HardwareProfile:
         logger.debug('save(obj=%s) -> ...', obj)
 
+        hwp_old = None
+        if obj.id:
+            hwp_old = self.get(obj.id)
+
         session = self._Session()
         db_hwp = self._to_db_hwp(obj, session)
         if not db_hwp:
@@ -135,5 +140,24 @@ class SqlalchemySessionHardwareProfileStore(TypeStore):
         hwp = self._to_hwp(db_hwp)
         session.close()
 
+        self._fire_events(hwp_old, hwp)
         logger.debug('save(...) -> %s', hwp)
         return hwp
+
+    def _marshall(self, hwp: HardwareProfile) -> dict:
+        schema_class = HardwareProfile.get_schema_class()
+        marshalled = schema_class().dump(hwp)
+        return marshalled.data
+
+    def _fire_events(self, hwp_old: HardwareProfile, hwp: HardwareProfile):
+        self._event_tags_changed(hwp_old, hwp)
+
+    def _event_tags_changed(self, hwp_old: HardwareProfile,
+                            hwp: HardwareProfile):
+        if hwp_old.tags != hwp.tags:
+            HardwareProfileTagsChanged.fire(
+                hardwareprofile_id=hwp.id,
+                hardwareprofile_name=hwp.name,
+                tags=hwp.tags,
+                previous_tags=hwp_old.tags
+            )

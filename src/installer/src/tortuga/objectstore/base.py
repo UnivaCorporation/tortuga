@@ -20,14 +20,26 @@ logger = logging.getLogger(__name__)
 
 
 def cmp_equals(left: Any, right: Any):
+    if isinstance(left, str):
+        right = str(right)
+    if isinstance(left, int):
+        right = int(right)
     return left == right
 
 
 def cmp_greater_than(left: Any, right: Any):
+    if isinstance(left, str):
+        right = str(right)
+    if isinstance(left, int):
+        right = int(right)
     return left > right
 
 
 def cmp_less_than(left: Any, right: Any):
+    if isinstance(left, str):
+        right = str(right)
+    if isinstance(left, int):
+        right = int(right)
     return left < right
 
 

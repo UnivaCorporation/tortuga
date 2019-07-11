@@ -53,7 +53,9 @@ class NodeTagsChangedSchema(BaseEventSchema):
     Schema for the NodeTagsChanged events.
 
     """
-    node = fields.Dict()
+    node_id = fields.String
+    node_name = fields.String
+    tags = fields.Dict()
     previous_tags = fields.Dict()
 
 
@@ -65,7 +67,8 @@ class NodeTagsChanged(BaseEvent):
     name = 'node-tags-changed'
     schema_class = NodeTagsChangedSchema
 
-    def __init__(self, node: dict, previous_tags: dict, **kwargs):
+    def __init__(self, node_id: str, node_name: str, tags: dict,
+                 previous_tags: dict, **kwargs):
         """
         Initializer.
 
@@ -76,5 +79,7 @@ class NodeTagsChanged(BaseEvent):
 
         """
         super().__init__(**kwargs)
-        self.node: dict = node
-        self.previous_tags: dict = previous_tags
+        self.node_id = node_id
+        self.node_name = node_name
+        self.tags = tags
+        self.previous_tags = previous_tags
