@@ -77,3 +77,13 @@ class TortugaWsApiClient:
         path = '/{}'.format(id_)
 
         return self._client.get(path)
+
+    def put(self, data: dict) -> dict:
+        if not data or 'id' not in data.keys():
+            raise Exception('Object does not have an id field')
+        id_ = data['id']
+        if not id_:
+            raise Exception('Object id is invalid')
+        path = '/{}'.format(id_)
+
+        return self._client.put(path, data=data)

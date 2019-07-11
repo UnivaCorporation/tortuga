@@ -31,7 +31,7 @@ class AddNodeRequestMixin:
     Common mixin for all AddNodeRequest event classes.
 
     """
-    schema = AddNodeRequestSchema
+    schema_class = AddNodeRequestSchema
 
     def __init__(self, request_id: int, request: dict, **kwargs):
         """
@@ -42,10 +42,9 @@ class AddNodeRequestMixin:
         :param kwargs:
 
         """
+        super().__init__(**kwargs)
         self.request_id: int = request_id
         self.request: dict = request
-
-        super().__init__(**kwargs)
 
 
 class AddNodeRequestComplete(AddNodeRequestMixin, BaseEvent):
@@ -78,7 +77,7 @@ class DeleteNodeRequestMixin:
     Common mixin for all DeleteNodeRequest event classes.
 
     """
-    schema = DeleteNodeRequestSchema
+    schema_class = DeleteNodeRequestSchema
 
     def __init__(self, request_id: int, request: dict, **kwargs):
         """
@@ -89,9 +88,9 @@ class DeleteNodeRequestMixin:
         :param kwargs:
 
         """
+        super().__init__(**kwargs)
         self.request_id: int = request_id
         self.request: dict = request
-        super().__init__(**kwargs)
 
 
 class DeleteNodeRequestQueued(DeleteNodeRequestMixin, BaseEvent):

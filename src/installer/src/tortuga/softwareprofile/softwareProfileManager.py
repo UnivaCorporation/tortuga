@@ -129,7 +129,9 @@ class SoftwareProfileManager(TortugaObjectManager): \
         #
         if existing_swp.getTags() != new_swp.getTags():
             SoftwareProfileTagsChanged.fire(
-                software_profile=new_swp.getCleanDict(),
+                softwareprofile_id=str(new_swp.getId()),
+                softwareprofile_name=new_swp.getName(),
+                tags=new_swp.getTags(),
                 previous_tags=existing_swp.getTags()
             )
 
@@ -425,7 +427,9 @@ class SoftwareProfileManager(TortugaObjectManager): \
         swp = self.getSoftwareProfile(session, swProfileSpec.getName())
         if swp.getTags():
             SoftwareProfileTagsChanged.fire(
-                software_profile=swp.getCleanDict(),
+                softwareprofile_id=str(swp.getId()),
+                softwareprofile_name=swp.getName(),
+                tags=swp.getTags(),
                 previous_tags={}
             )
 
@@ -853,7 +857,9 @@ class SoftwareProfileManager(TortugaObjectManager): \
         swp = self.getSoftwareProfile(session, dstSoftwareProfileName)
         if swp.getTags():
             SoftwareProfileTagsChanged.fire(
-                software_profile=swp.getCleanDict(),
+                softwareprofile_id=str(swp.getId()),
+                softwareprofile_name=swp.getName(),
+                tags=swp.getTags(),
                 previous_tags={}
             )
 

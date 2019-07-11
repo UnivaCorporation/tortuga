@@ -14,11 +14,14 @@
 
 import http.client
 import logging
+import traceback
 from typing import Any, List
 
 import cherrypy
 
 from tortuga.logging import WEBSERVICE_NAMESPACE
+from tortuga.types.base import BaseType
+from tortuga.typestore.base import TypeStore
 from tortuga.web_service.auth.decorators import authentication_required
 
 
@@ -27,9 +30,9 @@ class Controller(object):
     Base controller class.
 
     """
-    name = None
-    methods = ['GET']
-    object_store = None
+    name: str = None
+    methods: List[str] = ['GET']
+    type_store: TypeStore = None
 
     def __init__(self):
         self._logger = logging.getLogger(WEBSERVICE_NAMESPACE)
@@ -54,9 +57,42 @@ class Controller(object):
             #
             actions.append({
                 'name': '{}_get'.format(self.name),
-                'path': '/v2/{}/:(id)'.format(self.name),
+                'path': '/v2/{}/:(obj_id)'.format(self.name),
                 'method': ['GET'],
                 'action': 'get'
+            })
+
+        if 'POST' in self.methods:
+            #
+            # Action for creating an object
+            #
+            actions.append({
+                'name': '{}_create'.format(self.name),
+                'path': '/v2/{}/'.format(self.name),
+                'method': ['POST'],
+                'action': 'create'
+            })
+
+        if 'PUT' in self.methods:
+            #
+            # Action for updating an object
+            #
+            actions.append({
+                'name': '{}_update'.format(self.name),
+                'path': '/v2/{}/:(obj_id)'.format(self.name),
+                'method': ['PUT'],
+                'action': 'update'
+            })
+
+        if 'DELETE' in self.methods:
+            #
+            # Action for updating an object
+            #
+            actions.append({
+                'name': '{}_delete'.format(self.name),
+                'path': '/v2/{}/:(obj_id)'.format(self.name),
+                'method': ['DELETE'],
+                'action': 'delete'
             })
 
         return actions
@@ -91,6 +127,31 @@ class Controller(object):
 
         return params
 
+    def marshall(self, obj: BaseType) -> dict:
+        """
+        Marshalls a obj into a dict.
+
+        :param BaseType obj: the obj instance to marshall
+
+        :return dict: the marshalled data
+
+        """
+        schema_class = obj.get_schema_class()
+        marshalled = schema_class().dump(obj)
+        return marshalled.data
+
+    def unmarshall(self, obj_dict: dict) -> BaseType:
+        """
+        Unmarshalls an obj dict into an obj class instance.
+
+        :param dict obj_dict:
+        :return BaseType: the unmarshalled obj
+
+        """
+        schema_class = self.type_store.type_class.get_schema_class()
+        unmarshalled = schema_class().load(obj_dict)
+        return self.type_store.type_class(**unmarshalled.data)
+
     @authentication_required()
     @cherrypy.tools.json_out()
     def list(self, **query) -> List[dict]:
@@ -106,38 +167,80 @@ class Controller(object):
             params = self.build_params(query)
 
             response = []
-            for obj in self.object_store.list(**params):
-                if hasattr(obj, 'schema'):
-                    response.append(obj.schema().dump(obj).data)
-                else:
-                    response.append(obj)
+            for obj in self.type_store.list(**params):
+                response.append(self.marshall(obj))
 
         except Exception as ex:
-            self._logger.error(str(ex))
+            self._logger.error(traceback.format_exc())
             response = self.error_response(str(ex))
 
         return self.format_response(response)
 
     @authentication_required()
     @cherrypy.tools.json_out()
-    def get(self, id: str) -> dict:
+    def get(self, obj_id: str) -> dict:
         """
         Gets a single object, by id.
 
-        :param str id: the id of the object to get
+        :param str obj_id: the id of the object to get
 
         :return dict: the object, in dict form
 
         """
         try:
-            obj = self.object_store.get(id)
-            if hasattr(obj, 'schema'):
-                response = obj.schema().dump(obj).data
-            else:
-                response = obj
+            obj = self.type_store.get(obj_id)
+            response = self.marshall(obj)
 
         except Exception as ex:
-            self._logger.error(str(ex))
+            self._logger.error(traceback.format_exc())
+            response = self.error_response(str(ex))
+
+        return self.format_response(response)
+
+    @authentication_required()
+    @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
+    def create(self) -> dict:
+        """
+        Creates a single object.
+
+        :return str: the object, in dict form
+
+        """
+        try:
+            obj = self.unmarshall(cherrypy.request.json)
+            obj = self.type_store.save(obj)
+            response = self.marshall(obj)
+
+        except Exception as ex:
+            self._logger.error(traceback.format_exc())
+            response = self.error_response(str(ex))
+
+        return self.format_response(response)
+
+    @authentication_required()
+    @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
+    def update(self, obj_id: str) -> dict:
+        try:
+            obj = self.unmarshall(cherrypy.request.json)
+            obj = self.type_store.save(obj)
+            response = self.marshall(obj)
+
+        except Exception as ex:
+            self._logger.error(traceback.format_exc())
+            response = self.error_response(str(ex))
+
+        return self.format_response(response)
+
+    @authentication_required()
+    def delete(self, obj_id: str):
+        try:
+            self.type_store.delete(obj_id)
+            response = None
+
+        except Exception as ex:
+            self._logger.error(traceback.format_exc())
             response = self.error_response(str(ex))
 
         return self.format_response(response)

@@ -82,8 +82,8 @@ class BaseAction(metaclass=ActionMeta):
     The base websocket action. Extend for concrete actions.
 
     """
-    action = None
-    schema = None
+    action: str = None
+    schema_class: Type[Schema] = None
 
     def __init__(self, state: State):
         """
@@ -93,6 +93,10 @@ class BaseAction(metaclass=ActionMeta):
 
         """
         self._state: State = state
+
+    @classmethod
+    def get_schema_class(cls) -> Type[Schema]:
+        return cls.schema_class
 
     def do(self):
         """
@@ -126,7 +130,7 @@ class AuthenticateAction(BaseAction):
 
     """
     action = 'authenticate'
-    schema = AuthenticateActionSchema
+    schema_class = AuthenticateActionSchema
 
     #
     # List of currently supported authentication methods.
@@ -190,7 +194,7 @@ class SubscribeAction(BaseAction):
 
     """
     action = 'subscribe'
-    schema = BaseActionSchema
+    schema_class = BaseActionSchema
 
     def do(self):
         """
@@ -223,7 +227,7 @@ class UnsubscribeAction(BaseAction):
 
     """
     action = 'unsubscribe'
-    schema = BaseActionSchema
+    schema_class = BaseActionSchema
 
     def do(self):
         """

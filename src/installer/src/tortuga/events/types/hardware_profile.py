@@ -6,7 +6,7 @@
 #
 #    http://www.apache.org/licenses/LICENSE-2.0
 #
-# Unless required by applicable law or agreed to in writing, hardware
+# Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
@@ -22,7 +22,9 @@ class HardwareProfileTagsChangedSchema(BaseEventSchema):
     Schema for the HardwareProfileTagsChanged events.
 
     """
-    hardware_profile = fields.Dict()
+    hardwareprofile_id = fields.String()
+    hardwareprofile_name = fields.String()
+    tags = fields.Dict()
     previous_tags = fields.Dict()
 
 
@@ -32,10 +34,10 @@ class HardwareProfileTagsChanged(BaseEvent):
 
     """
     name = 'hardware-profile-tags-changed'
-    schema = HardwareProfileTagsChangedSchema
+    schema_class = HardwareProfileTagsChangedSchema
 
-    def __init__(self, hardware_profile: dict, previous_tags: dict,
-                 **kwargs):
+    def __init__(self, hardwareprofile_id: str, hardwareprofile_name: str,
+                 tags: dict, previous_tags: dict, **kwargs):
         """
         Initializer.
 
@@ -46,7 +48,8 @@ class HardwareProfileTagsChanged(BaseEvent):
         :param kwargs:
 
         """
-        self.hardware_profile: dict = hardware_profile
-        self.previous_tags: dict = previous_tags
-
         super().__init__(**kwargs)
+        self.hardwareprofile_id = hardwareprofile_id
+        self.hardwareprofile_name = hardwareprofile_name
+        self.tags = tags
+        self.previous_tags = previous_tags
