@@ -53,8 +53,8 @@ class NodeTagsChangedSchema(BaseEventSchema):
     Schema for the NodeTagsChanged events.
 
     """
-    node_id = fields.String
-    node_name = fields.String
+    node_id = fields.String()
+    node_name = fields.String()
     tags = fields.Dict()
     previous_tags = fields.Dict()
 
