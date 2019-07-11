@@ -164,7 +164,7 @@ class InstanceMappingSchema(ModelSchema):
     instance_metadata = fields.Nested('InstanceMetadataSchema', many=True)
     resource_adapter_configuration = \
         fields.Nested('ResourceAdapterConfigSchema')
-    node = fields.Nested('NodeSchema', only=('id', 'name'))
+    node = fields.Nested('tortuga.schema.NodeSchema', only=('id', 'name'))
 
     class Meta:
         model = InstanceMappingModel
@@ -177,11 +177,11 @@ class NodeTagSchema(ModelSchema):
 
 class NodeSchema(ModelSchema):
     softwareprofile = fields.Nested(
-        'SoftwareProfileSchema',
+        'tortuga.schema.SoftwareProfileSchema',
         only=('id', 'name')
     )
     hardwareprofile = fields.Nested(
-        'HardwareProfileSchema',
+        'tortuga.schema.HardwareProfileSchema',
         only=('id', 'name', 'resourceadapter'),
         exclude=('resourceadapter.hardwareprofiles',
                  'resourceadapter.credentials',
@@ -222,13 +222,13 @@ class SoftwareProfileTagSchema(ModelSchema):
 
 
 class SoftwareProfileSchema(ModelSchema):
-    nodes = fields.Nested('NodeSchema', many=True,
+    nodes = fields.Nested('tortuga.schema.NodeSchema', many=True,
                           exclude=('softwareprofile',))
 
     components = fields.Nested('ComponentSchema', many=True,
                                exclude=('softwareprofiles',))
 
-    hardwareprofiles = fields.Nested('HardwareProfileSchema',
+    hardwareprofiles = fields.Nested('tortuga.schema.HardwareProfileSchema',
                                      only=('id', 'name', 'resourceadapter'),
                                      many=True)
 
@@ -247,13 +247,14 @@ class HardwareProfileTagSchema(ModelSchema):
 
 
 class HardwareProfileSchema(ModelSchema):
-    nodes = fields.Nested('NodeSchema', many=True,
+    nodes = fields.Nested('tortuga.schema.NodeSchema', many=True,
                           exclude=('hardwareprofile',))
 
-    mappedsoftwareprofiles = fields.Nested('SoftwareProfileSchema',
-                                           only=('id', 'name'), many=True)
+    mappedsoftwareprofiles = fields.Nested(
+        'tortuga.schema.SoftwareProfileSchema',
+        only=('id', 'name'), many=True)
 
-    tags = fields.Nested('HardwareProfileTagSchema',
+    tags = fields.Nested('tortuga.schema.HardwareProfileTagSchema',
                          only=('id', 'name', 'value'), many=True)
 
     resourceadapter = fields.Nested('ResourceAdapterSchema',
