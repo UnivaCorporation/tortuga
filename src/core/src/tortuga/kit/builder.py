@@ -351,13 +351,17 @@ class KitBuilder(object):
 
         for puppet_module in self._puppet_modules:
             if os.environ.get('TORTUGA_BUILD_DOCKER'):
+                target_path = os.path.join(os.environ.get('PWD'), puppet_module['path'])
                 cmd = 'docker run --rm=true -v {}:/root puppet/puppet-agent module build /root'.format(
-                    os.path.join(os.environ.get('PWD'), puppet_module['path'])
+                    target_path
                 )
             else:
+                target_path = puppet_module['path']
                 cmd = 'puppet module build --color false {}'.format(
-                    puppet_module['path']
+                    target_path
                 )
+            # Copy kit.json file in for future reference
+            self._copy_file(KIT_METADATA_FILE, '{}/{}'.format(target_path, KIT_METADATA_FILE))
             self._run_command(cmd)
 
     def _copy_python_package(self, dist_dir, kit_build_dir):
