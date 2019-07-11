@@ -13,14 +13,14 @@
 # limitations under the License.
 
 
-class tortuga_kit_base::ntpd::package {
+class tortuga_kit_base::installer::ntpd::package {
   require tortuga::packages
 
   ensure_resource('package', 'ntp', { 'ensure' => 'installed'})
 }
 
-class tortuga_kit_base::ntpd::server {
-  require tortuga_kit_base::ntpd::package
+class tortuga_kit_base::installer::ntpd::server {
+  require tortuga_kit_base::installer::ntpd::package
 
   service { 'ntpd':
     enable => true,
@@ -30,7 +30,7 @@ class tortuga_kit_base::ntpd::server {
 
 class tortuga_kit_base::installer::ntpd ($enable = true) {
   if $enable {
-    contain tortuga_kit_base::ntpd::package
-    contain tortuga_kit_base::ntpd::server
+    contain tortuga_kit_base::installer::ntpd::package
+    contain tortuga_kit_base::installer::ntpd::server
   }
 }
