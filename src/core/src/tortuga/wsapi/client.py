@@ -51,7 +51,8 @@ class RestApiClient:
     A generic REST API Client class.
 
     """
-    def __init__(self, username: Optional[str] = None,
+    def __init__(self, token: Optional[str] = None,
+                 username: Optional[str] = None,
                  password: Optional[str] = None,
                  baseurl: Optional[str] = None,
                  verify: bool = True):
@@ -60,6 +61,7 @@ class RestApiClient:
             baseurl = baseurl[:-1]
 
         self.baseurl = baseurl
+        self.token = token
         self.username = username
         self.password = password
         self.verify = verify
@@ -77,12 +79,18 @@ class RestApiClient:
         # Cache the base kwargs
         #
         if self._requests_kwargs is None:
+            self._requests_kwargs = {}
             #
             # Authentication
             #
-            self._requests_kwargs = {
-                'auth': (self.username, self.password)
-            }
+            if self.token:
+                self._requests_kwargs['headers'] = {
+                        'Authorization': 'Bearer {}'.format(self.token)
+                    }
+                self._logger.debug('Using token authentication')
+            else:
+                self._requests_kwargs['auth'] = (self.username, self.password)
+                self._logger.debug('Using password authentication')
             #
             # SSL cert verification
             #

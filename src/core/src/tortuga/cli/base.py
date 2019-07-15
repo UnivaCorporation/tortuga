@@ -21,6 +21,14 @@ from typing import List, Optional, Type
 from tortuga.logging import CLI_NAMESPACE
 
 
+class Config:
+    pass
+
+
+class ConfigException(Exception):
+    pass
+
+
 class Command:
     """
     A CLI command.
@@ -36,9 +44,21 @@ class Command:
         A command.
 
         """
+        self.root: 'Command' = None
         self.parent: 'Command' = None
         self.parser: Optional[argparse.ArgumentParser] = None
         self._logger = logging.getLogger(CLI_NAMESPACE)
+
+    def get_config(self) -> Optional[Config]:
+        """
+        Gets the config for the command hierarchy.
+
+        :return Config: the current Config instance
+
+        """
+        if self.parent:
+            return self.parent.get_config()
+        return None
 
     def set_parent(self, parent: 'Command'):
         """
@@ -53,10 +73,7 @@ class Command:
         """
         Builds up the passed-in parser with arguments and sub-parsers.
 
-        :param Cli cli                       : the base Cli instance that
-                                               this command belongs to
         :param argparse.ArgumentParser parser: the parser to build
-        :param Command parent                : the parent command, if any
 
         """
         self.parser = parser

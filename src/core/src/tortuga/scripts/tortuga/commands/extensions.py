@@ -23,7 +23,7 @@ import requests
 from tortuga.cli.base import RootCommand, Command, Argument
 from tortuga.cli.utils import pretty_print
 from tortuga.config.configManager import ConfigManager
-from .tortuga_ws import get_web_service_config
+from ..script import TortugaScriptConfig
 
 
 class ListCommand(Command):
@@ -60,12 +60,13 @@ class InstallCommand(Command):
     ]
 
     def execute(self, args: argparse.Namespace):
-        available_extensions = get_available_extensions(args)
+        available_extensions = get_available_extensions(args,
+                                                        self.get_config())
         if args.name not in available_extensions:
             raise Exception(
                 '{} is not a valid extension name'.format(args.name))
 
-        installer = get_installer(args)
+        installer = get_installer(self.get_config())
 
         pip_cmd = [
             'pip', 'install',
@@ -103,24 +104,20 @@ class ExtensionsCommand(RootCommand):
     ]
 
 
-def get_installer(args: argparse.Namespace) -> str:
+def get_installer(config: TortugaScriptConfig) -> str:
     """
     Gets the hostname of the Tortuga installer.
 
-    :param argparse.Namespace args: argparse arguments
+    :param TortugaScriptConfig config: the current config instance
 
     :return str: the URL
 
     """
-    cm = ConfigManager()
+    if not config:
+        raise Exception('Invalid configuration')
 
-    url, username, password, verify = get_web_service_config(args)
-    if url:
-        url_parts = url.split(':')
-        host = url_parts[1].replace('//', '')
-
-    else:
-        host = cm.getInstaller()
+    url_parts = config.url.split(':')
+    host = url_parts[1].replace('//', '')
 
     return host
 
@@ -141,7 +138,8 @@ def get_python_package_repo(installer: str) -> str:
     return '{}/python-tortuga/simple/'.format(url)
 
 
-def get_available_extensions(args: argparse.Namespace) -> List[str]:
+def get_available_extensions(args: argparse.Namespace,
+                             config: TortugaScriptConfig) -> List[str]:
     """
     Get a list of all available CLI extensions.
 
@@ -150,7 +148,7 @@ def get_available_extensions(args: argparse.Namespace) -> List[str]:
     :return List[str]: the list of available extensions
 
     """
-    installer = get_installer(args)
+    installer = get_installer(config)
     r = requests.get(get_python_package_repo(installer))
     if r.status_code != 200:
         raise Exception(

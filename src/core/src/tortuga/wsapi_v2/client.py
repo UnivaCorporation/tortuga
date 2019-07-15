@@ -32,6 +32,7 @@ class TortugaWsApiClient:
 
     """
     def __init__(self, endpoint: str,
+                 token: Optional[str] = None,
                  username: Optional[str] = None,
                  password: Optional[str] = None,
                  base_url: Optional[str] = None,
@@ -46,12 +47,14 @@ class TortugaWsApiClient:
                 self._cm.getAdminPort()
             )
 
-        if username is None and password is None:
-            logger.debug('Using built-in user credentials')
-            username = self._cm.getCfmUser()
-            password = self._cm.getCfmPassword()
+        if not token:
+            if username is None and password is None:
+                logger.debug('Using built-in user credentials')
+                username = self._cm.getCfmUser()
+                password = self._cm.getCfmPassword()
 
         self._client = RestApiClient(
+            token=token,
             username=username,
             password=password,
             baseurl=base_url,

@@ -22,7 +22,6 @@ import websockets
 from tortuga.cli.base import RootCommand
 from tortuga.cli.utils import pretty_print
 from tortuga.config.configManager import ConfigManager
-from .tortuga_ws import get_web_service_config
 
 
 class ListenCommand(RootCommand):
@@ -40,38 +39,25 @@ class ListenCommand(RootCommand):
 
         """
         cm = ConfigManager()
-
-        url, username, password, verify = get_web_service_config(args)
-        #
-        # If we get a URL from the environment or CLI, we need to transform
-        # it from the installer REST API URL into a websocket URL
-        #
-        if url:
-            #
-            # Replace http[s] with ws[s]
-            #
-            url = url.replace('http', 'ws')
-            #
-            # Replace port with websocket port
-            #
-            url_parts = url.split(':')
-            url = '{}:{}:{}'.format(url_parts[0], url_parts[1],
-                                    cm.getWebsocketPort())
+        config = self.get_config()
+        if not config:
+            raise Exception('Invalid configuration')
 
         #
-        # Otherwise, use the default URL from the config manager
+        # Replace http[s] with ws[s]
         #
-        else:
-            url = '{}://{}:{}'.format(
-                cm.getWebsocketScheme(),
-                cm.getInstaller(),
-                cm.getWebsocketPort()
-            )
+        url = config.url.replace('http', 'ws')
+        #
+        # Replace port with websocket port
+        #
+        url_parts = url.split(':')
+        url = '{}:{}:{}'.format(url_parts[0], url_parts[1],
+                                cm.getWebsocketPort())
 
-        ws_client = WebsocketClient(username=username,
-                                    password=password,
+        ws_client = WebsocketClient(username=config.username,
+                                    password=config.password,
                                     url=url,
-                                    verify=verify)
+                                    verify=config.verify)
 
         try:
             asyncio.get_event_loop().run_until_complete(ws_client.start())
