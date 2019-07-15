@@ -32,7 +32,8 @@ class TortugaWsApi(RestApiClient):
     Base tortuga ws api class.
 
     """
-    def __init__(self, username: Optional[str] = None,
+    def __init__(self, token: Optional[str] = None,
+                 username: Optional[str] = None,
                  password: Optional[str] = None,
                  baseurl: Optional[str] = None,
                  verify: bool = True):
@@ -52,7 +53,8 @@ class TortugaWsApi(RestApiClient):
             username = self._cm.getCfmUser()
             password = self._cm.getCfmPassword()
 
-        super().__init__(username, password, baseurl, verify)
+        super().__init__(token=token, username=username, password=password,
+                         baseurl=baseurl, verify=verify)
 
         self.baseurl = '{}/{}'.format(self.baseurl, WS_API_VERSION)
 
