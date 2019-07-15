@@ -28,10 +28,7 @@ class GetProvisioningNetworks(TortugaCli):
     def runCommand(self):
         self.parseArgs(_('Returns a YAML list of provisioning networks'))
 
-        api = NetworkWsApi(username=self.getUsername(),
-                           password=self.getPassword(),
-                           baseurl=self.getUrl(),
-                           verify=self._verify)
+        api = self.configureClient(NetworkWsApi)
 
         data = []
         for network in api.getNetworkList():

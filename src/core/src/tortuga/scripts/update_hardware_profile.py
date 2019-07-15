@@ -151,20 +151,8 @@ class UpdateHardwareProfileCli(TortugaCli):
         name = self.getArgs().name \
             if self.getArgs().name else self.getArgs().hardwareProfileName
 
-        api = HardwareProfileWsApi(username=self.getUsername(),
-                                   password=self.getPassword(),
-                                   baseurl=self.getUrl(),
-                                   verify=self._verify)
-
-        spApi = SoftwareProfileWsApi(username=self.getUsername(),
-                                     password=self.getPassword(),
-                                     baseurl=self.getUrl(),
-                                     verify=self._verify)
-
-        nodeApi = NodeWsApi(username=self.getUsername(),
-                            password=self.getPassword(),
-                            baseurl=self.getUrl(),
-                            verify=self._verify)
+        api = self.configureClient(HardwareProfileWsApi)
+        nodeApi = self.configureClient(NodeWsApi)
 
         hp = api.getHardwareProfile(
             name, UpdateHardwareProfileCli.optionDict)

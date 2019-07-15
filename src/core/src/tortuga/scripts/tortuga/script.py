@@ -184,7 +184,10 @@ class TortugaScriptConfig(Config):
 
         """
         if self.navops_cli:
-            return self._get_navops_token()
+            try:
+                return self._get_navops_token()
+            except ConfigException:
+                pass
 
         if self.token:
             return self.token
@@ -193,12 +196,17 @@ class TortugaScriptConfig(Config):
 
     def _get_navops_token(self) -> str:
         cmd = '{} token'.format(self.navops_cli)
-        p = executeCommand(cmd)
+
+        try:
+            p = executeCommand(cmd)
+        except Exception as ex:
+            logger.info(str(ex))
+            raise ConfigException(str(ex))
 
         if p.getExitStatus() != 0:
             raise ConfigException(p.getStdErr())
 
-        return p.stdout
+        return p.getStdOut().decode()
 
 
 class TortugaScript(Cli):

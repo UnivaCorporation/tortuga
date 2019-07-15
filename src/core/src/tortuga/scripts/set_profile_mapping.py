@@ -53,10 +53,7 @@ accomodate a consistent software stack across mulitple resource adapters,
 for example. All profiles must be mapped in order to be used for active nodes.
 """))
 
-        api = SoftwareProfileWsApi(username=self.getUsername(),
-                                   password=self.getPassword(),
-                                   baseurl=self.getUrl(),
-                                   verify=self._verify)
+        api = self.configureClient(SoftwareProfileWsApi)
 
         try:
             api.addUsableHardwareProfileToSoftwareProfile(

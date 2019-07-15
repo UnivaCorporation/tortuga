@@ -88,10 +88,7 @@ class GetHardwareProfileCli(TortugaCli):
         name = self.getArgs().name \
             if self.getArgs().name else self.getArgs().deprecated_name
 
-        api = HardwareProfileWsApi(username=self.getUsername(),
-                                   password=self.getPassword(),
-                                   baseurl=self.getUrl(),
-                                   verify=self._verify)
+        api = self.configureClient(HardwareProfileWsApi)
 
         optionDict = {}
 

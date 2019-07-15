@@ -64,13 +64,9 @@ class GetComponentList(TortugaCli):
         # Determine software profile name based on command-line option(s)
 
         if self.getArgs().applyToInstaller:
+            api = self.configureClient(NodeWsApi)
             # Get software profile name from installer node
-            node = NodeWsApi(
-                username=self.getUsername(),
-                password=self.getPassword(),
-                baseurl=self.getUrl(),
-                verify=self._verify
-            ).getInstallerNode(
+            node = api.getInstallerNode(
                 optionDict={
                     'softwareprofile': True,
                 }
@@ -90,12 +86,8 @@ Display list of components available for software profiles in the system.
         if softwareProfileName:
             # Display all components enabled for software profile
 
-            for c in SoftwareProfileWsApi(username=self.getUsername(),
-                                          password=self.getPassword(),
-                                          baseurl=self.getUrl(),
-                                          verify=self._verify
-                                          ).getEnabledComponentList(
-                    softwareProfileName):
+            swp_api = self.configureClient(SoftwareProfileWsApi)
+            for c in swp_api.getEnabledComponentList(softwareProfileName):
                 displayComponent(c, c.getKit())
 
             return
@@ -113,11 +105,8 @@ Display list of components available for software profiles in the system.
             osinfo = None
 
         # Display all components
-        for kit in KitWsApi(
-                username=self.getUsername(),
-                password=self.getPassword(),
-                baseurl=self.getUrl(),
-                verify=self._verify).getKitList():
+        kit_api = self.configureClient(KitWsApi)
+        for kit in kit_api.getKitList():
             for c in kit.getComponentList():
                 if osinfo and osinfo not in c.getOsInfoList() and \
                         osinfo.getOsFamilyInfo() not in c.getOsFamilyInfoList():

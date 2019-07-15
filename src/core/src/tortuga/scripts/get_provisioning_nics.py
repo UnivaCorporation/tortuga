@@ -40,11 +40,7 @@ class GetProvisioningNicsApp(TortugaCli):
         self.parseArgs()
 
         if self.getArgs().hardwareProfile:
-            hw_profile_api = HardwareProfileWsApi(username=self.getUsername(),
-                                                  password=self.getPassword(),
-                                                  baseurl=self.getUrl(),
-                                                  verify=self._verify)
-
+            hw_profile_api = self.configureClient(HardwareProfileWsApi)
             hw_profile = hw_profile_api.getHardwareProfile(
                 self.getArgs().hardwareProfile, {
                     'hardwareprofilenetworks': True
@@ -72,10 +68,7 @@ class GetProvisioningNicsApp(TortugaCli):
                 print(yaml.safe_dump(nic.getNetworkDevice().getName()))
         else:
             # Display list of provisioning NICs on installer
-            node_api = NodeWsApi(username=self.getUsername(),
-                                 password=self.getPassword(),
-                                 baseurl=self.getUrl(),
-                                 verify=self._verify)
+            node_api = self.configureClient(NodeWsApi)
 
             data_dict = {}
 

@@ -43,14 +43,9 @@ class UpdateNodeStatusCli(TortugaCli):
         self.parseArgs()
 
         # Always go over the web service for this call.
-        nodeWsApi.NodeWsApi(
-            username=self.getUsername(),
-            password=self.getPassword(),
-            baseurl=self.getUrl(),
-            verify=self._verify).updateNodeStatus(
-                self.getArgs().nodeName,
-                self.getArgs().status,
-                self.getArgs().bootFrom)
+        api = self.configureClient(nodeWsApi.NodeWsApi)
+        api.updateNodeStatus(self.getArgs().nodeName, self.getArgs().status,
+                             self.getArgs().bootFrom)
 
 
 def main():

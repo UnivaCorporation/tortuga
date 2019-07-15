@@ -33,11 +33,7 @@ class GetSoftwareProfileListCli(TortugaCli):
         self.parseArgs(_('Return list of software profiles configured in'
                          ' the system'))
 
-        api = SoftwareProfileWsApi(username=self.getUsername(),
-                                   password=self.getPassword(),
-                                   baseurl=self.getUrl(),
-                                   verify=self._verify)
-
+        api = self.configureClient(SoftwareProfileWsApi)
         for sp in api.getSoftwareProfileList(tags=self.getArgs().tags):
             print(sp)
 

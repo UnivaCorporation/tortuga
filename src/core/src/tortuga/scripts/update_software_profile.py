@@ -198,10 +198,7 @@ Updates software profile in the Tortuga system.
         name = self.getArgs().name \
             if self.getArgs().name else self.getArgs().softwareProfileName
 
-        api = SoftwareProfileWsApi(username=self.getUsername(),
-                                   password=self.getPassword(),
-                                   baseurl=self.getUrl(),
-                                   verify=self._verify)
+        api = self.configureClient(SoftwareProfileWsApi)
 
         sp = api.getSoftwareProfile(name, UpdateSoftwareProfileCli.optionDict)
 

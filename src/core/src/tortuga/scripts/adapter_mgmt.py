@@ -187,12 +187,7 @@ class AdapterMgmtCLI(TortugaCli):
 
         args = self.getParser().parse_args()
 
-        self.api = ResourceAdapterConfigurationWsApi(
-            username=self.getUsername(),
-            password=self.getPassword(),
-            baseurl=self.getUrl(),
-            verify=self._verify
-        )
+        self.api = self.configureClient(ResourceAdapterConfigurationWsApi)
 
         if not hasattr(
                 self,
@@ -362,13 +357,7 @@ class AdapterMgmtCLI(TortugaCli):
                          if found otherwise None
 
         """
-        ra_api = ResourceAdapterWsApi(
-            username=self.getUsername(),
-            password=self.getPassword(),
-            baseurl=self.getUrl(),
-            verify=self._verify
-        )
-
+        ra_api = self.configureClient(ResourceAdapterWsApi)
         ra_list = ra_api.getResourceAdapterList()
         for ra in ra_list:
             if ra['name'] == name:

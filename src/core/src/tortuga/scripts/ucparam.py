@@ -64,10 +64,8 @@ class UcParam(TortugaCli):
 
     def get_api(self):
         if not self._api:
-            self._api = ParameterWsApi(username=self.getUsername(),
-                                       password=self.getPassword(),
-                                       baseurl=self.getUrl(),
-                                       verify=self._verify)
+            self._api = self.configureClient(ParameterWsApi)
+
         return self._api
 
     def runCommand(self):

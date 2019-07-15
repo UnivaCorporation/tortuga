@@ -123,11 +123,7 @@ class GetNodeStatus(TortugaCli): \
                 ' mutually exclusive'
             )
 
-        api = NodeWsApi(username=self.getUsername(),
-                        password=self.getPassword(),
-                        baseurl=self.getUrl(),
-                        verify=self._verify)
-
+        api = self.configureClient(NodeWsApi)
         nodes: List[Dict[str, Any]] = [
             dict(x)
             for x in api.getNodeList(nodespec=options.nodeName,

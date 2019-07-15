@@ -86,12 +86,7 @@ result set can be filtered by state and count.
         else:
             numNodes = -1
 
-        api = SoftwareProfileWsApi(
-            username=self.getUsername(),
-            password=self.getPassword(),
-            baseurl=self.getUrl(),
-            verify=self._verify
-        )
+        api = self.configureClient(SoftwareProfileWsApi)
 
         optionDict = {}
         optionDict['nodes'] = True

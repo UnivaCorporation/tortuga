@@ -36,10 +36,7 @@ class GetNodeRequestsCli(TortugaCli):
     def runCommand(self):
         self.parseArgs()
 
-        self.node_wsapi = NodeWsApi(username=self.getUsername(),
-                                    password=self.getPassword(),
-                                    baseurl=self.getUrl(),
-                                    verify=self._verify)
+        self.node_wsapi = self.configureClient(NodeWsApi)
 
         if self.getArgs().request_id:
             self._get_node_request(self.getArgs().request_id)

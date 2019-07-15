@@ -75,16 +75,10 @@ Associates an existing adminstrative user with a hardware or software profile.
 
         if swprofile:
             profile = swprofile
-            api = SoftwareProfileWsApi(username=self.getUsername(),
-                                       password=self.getPassword(),
-                                       baseurl=self.getUrl(),
-                                       verify=self._verify)
+            api = self.configureClient(SoftwareProfileWsApi)
         else:
             profile = hwprofile
-            api = HardwareProfileWsApi(username=self.getUsername(),
-                                       password=self.getPassword(),
-                                       baseurl=self.getUrl(),
-                                       verify=self._verify)
+            api = self.configureClient(HardwareProfileWsApi)
 
         api.addAdmin(profile, admin_username)
 

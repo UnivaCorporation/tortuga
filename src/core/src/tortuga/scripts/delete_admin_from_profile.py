@@ -46,8 +46,8 @@ class DeleteAdminFromProfileCli(TortugaCli):
         profile_attr_group = _('Admin Attribute Options')
         self.addOptionGroup(
             profile_attr_group, _('Admin username must be specified.'))
-        self.addOptionToGroup(profile_attr_group, required=True,
-                              '--admin-username', dest='adminUsername',
+        self.addOptionToGroup(profile_attr_group, '--admin-username',
+                              required=True, dest='adminUsername',
                               help=_('Admin username'))
 
         super().parseArgs(usage=usage)
@@ -65,18 +65,10 @@ software profile.
 
         if swprofile:
             profile = swprofile
-
-            api = SoftwareProfileWsApi(username=self.getUsername(),
-                                       password=self.getPassword(),
-                                       baseurl=self.getUrl(),
-                                       verify=self._verify)
+            api = self.configureClient(SoftwareProfileWsApi)
         else:
             profile = hwprofile
-
-            api = HardwareProfileWsApi(username=self.getUsername(),
-                                       password=self.getPassword(),
-                                       baseurl=self.getUrl(),
-                                       verify=self._verify)
+            api = self.configureClient(HardwareProfileWsApi)
 
         api.deleteAdmin(profile, admin_username)
 

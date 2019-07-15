@@ -33,11 +33,7 @@ class ScheduleUpdateCli(TortugaCli):
     def runCommand(self):
         self.parseArgs()
 
-        api = SyncWsApi(username=self.getUsername(),
-                        password=self.getPassword(),
-                        baseurl=self.getUrl(),
-                        verify=self._verify)
-
+        api = self.configureClient(SyncWsApi)
         api.scheduleClusterUpdate(updateReason=self.getArgs().reason)
 
 

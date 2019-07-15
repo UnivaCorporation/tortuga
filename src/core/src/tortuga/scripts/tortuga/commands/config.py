@@ -16,7 +16,7 @@ import argparse
 
 from tortuga.cli.base import RootCommand
 from tortuga.cli.utils import pretty_print
-from ..script import TortugaScriptConfigSchema
+from ..script import TortugaScriptConfig, TortugaScriptConfigSchema
 
 
 class ConfigCommand(RootCommand):
@@ -32,7 +32,8 @@ class ConfigCommand(RootCommand):
         Print the current CLI configuration to stdout.
 
         """
-        config = self.get_config()
+        config: TortugaScriptConfig = self.get_config()
         schema = TortugaScriptConfigSchema()
-        marshalled = schema.dump(config)
-        pretty_print(marshalled.data, args.fmt)
+        config_data = schema.dump(config).data
+        config_data['auth_method'] = config.get_auth_method()
+        pretty_print(config_data, args.fmt)

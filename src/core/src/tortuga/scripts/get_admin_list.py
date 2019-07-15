@@ -30,10 +30,7 @@ class GetAdminListCli(AdminCli):
 Return list of administrators in the Tortuga system.
 """))
 
-        api = AdminWsApi(username=self.getUsername(),
-                         password=self.getPassword(),
-                         baseurl=self.getUrl(),
-                         verify=self._verify)
+        api = self.configureClient(AdminWsApi)
 
         for admin_entry in api.getAdminList():
             result = '{0}'.format(admin_entry.getUsername())

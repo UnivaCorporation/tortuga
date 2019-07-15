@@ -150,17 +150,12 @@ class CreateSoftwareProfileCli(TortugaCli):
 
         sw_profile_spec = SoftwareProfile.getFromDict(tmpl_dict)
 
-        api = SoftwareProfileWsApi(username=self.getUsername(),
-                                   password=self.getPassword(),
-                                   baseurl=self.getUrl(),
-                                   verify=self._verify)
-
+        api = self.configureClient(SoftwareProfileWsApi)
         # Populate 'settings_dict' from command-line arguments
         settings_dict = {
             'bOsMediaRequired': self.getArgs().bOsMediaRequired,
             'unmanagedProfile': self.getArgs().unmanaged,
         }
-
         api.createSoftwareProfile(sw_profile_spec, settings_dict)
 
     def load_software_profile_template(self, tmplpath: str) -> dict:
