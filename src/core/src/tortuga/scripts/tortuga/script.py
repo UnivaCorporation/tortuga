@@ -44,6 +44,9 @@ class ConfigFileNotFoundException(ConfigException):
 
 
 class TortugaScriptConfig(Config):
+    AUTH_METHOD_PASSWORD = 'password'
+    AUTH_METHOD_TOKEN = 'token'
+
     NAVOPS_CLI = '/opt/navops-launch/bin/navopsctl'
     DEFAULT_FILENAME = os.path.join(os.path.expanduser('~'),
                                     '.tortuga', 'config')
@@ -171,20 +174,20 @@ class TortugaScriptConfig(Config):
         # For the CFM user, always use password authentication
         #
         if self.username == self._cm.getCfmUser() and self.password:
-            return 'password'
+            return self.AUTH_METHOD_PASSWORD
 
         #
         # For all other cases, if the navops CLI is present, or there
         # is a token, use token-based authentication
         #
         if self.navops_cli or self.token:
-            return 'token'
+            return self.AUTH_METHOD_TOKEN
 
         #
         # Otherwise, fall back to password authentication
         #
         if self.username and self.password:
-            return 'password'
+            return self.AUTH_METHOD_PASSWORD
 
         raise ConfigException('Authentication required. Use "tortuga login".')
 

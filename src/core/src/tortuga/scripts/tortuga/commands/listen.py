@@ -57,12 +57,12 @@ class ListenCommand(RootCommand):
                                 cm.getWebsocketPort())
 
         auth_method = config.get_auth_method()
-        if auth_method == 'token':
+        if auth_method == config.AUTH_METHOD_TOKEN:
             ws_client = WebsocketClient(token=config.get_token(),
                                         url=url,
                                         verify=config.verify)
 
-        elif auth_method == 'password':
+        elif auth_method == config.AUTH_METHOD_PASSWORD:
             ws_client = WebsocketClient(username=config.username,
                                         password=config.password,
                                         url=url,

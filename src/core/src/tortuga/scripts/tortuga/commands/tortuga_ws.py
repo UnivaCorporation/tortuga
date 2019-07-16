@@ -292,7 +292,7 @@ def get_client(config: TortugaScriptConfig,
 
     auth_method = config.get_auth_method()
 
-    if auth_method == 'password':
+    if auth_method == config.AUTH_METHOD_PASSWORD:
         return TortugaWsApiClient(
             endpoint=endpoint,
             username=config.username,
@@ -301,7 +301,7 @@ def get_client(config: TortugaScriptConfig,
             verify=config.verify
         )
 
-    if auth_method == 'token':
+    if auth_method == config.AUTH_METHOD_TOKEN:
         return TortugaWsApiClient(
             endpoint=endpoint,
             token=config.get_token(),

@@ -223,12 +223,12 @@ class TortugaCli(metaclass=ABCMeta):
     def configureClient(self, client_class: Generic[T]) -> T:
         auth_method = self._config.get_auth_method()
 
-        if auth_method == 'token':
+        if auth_method == self._config.AUTH_METHOD_TOKEN:
             return client_class(token=self._config.get_token(),
                                 baseurl=self._config.url,
                                 verify=self._config.verify)
 
-        elif auth_method == 'password':
+        elif auth_method == self._config.AUTH_METHOD_PASSWORD:
             return client_class(username=self._config.username,
                                 password=self._config.password,
                                 baseurl=self._config.url,
