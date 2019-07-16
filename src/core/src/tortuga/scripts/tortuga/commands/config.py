@@ -16,7 +16,8 @@ import argparse
 
 from tortuga.cli.base import RootCommand
 from tortuga.cli.utils import pretty_print
-from ..script import TortugaScriptConfig, TortugaScriptConfigSchema
+from ..script import ConfigException, TortugaScriptConfig,\
+    TortugaScriptConfigSchema
 
 
 class ConfigCommand(RootCommand):
@@ -35,5 +36,8 @@ class ConfigCommand(RootCommand):
         config: TortugaScriptConfig = self.get_config()
         schema = TortugaScriptConfigSchema()
         config_data = schema.dump(config).data
-        config_data['auth_method'] = config.get_auth_method()
+        try:
+            config_data['auth_method'] = config.get_auth_method()
+        except ConfigException:
+            pass
         pretty_print(config_data, args.fmt)
