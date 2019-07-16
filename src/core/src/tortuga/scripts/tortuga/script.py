@@ -170,7 +170,7 @@ class TortugaScriptConfig(Config):
         #
         # For the CFM user, always use password authentication
         #
-        if self.username == 'cfm' and self.password:
+        if self.username == self._cm.getCfmUser() and self.password:
             return 'password'
 
         #
