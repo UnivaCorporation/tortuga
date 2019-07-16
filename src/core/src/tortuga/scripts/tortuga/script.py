@@ -36,6 +36,7 @@ class TortugaScriptConfigSchema(Schema):
     username = fields.String()
     password = fields.String()
     token = fields.String()
+    verify = fields.Boolean()
 
 
 class ConfigFileNotFoundException(ConfigException):
@@ -78,7 +79,7 @@ class TortugaScriptConfig(Config):
         self.navops_cli = kwargs.get('navops_cli', default_navops_cli)
         self.username = kwargs.get('username', default_username)
         self.password = kwargs.get('password', default_password)
-        self.verify = True
+        self.verify = kwargs.get('verify', True)
 
     def _load_from_environment(self):
         if os.getenv('TORTUGA_WS_URL'):
