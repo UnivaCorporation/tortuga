@@ -17,11 +17,13 @@ import asyncio
 import json
 import ssl
 import sys
+from typing import Optional
 import websockets
 
 from tortuga.cli.base import RootCommand
 from tortuga.cli.utils import pretty_print
 from tortuga.config.configManager import ConfigManager
+from ..script import TortugaScriptConfig
 
 
 class ListenCommand(RootCommand):
@@ -39,7 +41,7 @@ class ListenCommand(RootCommand):
 
         """
         cm = ConfigManager()
-        config = self.get_config()
+        config: TortugaScriptConfig = self.get_config()
         if not config:
             raise Exception('Invalid configuration')
 
@@ -54,10 +56,20 @@ class ListenCommand(RootCommand):
         url = '{}:{}:{}'.format(url_parts[0], url_parts[1],
                                 cm.getWebsocketPort())
 
-        ws_client = WebsocketClient(username=config.username,
-                                    password=config.password,
-                                    url=url,
-                                    verify=config.verify)
+        auth_method = config.get_auth_method()
+        if auth_method == 'token':
+            ws_client = WebsocketClient(token=config.get_token(),
+                                        url=url,
+                                        verify=config.verify)
+
+        elif auth_method == 'password':
+            ws_client = WebsocketClient(username=config.username,
+                                        password=config.password,
+                                        url=url,
+                                        verify=config.verify)
+
+        else:
+            raise Exception('Unsupported auth method: {}'.format(auth_method))
 
         try:
             asyncio.get_event_loop().run_until_complete(ws_client.start())
@@ -71,8 +83,12 @@ class WebsocketClient:
     Websocket client class.
 
     """
-    def __init__(self, username: str, password: str, url: str,
+    def __init__(self, token: Optional[str] = None,
+                 username: Optional[str] = None,
+                 password: Optional[str] = None,
+                 url: Optional[str] = None,
                  verify: bool = True):
+        self._token = token
         self._username = username
         self._password = password
         self._url = url
@@ -125,14 +141,23 @@ class WebsocketClient:
         :param ws: the web socket client
 
         """
-        data = {
-            'action': 'authenticate',
-            'method': 'password',
-            'data': {
-                'username': self._username,
-                'password': self._password
+        if self._token:
+            data = {
+                'action': 'authenticate',
+                'method': 'jwt',
+                'data': {
+                    'token': self._token
+                }
             }
-        }
+        else:
+            data = {
+                'action': 'authenticate',
+                'method': 'password',
+                'data': {
+                    'username': self._username,
+                    'password': self._password
+                }
+            }
 
         await ws.send(json.dumps(data))
 
