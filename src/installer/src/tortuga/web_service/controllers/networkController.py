@@ -50,7 +50,7 @@ class NetworkController(TortugaController):
         },
         {
             'name': 'deleteNetwork',
-            'path': '/v1/networks/:(id)',
+            'path': '/v1/networks/:(network_id)',
             'action': 'deleteNetwork',
             'method': ['DELETE'],
         },
@@ -165,7 +165,7 @@ class NetworkController(TortugaController):
     @authentication_required()
     def deleteNetwork(self, network_id):
         '''
-        Handle delete to networks/:(id)
+        Handle delete to networks/:(network_id)
         '''
 
         response = None
