@@ -49,8 +49,10 @@ class HardwareProfileApi(TortugaApi):
         try:
             return HardwareProfileManager().getHardwareProfile(
                 session, hardwareProfileName, optionDict or {})
-        except TortugaException as ex:
+
+        except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
@@ -68,8 +70,10 @@ class HardwareProfileApi(TortugaApi):
         try:
             return HardwareProfileManager().getHardwareProfileById(
                 session, id_, optionDict or {})
-        except TortugaException as ex:
+
+        except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
@@ -87,8 +91,10 @@ class HardwareProfileApi(TortugaApi):
         try:
             HardwareProfileManager().deleteHardwareProfile(
                 session, hardwareProfileName)
-        except TortugaException as ex:
+
+        except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
@@ -107,8 +113,10 @@ class HardwareProfileApi(TortugaApi):
         try:
             return HardwareProfileManager().getHardwareProfileList(
                 session, optionDict=optionDict, tags=tags)
+
         except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
@@ -127,8 +135,10 @@ class HardwareProfileApi(TortugaApi):
         try:
             HardwareProfileManager().addAdmin(
                 session, hardwareProfileName, adminUsername)
-        except TortugaException as ex:
+
+        except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
@@ -148,8 +158,10 @@ class HardwareProfileApi(TortugaApi):
         try:
             HardwareProfileManager().deleteAdmin(
                 session, hardwareProfileName, adminUsername)
-        except TortugaException as ex:
+
+        except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
@@ -169,10 +181,11 @@ class HardwareProfileApi(TortugaApi):
         """
         try:
             HardwareProfileManager().updateHardwareProfile(
-                session,
-                hardwareProfileObject)
-        except TortugaException as ex:
+                session, hardwareProfileObject)
+
+        except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
@@ -192,8 +205,10 @@ class HardwareProfileApi(TortugaApi):
         try:
             HardwareProfileManager().createHardwareProfile(
                 session, hwProfileSpec, settingsDict=settingsDict)
-        except TortugaException as ex:
+
+        except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
@@ -209,8 +224,10 @@ class HardwareProfileApi(TortugaApi):
         try:
             HardwareProfileManager().setProvisioningNic(
                 session, hardwareProfileName, nicId)
+
         except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
@@ -219,8 +236,10 @@ class HardwareProfileApi(TortugaApi):
         try:
             HardwareProfileManager().getProvisioningNicForNetwork(
                 session, network, netmask)
+
         except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
@@ -228,10 +247,12 @@ class HardwareProfileApi(TortugaApi):
     def copyHardwareProfile(self, session: Session, srcHardwareProfileName,
                             dstHardwareProfileName):
         try:
-            return HardwareProfileManager().copyHardwareProfile(
+            HardwareProfileManager().copyHardwareProfile(
                 session, srcHardwareProfileName, dstHardwareProfileName)
-        except TortugaException as ex:
+
+        except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(str(ex))
             raise TortugaException(exception=ex)
@@ -240,8 +261,10 @@ class HardwareProfileApi(TortugaApi):
         try:
             HardwareProfileManager().getNodeList(
                 session, hardware_profile_name)
+
         except TortugaException:
             raise
-        except Exception as exc:
-            self._logger.exception(str(exc))
-            raise TortugaException(exception=exc)
+
+        except Exception as ex:
+            self._logger.exception(str(ex))
+            raise TortugaException(exception=ex)

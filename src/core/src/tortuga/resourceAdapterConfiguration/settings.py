@@ -312,7 +312,7 @@ class TagListSetting(BaseSetting):
             # if we don't get a value, then set the value to an empty string
             #
             if len(parts) == 1:
-                parts[1] = ''
+                parts.append('')
 
             #
             # If the key is empty, just skip this tag

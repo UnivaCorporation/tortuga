@@ -164,7 +164,7 @@ class InstanceMappingSchema(ModelSchema):
     instance_metadata = fields.Nested('InstanceMetadataSchema', many=True)
     resource_adapter_configuration = \
         fields.Nested('ResourceAdapterConfigSchema')
-    node = fields.Nested('NodeSchema', only=('id', 'name'))
+    node = fields.Nested('tortuga.schema.NodeSchema', only=('id', 'name'))
 
     class Meta:
         model = InstanceMappingModel
@@ -176,10 +176,12 @@ class NodeTagSchema(ModelSchema):
 
 
 class NodeSchema(ModelSchema):
-    softwareprofile = fields.Nested('SoftwareProfileSchema',
-                                    only=('id', 'name', 'metadata'))
+    softwareprofile = fields.Nested(
+        'tortuga.schema.SoftwareProfileSchema',
+        only=('id', 'name')
+    )
     hardwareprofile = fields.Nested(
-        'HardwareProfileSchema',
+        'tortuga.schema.HardwareProfileSchema',
         only=('id', 'name', 'resourceadapter'),
         exclude=('resourceadapter.hardwareprofiles',
                  'resourceadapter.credentials',
@@ -199,16 +201,16 @@ class NodeSchema(ModelSchema):
     # standard object serialization
     @post_dump(pass_many=True, pass_original=True)
     def fixTags(self, in_data, many, original):
-         if isinstance(in_data, list):
-             for i in range(0, len(in_data)):
-                 tagFunc = getattr(original[i], "getTags", None)
-                 if callable(tagFunc):
-                     in_data[i]['tags'] = tagFunc()
-         else:
-             tagFunc = getattr(original, "getTags", None)
-             if callable(tagFunc):
-                 in_data['tags'] = tagFunc()
-         return in_data
+        if isinstance(in_data, list):
+            for i in range(0, len(in_data)):
+                tagFunc = getattr(original[i], "getTags", None)
+                if callable(tagFunc):
+                    in_data[i]['tags'] = tagFunc()
+        else:
+            tagFunc = getattr(original, "getTags", None)
+            if callable(tagFunc):
+                in_data['tags'] = tagFunc()
+        return in_data
 
     class Meta:
         model = NodeModel
@@ -220,13 +222,13 @@ class SoftwareProfileTagSchema(ModelSchema):
 
 
 class SoftwareProfileSchema(ModelSchema):
-    nodes = fields.Nested('NodeSchema', many=True,
+    nodes = fields.Nested('tortuga.schema.NodeSchema', many=True,
                           exclude=('softwareprofile',))
 
     components = fields.Nested('ComponentSchema', many=True,
                                exclude=('softwareprofiles',))
 
-    hardwareprofiles = fields.Nested('HardwareProfileSchema',
+    hardwareprofiles = fields.Nested('tortuga.schema.HardwareProfileSchema',
                                      only=('id', 'name', 'resourceadapter'),
                                      many=True)
 
@@ -234,8 +236,6 @@ class SoftwareProfileSchema(ModelSchema):
 
     tags = fields.Nested('SoftwareProfileTagSchema',
                          only=('id', 'name', 'value'), many=True)
-
-    metadata = fields.Dict()
 
     class Meta:
         model = SoftwareProfileModel
@@ -247,13 +247,14 @@ class HardwareProfileTagSchema(ModelSchema):
 
 
 class HardwareProfileSchema(ModelSchema):
-    nodes = fields.Nested('NodeSchema', many=True,
+    nodes = fields.Nested('tortuga.schema.NodeSchema', many=True,
                           exclude=('hardwareprofile',))
 
-    mappedsoftwareprofiles = fields.Nested('SoftwareProfileSchema',
-                                           only=('id', 'name'), many=True)
+    mappedsoftwareprofiles = fields.Nested(
+        'tortuga.schema.SoftwareProfileSchema',
+        only=('id', 'name'), many=True)
 
-    tags = fields.Nested('HardwareProfileTagSchema',
+    tags = fields.Nested('tortuga.schema.HardwareProfileTagSchema',
                          only=('id', 'name', 'value'), many=True)
 
     resourceadapter = fields.Nested('ResourceAdapterSchema',

@@ -115,7 +115,7 @@ class BaseListener(metaclass=ListenerMeta):
             if isinstance(event, event_type):
                 return True
 
-            return False
+        return False
 
     def run_if_required(self, event: BaseEvent):
         """

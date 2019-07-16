@@ -16,8 +16,9 @@ import datetime
 from typing import Dict, Type
 import uuid
 
-from marshmallow import Schema, fields
+from marshmallow import fields
 
+from tortuga.types.base import BaseTypeSchema, BaseType
 from ..exceptions import EventNotFoundError
 
 
@@ -56,41 +57,36 @@ class EventMeta(type):
         #
         # Don't attempt to load the base installer
         #
-        if name == 'BaseEvent':
+        if name == 'base-event':
             return
 
         EVENT_TYPES[cls.name] = cls
 
 
-class BaseEventSchema(Schema):
+class BaseEventSchema(BaseTypeSchema):
     """
     Marshmallow schema for events.
 
     """
-    type: fields.Field = fields.String(dump_only=True)
     name: fields.Field = fields.String(dump_only=True)
-    id: fields.Field = fields.String()
     timestamp: fields.Field = fields.DateTime()
-    message: fields.Field = fields.String(required=False)
 
 
-class BaseEvent(metaclass=EventMeta):
+class BaseEvent(BaseType, metaclass=EventMeta):
     """
     This is the base event type. This class is meant to be overridden to
     implement specific event types.
 
     """
-    type: str = 'event'
     #
-    # A name for the event type
+    # Requirements for BaseType
     #
-    name: str = None
-    #
-    # A marshmallow schema for the event
-    #
-    schema: Type[BaseEventSchema] = None
+    type = 'event'
+    schema_class = BaseEventSchema
 
-    def __init__(self, message=None, **kwargs):
+    name: str = 'base-event'
+
+    def __init__(self, **kwargs):
         """
         Initialization.
 
@@ -98,12 +94,9 @@ class BaseEvent(metaclass=EventMeta):
                        directly on the instance.
 
         """
-        self.id: str = None
-        self.timestamp: datetime.datetime = None
-        self.message = message
+        super().__init__(**kwargs)
+        self.timestamp: datetime.datetime = kwargs.get('timestamp', None)
 
-        for k, v in kwargs.items():
-            setattr(self, k, v)
 
     @classmethod
     def fire(cls, **kwargs) -> 'BaseEvent':
@@ -170,7 +163,8 @@ class BaseEvent(metaclass=EventMeta):
         from ..listeners import get_all_listener_classes
         from ..tasks import run_event_listener
 
-        event_dict = event.schema().dump(event).data
+        schema_class = event.get_schema_class()
+        event_dict = schema_class().dump(event).data
         for listener_class in get_all_listener_classes():
             if listener_class.should_run(event):
                 kwargs = {}

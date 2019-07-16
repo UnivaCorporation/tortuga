@@ -15,20 +15,31 @@
 import logging
 from typing import Any, Dict, Iterator, Optional, Tuple, Union
 
-from tortuga.logging import OBJECT_STORE_NAMESPACE
 
-logger = logging.getLogger(OBJECT_STORE_NAMESPACE)
+logger = logging.getLogger(__name__)
 
 
 def cmp_equals(left: Any, right: Any):
+    if isinstance(left, str):
+        right = str(right)
+    if isinstance(left, int):
+        right = int(right)
     return left == right
 
 
 def cmp_greater_than(left: Any, right: Any):
+    if isinstance(left, str):
+        right = str(right)
+    if isinstance(left, int):
+        right = int(right)
     return left > right
 
 
 def cmp_less_than(left: Any, right: Any):
+    if isinstance(left, str):
+        right = str(right)
+    if isinstance(left, int):
+        right = int(right)
     return left < right
 
 
@@ -46,7 +57,7 @@ def matches_filters(obj: Union[object, dict],
     look like this:
 
         attr=value
-        attr__lt=valiue
+        attr__lt=value
         attr__attr__gt=value
 
     Where attr is an attribute name on the object (dict), which can be
@@ -153,9 +164,8 @@ class ObjectStore:
 
         """
         logger.debug(
-            'list(order_by={}, order_desc={}, order_alpha={}, limit={}, filters={}) -> ...'.format(
-                order_by, order_desc, order_alpha, limit, filters
-            )
+            'list(order_by=%s, order_desc=%s, order_alpha=%s, limit=%s, filters=%s) -> ...',
+            order_by, order_desc, order_alpha, limit, filters
         )
 
         count = 0
@@ -180,7 +190,7 @@ class ObjectStore:
         called by the list() method, which is responsible for applying
         the limits and filters.
 
-        :param int order_by:     the name of the object attribue to order by
+        :param int order_by:     the name of the object attribute to order by
         :param bool order_desc:  sort in descending order
         :param bool order_alpha: order alphabetically (instead of numerically)
 

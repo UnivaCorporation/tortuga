@@ -12,9 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .base import BaseEvent, get_event_class
-from .hardware_profile import HardwareProfileTagsChanged
-from .node import NodeStateChanged, NodeTagsChanged
-from .node_request import (AddNodeRequestComplete, AddNodeRequestQueued,
-                           DeleteNodeRequestComplete, DeleteNodeRequestQueued)
-from .software_profile import SoftwareProfileTagsChanged
+from tortuga.node.manager import NodeStoreManager
+from .base import Controller
+
+
+class NodeController(Controller):
+    """
+    Node web service controller class.
+
+    """
+    name = 'nodes'
+    type_store = NodeStoreManager.get()
+    methods = ['GET', 'PUT']

@@ -21,6 +21,7 @@ from sqlalchemy.orm.session import Session
 from tortuga.db.models.hardwareProfile import HardwareProfile
 from tortuga.db.models.node import Node as NodeModel
 from tortuga.db.models.softwareProfile import SoftwareProfile
+from tortuga.events.types import NodeTagsChanged
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.logging import NODE_NAMESPACE
 from tortuga.node.nodeManager import NodeManager
@@ -48,13 +49,24 @@ class NodeApi(TortugaApi):
                       validateIp: bool = True, bGenerateIp: bool = True,
                       dns_zone: Optional[str] = None) -> NodeModel:
         try:
-            return self._nodeManager.createNewNode(
+            node: Node = self._nodeManager.createNewNode(
                 session, addNodeRequest, dbHardwareProfile,
                 dbSoftwareProfile=dbSoftwareProfile,
                 validateIp=validateIp, bGenerateIp=bGenerateIp,
                 dns_zone=dns_zone)
+            #
+            # Fire the tags changed event for all creates that have tags
+            #
+            if node.getTags():
+                NodeTagsChanged.fire(
+                    node=node.getCleanDict(),
+                    previous_tags={}
+                )
+            return node
+
         except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception('Fatal error creating new node')
 
@@ -72,25 +84,27 @@ class NodeApi(TortugaApi):
         """
         try:
             return self._nodeManager.getNodeList(session, tags=tags)
+
         except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception('Fatal error retrieving node list')
-
             raise TortugaException(exception=ex)
 
     def getNode(self, session: Session, name: str,
                 optionDict: Optional[OptionDict] = None):
         """Get node id by name"""
         try:
-            return self._nodeManager.getNode(
-                session, name, optionDict=optionDict)
+            return self._nodeManager.getNode(session, name,
+                                             optionDict=optionDict)
+
         except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(
                 'Fatal error retrieving node [{}]'.format(name))
-
             raise TortugaException(exception=ex)
 
     def getInstallerNode(self, session,
@@ -101,14 +115,15 @@ class NodeApi(TortugaApi):
         """
 
         try:
-            return self._nodeManager.getInstallerNode(
-                session, optionDict=optionDict)
+            return self._nodeManager.getInstallerNode(session,
+                                                      optionDict=optionDict)
+
         except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(
                 'Fatal error retrieving installer node')
-
             raise TortugaException(exception=ex)
 
     def getNodeById(self, session: Session, nodeId: int,
@@ -118,14 +133,15 @@ class NodeApi(TortugaApi):
         """
 
         try:
-            return self._nodeManager.getNodeById(
-                session, nodeId, optionDict=optionDict)
+            return self._nodeManager.getNodeById(session, nodeId,
+                                                 optionDict=optionDict)
+
         except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(
                 'Fatal error retrieving node by id [{}]'.format(nodeId))
-
             raise TortugaException(exception=ex)
 
     def getNodeByIp(self, session: Session, ip: str) -> Node:
@@ -135,63 +151,87 @@ class NodeApi(TortugaApi):
 
         try:
             return self._nodeManager.getNodeByIp(session, ip)
+
         except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(
                 'Fatal error retrieving node by ip [{}]'.format(ip))
-
             raise TortugaException(exception=ex)
 
     def deleteNode(self, session: Session, nodespec: str, force: bool = False):
         try:
-            return self._nodeManager.deleteNode(
-                session, nodespec, force=force)
+            return self._nodeManager.deleteNode(session, nodespec,
+                                                force=force)
+
         except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(
                 'Fatal error deleting nodespec [{}]'.format(nodespec))
-
             raise TortugaException(exception=ex)
 
     def getProvisioningInfo(self, session: Session, nodeName: str):
         """ Get provisioning information for a node """
         try:
             return self._nodeManager.getProvisioningInfo(session, nodeName)
+
         except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(
                 'Fatal error retrieving provisioning info for'
                 ' node [{}]'.format(nodeName))
-
             raise TortugaException(exception=ex)
 
-    def updateNode(self, session: Session, name: str, updateNodeRequest: dict):
+    def updateNode(self, session: Session, name: str,
+                   updateNodeRequest: dict):
         try:
-            return self._nodeManager.updateNode(
-                session, name, updateNodeRequest)
+            #
+            # Get the current version from the db for later comparison
+            #
+            old_node = self.getNode(session, name)
+            #
+            # Do the actual update
+            #
+            self._nodeManager.updateNode(session, name, updateNodeRequest)
+            #
+            # Get the new version from the DB
+            #
+            new_node = self.getNode(session, name)
+            #
+            # If the tags have changed, fire the tags changed event
+            #
+            if old_node.getTags() != new_node.getTags():
+                NodeTagsChanged.fire(
+                    node=new_node.getCleanDict(),
+                    previous_tags=old_node.getTags()
+                )
+
         except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(
                 'Fatal error updating node [{0}]'.format(name))
-
             raise TortugaException(exception=ex)
 
     def updateNodeStatus(self, session: Session, name: str,
                          state: Optional[str] = None,
                          bootFrom: Optional[int] = None):
         try:
-            return self._nodeManager.updateNodeStatus(
-                session, name, state, bootFrom)
+            return self._nodeManager.updateNodeStatus(session, name, state,
+                                                      bootFrom)
+
         except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(
                 'Fatal error updating status for node [{}]'.format(name))
-
             raise TortugaException(exception=ex)
 
     def startupNode(self, session: Session, nodespec: str,
@@ -199,16 +239,19 @@ class NodeApi(TortugaApi):
                     bootMethod: Optional[str] = 'n') -> None:
         try:
             self._nodeManager.startupNode(
-                session, nodespec,
+                session,
+                nodespec,
                 remainingNodeList=remainingNodeList or [],
-                bootMethod=bootMethod)
+                bootMethod=bootMethod
+            )
+
         except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(
                 'Fatal error starting node(s) matching nodespec [{}]'.format(
                     nodespec))
-
             raise TortugaException(exception=ex)
 
     def shutdownNode(self, session: Session, nodespec: str,
@@ -216,13 +259,14 @@ class NodeApi(TortugaApi):
         try:
             self._nodeManager.shutdownNode(
                 session, nodespec, bSoftShutdown)
+
         except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(
                 'Fatal error shutting down node(s) matching'
                 ' nodespec [{0}]'.format(nodespec))
-
             raise TortugaException(exception=ex)
 
     def rebootNode(self, session: Session, nodespec: str,
@@ -232,13 +276,14 @@ class NodeApi(TortugaApi):
             self._nodeManager.rebootNode(
                 session, nodespec, bSoftReset=bSoftReset,
                 bReinstall=bReinstall)
+
         except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(
                 'Fatal error rebooting node(s) matching'
                 ' nodespec [{0}]'.format(nodespec))
-
             raise TortugaException(exception=ex)
 
     def addStorageVolume(self, nodeName: str, volume: str,
@@ -246,37 +291,40 @@ class NodeApi(TortugaApi):
         try:
             return self._nodeManager.addStorageVolume(
                 nodeName, volume, isDirect)
+
         except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(
                 'Fatal error adding storage volume to node [{}]'.format(
                     nodeName))
-
             raise TortugaException(exception=ex)
 
     def removeStorageVolume(self, nodeName: str, volume: str):
         try:
             return self._nodeManager.removeStorageVolume(nodeName, volume)
+
         except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(
                 'Fatal error removing storage volume from node [{}]'.format(
                     nodeName))
-
             raise TortugaException(exception=ex)
 
     def getStorageVolumeList(self, session: Session, nodeName: str):
         try:
             return self._nodeManager.getStorageVolumes(session, nodeName)
+
         except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(
                 'Fatal error retrieving storage volumes for node [{}]'.format(
                     nodeName))
-
             raise TortugaException(exception=ex)
 
     def getNodesByNodeState(self, session: Session, state: str) \
@@ -292,12 +340,13 @@ class NodeApi(TortugaApi):
         """
         try:
             return self._nodeManager.getNodesByNodeState(session, state)
+
         except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(
                 'Fatal error retrieving nodes in state [{}]'.format(state))
-
             raise TortugaException(exception=ex)
 
     def getNodesByNameFilter(self, session: Session, nodespec: str,
@@ -306,13 +355,14 @@ class NodeApi(TortugaApi):
         try:
             return self._nodeManager.getNodesByNameFilter(
                 session, nodespec, optionDict=optionDict)
+
         except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(
                 'Fatal error retrieving nodes by nodespec [{}]'.format(
                     nodespec))
-
             raise TortugaException(exception=ex)
 
     def getNodesByAddHostSession(self, session: Session,
@@ -322,11 +372,12 @@ class NodeApi(TortugaApi):
         try:
             return self._nodeManager.getNodesByAddHostSession(
                 session, addHostSession, optionDict=optionDict)
+
         except TortugaException:
             raise
+
         except Exception as ex:
             self._logger.exception(
                 'Fatal error retrieving nodes by add host session [{}]'.format(
                     addHostSession))
-
             raise TortugaException(exception=ex)

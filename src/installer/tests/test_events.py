@@ -29,7 +29,7 @@ class ExampleEventSchema(BaseEventSchema):
 
 class ExampleEvent(BaseEvent):
     name = 'example-event'
-    schema = ExampleEventSchema
+    schema_class = ExampleEventSchema
 
     def __init__(self, integer: int, string: str, **kwargs):
         self.integer = integer

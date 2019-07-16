@@ -86,11 +86,10 @@ class StateManager:
             #
             # Get an instance of the action class based on the action_name
             #
-            action_class: Type[BaseAction] = get_action_class(action_name)
-            unmarshalled: UnmarshalResult = \
-                action_class.schema().load(inbound_message)
-            action: BaseAction = action_class(state=self.state,
-                                              **unmarshalled.data)
+            action_class = get_action_class(action_name)
+            schema_class = action_class.get_schema_class()
+            unmarshalled = schema_class().load(inbound_message)
+            action = action_class(state=self.state, **unmarshalled.data)
 
             #
             # Assuming we have a valid action class, we "do" the action
@@ -130,8 +129,9 @@ class StateManager:
         # Main outbound message handling loop
         #
         while not self.state.exit:
-            msg: Union[BaseMessage, BaseEvent] = await self.producer()
-            marshalled = msg.schema().dump(msg)
+            msg = await self.producer()
+            schema_class = msg.get_schema_class()
+            marshalled = schema_class().dump(msg)
             await self._websocket.send(json.dumps(marshalled.data))
 
         #

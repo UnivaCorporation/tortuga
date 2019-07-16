@@ -33,7 +33,11 @@ class BaseMessage:
     """
     type: str = 'message'
     name: str = None
-    schema: Type[BaseMessageSchema] = None
+    schema_class: Type[BaseMessageSchema] = None
+
+    @classmethod
+    def get_schema_class(cls) -> Type[Schema]:
+        return cls.schema_class
 
 
 class AuthenticationRequiredMessage(BaseMessage):
@@ -42,7 +46,7 @@ class AuthenticationRequiredMessage(BaseMessage):
 
     """
     name = 'authentication-required'
-    schema = BaseMessageSchema
+    schema_class = BaseMessageSchema
 
 
 class AuthenticationFailedMessage(BaseMessage):
@@ -51,7 +55,7 @@ class AuthenticationFailedMessage(BaseMessage):
 
     """
     name = 'authentication-failed'
-    schema = BaseMessageSchema
+    schema_class = BaseMessageSchema
 
 
 class AuthenticationSucceededMessage(BaseMessage):
@@ -60,7 +64,7 @@ class AuthenticationSucceededMessage(BaseMessage):
 
     """
     name = 'authentication-succeeded'
-    schema = BaseMessageSchema
+    schema_class = BaseMessageSchema
 
 
 class ErrorMessageSchema(BaseMessageSchema):
@@ -80,7 +84,7 @@ class ErrorMessage(BaseMessage):
 
     """
     name = 'error'
-    schema = ErrorMessageSchema
+    schema_class = ErrorMessageSchema
 
     def __init__(self, reason: str = None):
         """
@@ -98,7 +102,7 @@ class SubscribeSucceededMessage(BaseMessage):
 
     """
     name = 'subscribe-succeeded'
-    schema = BaseMessageSchema
+    schema_class = BaseMessageSchema
 
 
 class UnsubscribeSucceededMessage(BaseMessage):
@@ -107,4 +111,4 @@ class UnsubscribeSucceededMessage(BaseMessage):
 
     """
     name = 'unsubscribe-succeeded'
-    schema = BaseMessageSchema
+    schema_class = BaseMessageSchema
