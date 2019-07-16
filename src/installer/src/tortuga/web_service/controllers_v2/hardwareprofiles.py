@@ -12,9 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .base import BaseEvent, get_event_class
-from .hardware_profile import HardwareProfileTagsChanged
-from .node import NodeStateChanged, NodeTagsChanged
-from .node_request import (AddNodeRequestComplete, AddNodeRequestQueued,
-                           DeleteNodeRequestComplete, DeleteNodeRequestQueued)
-from .software_profile import SoftwareProfileTagsChanged
+from tortuga.hardwareprofile.manager import HardwareProfileStoreManager
+from .base import Controller
+
+
+class HardwareProfileController(Controller):
+    """
+    HardwareProfile web service controller class.
+
+    """
+    name = 'hardwareprofiles'
+    type_store = HardwareProfileStoreManager.get()
+    methods = ['GET', 'PUT']

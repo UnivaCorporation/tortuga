@@ -13,12 +13,18 @@
 # limitations under the License.
 
 import argparse
+import os
 from typing import List, Dict
+
+import yaml
 
 from tortuga.cli.base import Argument, RootCommand, Command
 from tortuga.cli.utils import pretty_print
 from tortuga.wsapi_v2.client import TortugaWsApiClient
 from ..script import TortugaScriptConfig
+
+
+SUPPORTED_FILE_TYPES = ['yaml', 'json']
 
 
 class ListCommand(Command):
@@ -139,7 +145,76 @@ class ShowCommand(Command):
         config: TortugaScriptConfig = self.get_config()
         ws_client: TortugaWsApiClient = get_client(config, self.parent.name)
 
-        pretty_print(ws_client.get(args.id), args.fmt)
+        pretty_print(ws_client.get(args.id[0]), args.fmt)
+
+
+class UpdateCommand(Command):
+    """
+    This command shows a specific item on an API endpoint.
+
+    """
+    name = 'update'
+    help = 'Update a {}'
+
+    arguments = [
+        TortugaWsArgument(
+            'file',
+            type=str,
+            nargs=1,
+            help='Path to the {} update file'
+        )
+    ]
+
+    def get_help(self):
+        #
+        # Since this class can be used for multiple endpoints, we want to
+        # customize the help text by inserting the endpoint name as
+        # required
+        #
+        endpoint: str = self.parent.name
+        #
+        # Remove pluralization if found, as this command represents
+        # a single entity
+        #
+        if endpoint.endswith('s'):
+            endpoint = endpoint[0:-1]
+
+        return super().get_help().format(endpoint)
+
+    def execute(self, args: argparse.Namespace):
+        ws_client: TortugaWsApiClient = get_client(args, self.parent.name)
+
+        obj_filename = args.file[0]
+        if not os.path.exists(obj_filename):
+            raise Exception('File not found: {}'.format(obj_filename))
+
+        _, ext = os.path.splitext(obj_filename)
+        if not ext:
+            raise Exception(
+                'File extension not valid. Supported file types: {}'.format(
+                    SUPPORTED_FILE_TYPES
+                ))
+
+        ext = ext[1:]
+        if ext not in SUPPORTED_FILE_TYPES:
+            raise Exception(
+                'File extension not valid. Supported file types: {}'.format(
+                    SUPPORTED_FILE_TYPES
+                ))
+
+        with open(obj_filename) as fp:
+            loader = getattr(self, '_load_{}'.format(ext))
+            data = loader(fp)
+
+        pretty_print(ws_client.put(data), args.fmt)
+
+    @staticmethod
+    def _load_json(fp) -> dict:
+        return json.load(fp)
+
+    @staticmethod
+    def _load_yaml(fp) -> dict:
+        return yaml.safe_load(fp)
 
 
 class EventsCommand(RootCommand):
@@ -152,7 +227,52 @@ class EventsCommand(RootCommand):
 
     sub_commands = [
         ListCommand(),
-        ShowCommand()
+        ShowCommand(),
+    ]
+
+
+class HardwareProfilesCommand(RootCommand):
+    """
+    This is a command for interacting with WS API endpoints.
+
+    """
+    name = 'hardwareprofiles'
+    help = 'Tortuga hardware profiles API'
+
+    sub_commands = [
+        ListCommand(),
+        ShowCommand(),
+        UpdateCommand(),
+    ]
+
+
+class NodesCommand(RootCommand):
+    """
+    This is a command for interacting with WS API endpoints.
+
+    """
+    name = 'nodes'
+    help = 'Tortuga nodes API'
+
+    sub_commands = [
+        ListCommand(),
+        ShowCommand(),
+        UpdateCommand(),
+    ]
+
+
+class SoftwareProfilesCommand(RootCommand):
+    """
+    This is a command for interacting with WS API endpoints.
+
+    """
+    name = 'softwareprofiles'
+    help = 'Tortuga software profiles API'
+
+    sub_commands = [
+        ListCommand(),
+        ShowCommand(),
+        UpdateCommand(),
     ]
 
 

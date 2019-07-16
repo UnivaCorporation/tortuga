@@ -24,6 +24,7 @@ from tortuga.db.globalParameterDbApi import GlobalParameterDbApi
 from tortuga.db.kitDbApi import KitDbApi
 from tortuga.db.nodeDbApi import NodeDbApi
 from tortuga.db.softwareProfileDbApi import SoftwareProfileDbApi
+from tortuga.events.types import SoftwareProfileTagsChanged
 from tortuga.exceptions.componentNotFound import ComponentNotFound
 from tortuga.exceptions.kitNotFound import KitNotFound
 from tortuga.helper import osHelper
@@ -99,22 +100,40 @@ class SoftwareProfileManager(TortugaObjectManager): \
         return self._sp_db_api.deleteAdmin(
             session, softwareProfileName, adminUsername)
 
-    def updateSoftwareProfile(self, session: Session,
-                              softwareProfileObject):
+    def updateSoftwareProfile(self, session: Session, softwareProfileObject):
         self._logger.debug(
             'Updating software profile: %s' % (
                 softwareProfileObject.getName()))
-
-        # First get the object from the db we are updating...
-        existingProfile = self.getSoftwareProfileById(
+        #
+        # First get the object from the db we are updating
+        #
+        existing_swp = self.getSoftwareProfileById(
             session, softwareProfileObject.getId())
-
+        #
         # Set parameters that we will not allow updating
-        softwareProfileObject.setOsInfo(existingProfile.getOsInfo())
-        softwareProfileObject.setOsId(existingProfile.getOsId())
-        softwareProfileObject.setType(existingProfile.getType())
-
+        #
+        softwareProfileObject.setOsInfo(existing_swp.getOsInfo())
+        softwareProfileObject.setOsId(existing_swp.getOsId())
+        softwareProfileObject.setType(existing_swp.getType())
+        #
+        # Do the DB update
+        #
         self._sp_db_api.updateSoftwareProfile(session, softwareProfileObject)
+        #
+        # Get the new version
+        #
+        new_swp = self.getSoftwareProfileById(session,
+                                              softwareProfileObject.getId())
+        #
+        # If the tags have changed, fire the tags changed event
+        #
+        if existing_swp.getTags() != new_swp.getTags():
+            SoftwareProfileTagsChanged.fire(
+                softwareprofile_id=str(new_swp.getId()),
+                softwareprofile_name=new_swp.getName(),
+                tags=new_swp.getTags(),
+                previous_tags=existing_swp.getTags()
+            )
 
     def getSoftwareProfile(
             self,
@@ -266,6 +285,7 @@ class SoftwareProfileManager(TortugaObjectManager): \
         # DHCP/PXE/kickstart/OS) just create it now and we're done
         if unmanagedProfile:
             self._sp_db_api.addSoftwareProfile(session, swProfileSpec)
+
         else:
             if bOsMediaRequired and swProfileSpec.getOsInfo():
                 try:
@@ -398,9 +418,20 @@ class SoftwareProfileManager(TortugaObjectManager): \
                                      comp.getName(),
                                      comp.getVersion())
 
-            self._logger.debug(
-                'Software profile [%s] created successfully' % (
-                    swProfileSpec.getName()))
+        #
+        # Fire the tags changed event for all creates that have tags
+        #
+        # Get the latest version from the db in case the create method
+        # added some embellishments
+        #
+        swp = self.getSoftwareProfile(session, swProfileSpec.getName())
+        if swp.getTags():
+            SoftwareProfileTagsChanged.fire(
+                softwareprofile_id=str(swp.getId()),
+                softwareprofile_name=swp.getName(),
+                tags=swp.getTags(),
+                previous_tags={}
+            )
 
     def _getComponent(self, kit, compName, compVersion): \
             # pylint: disable=no-self-use
@@ -815,15 +846,22 @@ class SoftwareProfileManager(TortugaObjectManager): \
 
     def copySoftwareProfile(self, session: Session, srcSoftwareProfileName,
                             dstSoftwareProfileName):
-        # Validate software profile name
         validation.validateProfileName(dstSoftwareProfileName)
-
-        self._logger.info(
-            'Copying software profile [%s] to [%s]',
-            srcSoftwareProfileName, dstSoftwareProfileName)
-
+        self._logger.info('Copying software profile [%s] to [%s]',
+                          srcSoftwareProfileName, dstSoftwareProfileName)
         self._sp_db_api.copySoftwareProfile(
             session, srcSoftwareProfileName, dstSoftwareProfileName)
+        #
+        # Fire the tags changed event for all copies that have tags
+        #
+        swp = self.getSoftwareProfile(session, dstSoftwareProfileName)
+        if swp.getTags():
+            SoftwareProfileTagsChanged.fire(
+                softwareprofile_id=str(swp.getId()),
+                softwareprofile_name=swp.getName(),
+                tags=swp.getTags(),
+                previous_tags={}
+            )
 
     def getUsableNodes(self, session: Session, softwareProfileName):
         return self._sp_db_api.getUsableNodes(session, softwareProfileName)

@@ -67,10 +67,15 @@ if 'TORTUGA_TEST' in os.environ:
 else:
     load_kits()
     kits_task_modules: List[str] = []
-    for kit_installer_class in get_all_kit_installers():
-        kit_installer = kit_installer_class()
-        kit_installer.register_event_listeners()
-        kits_task_modules += kit_installer.task_modules
+    # This module gets loaded during kit install so we may fail
+    # on a circular import.  Protect against that.
+    try:
+        for kit_installer_class in get_all_kit_installers():
+            kit_installer = kit_installer_class()
+            kit_installer.register_event_listeners()
+            kits_task_modules += kit_installer.task_modules
+    except ImportError as ex:
+        logging.getLogger(KIT_NAMESPACE).info("Ignoring import exception: %s.  Likely installing kit." % ex)
 
     config_manager = ConfigManager()
     redis_password = config_manager.getRedisPassword()
