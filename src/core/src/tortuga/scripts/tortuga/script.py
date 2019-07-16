@@ -167,9 +167,22 @@ class TortugaScriptConfig(Config):
         :raises ConfigException: if no auth method is configured
 
         """
+        #
+        # For the CFM user, always use password authentication
+        #
+        if self.username == 'cfm' and self.password:
+            return 'password'
+
+        #
+        # For all other cases, if the navops CLI is present, or there
+        # is a token, use token-based authentication
+        #
         if self.navops_cli or self.token:
             return 'token'
 
+        #
+        # Otherwise, fall back to password authentication
+        #
         if self.username and self.password:
             return 'password'
 
