@@ -48,10 +48,11 @@ class TortugaWsApi(RestApiClient):
                 self._cm.getAdminPort()
             )
 
-        if username is None and password is None:
-            self._logger.debug('Using built-in user credentials')
-            username = self._cm.getCfmUser()
-            password = self._cm.getCfmPassword()
+        if not token:
+            if username is None and password is None:
+                self._logger.debug('Using built-in user credentials')
+                username = self._cm.getCfmUser()
+                password = self._cm.getCfmPassword()
 
         super().__init__(token=token, username=username, password=password,
                          baseurl=baseurl, verify=verify)

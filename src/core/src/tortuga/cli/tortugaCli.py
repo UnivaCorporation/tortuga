@@ -224,7 +224,7 @@ class TortugaCli(metaclass=ABCMeta):
         auth_method = self._config.get_auth_method()
 
         if auth_method == 'token':
-            return client_class(token=self._config.token,
+            return client_class(token=self._config.get_token(),
                                 baseurl=self._config.url,
                                 verify=self._config.verify)
 
