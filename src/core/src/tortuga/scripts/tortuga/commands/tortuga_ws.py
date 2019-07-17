@@ -182,7 +182,8 @@ class UpdateCommand(Command):
         return super().get_help().format(endpoint)
 
     def execute(self, args: argparse.Namespace):
-        ws_client: TortugaWsApiClient = get_client(args, self.parent.name)
+        config: TortugaScriptConfig = self.get_config()
+        ws_client: TortugaWsApiClient = get_client(config, self.parent.name)
 
         obj_filename = args.file[0]
         if not os.path.exists(obj_filename):
