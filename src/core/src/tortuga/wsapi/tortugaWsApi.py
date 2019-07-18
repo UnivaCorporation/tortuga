@@ -32,7 +32,8 @@ class TortugaWsApi(RestApiClient):
     Base tortuga ws api class.
 
     """
-    def __init__(self, username: Optional[str] = None,
+    def __init__(self, token: Optional[str] = None,
+                 username: Optional[str] = None,
                  password: Optional[str] = None,
                  baseurl: Optional[str] = None,
                  verify: bool = True):
@@ -47,12 +48,14 @@ class TortugaWsApi(RestApiClient):
                 self._cm.getAdminPort()
             )
 
-        if username is None and password is None:
-            self._logger.debug('Using built-in user credentials')
-            username = self._cm.getCfmUser()
-            password = self._cm.getCfmPassword()
+        if not token:
+            if username is None and password is None:
+                self._logger.debug('Using built-in user credentials')
+                username = self._cm.getCfmUser()
+                password = self._cm.getCfmPassword()
 
-        super().__init__(username, password, baseurl, verify)
+        super().__init__(token=token, username=username, password=password,
+                         baseurl=baseurl, verify=verify)
 
         self.baseurl = '{}/{}'.format(self.baseurl, WS_API_VERSION)
 

@@ -42,10 +42,7 @@ Reboots specified node(s). Mark nodes for reinstallation if --reinstall
 flag is specified.
 """))
 
-        nodeApi = NodeWsApi(username=self.getUsername(),
-                            password=self.getPassword(),
-                            baseurl=self.getUrl(),
-                            verify=self._verify)
+        nodeApi = self.configureClient(NodeWsApi)
 
         # If the node is being reinstalled as a result of the reboot,
         # do not use a soft shutdown.

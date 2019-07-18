@@ -50,13 +50,11 @@ class StartupNodeCli(TortugaCli):
             for node in self.getArgs().destinationString.split(',')
         ] if self.getArgs().destinationString else []
 
+        api = self.configureClient(NodeWsApi)
         try:
-            NodeWsApi(username=self.getUsername(),
-                      password=self.getPassword(),
-                      baseurl=self.getUrl(),
-                      verify=self._verify).startupNode(
-                self.getArgs().nodeName, destinationList,
-                self.getArgs().bootMethod)
+            api.startupNode(self.getArgs().nodeName, destinationList,
+                            self.getArgs().bootMethod)
+
         except Exception as msg:
             raise InvalidCliRequest(
                 _("Unable to start node(s) - %s") % (msg))

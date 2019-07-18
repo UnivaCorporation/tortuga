@@ -144,12 +144,7 @@ class AddNodes(TortugaCli): \
                 sys.stderr.write('Ignoring \'--count\' option when importing'
                                  ' from MAC file\n')
 
-        addHostWsApi = AddHostWsApi(
-            username=self.getUsername(),
-            password=self.getPassword(),
-            baseurl=self.getUrl(),
-            verify=self._verify
-        )
+        addHostWsApi = self.configureClient(AddHostWsApi)
 
         addNodesRequest = {
             'force': self.getArgs().force,

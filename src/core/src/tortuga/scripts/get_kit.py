@@ -62,10 +62,7 @@ Returns details of the specified kit
         name, version, iteration = \
             self.getKitNameVersionIteration(self.getArgs().kitspec)
 
-        api = KitWsApi(username=self.getUsername(),
-                       password=self.getPassword(),
-                       baseurl=self.getUrl(),
-                       verify=self._verify)
+        api = self.configureClient(KitWsApi)
 
         try:
             kit = api.getKit(name, version=version, iteration=iteration)

@@ -112,11 +112,7 @@ class GetSoftwareProfileCli(TortugaCli):
         name = self.getArgs().name \
             if self.getArgs().name else self.getArgs().deprecated_name
 
-        swprofileapi = SoftwareProfileWsApi(
-            username=self.getUsername(),
-            password=self.getPassword(),
-            baseurl=self.getUrl(),
-            verify=self._verify)
+        swprofileapi = self.configureClient(SoftwareProfileWsApi)
 
         optionDict = {}
 
@@ -152,11 +148,7 @@ class GetSoftwareProfileCli(TortugaCli):
     def __console_output(self, swprofile):
         hwprofiles = []
 
-        hwprofileapi = HardwareProfileWsApi(
-            username=self.getUsername(),
-            password=self.getPassword(),
-            baseurl=self.getUrl(),
-            verify=self._verify)
+        hwprofileapi = self.configureClient(HardwareProfileWsApi)
 
         for hwprofilename in \
                 [hwprofile_.getName()

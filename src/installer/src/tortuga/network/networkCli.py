@@ -269,9 +269,8 @@ class NetworkCli(TortugaCli):
 
         """
         if self._networkApi is None:
-            self._networkApi = NetworkWsApi(self.getUsername(),
-                                            self.getPassword(),
-                                            baseurl=self.getUrl())
+            self._networkApi = self.configureClient(NetworkWsApi)
+
         return self._networkApi
 
     def parseNetworkParameter(self, network): \

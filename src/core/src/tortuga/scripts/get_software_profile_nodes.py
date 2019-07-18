@@ -45,12 +45,7 @@ Return list of nodes that are using the specified software profile.
 """))
 
         software_profile_name = self.getArgs().softwareProfile
-
-        api = SoftwareProfileWsApi(username=self.getUsername(),
-                                   password=self.getPassword(),
-                                   baseurl=self.getUrl(),
-                                   verify=self._verify)
-
+        api = self.configureClient(SoftwareProfileWsApi)
         for node in api.getNodeList(software_profile_name):
             print(str(node))
 

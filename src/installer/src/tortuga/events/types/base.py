@@ -57,7 +57,7 @@ class EventMeta(type):
         #
         # Don't attempt to load the base installer
         #
-        if name == 'base-event':
+        if name == 'base':
             return
 
         EVENT_TYPES[cls.name] = cls
@@ -84,7 +84,7 @@ class BaseEvent(BaseType, metaclass=EventMeta):
     type = 'event'
     schema_class = BaseEventSchema
 
-    name: str = 'base-event'
+    name: str = 'base'
 
     def __init__(self, **kwargs):
         """

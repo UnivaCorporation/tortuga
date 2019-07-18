@@ -41,11 +41,7 @@ class CopyHardwareProfileCli(tortugaCli.TortugaCli):
     def runCommand(self):
         self.parseArgs(_('Copy an existing hardware profile'))
 
-        api = HardwareProfileWsApi(username=self.getUsername(),
-                                   password=self.getPassword(),
-                                   baseurl=self.getUrl(),
-                                   verify=self._verify)
-
+        api = self.configureClient(HardwareProfileWsApi)
         api.copyHardwareProfile(
             self.getArgs().srcHardwareProfileName,
             self.getArgs().dstHardwareProfileName)

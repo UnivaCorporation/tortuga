@@ -12,11 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from distutils.version import LooseVersion
+from marshmallow import fields
+
+from .base import BaseResourceRequest, BaseResourceRequestSchema
 
 
-VERSION = '7.0.3+003'
+class ScaleSetResourceRequestSchema(BaseResourceRequestSchema):
+    hardwareprofile_id = fields.String()
+    softwareprofile_id = fields.String()
+    min_nodes = fields.Integer()
+    max_nodes = fields.Integer()
+    desired_nodes = fields.Integer()
 
 
-def version_is_compatible(version_string: str):
-    return LooseVersion(VERSION) >= LooseVersion(version_string)
+class ScaleSetResourceRequest(BaseResourceRequest):
+    name = 'scale-set'
+    schema_class = ScaleSetResourceRequestSchema

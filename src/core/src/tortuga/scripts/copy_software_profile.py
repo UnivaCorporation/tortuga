@@ -41,11 +41,7 @@ class CopySoftwareProfileCli(tortugaCli.TortugaCli):
     def runCommand(self):
         self.parseArgs(_('Copy an existing software profile'))
 
-        api = SoftwareProfileWsApi(username=self.getUsername(),
-                                   password=self.getPassword(),
-                                   baseurl=self.getUrl(),
-                                   verify=self._verify)
-
+        api = self.configureClient(SoftwareProfileWsApi)
         api.copySoftwareProfile(
             self.getArgs().srcSoftwareProfileName,
             self.getArgs().dstSoftwareProfileName)

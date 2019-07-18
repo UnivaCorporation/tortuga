@@ -77,13 +77,9 @@ class KitCli(TortugaCli):
             ComponentNotFound
         """
 
-        kitApi = KitWsApi(username=self.getUsername(),
-                          password=self.getPassword(),
-                          baseurl=self.getUrl())
+        kitApi = self.configureClient(KitWsApi)
 
         k = kitApi.getKit(kitName, kitVersion, kitIteration)
-
-        c = None
 
         for c in k.getComponentList():
             _compDescr = '%s-%s' % (c.getName(), c.getVersion())

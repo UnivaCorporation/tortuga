@@ -47,11 +47,7 @@ class AddAdminCli(AdminCli):
                          ' This user does not need to match any operating'
                          ' system user'))
 
-        api = adminWsApi.AdminWsApi(username=self.getUsername(),
-                                    password=self.getPassword(),
-                                    baseurl=self.getUrl(),
-                                    verify=self._verify)
-
+        api = self.configureClient(adminWsApi.AdminWsApi)
         api.addAdmin(
             self.getArgs().adminUsername,
             self.getArgs().adminPassword,

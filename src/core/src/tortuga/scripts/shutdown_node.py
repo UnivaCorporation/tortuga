@@ -32,13 +32,12 @@ class ShutdownNodeCli(TortugaCli):
     def runCommand(self):
         self.parseArgs(_('Shuts down the given node'))
 
+        api = self.configureClient(NodeWsApi)
+
         try:
             # Perform a "soft" shutdown
-            NodeWsApi(username=self.getUsername(),
-                      password=self.getPassword(),
-                      baseurl=self.getUrl(),
-                      verify=self._verify).shutdownNode(
-                self.getArgs().nodeName, True)
+            api.shutdownNode(self.getArgs().nodeName, True)
+
         except Exception as msg:
             raise InvalidCliRequest(
                 _("Can't shutdown node(s) - %s") % (msg))

@@ -8,3 +8,5 @@ puppet ALL=(ALL) NOPASSWD: <%= @bin_dir -%>/get-provisioning-networks
 puppet ALL=(ALL) NOPASSWD: <%= @bin_dir -%>/get-component-node-list
 puppet ALL=(ALL) NOPASSWD: <%= @bin_dir -%>/get-nodes-with-component
 puppet ALL=(ALL) NOPASSWD: <%= @bin_dir -%>/get-provisioning-nics
+
+Defaults secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/opt/tortuga/bin:/opt/puppetlabs/bin

@@ -32,11 +32,7 @@ class GetHardwareProfileListCli(TortugaCli):
         self.parseArgs(_('Returns the list of hardware profiles in the'
                          ' system'))
 
-        api = HardwareProfileWsApi(username=self.getUsername(),
-                                   password=self.getPassword(),
-                                   baseurl=self.getUrl(),
-                                   verify=self._verify)
-
+        api = self.configureClient(HardwareProfileWsApi)
         for hp in api.getHardwareProfileList(tags=self.getArgs().tags):
             print(str(hp))
 

@@ -55,12 +55,9 @@ class GenerateNiiProfileCli(TortugaCli):
             instHostName = installer
             instHostPort = cm.getAdminPort()
 
-        base_url = f'https://{instHostName}:{instHostPort}'
+        self._config.url = f'https://{instHostName}:{instHostPort}'
 
-        api = NodeWsApi(username=self.getUsername(),
-                        password=self.getPassword(),
-                        baseurl=base_url,
-                        verify=self._verify)
+        api = self.configureClient(NodeWsApi)
 
         fileContent = api.getProvisioningInfo(
             self.getArgs().nodeName).getXmlRep()

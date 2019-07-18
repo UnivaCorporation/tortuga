@@ -110,12 +110,7 @@ class ComponentCli(TortugaCli):
         # Get the given software profile information
         self.software_profile_name = self.__get_software_profile_name()
 
-        self.software_profile_api = SoftwareProfileWsApi(
-            username=self.getUsername(),
-            password=self.getPassword(),
-            baseurl=self.getUrl(),
-            verify=self._verify
-        )
+        self.software_profile_api = self.configureClient(SoftwareProfileWsApi)
 
     def getKitNameVersionIteration(self, pkgname):
         if pkgname:
@@ -144,11 +139,7 @@ class ComponentCli(TortugaCli):
         """
 
         if self.getArgs().applyToInstaller:
-            nodeApi = NodeWsApi(username=self.getUsername(),
-                                password=self.getPassword(),
-                                baseurl=self.getUrl(),
-                                verify=self._verify)
-
+            nodeApi = self.configureClient(NodeWsApi)
             node = nodeApi.getInstallerNode(optionDict={
                 'softwareprofile': True,
             })

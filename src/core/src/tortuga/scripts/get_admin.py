@@ -49,10 +49,7 @@ class GetAdminCli(AdminCli):
 Returns admin user from the Tortuga system.
 """))
 
-        api = AdminWsApi(username=self.getUsername(),
-                         password=self.getPassword(),
-                         baseurl=self.getUrl(),
-                         verify=self._verify)
+        api = self.configureClient(AdminWsApi)
         admin = api.getAdmin(self.getArgs().admin_username)
 
         if self.getArgs().xml:

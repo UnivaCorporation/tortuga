@@ -31,11 +31,7 @@ class DeleteAdminCli(AdminCli):
     def runCommand(self):
         self.parseArgs(_('Deletes administrative user from Tortuga'))
 
-        api = AdminWsApi(username=self.getUsername(),
-                         password=self.getPassword(),
-                         baseurl=self.getUrl(),
-                         verify=self._verify)
-
+        api = self.configureClient(AdminWsApi)
         api.deleteAdmin(
             self.getArgs().adminId or self.getArgs().adminUsername)
 

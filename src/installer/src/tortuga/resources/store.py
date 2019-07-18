@@ -1,0 +1,87 @@
+# Copyright 2008-2018 Univa Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import logging
+from typing import Iterator, Optional
+
+from tortuga.logging import EVENTS_NAMESPACE
+from tortuga.typestore.objectstore import ObjectStoreTypeStore
+from .types import BaseResourceRequest
+from .types import get_resource_request_class
+
+
+logger = logging.getLogger(EVENTS_NAMESPACE)
+
+
+class ResourceRequestStore:
+    """
+    Base class for the event storage back-end.
+
+    """
+    def save(self, event: BaseResourceRequest):
+        """
+        Saves the event to the event store.
+
+        :param BaseResourceRequest event: the event to save
+
+        """
+        raise NotImplementedError()
+
+    def get(self, event_id: str) -> Optional[BaseResourceRequest]:
+        """
+        Gets an event from the event store.
+
+        :param str event_id: the id of the event to retrieve
+
+        :return: the event instance, if found, otherwise None
+
+        """
+        raise NotImplementedError()
+
+    def list(
+            self,
+            order_by: Optional[str] = None,
+            order_desc: bool = False,
+            order_alpha: bool = False,
+            limit: Optional[int] = None,
+            **filters) -> Iterator[BaseResourceRequest]:
+        """
+        Gets a iterator of events from the event store.
+
+        :param str order_by:     the name of the object attribute to order by
+        :param bool order_desc:  sort in descending order
+        :param bool order_alpha: order alphabetically (instead of numerically)
+        :param int limit:        the number of objects to limit in the
+                                 iterator
+        :param filters:          one or more filters to apply to the list
+
+        :return: an iterator of events
+
+        """
+        raise NotImplementedError()
+
+
+class ObjectStoreResourceRequestStore(ObjectStoreTypeStore):
+    type_class = BaseResourceRequest
+
+    def marshall(self, obj: BaseResourceRequest) -> dict:
+        schema_class = obj.get_schema_class()
+        marshalled = schema_class().dump(obj)
+        return marshalled.data
+
+    def unmarshall(self, obj_dict: dict) -> BaseResourceRequest:
+        event_class = get_resource_request_class(obj_dict['name'])
+        schema_class = event_class.get_schema_class()
+        unmarshalled = schema_class().load(obj_dict)
+        return event_class(**unmarshalled.data)

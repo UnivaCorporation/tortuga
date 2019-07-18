@@ -52,11 +52,7 @@ class DeleteSoftwareProfileCli(TortugaCli):
         name = self.getArgs().name \
             if self.getArgs().name else self.getArgs().softwareProfileName
 
-        api = SoftwareProfileWsApi(username=self.getUsername(),
-                                   password=self.getPassword(),
-                                   baseurl=self.getUrl(),
-                                   verify=self._verify)
-
+        api = self.configureClient(SoftwareProfileWsApi)
         api.deleteSoftwareProfile(name)
 
 

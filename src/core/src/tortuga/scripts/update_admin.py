@@ -53,11 +53,7 @@ Updates a administrative user settings in the Tortuga system.
 
         admin.setId(self.getArgs().adminId)
 
-        api = AdminWsApi(username=self.getUsername(),
-                         password=self.getPassword(),
-                         baseurl=self.getUrl(),
-                         verify=self._verify)
-
+        api = self.configureClient(AdminWsApi)
         api.updateAdmin(admin, self.getArgs().isCrypted)
 
 

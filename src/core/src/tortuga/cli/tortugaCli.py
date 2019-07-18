@@ -15,16 +15,21 @@
 # pylint: disable=no-member,maybe-no-member
 
 import argparse
-import configparser
 import gettext
 import logging
 import os
 import sys
 from abc import ABCMeta, abstractmethod
+from typing import Generic, TypeVar
 
 from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.logging import CLI_NAMESPACE, ROOT_NAMESPACE
+from tortuga.scripts.tortuga.script import ConfigException, \
+    TortugaScriptConfig
+
+
+T = TypeVar('T')
 
 
 def check_for_root(cls):
@@ -43,13 +48,10 @@ class TortugaCli(metaclass=ABCMeta):
     def __init__(self, validArgCount=0):
         self._logger = logging.getLogger(CLI_NAMESPACE)
 
+        self._config: TortugaScriptConfig = None
         self._parser = argparse.ArgumentParser()
         self._args = []
         self._validArgCount = validArgCount
-        self._url = None
-        self._username = None
-        self._password = None
-        self._verify = True
         self._optionGroupDict = {}
         self._cm = ConfigManager()
 
@@ -95,30 +97,37 @@ class TortugaCli(metaclass=ABCMeta):
         Raises:
             InvalidArgument
         """
-        common_group = _('Common Tortuga Options')
+        common_group = 'Common Tortuga Options'
         self.addOptionGroup(common_group, None)
 
         self.addOptionToGroup(common_group, '-V', action='store_true',
                               dest='cmdVersion', default=False,
-                              help=_('print version and exit'))
+                              help='print version and exit')
 
         self.addOptionToGroup(common_group, '-d', '--debug',
                               dest='consoleLogLevel', default='warning',
-                              help=_('set debug level; valid values are: '
-                                     'critical, error, warning, info, debug'))
+                              help='set debug level; valid values are: '
+                                   'critical, error, warning, info, debug')
+
+        self.addOptionToGroup(common_group, '--config', dest='config',
+                              help='Path to config file '
+                                   '(defaults to ~/.tortuga/config)')
 
         self.addOptionToGroup(common_group, '--url',
-                              help=_('Tortuga web service URL'))
+                              help='Tortuga web service URL')
 
         self.addOptionToGroup(common_group, '--username', dest='username',
-                              help=_('Tortuga web service user name'))
+                              help='Tortuga web service user name')
 
         self.addOptionToGroup(common_group, '--password', dest='password',
-                              help=_('Tortuga web service password'))
+                              help='Tortuga web service password')
+
+        self.addOptionToGroup(common_group, '--token', dest='token',
+                              help='Tortuga web service token')
 
         self.addOptionToGroup(common_group, '--no-verify', dest='verify',
                               action='store_false', default=True,
-                              help=_("Don't verify the API SSL certificate"))
+                              help="Don't verify the API SSL certificate")
 
         if usage:
             self._parser.description = usage
@@ -131,15 +140,14 @@ class TortugaCli(metaclass=ABCMeta):
             sys.exit(int(str(rc)))
 
         if self._args.cmdVersion:
-            print(_('{0} version: {1}'.format(
+            print('{0} version: {1}'.format(
                 os.path.basename(sys.argv[0]),
-                self._cm.getTortugaRelease())))
+                self._cm.getTortugaRelease()))
             sys.exit(0)
 
         self._setup_logging(self._args.consoleLogLevel)
 
-        self._url, self._username, self._password, self._verify = \
-            self._get_web_service_options()
+        self._load_config(self._args)
 
         return self._args
 
@@ -169,67 +177,33 @@ class TortugaCli(metaclass=ABCMeta):
 
         logger.addHandler(ch)
 
-    def _get_web_service_options(self):
+    def _load_config(self, args: argparse.Namespace):
         """
-        Read Tortuga web service credentials from config file, environment,
-        or command-line. Command-line overrides either config file or
-        environment.
+        Implements the --config argument.
 
-        :return: tuple of (url, username, password)
         """
-        username = password = url = None
+        #
+        # Load a config, filename may or may-not be provided...
+        #
+        try:
+            self._config = TortugaScriptConfig.load(args.config)
 
-        cfg_file = os.path.join(os.path.expanduser('~'),
-                                '.local',
-                                'tortuga',
-                                'credentials')
-
-        if os.path.exists(cfg_file):
-            cfg = configparser.ConfigParser()
-
-            cfg.read(cfg_file)
-
-            username = cfg.get('default', 'username') \
-                if cfg.has_section('default') and \
-                cfg.has_option('default', 'username') else None
-
-            password = cfg.get('default', 'password') \
-                if cfg.has_section('default') and \
-                cfg.has_option('default', 'password') else None
-
-            url = cfg.get('default', 'url') \
-                if cfg.has_section('default') and \
-                cfg.has_option('default', 'url') else None
-
-        # TORTUGA_WS_URL
-        if self._args.url:
-            # Command-line "--server" argument overrides env var and
-            # setting contained within '/etc/profile.nii'
-            url = self._args.url
-        elif os.getenv('TORTUGA_WS_URL'):
-            url = os.getenv('TORTUGA_WS_URL')
-
-        # TORTUGA_WS_USERNAME
-        if self._args.username:
-            username = self._args.username
-        elif os.getenv('TORTUGA_WS_USERNAME'):
-            username = os.getenv('TORTUGA_WS_USERNAME')
-
-        # TORTUGA_WS_PASSWORD
-        if self._args.password:
-            password = self._args.password
-        elif os.getenv('TORTUGA_WS_PASSWORD'):
-            password = os.getenv('TORTUGA_WS_PASSWORD')
+        except ConfigException as ex:
+            print(str(ex))
+            sys.exit(0)
 
         #
-        # CLI arguments should override the environment variable
+        # Override the config with any provided argument values
         #
-        if os.getenv('TORTUGA_WS_NO_VERIFY'):
-            verify = False
-        else:
-            verify = self._args.verify
-
-        return url, username, password, verify
+        if args.url:
+            self._config.url = args.url
+        if args.username:
+            self._config.username = args.username
+        if args.password:
+            self._config.password = args.password
+        if args.token:
+            self._config.token = args.token
+        self._config.verify = args.verify
 
     def usage(self, s=None):
         """
@@ -237,26 +211,30 @@ class TortugaCli(metaclass=ABCMeta):
         """
 
         if s:
-            sys.stderr.write(_('Error: {0}').format(s) + '\n')
+            sys.stderr.write('Error: {0}'.format(s)) + '\n'
 
         self._parser.print_help()
 
         sys.exit(1)
 
     def getArgs(self):
-        '''Returns the command line argument list'''
         return self._args
 
-    def getUrl(self):
-        return self._url
+    def configureClient(self, client_class: Generic[T]) -> T:
+        auth_method = self._config.get_auth_method()
 
-    def getUsername(self):
-        """ Get user name. """
-        return self._username
+        if auth_method == self._config.AUTH_METHOD_TOKEN:
+            return client_class(token=self._config.get_token(),
+                                baseurl=self._config.url,
+                                verify=self._config.verify)
 
-    def getPassword(self):
-        """ Get password. """
-        return self._password
+        elif auth_method == self._config.AUTH_METHOD_PASSWORD:
+            return client_class(username=self._config.username,
+                                password=self._config.password,
+                                baseurl=self._config.url,
+                                verify=self._config.verify)
+
+        raise Exception('Unsupported auth method: {}'.format(auth_method))
 
     @abstractmethod
     def runCommand(self): \

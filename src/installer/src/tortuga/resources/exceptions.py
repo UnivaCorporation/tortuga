@@ -12,11 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from distutils.version import LooseVersion
 
-
-VERSION = '7.0.3+003'
-
-
-def version_is_compatible(version_string: str):
-    return LooseVersion(VERSION) >= LooseVersion(version_string)
+class ResourceRequestNotFoundError(Exception):
+    pass
