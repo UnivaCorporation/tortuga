@@ -29,7 +29,7 @@ class EventStore:
     Base class for the event storage back-end.
 
     """
-    def save(self, event: BaseEvent):
+    def save(self, event: BaseEvent) -> BaseEvent:
         """
         Saves the event to the event store.
 
@@ -72,7 +72,7 @@ class EventStore:
         raise NotImplementedError()
 
 
-class ObjectStoreEventStore(ObjectStoreTypeStore):
+class ObjectStoreEventStore(ObjectStoreTypeStore, EventStore):
     type_class = BaseEvent
 
     def marshall(self, obj: BaseEvent) -> dict:

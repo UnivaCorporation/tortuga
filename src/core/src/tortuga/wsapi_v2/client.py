@@ -64,8 +64,7 @@ class TortugaWsApiClient:
         self._client.baseurl = '{}/{}/{}/'.format(base_url, WS_API_VERSION,
                                                   endpoint)
 
-    def _build_query_string(self, params: dict) -> str: \
-            # pylint: disable=no-self-use
+    def _build_query_string(self, params: dict) -> str:
         return '&'.join([f'{k}={v}' for k, v in params.items()])
 
     def list(self, **params) -> list:
@@ -81,6 +80,11 @@ class TortugaWsApiClient:
 
         return self._client.get(path)
 
+    def post(self, data: dict) -> dict:
+        path = '/'
+
+        return self._client.post(path, data=data)
+
     def put(self, data: dict) -> dict:
         if not data or 'id' not in data.keys():
             raise Exception('Object does not have an id field')
@@ -90,3 +94,8 @@ class TortugaWsApiClient:
         path = '/{}'.format(id_)
 
         return self._client.put(path, data=data)
+
+    def delete(self, id_: str):
+        path = '/{}'.format(id_)
+
+        return self._client.delete(path)

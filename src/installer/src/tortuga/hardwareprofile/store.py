@@ -20,7 +20,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from tortuga.db.dbManager import DbManager
 from tortuga.db.models.hardwareProfile import HardwareProfile as DbHardwareProfile
 from tortuga.db.models.hardwareProfileTag import HardwareProfileTag
-from tortuga.events.types.hardware_profile import HardwareProfileTagsChanged
+from tortuga.events.types.hardwareprofile import HardwareProfileTagsChanged
 from tortuga.objectstore.base import matches_filters
 from tortuga.typestore.base import TypeStore
 from .types import HardwareProfile

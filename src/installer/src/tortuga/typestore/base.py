@@ -15,7 +15,7 @@ class TypeStore:
 
     def save(self, obj: BaseType) -> BaseType:
         """
-        Saves the event to the store. If the object doesn't exist, it is
+        Saves the type to the store. If the object doesn't exist, it is
         created, otherwise it is updated.
 
         :param BaseType obj: the object instance to save
@@ -44,7 +44,7 @@ class TypeStore:
             limit: Optional[int] = None,
             **filters) -> Iterator[BaseType]:
         """
-        Gets a iterator of objects from the event store.
+        Gets a iterator of objects from the type store.
 
         :param str order_by:     the name of the object attribute to order by
         :param bool order_desc:  sort in descending order
@@ -54,6 +54,15 @@ class TypeStore:
         :param filters:          one or more filters to apply to the list
 
         :return Iterator[BaseType]: an iterator of objects
+
+        """
+        raise NotImplementedError()
+
+    def delete(self, obj_id: str):
+        """
+        Deletes an object from the type store.
+
+        :param str obj_id: the ID of the object to delete
 
         """
         raise NotImplementedError()

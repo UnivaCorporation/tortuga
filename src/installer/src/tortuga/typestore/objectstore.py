@@ -82,3 +82,12 @@ class ObjectStoreTypeStore(TypeStore):
                     return
 
                 yield obj
+
+    def delete(self, obj_id: str):
+        """
+        See superclass.
+
+        :param obj_id:
+
+        """
+        self._store.delete(obj_id)

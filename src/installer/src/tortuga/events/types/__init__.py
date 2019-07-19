@@ -13,9 +13,11 @@
 # limitations under the License.
 
 from .base import BaseEvent, get_event_class
-from .hardware_profile import HardwareProfileTagsChanged
+from .hardwareprofile import HardwareProfileTagsChanged
 from .node import NodeStateChanged, NodeTagsChanged
-from .node_request import (AddNodeRequestComplete, AddNodeRequestQueued,
-                           DeleteNodeRequestComplete, DeleteNodeRequestQueued)
+from .noderequest import (AddNodeRequestComplete, AddNodeRequestQueued,
+                          DeleteNodeRequestComplete, DeleteNodeRequestQueued)
+from .resourcerequest import (ResourceRequestCreated, ResourceRequestUpdated,
+                              ResourceRequestDeleted)
 from .software_profile import SoftwareProfileTagsChanged
 from .task import TaskFailed

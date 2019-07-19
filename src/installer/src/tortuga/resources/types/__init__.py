@@ -13,3 +13,4 @@
 # limitations under the License.
 
 from .base import BaseResourceRequest, get_resource_request_class
+from .scale_set import ScaleSetResourceRequest
