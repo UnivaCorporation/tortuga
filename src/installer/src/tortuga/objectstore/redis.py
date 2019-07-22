@@ -224,7 +224,7 @@ class RedisObjectStore(ObjectStore):
         #
         # Delete the object
         #
-        self._redis.delete(self.get_key_name(key))
+        self._redis.delete(key)
 
     def exists(self, key: str) -> bool:
         """
