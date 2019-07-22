@@ -29,7 +29,7 @@ class MockRedis:
         try:
             self._data_store.pop(bkey)
         except KeyError:
-            raise
+            pass
 
     def exists(self, key: str) -> bool:
         bkey = key.encode()
