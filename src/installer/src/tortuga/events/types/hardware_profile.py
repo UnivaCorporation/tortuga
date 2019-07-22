@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from typing import Dict
 
 from marshmallow import fields
 
@@ -36,8 +37,7 @@ class HardwareProfileTagsChanged(BaseEvent):
     name = 'hardware-profile-tags-changed'
     schema_class = HardwareProfileTagsChangedSchema
 
-    def __init__(self, hardwareprofile_id: str, hardwareprofile_name: str,
-                 tags: dict, previous_tags: dict, **kwargs):
+    def __init__(self, **kwargs):
         """
         Initializer.
 
@@ -49,7 +49,7 @@ class HardwareProfileTagsChanged(BaseEvent):
 
         """
         super().__init__(**kwargs)
-        self.hardwareprofile_id = hardwareprofile_id
-        self.hardwareprofile_name = hardwareprofile_name
-        self.tags = tags
-        self.previous_tags = previous_tags
+        self.hardwareprofile_id: str = kwargs.get('hardwareprofile_id', None)
+        self.hardwareprofile_name: str = kwargs.get('hardwareprofile_name', None)
+        self.tags: Dict[str, str] = kwargs.get('tags', {})
+        self.previous_tags: Dict[str, str] = kwargs.get('previous_tags', {})

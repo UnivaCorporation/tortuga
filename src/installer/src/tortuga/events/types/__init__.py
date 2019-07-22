@@ -18,3 +18,4 @@ from .node import NodeStateChanged, NodeTagsChanged
 from .node_request import (AddNodeRequestComplete, AddNodeRequestQueued,
                            DeleteNodeRequestComplete, DeleteNodeRequestQueued)
 from .software_profile import SoftwareProfileTagsChanged
+from .task import TaskFailed

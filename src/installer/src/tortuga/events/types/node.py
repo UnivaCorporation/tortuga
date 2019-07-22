@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Dict
+
 from marshmallow import fields
 
 from .base import BaseEventSchema, BaseEvent
@@ -34,7 +36,7 @@ class NodeStateChanged(BaseEvent):
     name = 'node-state-changed'
     schema_class = NodeStateChangedSchema
 
-    def __init__(self, node: dict, previous_state: str, **kwargs):
+    def __init__(self, **kwargs):
         """
         Initializer.
 
@@ -44,8 +46,8 @@ class NodeStateChanged(BaseEvent):
 
         """
         super().__init__(**kwargs)
-        self.node: dict = node
-        self.previous_state: str = previous_state
+        self.node: dict = kwargs.get('node', {})
+        self.previous_state: str = kwargs.get('previous_state', None)
 
 
 class NodeTagsChangedSchema(BaseEventSchema):
@@ -67,8 +69,7 @@ class NodeTagsChanged(BaseEvent):
     name = 'node-tags-changed'
     schema_class = NodeTagsChangedSchema
 
-    def __init__(self, node_id: str, node_name: str, tags: dict,
-                 previous_tags: dict, **kwargs):
+    def __init__(self, **kwargs):
         """
         Initializer.
 
@@ -79,7 +80,7 @@ class NodeTagsChanged(BaseEvent):
 
         """
         super().__init__(**kwargs)
-        self.node_id = node_id
-        self.node_name = node_name
-        self.tags = tags
-        self.previous_tags = previous_tags
+        self.node_id: str = kwargs.get('node_id', None)
+        self.node_name: str = kwargs.get('node_name', None)
+        self.tags: Dict[str, str] = kwargs.get('tags', {})
+        self.previous_tags: Dict[str, str] = kwargs.get('previous_tags', {})

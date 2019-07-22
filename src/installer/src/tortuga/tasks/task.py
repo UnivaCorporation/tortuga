@@ -12,4 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .task import TortugaTask
+from celery.task import Task
+
+from tortuga.events.types import TaskFailed
+
+
+class TortugaTask(Task):
+    def on_failure(self, exc, task_id, args, kwargs, einfo):
+        TaskFailed.fire(
+            task_id=task_id,
+            task_name=self.name,
+            task_error=str(exc),
+            task_args=args,
+            task_kwargs=kwargs,
+            task_trace=str(einfo)
+        )
