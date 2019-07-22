@@ -27,7 +27,7 @@ class TaskFailedSchema(BaseEventSchema):
     task_id = fields.String()
     task_name = fields.String()
     task_error = fields.String()
-    task_args = fields.List(fields.String())
+    task_args = fields.Raw()
     task_kwargs = fields.Dict()
     task_trace = fields.String()
 
