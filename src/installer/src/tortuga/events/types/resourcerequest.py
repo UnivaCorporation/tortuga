@@ -30,9 +30,9 @@ class ResourceRequestCreated(BaseEvent):
 
     name = 'resource-request-created'
 
-    def __init__(self, resourcerequest_id: str, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.resourcerequest_id = resourcerequest_id
+        self.resourcerequest_id: str = kwargs.get('resourcerequest_id', None)
 
 
 class ResourceRequestUpdatedSchema(BaseEventSchema):
@@ -49,12 +49,10 @@ class ResourceRequestUpdated(BaseEvent):
 
     name = 'resource-request-updated'
 
-    def __init__(self, resourcerequest_id: str,
-                 previous_resourcerequest: dict,
-                 **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.resourcerequest_id = resourcerequest_id
-        self.previous_resourcerequest = previous_resourcerequest
+        self.resourcerequest_id: str = kwargs.get('resourcerequest_id', None)
+        self.previous_resourcerequest: dict = kwargs.get('previous_resourcerequest', {})
 
 
 class ResourceRequestDeletedSchema(BaseEventSchema):
@@ -71,9 +69,7 @@ class ResourceRequestDeleted(BaseEvent):
 
     name = 'resource-request-deleted'
 
-    def __init__(self, resourcerequest_id: str,
-                 previous_resourcerequest: dict,
-                 **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.resourcerequest_id = resourcerequest_id
-        self.previous_resourcerequest = previous_resourcerequest
+        self.resourcerequest_id: str = kwargs.get('resourcerequest_id', None)
+        self.previous_resourcerequest: dict = kwargs.get('previous_resourcerequest', {})
