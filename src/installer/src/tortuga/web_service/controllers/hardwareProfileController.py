@@ -98,16 +98,21 @@ class HardwareProfileController(TortugaController):
     @authentication_required()
     @cherrypy.tools.json_out()
     def getHardwareProfiles(self, **kwargs):
-        tagspec = []
-
-        if 'tag' in kwargs and kwargs['tag']:
-            tagspec.extend(parse_tag_query_string(kwargs['tag']))
-
         try:
+            tags = {}
+
+            if 'tag' in kwargs and kwargs['tag']:
+                tags.update(
+                    dict(parse_tag_query_string(kwargs['tag']))
+                )
+
             if 'name' in kwargs and kwargs['name']:
+                default_options = [
+                    'resourceadapter'
+                ]
                 options = make_options_from_query_string(
-                    kwargs['include']
-                    if 'include' in kwargs else None, ['resourceadapter'])
+                    kwargs.get('include', default_options)
+                )
 
                 hardwareProfiles = TortugaObjectList(
                     [HardwareProfileManager().getHardwareProfile(
@@ -116,7 +121,7 @@ class HardwareProfileController(TortugaController):
             else:
                 hardwareProfiles = \
                     HardwareProfileManager().getHardwareProfileList(
-                        cherrypy.request.db, tags=tagspec)
+                        cherrypy.request.db, tags=tags)
 
             response = {
                 'hardwareprofiles': hardwareProfiles.getCleanDict(),
