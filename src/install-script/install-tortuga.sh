@@ -774,7 +774,7 @@ cachedpkgs+=" ${commonpkgs}"
     # Download mcollective-puppet-agent plugin
     echo -n "Downloading 'mcollective-puppet-agent' plugin... "
 
-    url=https://puppet-mirror.univa.com/puppetlabs/mcollective-puppet-agent/archive/1.13.1.tar.gz
+    url=https://github.com/puppetlabs/mcollective-puppet-agent/archive/1.13.1.tar.gz
 
     ( cd ${INTWEBROOT}/3rdparty/mcollective-puppet-agent; \
         curl --retry 10 --retry-max-time 60 --silent --fail --location \
