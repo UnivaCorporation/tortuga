@@ -21,7 +21,6 @@ from sqlalchemy.orm.session import Session
 from tortuga.db.models.hardwareProfile import HardwareProfile
 from tortuga.db.models.node import Node as NodeModel
 from tortuga.db.models.softwareProfile import SoftwareProfile
-from tortuga.events.types import NodeTagsChanged
 from tortuga.exceptions.tortugaException import TortugaException
 from tortuga.logging import NODE_NAMESPACE
 from tortuga.node.nodeManager import NodeManager
@@ -49,27 +48,17 @@ class NodeApi(TortugaApi):
                       validateIp: bool = True, bGenerateIp: bool = True,
                       dns_zone: Optional[str] = None) -> NodeModel:
         try:
-            node: Node = self._nodeManager.createNewNode(
+            return self._nodeManager.createNewNode(
                 session, addNodeRequest, dbHardwareProfile,
                 dbSoftwareProfile=dbSoftwareProfile,
                 validateIp=validateIp, bGenerateIp=bGenerateIp,
                 dns_zone=dns_zone)
-            #
-            # Fire the tags changed event for all creates that have tags
-            #
-            if node.getTags():
-                NodeTagsChanged.fire(
-                    node=node.getCleanDict(),
-                    previous_tags={}
-                )
-            return node
 
         except TortugaException:
             raise
 
         except Exception as ex:
             self._logger.exception('Fatal error creating new node')
-
             raise TortugaException(exception=ex)
 
     def getNodeList(self, session,
@@ -190,26 +179,7 @@ class NodeApi(TortugaApi):
     def updateNode(self, session: Session, name: str,
                    updateNodeRequest: dict):
         try:
-            #
-            # Get the current version from the db for later comparison
-            #
-            old_node = self.getNode(session, name)
-            #
-            # Do the actual update
-            #
             self._nodeManager.updateNode(session, name, updateNodeRequest)
-            #
-            # Get the new version from the DB
-            #
-            new_node = self.getNode(session, name)
-            #
-            # If the tags have changed, fire the tags changed event
-            #
-            if old_node.getTags() != new_node.getTags():
-                NodeTagsChanged.fire(
-                    node=new_node.getCleanDict(),
-                    previous_tags=old_node.getTags()
-                )
 
         except TortugaException:
             raise
