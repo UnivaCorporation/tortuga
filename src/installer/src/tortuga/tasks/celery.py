@@ -18,14 +18,18 @@ from typing import List
 
 from celery import Celery
 from celery.contrib.testing.app import TestApp
+from sqlalchemy.orm import sessionmaker
 
 from tortuga.config.configManager import ConfigManager
 from tortuga.db.dbManager import DbManager
 from tortuga.kit.loader import load_kits
 from tortuga.kit.registry import get_all_kit_installers
 from tortuga.logging import ROOT_NAMESPACE, KIT_NAMESPACE
+from tortuga.objects.component import Component
+from tortuga.objects.kit import Kit
+from tortuga.objects.softwareProfile import SoftwareProfile
+from tortuga.softwareprofile.softwareProfileApi import SoftwareProfileApi
 from tortuga.types.application import Application
-
 
 logging.getLogger(ROOT_NAMESPACE).setLevel(logging.DEBUG)
 logging.getLogger(KIT_NAMESPACE).setLevel(logging.DEBUG)
@@ -59,23 +63,55 @@ if 'TORTUGA_TEST' in os.environ:
     app.app = Application()
     app.dbm = DbManager()
 
-
 #
 # In regular mode, we also want to load the kits, and include any tasks
 # they may have as well.
 #
 else:
+    from tortuga.web_service.database import dbm
+
+    Session = sessionmaker(bind=dbm.engine)
+    sess = Session()
+
     load_kits()
-    kits_task_modules: List[str] = []
-    # This module gets loaded during kit install so we may fail
-    # on a circular import.  Protect against that.
+
+    #
+    # Get software profile and installed components for the Installer node
+    #
+    swp_api = SoftwareProfileApi()
+    installer_swp: SoftwareProfile = swp_api.getSoftwareProfile(
+        sess, 'Installer')
+    installer_components: List[Component] = installer_swp.getComponents()
+
+    #
+    # Get list of kit and component task modules
+    #
+    kit_task_modules: List[str] = []
+    component_task_modules: List[str] = []
     try:
         for kit_installer_class in get_all_kit_installers():
             kit_installer = kit_installer_class()
             kit_installer.register_event_listeners()
-            kits_task_modules += kit_installer.task_modules
+            kit_task_modules += kit_installer.task_modules
+            #
+            # Check all components to see if there are any task modules that
+            # need to be included
+            #
+            component: Component
+            for component in installer_components:
+                kit: Kit = component.getKit()
+                if kit.getName() == kit_installer.name:
+                    component_installer = \
+                        kit_installer.get_component_installer(
+                            component.getName())
+                    component_task_modules += component_installer.task_modules
+    #
+    # This module gets loaded during kit install so we may fail
+    # on a circular import.  Protect against that.
+    #
     except ImportError as ex:
-        logging.getLogger(KIT_NAMESPACE).info("Ignoring import exception: %s.  Likely installing kit." % ex)
+        logging.getLogger(KIT_NAMESPACE).info(
+            "Ignoring import exception: %s.  Likely installing kit.", ex)
 
     config_manager = ConfigManager()
     redis_password = config_manager.getRedisPassword()
@@ -87,7 +123,7 @@ else:
         include=[
             'tortuga.events.tasks',
             'tortuga.resourceAdapter.tasks',
-        ] + kits_task_modules
+        ] + kit_task_modules + component_task_modules
     )
 
 

@@ -603,6 +603,7 @@ class ComponentInstallerBase(ConfigurableMixin):
     #
     installer_only = False
     compute_only = False
+    task_modules = []
 
     def __init__(self, kit_installer):
         self.kit_installer = kit_installer
