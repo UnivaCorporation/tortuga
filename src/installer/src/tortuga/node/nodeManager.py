@@ -141,11 +141,14 @@ class NodeManager(TortugaObjectManager): \
         node.softwareprofile = dbSoftwareProfile
 
         #
-        # Fire the tags changed event for all creates that have tags
+        # Fire the tags changed event for all creates that have tags...
+        # we have to convert this to a node object because... our API
+        # is inconsistent!
         #
-        if node.getTags():
+        n = Node.getFromDbDict(node.__dict__)
+        if n.getTags():
             NodeTagsChanged.fire(
-                node=node.getCleanDict(),
+                node=n.getCleanDict(),
                 previous_tags={}
             )
 
