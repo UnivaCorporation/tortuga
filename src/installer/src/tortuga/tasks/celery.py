@@ -93,6 +93,7 @@ else:
     try:
         for kit_installer_class in get_all_kit_installers():
             kit_installer = kit_installer_class()
+            kit_installer.session = sess
             kit_installer.register_event_listeners()
             kit_task_modules += kit_installer.task_modules
             #
