@@ -208,7 +208,7 @@ class KitInstallerBase(ConfigurableMixin, metaclass=KitInstallerMeta):
     task_modules = []
 
     def __init__(self):
-        self.config_manager = ConfigManager()
+        self.config_manager: ConfigManager = ConfigManager()
 
         #
         # Setup paths
@@ -606,7 +606,7 @@ class ComponentInstallerBase(ConfigurableMixin):
     task_modules = []
 
     def __init__(self, kit_installer):
-        self.kit_installer = kit_installer
+        self.kit_installer: KitInstallerBase = kit_installer
         self.spec = (self.kit_installer.spec, self.name, self.version)
 
         #
@@ -864,7 +864,14 @@ class ComponentInstallerBase(ConfigurableMixin):
         :param kwargs:
 
         """
-        pass
+        #
+        # Install required python packages from requirements.txt
+        #
+        requirements_path = os.path.join(
+            self.component_path,
+            'requirements.txt'
+        )
+        pip_install_requirements(requirements_path)
 
     def action_post_install(self, *args, **kwargs):
         pass

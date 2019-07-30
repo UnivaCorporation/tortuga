@@ -31,6 +31,7 @@ from tortuga.objects.softwareProfile import SoftwareProfile
 from tortuga.softwareprofile.softwareProfileApi import SoftwareProfileApi
 from tortuga.types.application import Application
 
+
 logging.getLogger(ROOT_NAMESPACE).setLevel(logging.DEBUG)
 logging.getLogger(KIT_NAMESPACE).setLevel(logging.DEBUG)
 
@@ -70,6 +71,8 @@ if 'TORTUGA_TEST' in os.environ:
 else:
     from tortuga.web_service.database import dbm
 
+    logger = logging.getLogger(KIT_NAMESPACE)
+
     Session = sessionmaker(bind=dbm.engine)
     sess = Session()
 
@@ -79,9 +82,8 @@ else:
     # Get software profile and installed components for the Installer node
     #
     swp_api = SoftwareProfileApi()
-    installer_swp: SoftwareProfile = swp_api.getSoftwareProfile(
-        sess, 'Installer')
-    installer_components: List[Component] = installer_swp.getComponents()
+    installer_components: List[Component] = swp_api.getEnabledComponentList(
+        sess, "Installer")
 
     #
     # Get list of kit and component task modules
@@ -110,8 +112,11 @@ else:
     # on a circular import.  Protect against that.
     #
     except ImportError as ex:
-        logging.getLogger(KIT_NAMESPACE).info(
+        logger.info(
             "Ignoring import exception: %s.  Likely installing kit.", ex)
+
+    logger.info('Loading celery tasks from kits: %s',
+                kit_task_modules + component_task_modules)
 
     config_manager = ConfigManager()
     redis_password = config_manager.getRedisPassword()
