@@ -33,7 +33,7 @@ class AddNodeRequestMixin:
     """
     schema_class = AddNodeRequestSchema
 
-    def __init__(self, request_id: int, request: dict, **kwargs):
+    def __init__(self, **kwargs):
         """
         Initializer.
 
@@ -43,8 +43,8 @@ class AddNodeRequestMixin:
 
         """
         super().__init__(**kwargs)
-        self.request_id: int = request_id
-        self.request: dict = request
+        self.request_id: int = kwargs.get('request_id', None)
+        self.request: dict = kwargs.get('request', {})
 
 
 class AddNodeRequestComplete(AddNodeRequestMixin, BaseEvent):
@@ -79,7 +79,7 @@ class DeleteNodeRequestMixin:
     """
     schema_class = DeleteNodeRequestSchema
 
-    def __init__(self, request_id: int, request: dict, **kwargs):
+    def __init__(self, **kwargs):
         """
         Initializer.
 
@@ -89,8 +89,8 @@ class DeleteNodeRequestMixin:
 
         """
         super().__init__(**kwargs)
-        self.request_id: int = request_id
-        self.request: dict = request
+        self.request_id: int = kwargs.get('request_id', None)
+        self.request: dict = kwargs.get('request', None)
 
 
 class DeleteNodeRequestQueued(DeleteNodeRequestMixin, BaseEvent):

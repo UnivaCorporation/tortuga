@@ -16,8 +16,6 @@ import logging
 
 from tortuga.addhost.addHostRequest import process_addhost_request
 from tortuga.addhost.deleteHostRequest import process_delete_host_request
-from tortuga.exceptions.nodeNotFound import NodeNotFound
-from tortuga.exceptions.operationFailed import OperationFailed
 from tortuga.logging import RESOURCE_ADAPTER_NAMESPACE
 from tortuga.tasks.celery import app
 
@@ -27,20 +25,14 @@ logger = logging.getLogger(RESOURCE_ADAPTER_NAMESPACE)
 
 @app.task(bind=True)
 def add_nodes(self, request: dict) -> None:
-    try:
-        with app.dbm.session() as session:
-            # use Celery task id as 'addHostSession'
-            process_addhost_request(session, request, self.request.id)
-    except (OperationFailed, NodeNotFound) as exc:
-        logger.error('Add nodes operation failed: {}'.format(exc))
+    with app.dbm.session() as session:
+        # use Celery task id as 'addHostSession'
+        process_addhost_request(session, request, self.request.id)
 
 
 @app.task(bind=True)
 def delete_nodes(self, nodespec: str, force: bool = False) -> None:
-    try:
-        with app.dbm.session() as session:
-            # use Celery task id as 'addHostSession'
-            process_delete_host_request(
-                session, self.request.id, nodespec, force=force)
-    except (OperationFailed, NodeNotFound) as exc:
-        logger.error('Delete nodes operation failed: {}'.format(exc))
+    with app.dbm.session() as session:
+        # use Celery task id as 'addHostSession'
+        process_delete_host_request(
+            session, self.request.id, nodespec, force=force)

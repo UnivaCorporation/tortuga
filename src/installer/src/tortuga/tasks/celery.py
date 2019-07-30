@@ -25,7 +25,7 @@ from tortuga.kit.loader import load_kits
 from tortuga.kit.registry import get_all_kit_installers
 from tortuga.logging import ROOT_NAMESPACE, KIT_NAMESPACE
 from tortuga.types.application import Application
-
+from .task import TortugaTask
 
 logging.getLogger(ROOT_NAMESPACE).setLevel(logging.DEBUG)
 logging.getLogger(KIT_NAMESPACE).setLevel(logging.DEBUG)
@@ -38,6 +38,7 @@ class TortugaCeleryApp(Celery):
     """
     app: Application = None
     dbm: DbManager = None
+    task_cls = TortugaTask
 
     def on_init(self):
         TortugaCeleryApp.app = Application()
