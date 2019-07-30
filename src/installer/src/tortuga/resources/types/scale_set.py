@@ -20,8 +20,8 @@ from .base import BaseResourceRequest, BaseResourceRequestSchema
 
 
 class ScaleSetResourceRequestSchema(BaseResourceRequestSchema):
-    hardwareprofile_id = fields.String()
-    softwareprofile_id = fields.String()
+    hardwareprofile_name = fields.String()
+    softwareprofile_name = fields.String()
     resourceadapter_name = fields.String()
     resourceadapter_profile_name = fields.String()
     min_nodes = fields.Integer()
@@ -35,8 +35,8 @@ class ScaleSetResourceRequest(BaseResourceRequest):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.hardwareprofile_id: Optional[str] = kwargs.get('hardwareprofile_id', None)
-        self.softwareprofile_id: Optional[str] = kwargs.get('softwareprofile_id', None)
+        self.hardwareprofile_name: Optional[str] = kwargs.get('hardwareprofile_name', None)
+        self.softwareprofile_name: Optional[str] = kwargs.get('softwareprofile_name', None)
         self.resourceadapter_name: Optional[str] = kwargs.get('resourceadapter_name', None)
         self.resourceadapter_profile_name: Optional[str] = kwargs.get('resourceadapter_profile_name', None)
         self.min_nodes: int = kwargs.get('min_nodes', 0)

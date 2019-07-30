@@ -29,6 +29,8 @@ from tortuga.exceptions.operationFailed import OperationFailed
 from tortuga.exceptions.profileMappingNotAllowed import \
     ProfileMappingNotAllowed
 from tortuga.resourceAdapter import resourceAdapterFactory
+from cryptography.fernet import Fernet
+import json
 
 
 def validate_addnodes_request(session: Session, addNodesRequest: Dict[str, Any]):
@@ -164,6 +166,19 @@ def validate_addnodes_request(session: Session, addNodesRequest: Dict[str, Any])
     adapter.validate_start_arguments(
         addNodesRequest, hp, dbSoftwareProfile=sp)
 
+def decrypt_insertnode_request(key: bytes, token: str) -> Dict[str, Any]:
+    """
+    Raises Exception if the token can't be decrypted
+    """
+    f = Fernet(key)
+    return json.loads(f.decrypt(token))
+
+def encrypt_insertnode_request(key: bytes,  request: Dict[str, Any]) -> str:
+    """
+    Raises Exception if the token can't be decrypted
+    """
+    f = Fernet(key)
+    return f.encrypt(json.dumps(request).encode())
 
 def checkProfilesMapped(swProfile: SoftwareProfile, hwProfile: HardwareProfile):
     """
