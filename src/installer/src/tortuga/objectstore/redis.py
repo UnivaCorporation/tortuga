@@ -216,7 +216,15 @@ class RedisObjectStore(ObjectStore):
 
         """
         logger.debug('delete({})'.format(key))
-        self._redis.delete(self.get_key_name(key))
+        key = self.get_key_name(key)
+        #
+        # Remove from the Redis set
+        #
+        self._redis.srem(self._get_index_key_name(), key)
+        #
+        # Delete the object
+        #
+        self._redis.delete(key)
 
     def exists(self, key: str) -> bool:
         """

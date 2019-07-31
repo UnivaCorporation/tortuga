@@ -12,19 +12,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Optional
+
 from marshmallow import fields
 
 from .base import BaseResourceRequest, BaseResourceRequestSchema
 
 
 class ScaleSetResourceRequestSchema(BaseResourceRequestSchema):
-    hardwareprofile_id = fields.String()
-    softwareprofile_id = fields.String()
+    hardwareprofile_name = fields.String()
+    softwareprofile_name = fields.String()
+    resourceadapter_name = fields.String()
+    resourceadapter_profile_name = fields.String()
     min_nodes = fields.Integer()
     max_nodes = fields.Integer()
     desired_nodes = fields.Integer()
 
 
 class ScaleSetResourceRequest(BaseResourceRequest):
-    name = 'scale-set'
     schema_class = ScaleSetResourceRequestSchema
+    resource_type = 'scale-set'
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.hardwareprofile_name: Optional[str] = kwargs.get('hardwareprofile_name', None)
+        self.softwareprofile_name: Optional[str] = kwargs.get('softwareprofile_name', None)
+        self.resourceadapter_name: Optional[str] = kwargs.get('resourceadapter_name', None)
+        self.resourceadapter_profile_name: Optional[str] = kwargs.get('resourceadapter_profile_name', None)
+        self.min_nodes: int = kwargs.get('min_nodes', 0)
+        self.max_nodes: int = kwargs.get('max_nodes', 0)
+        self.desired_nodes: int = kwargs.get('desired_nodes', 0)
