@@ -30,7 +30,7 @@ from tortuga.objects.kit import Kit
 from tortuga.objects.softwareProfile import SoftwareProfile
 from tortuga.softwareprofile.softwareProfileApi import SoftwareProfileApi
 from tortuga.types.application import Application
-
+from .task import TortugaTask
 
 logging.getLogger(ROOT_NAMESPACE).setLevel(logging.DEBUG)
 logging.getLogger(KIT_NAMESPACE).setLevel(logging.DEBUG)
@@ -43,6 +43,7 @@ class TortugaCeleryApp(Celery):
     """
     app: Application = None
     dbm: DbManager = None
+    task_cls = TortugaTask
 
     def on_init(self):
         TortugaCeleryApp.app = Application()
