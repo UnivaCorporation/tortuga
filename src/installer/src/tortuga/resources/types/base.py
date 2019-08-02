@@ -26,11 +26,12 @@ from ..exceptions import ResourceRequestNotFoundError
 RESOURCE_REQUEST_TYPES: Dict[str, Type['BaseResourceRequest']] = {}
 
 
-def get_resource_request_class(name: str) -> Type['BaseResourceRequest']:
+def get_resource_request_class(resource_type: str
+                               ) -> Type['BaseResourceRequest']:
     """
     Gets the resource request class for a specified resource_request name.
 
-    :param str name:                      the name of the resource
+    :param str resource_type:                      the name of the resource
                                           request
     :return BaseResource_request:         the class for the requested
                                           resource request
@@ -39,7 +40,7 @@ def get_resource_request_class(name: str) -> Type['BaseResourceRequest']:
 
     """
     try:
-        return RESOURCE_REQUEST_TYPES[name]
+        return RESOURCE_REQUEST_TYPES[resource_type]
     except KeyError:
         raise ResourceRequestNotFoundError()
 
@@ -49,31 +50,28 @@ class ResourceRequestMeta(type):
     Metaclass for resource request types.
 
     The purpose of this metaclass is to register resource request types
-    so that they can easily be looked-up by name.
+    so that they can easily be looked-up by resource type.
 
     """
     def __init__(cls, name, bases, attrs):
         super().__init__(name, bases, attrs)
 
         #
-        # Don't attempt to load the base installer
+        # Don't attempt to register the base request type
         #
-        if name == 'base':
+        if cls.resource_type == 'base-resource-request':
             return
 
-        RESOURCE_REQUEST_TYPES[cls.name] = cls
+        RESOURCE_REQUEST_TYPES[cls.resource_type] = cls
 
 
-class BaseResourceRequestSchema(BaseTypeSchema,
-                                metaclass=ResourceRequestMeta):
-    name: fields.Field = fields.String(dump_only=True)
+class BaseResourceRequestSchema(BaseTypeSchema):
+    resource_type: fields.Field = fields.String(dump_only=True)
     timestamp: fields.Field = fields.DateTime()
 
 
-class BaseResourceRequest(BaseType):
+class BaseResourceRequest(BaseType, metaclass=ResourceRequestMeta):
     type = 'resource-request'
     schema_class = BaseResourceRequestSchema
     
-    name: str = 'base-resource-request'
-
-
+    resource_type: str = 'base-resource-request'

@@ -81,6 +81,13 @@ class MockRedis:
         set_.append(value.encode())
         self._data_store[bkey] = set_
 
+    def srem(self, key: str, value: str):
+        bkey = key.encode()
+
+        set_ = self._data_store.get(bkey, [])
+        set_.remove(value.encode())
+        self._data_store[bkey] = set_
+
     def smembers(self, key: str) -> List[bytes]:
         bkey = key.encode()
 
@@ -92,7 +99,7 @@ class MockRedis:
 
         sort_key = None
         if by:
-            m = re.match('\*->(.+)', by)
+            m = re.match(r'\*->(.+)', by)
             groups = m.groups()
             if not len(groups) == 1:
                 raise Exception('Mock does not support by: {}'.format(by))

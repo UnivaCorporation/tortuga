@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import http.client
 import logging
 import traceback
 from typing import Any, List
@@ -23,6 +22,19 @@ from tortuga.logging import WEBSERVICE_NAMESPACE
 from tortuga.types.base import BaseType
 from tortuga.typestore.base import TypeStore
 from tortuga.web_service.auth.decorators import authentication_required
+
+
+HTTP_STATUS_NO_CONTENT = 204
+HTTP_STATUS_BAD_REQUEST = 400
+HTTP_STATUS_NOT_FOUND = 404
+
+
+class HttpError(Exception):
+    status_code = HTTP_STATUS_BAD_REQUEST
+
+
+class HttpNotFoundError(HttpError):
+    status_code = HTTP_STATUS_NOT_FOUND
 
 
 class Controller(object):
@@ -165,7 +177,6 @@ class Controller(object):
         """
         try:
             params = self.build_params(query)
-
             response = []
             for obj in self.type_store.list(**params):
                 response.append(self.marshall(obj))
@@ -189,8 +200,13 @@ class Controller(object):
         """
         try:
             obj = self.type_store.get(obj_id)
+            if not obj:
+                raise HttpNotFoundError('Not found: {}'.format(obj_id))
             response = self.marshall(obj)
 
+        except HttpError as ex:
+            response = self.error_response(str(ex),
+                                           http_status=ex.status_code)
         except Exception as ex:
             self._logger.error(traceback.format_exc())
             response = self.error_response(str(ex))
@@ -223,10 +239,30 @@ class Controller(object):
     @cherrypy.tools.json_out()
     def update(self, obj_id: str) -> dict:
         try:
+            #
+            # Verify that the object currently exists
+            #
+            obj_current = self.type_store.get(obj_id)
+            if not obj_current:
+                raise HttpNotFoundError('Not found: {}'.format(obj_id))
+            #
+            # Deserialize the update request
+            #
             obj = self.unmarshall(cherrypy.request.json)
+            #
+            # Make sure the Object IDs match
+            #
+            if obj_current.id != obj.id:
+                raise HttpError('Object ID mismatch')
+            #
+            # Do the actual update
+            #
             obj = self.type_store.save(obj)
             response = self.marshall(obj)
 
+        except HttpError as ex:
+            response = self.error_response(str(ex),
+                                           http_status=ex.status_code)
         except Exception as ex:
             self._logger.error(traceback.format_exc())
             response = self.error_response(str(ex))
@@ -236,9 +272,21 @@ class Controller(object):
     @authentication_required()
     def delete(self, obj_id: str):
         try:
+            #
+            # Verify that the object currently exists
+            #
+            current_obj = self.type_store.get(obj_id)
+            if not current_obj:
+                raise HttpNotFoundError('Not found: {}'.format(obj_id))
+            #
+            # Do the actual delete
+            #
             self.type_store.delete(obj_id)
             response = None
 
+        except HttpError as ex:
+            response = self.error_response(str(ex),
+                                           http_status=ex.status_code)
         except Exception as ex:
             self._logger.error(traceback.format_exc())
             response = self.error_response(str(ex))
@@ -256,11 +304,11 @@ class Controller(object):
         """
         if response is not None:
             return response
-        cherrypy.response.status = http.client.NO_CONTENT
+        cherrypy.response.status = HTTP_STATUS_NO_CONTENT
         return ''
 
     def error_response(self, msg: str,
-                       http_status=http.client.BAD_REQUEST) -> dict:
+                       http_status=HTTP_STATUS_BAD_REQUEST) -> dict:
         """
         Prepares an error response.
 

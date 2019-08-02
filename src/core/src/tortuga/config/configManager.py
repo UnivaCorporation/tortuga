@@ -21,6 +21,13 @@ from typing import Optional, Union
 from tortuga.objects.provisioningInfo import ProvisioningInfo
 from tortuga.utility.helper import str2bool
 
+# For encryption of sensitve data
+import base64
+import os
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+
 
 # Defaults.
 DEFAULT_TORTUGA_ROOT = '/opt/tortuga'
@@ -232,6 +239,18 @@ class ConfigManager(dict): \
             self['adminPort'] = int(self['adminPort'])
 
         self.__init_from_varfile()
+
+        # set encryption key
+        password = self.getCfmPassword().encode()
+        salt = b'salt_fixed'
+        kdf = PBKDF2HMAC(
+            algorithm=hashes.SHA256(),
+            length=32,
+            salt=salt,
+            iterations=100000,
+            backend=default_backend()
+        )
+        self['defaultEncryptionKey'] = base64.urlsafe_b64encode(kdf.derive(password)) 
 
         # Set host based on provisioning info
         if self.getProvisioningInfo() is None:
@@ -763,3 +782,7 @@ class ConfigManager(dict): \
             return False
 
         return str2bool(cfg.get('installer', 'offline_installation'))
+
+    def get_encryption_key(self, default='__internal__') -> bytes:
+        """ return encryption key """
+        return self.__getKeyValue('encryptionKey', default)  

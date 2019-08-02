@@ -17,9 +17,11 @@
 from marshmallow import Schema, fields
 
 import cherrypy
+import cryptography
 from tortuga.addhost.addHostManager import AddHostManager
 from tortuga.addhost.task import enqueue_addnodes_request
-from tortuga.addhost.utility import validate_addnodes_request
+from tortuga.addhost.utility import (validate_addnodes_request,
+                                     decrypt_insertnode_request)
 from tortuga.db.nodeRequestsDbHandler import NodeRequestsDbHandler
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.notFound import NotFound
@@ -52,7 +54,7 @@ class AddHostController(TortugaController):
         {
             'name': 'addNodes',
             'path': '/v1/nodes/',
-            'action': 'addNodes',
+            'action': 'addNodesWrapper',
             'method': ['POST']
         },
         {
@@ -61,22 +63,54 @@ class AddHostController(TortugaController):
             'action': 'getAddHostRequests',
             'method': ['GET'],
         },
+        {
+            'name': 'insertNodes',
+            'path': '/v1/node-token/:(token)',
+            'action': 'insertNodeWrapper',
+            'method': ['POST']
+        },
     ]
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     @authentication_required()
-    def addNodes(self):
+    def addNodesWrapper(self):
+        return self.addNodes(cherrypy.request.json.get('node'))
+
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.json_in()
+    def insertNodeWrapper(self, token):
         try:
-            if 'node' not in cherrypy.request.json:
+             node = decrypt_insertnode_request(self.app.cm.get_encryption_key(), token.encode())
+             # Insert only supports one node at a time
+             node['count'] = 1
+             node['nodeDetails'] = [cherrypy.request.json.get('node_details')]
+        except Exception as ex:
+            if not isinstance(ex, TortugaException):
+                if isinstance(ex, cryptography.fernet.InvalidToken):
+                    ex = TortugaException(args="InvalidToken")
+                else:
+                    self._logger.exception(
+                        'Exception occurred while adding hosts')
+
+            self.handleException(ex)
+
+            response = self.errorResponse(str(ex))
+            return self.formatResponse(response)
+
+        return self.addNodes(node)
+
+    def addNodes(self, node):
+        try:
+            if node == None:
                 raise InvalidArgument('Malformed request')
 
             validate_addnodes_request(
-                cherrypy.request.db, cherrypy.request.json['node']
+                cherrypy.request.db, node
             )
 
             request = {
-                'addNodesRequest': cherrypy.request.json['node'],
+                'addNodesRequest': node,
             }
 
             # associate authenticated user id with request

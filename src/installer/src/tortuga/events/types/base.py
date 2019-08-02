@@ -55,9 +55,9 @@ class EventMeta(type):
         super().__init__(name, bases, attrs)
 
         #
-        # Don't attempt to load the base installer
+        # Don't attempt to register the base event type
         #
-        if name == 'base':
+        if cls.name == 'base':
             return
 
         EVENT_TYPES[cls.name] = cls

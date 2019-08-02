@@ -28,7 +28,7 @@ class tortuga::puppet::config {
   augeas { 'configure_puppet_agent':
     context => '/files/etc/puppetlabs/puppet/puppet.conf',
     changes => [
-      "set main/server ${normalized_installer}",
+      "set agent/server ${normalized_installer}",
     ],
   }
 
@@ -38,7 +38,7 @@ class tortuga::puppet::config {
     augeas { 'configure puppet proxy_http_host':
       context => '/files/etc/puppetlabs/puppet/puppet.conf',
       changes => [
-        "set main/http_proxy_host ${tortuga::config::puppet_proxy_http_host}",
+        "set agent/http_proxy_host ${tortuga::config::puppet_proxy_http_host}",
       ],
     }
   }
@@ -47,7 +47,7 @@ class tortuga::puppet::config {
     augeas { 'configure puppet proxy_http_port':
       context => '/files/etc/puppetlabs/puppet/puppet.conf',
       changes => [
-        "set main/http_proxy_port ${tortuga::config::puppet_proxy_http_port}",
+        "set agent/http_proxy_port ${tortuga::config::puppet_proxy_http_port}",
       ],
     }
   }
@@ -56,7 +56,7 @@ class tortuga::puppet::config {
     augeas { 'configure puppet proxy_http_user':
       context => '/files/etc/puppetlabs/puppet/puppet.conf',
       changes => [
-        "set main/http_proxy_user ${tortuga::config::puppet_proxy_http_user}",
+        "set agent/http_proxy_user ${tortuga::config::puppet_proxy_http_user}",
       ],
     }
   }
@@ -65,7 +65,7 @@ class tortuga::puppet::config {
     augeas { 'configure puppet proxy_http_password':
       context => '/files/etc/puppetlabs/puppet/puppet.conf',
       changes => [
-        "set main/http_proxy_password ${tortuga::config::puppet_proxy_http_password}",
+        "set agent/http_proxy_password ${tortuga::config::puppet_proxy_http_password}",
       ],
     }
   }
