@@ -15,11 +15,10 @@
 # pylint: disable=not-callable,multiple-statements,no-member
 from typing import Dict, Optional
 
-from sqlalchemy import and_, or_
+from sqlalchemy import and_
 from sqlalchemy.orm.exc import NoResultFound
 from tortuga.db.tortugaDbObjectHandler import TortugaDbObjectHandler
 from tortuga.exceptions.hardwareProfileNotFound import HardwareProfileNotFound
-from tortuga.exceptions.invalidArgument import InvalidArgument
 
 from .models.hardwareProfile import HardwareProfile
 
@@ -89,4 +88,4 @@ class HardwareProfilesDbHandler(TortugaDbObjectHandler):
                     searchspec.append(HardwareProfile.tags.any(name=name))
 
         return session.query(HardwareProfile).filter(
-            or_(*searchspec)).order_by(HardwareProfile.name).all()
+            and_(*searchspec)).order_by(HardwareProfile.name).all()
