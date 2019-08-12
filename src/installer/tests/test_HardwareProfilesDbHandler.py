@@ -57,12 +57,11 @@ class TestHardwareProfilesDbHandler(unittest.TestCase):
         assert result and len(result) == 1 and result[0].name == 'profile2'
 
     def test_getHardwareProfileList_tag1_and_tag2(self):
-        # 'tag1' and 'tag2' returns both profiles
+        # 'tag1' and 'tag2' returns neither profile (and operation)
         result = HardwareProfilesDbHandler().getHardwareProfileList(
             self.session, tags={'tag1': None, 'tag2': None})
 
-        assert result and len(result) == 2 and \
-            result[0].name == 'profile1' and result[1].name == 'profile2'
+        assert len(result) == 0
 
     def test_getHardwareProfile_resource_adapter_config(self):
         result = HardwareProfilesDbHandler().getHardwareProfile(
