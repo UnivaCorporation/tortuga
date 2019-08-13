@@ -26,12 +26,17 @@ class tortuga::installer::apache::package {
 class tortuga::installer::apache::config {
   require tortuga::installer::apache::package
 
-  # Ensure SSLv3 is disabled by default (req'd for POODLE exploit)
-  augeas { 'disable_ssl_v3':
-    context => '/files/etc/httpd/conf.d/ssl.conf',
-    changes => 'set VirtualHost/directive[.="SSLProtocol"]/arg[last()+1] -SSLv3',
-    onlyif  => 'match VirtualHost/directive[.="SSLProtocol"][arg="-SSLv3"] size == 0',
+  file { '/etc/httpd/conf.d/ssl.conf':
+    ensure => absent,
+    notify => Service['httpd'],
   }
+
+  augeas { 'stop_listening_80':
+    context => '/files/etc/httpd/conf/httpd.conf',
+    changes => 'rm directive[.="Listen"]',
+    notify  => Service['httpd'],
+  }
+
 }
 
 class tortuga::installer::apache::server {
