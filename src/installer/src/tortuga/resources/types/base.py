@@ -68,6 +68,7 @@ class ResourceRequestMeta(type):
 class BaseResourceRequestSchema(BaseTypeSchema):
     resource_type: fields.Field = fields.String(dump_only=True)
     timestamp: fields.Field = fields.DateTime()
+    adapter_arguments: fields.Field = fields.Dict()
 
 
 class BaseResourceRequest(BaseType, metaclass=ResourceRequestMeta):
@@ -75,3 +76,7 @@ class BaseResourceRequest(BaseType, metaclass=ResourceRequestMeta):
     schema_class = BaseResourceRequestSchema
     
     resource_type: str = 'base-resource-request'
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.adapter_arguments: Optional[dict] = kwargs.get('adapter_arguments', {})
