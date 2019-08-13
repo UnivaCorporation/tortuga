@@ -166,6 +166,18 @@ class ConfigurationValidator(MutableMapping):
         if k in self._storage.keys():
             return
 
+        #
+        # Only validate the required restriction if the key that this one
+        # depends on is set, otherwise ignore it...
+        #
+        if v.requires:
+            found = False
+            for require_key in v.requires:
+                if require_key in self._storage.keys():
+                    found = True
+            if not found:
+                return
+
         if v.mutually_exclusive:
             for alternate_key in v.mutually_exclusive:
                 if alternate_key in self._storage.keys():
