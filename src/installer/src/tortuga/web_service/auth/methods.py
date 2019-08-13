@@ -22,7 +22,8 @@ import cherrypy
 
 from tortuga.auth.methods import (AuthenticationMethod,
                                   JwtAuthenticationMethod,
-                                  UsernamePasswordAuthenticationMethod)
+                                  UsernamePasswordAuthenticationMethod,
+                                  UsernamePasswordAuthenticationVaultMethod)
 from tortuga.exceptions.authenticationFailed import AuthenticationFailed
 from tortuga.logging import AUTH_NAMESPACE
 
@@ -72,8 +73,8 @@ class HttpSessionAuthenticationMethod(AuthenticationMethod):
         cherrypy.session[self.SESSION_KEY] = None
 
 
-class HttpBasicAuthenticationMethod(AuthorizationHeaderMixin,
-                                    UsernamePasswordAuthenticationMethod):
+class HttpBasicAuthenticationBaseMethod(AuthorizationHeaderMixin):
+
     """
     Authenticate a user via username password, via HTTP basic authentication.
 
@@ -106,6 +107,13 @@ class HttpBasicAuthenticationMethod(AuthorizationHeaderMixin,
 
         return parts[0], parts[1]
 
+class HttpBasicAuthenticationMethod(HttpBasicAuthenticationBaseMethod,
+                                    UsernamePasswordAuthenticationMethod):
+    pass
+
+class HttpBasicAuthenticationVaultMethod(HttpBasicAuthenticationBaseMethod,
+                                    UsernamePasswordAuthenticationVaultMethod):
+    pass
 
 class HttpPostAuthenticatonMethod(UsernamePasswordAuthenticationMethod):
     """

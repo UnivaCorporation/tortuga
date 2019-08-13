@@ -138,6 +138,7 @@ def run_server(daemonize: bool = False, pidfile: str = None,
     cherrypy.tools.db = DatabaseTool()
     authentication_methods = [
         auth_methods.HttpBasicAuthenticationMethod(),
+        auth_methods.HttpBasicAuthenticationVaultMethod(),
         auth_methods.HttpSessionAuthenticationMethod(),
         auth_methods.HttpJwtAuthenticationMethod()
     ]
