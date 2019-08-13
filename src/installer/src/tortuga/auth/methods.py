@@ -222,7 +222,10 @@ class UsernamePasswordAuthenticationMethod(UsernamePasswordAuthenticationMethodB
     db.
     """
     def validate(self,principal, password):
-        return pbkdf2_sha256.verify(password, principal.get_password())
+        try:
+            return pbkdf2_sha256.verify(password, principal.get_password())
+        except:
+            return False
 
 class UsernamePasswordAuthenticationVaultMethod(UsernamePasswordAuthenticationMethodBase):
     """

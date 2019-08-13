@@ -29,7 +29,7 @@ class UpdateAdminCli(AdminCli):
                        help=_('Password of admin.'))
 
         self.addOption('--uncrypted', dest='isCrypted',
-                       help=_('Is the password crypted'), default=False,
+                       help=_('Is the password crypted'), default=True,
                        action='store_false')
 
         self.addOption('--admin-realname', dest='adminRealname',
@@ -54,7 +54,7 @@ Updates a administrative user settings in the Tortuga system.
         admin.setId(self.getArgs().adminId)
 
         api = self.configureClient(AdminWsApi)
-        api.updateAdmin(admin, self.getArgs().isCrypted)
+        api.updateAdmin(admin, str(self.getArgs().isCrypted))
 
 
 def main():
