@@ -243,6 +243,18 @@ class FileSetting(BaseSetting):
 
         return path
 
+class FloatSetting(BaseSetting):
+    type = 'string'
+    schema = BaseSettingSchema
+    validation_regex = '([0-9]*[.])?[0-9]+'
+
+    def dump(self, value: str) -> Union[float, List[float]]:
+        dumped = super().dump(value)
+
+        if isinstance(dumped, list):
+            return [float(v) for v in dumped]
+
+        return float(value)
 
 class IntegerSetting(BaseSetting):
     type = 'integer'
