@@ -244,9 +244,10 @@ class ConfigManager(dict): \
 
         # Check to see if CFM should be loaded from vault
         vault_data = self.loadFromVault('launch-services/tortuga')
-        vault_cfm_password = vault_data.get('data',{}).get('password')
-        if vault_cfm_password is not None:
-            self['cfmPassword'] = vault_cfm_password
+        if vault_data is not None:
+            vault_cfm_password = vault_data.get('data',{}).get('password')
+            if vault_cfm_password is not None:
+                self['cfmPassword'] = vault_cfm_password
 
         # set encryption key
         password = self.getCfmPassword().encode()
@@ -266,15 +267,25 @@ class ConfigManager(dict): \
         else:
             self['host'] = self.getProvisioningInfo().getNode().getName()
 
-    def loadFromVault(self, path, mount_point='puppet'):
+    def __get_vault_client(self):
         # Check to see if CFM should be loaded from vault
         if self.__vault_client is None:
             try:
                 import hvac
                 self.__vault_client = hvac.Client()
+                return self.__vault_client
             except:
                 self.__vault_client = None
                 return None
+        return self.__vault_client
+
+    def isVaultEnabled(self):
+        return self.__get_vault_client() is not None
+
+    def loadFromVault(self, path, mount_point='puppet'):
+        # Check to see if CFM should be loaded from vault
+        if not self.isVaultEnabled():
+            return None
         try:
             self.__vault_client.secrets.kv.default_kv_version = 1
             record = self.__vault_client.secrets.kv.read_secret(
