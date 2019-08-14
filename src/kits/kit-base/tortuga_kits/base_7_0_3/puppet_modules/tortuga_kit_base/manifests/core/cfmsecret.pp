@@ -26,7 +26,7 @@ class tortuga_kit_base::core::cfmsecret {
   $processed = $record.unwrap
   $cfm_secret = Sensitive.new($processed['password'])
 
-  if $cfm_secret == "" {
+  if $cfm_secret.unwrap == "" {
     file { '/etc/cfm/.cfmsecret':
       source  => 'puppet:///private/.cfmsecret',
       owner   => 'root',

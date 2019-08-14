@@ -24,7 +24,7 @@ class tortuga::installer::cfm {
   $processed = $record.unwrap
   $cfm_secret = Sensitive.new($processed['password'])
 
-  if $cfm_secret == "" {
+  if $cfm_secret.unwrap == "" {
     file { '/etc/cfm':
       ensure => directory,
     }
