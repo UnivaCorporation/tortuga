@@ -20,11 +20,27 @@ class tortuga_kit_base::core::cfmsecret {
     group  => 'root',
   }
 
-  file { '/etc/cfm/.cfmsecret':
-    source  => 'puppet:///private/.cfmsecret',
-    owner   => 'root',
-    group   => 'root',
-    mode    => '0600',
-    require => File['/etc/cfm'],
+  $record = Sensitive.new(lookup({"name" => "cfm", "default_value" => { "password" => ""} }))
+
+  # Unwrap for hash lookup
+  $processed = $record.unwrap
+  $cfm_secret = Sensitive.new($processed['password'])
+
+  if $cfm_secret == "" {
+    file { '/etc/cfm/.cfmsecret':
+      source  => 'puppet:///private/.cfmsecret',
+      owner   => 'root',
+      group   => 'root',
+      mode    => '0600',
+      require => File['/etc/cfm'],
+    }
+  } else {
+    file { '/etc/cfm/.cfmsecret':
+      content  => $cfm_secret,
+      owner   => 'root',
+      group   => 'root',
+      mode    => '0600',
+      require => File['/etc/cfm'],
+    }
   }
 }

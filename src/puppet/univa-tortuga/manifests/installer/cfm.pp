@@ -18,35 +18,43 @@ class tortuga::installer::cfm {
 
   include tortuga::config
 
-  file { '/etc/cfm':
-    ensure => directory,
-  }
+  $record = Sensitive.new(lookup({"name" => "cfm", "default_value" => { "password" => ""} }))
 
-  # Generate random password
-  exec { 'create_cfmsecret':
-    command => 'bash -c \'( umask 0066; openssl rand -base64 32 >/etc/cfm/.cfmsecret )\'',
-    path    => [ '/bin', '/usr/bin' ],
-    creates => '/etc/cfm/.cfmsecret',
-    require => File['/etc/cfm'],
-  }
+  # Unwrap for hash lookup
+  $processed = $record.unwrap
+  $cfm_secret = Sensitive.new($processed['password'])
 
-  # Replicate the same file for service to Puppet clients.  This is a temporary
-  # measure until the reliance on /etc/cfm/.cfmsecret is removed completely.
-  file { '/etc/cfm/.cfmsecret':
-    owner   => apache,
-    group   => apache,
-    mode    => '0600',
-    require => Exec['create_cfmsecret'],
-  }
+  if $cfm_secret == "" {
+    file { '/etc/cfm':
+      ensure => directory,
+    }
 
-  # 'private' directory created in tortuga::installer::puppetmaster
+    # Generate random password
+    exec { 'create_cfmsecret':
+      command => 'bash -c \'( umask 0066; openssl rand -base64 32 >/etc/cfm/.cfmsecret )\'',
+      path    => [ '/bin', '/usr/bin' ],
+      creates => '/etc/cfm/.cfmsecret',
+      require => File['/etc/cfm'],
+    }
 
-  file { "${tortuga::config::instroot}/private/.cfmsecret":
-    ensure => present,
-    source => '/etc/cfm/.cfmsecret',
-    owner  => 'puppet',
-    group  => 'puppet',
-    mode   => '0440',
-    require => File["${tortuga::config::instroot}/private"],
+    # Replicate the same file for service to Puppet clients.  This is a temporary
+    # measure until the reliance on /etc/cfm/.cfmsecret is removed completely.
+    file { '/etc/cfm/.cfmsecret':
+      owner   => apache,
+      group   => apache,
+      mode    => '0600',
+      require => Exec['create_cfmsecret'],
+    }
+
+    # 'private' directory created in tortuga::installer::puppetmaster
+
+    file { "${tortuga::config::instroot}/private/.cfmsecret":
+      ensure => present,
+      source => '/etc/cfm/.cfmsecret',
+      owner  => 'puppet',
+      group  => 'puppet',
+      mode   => '0440',
+      require => File["${tortuga::config::instroot}/private"],
+    }
   }
 }
