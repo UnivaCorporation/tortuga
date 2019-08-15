@@ -91,8 +91,8 @@ else:
     #
     kit_task_modules: List[str] = []
     component_task_modules: List[str] = []
-    try:
-        for kit_installer_class in get_all_kit_installers():
+    for kit_installer_class in get_all_kit_installers():
+        try:
             kit_installer = kit_installer_class()
             kit_installer.session = sess
             kit_installer.register_event_listeners()
@@ -109,13 +109,13 @@ else:
                         kit_installer.get_component_installer(
                             component.getName())
                     component_task_modules += component_installer.task_modules
-    #
-    # This module gets loaded during kit install so we may fail
-    # on a circular import.  Protect against that.
-    #
-    except ImportError as ex:
-        logger.info(
-            "Ignoring import exception: %s.  Likely installing kit.", ex)
+        #
+        # This module gets loaded during kit install so we may fail
+        # on a circular import.  Protect against that.
+        #
+        except ImportError as ex:
+            logger.info(
+                "Ignoring import exception: %s.  Likely installing kit.", ex)
 
     logger.info('Loading celery tasks from kits: %s',
                 kit_task_modules + component_task_modules)
