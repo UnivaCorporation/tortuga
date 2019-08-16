@@ -384,15 +384,15 @@ class ResourceAdapter(UserDataMixin): \
         """
         pass
 
-    def get_tags(self, config: Dict[str, str], hwp: HardwareProfile,
-                 swp: SoftwareProfile) -> Dict[str, str]:
+    def get_tags(self, config: Dict[str, str], hwp_name: str,
+                 swp_name: str) -> Dict[str, str]:
         """
         Returns the list of tags that should be applied to one or more
         nodes.
 
         :param Dict[str, str] config: the resource adapter profile config
-        :param HardwareProfile hwp:   the node hardware profile
-        :param SoftwareProfile swp:   the node software profile
+        :param str hwp_name:          the node hardware profile name
+        :param str swp_name:          the node software profile name
 
         :return Dict[str, str: the tags that should be applied
 
@@ -401,8 +401,8 @@ class ResourceAdapter(UserDataMixin): \
         # Default tags for all nodes
         #
         tags: Dict[str, str] = {
-            'tortuga-softwareprofile': self._sanitze_tag_value(hwp.name),
-            'tortuga-hardwareprofile': self._sanitze_tag_value(swp.name),
+            'tortuga-softwareprofile': self._sanitze_tag_value(hwp_name),
+            'tortuga-hardwareprofile': self._sanitze_tag_value(swp_name),
             'tortuga-installer_hostname':
                 self._sanitze_tag_value(self.installer_public_hostname),
             'tortuga-installer_ipaddress':
