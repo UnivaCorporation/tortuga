@@ -27,8 +27,7 @@ class tortuga::installer::apache::config {
   require tortuga::installer::apache::package
 
   file { '/etc/httpd/conf.d/ssl.conf':
-    ensure => absent,
-    notify => Service['httpd'],
+    ensure => absent
   }
 
   augeas { 'stop_listening_80':
