@@ -225,6 +225,8 @@ class ConfigManager(dict): \
     def __init__(self):
         super(ConfigManager, self).__init__()
 
+        self.__vault_client = None
+
         self.__init_defaults()
 
         self.__init_from_env()
@@ -239,6 +241,13 @@ class ConfigManager(dict): \
             self['adminPort'] = int(self['adminPort'])
 
         self.__init_from_varfile()
+
+        # Check to see if CFM should be loaded from vault
+        vault_data = self.loadFromVault('launch-services/tortuga')
+        if vault_data is not None:
+            vault_cfm_password = vault_data.get('data',{}).get('password')
+            if vault_cfm_password is not None:
+                self['cfmPassword'] = vault_cfm_password
 
         # set encryption key
         password = self.getCfmPassword().encode()
@@ -257,6 +266,36 @@ class ConfigManager(dict): \
             self['installer'] = self['host'] = getfqdn()
         else:
             self['host'] = self.getProvisioningInfo().getNode().getName()
+
+    def __get_vault_client(self):
+        # Check to see if CFM should be loaded from vault
+        if self.__vault_client is None:
+            try:
+                import hvac
+                self.__vault_client = hvac.Client()
+                return self.__vault_client
+            except:
+                self.__vault_client = None
+                return None
+        return self.__vault_client
+
+    def isVaultEnabled(self):
+        return self.__get_vault_client() is not None
+
+    def loadFromVault(self, path, mount_point='puppet'):
+        # Check to see if CFM should be loaded from vault
+        if not self.isVaultEnabled():
+            return None
+        try:
+            self.__vault_client.secrets.kv.default_kv_version = 1
+            record = self.__vault_client.secrets.kv.read_secret(
+                       path=path,
+                       mount_point=mount_point
+            )
+            return record
+        except:
+            self.__vault_client = None
+            return None
 
     def __setRootSubdirectories(self):
         etc_dir = os.path.join(self.getRoot(), 'etc')

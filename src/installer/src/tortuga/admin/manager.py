@@ -94,7 +94,7 @@ class AdminManager(TortugaObjectManager):
             if not isCrypted:
                 adminObject.setPassword(
                     AuthManager(session=session).cryptPassword(
-                        adminObject.get_password()))
+                        adminObject.getPassword()))
 
         self._adminDbApi.updateAdmin(session, adminObject)
 

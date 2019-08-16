@@ -167,13 +167,20 @@ class MultiAuthentionMethod(AuthenticationMethod):
         for method in self._methods:
             method.on_authentication_failed()
 
-
-class UsernamePasswordAuthenticationMethod(AuthenticationMethod):
+class UsernamePasswordAuthenticationMethodBase(AuthenticationMethod):
     """
     An authentication method that uses a username/password passed in as
-    keyword arguments.
+    keyword arguments and delegates the password check to a derived
+    class.
 
     """
+
+    def validate(principal,password) -> bool:
+        """
+        Base class implementation of validator function
+        """
+        return False
+
     def do_authentication(self, **kwargs) -> str:
         """
         An authentication implementation that requires a username and
@@ -204,11 +211,51 @@ class UsernamePasswordAuthenticationMethod(AuthenticationMethod):
             if not principal:
                 raise AuthenticationFailed()
 
-            if pbkdf2_sha256.verify(password, principal.get_password()):
+            if self.validate(principal, password):
                 return username
 
             raise AuthenticationFailed()
 
+class UsernamePasswordAuthenticationMethod(UsernamePasswordAuthenticationMethodBase):
+    """
+    An authentication method that validates a user against records stored in the
+    db.
+    """
+    def validate(self,principal, password):
+        try:
+            return pbkdf2_sha256.verify(password, principal.get_password())
+        except:
+            return False
+
+class UsernamePasswordAuthenticationVaultMethod(UsernamePasswordAuthenticationMethodBase):
+    """
+    An authentication method that validates a user against data stored in vault.
+    """
+    def __init__(self):
+        super().__init__()
+        self.client = None
+
+    def validate(self,principal, password):
+        if self.client is None:
+            try:
+                import hvac
+                self.client = hvac.Client()
+                self.client.secrets.kv.default_kv_version = 1
+            except:
+                self.client = None
+                return False
+        try:
+           record = self.client.secrets.kv.read_secret(path='users/rest/'+principal.get_name(),
+                       mount_point="tortuga")
+           if record is not None:
+               vault_password = record.get('data',{}).get('password')
+               if vault_password is not None:
+                   if vault_password == password:
+                       return True
+        except:
+            self.client = None
+            pass
+        return False
 
 class JwtAuthenticationMethod(AuthenticationMethod):
     """
