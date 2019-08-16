@@ -32,6 +32,11 @@ class tortuga::installer::apache::config {
     changes => 'set VirtualHost/directive[.="SSLProtocol"]/arg[last()+1] -SSLv3',
     onlyif  => 'match VirtualHost/directive[.="SSLProtocol"][arg="-SSLv3"] size == 0',
   }
+
+  augeas { 'stop_listening_80':
+    context => '/files/etc/httpd/conf/httpd.conf',
+    changes => 'rm directive[.="Listen"]'
+  }
 }
 
 class tortuga::installer::apache::server {
@@ -49,7 +54,4 @@ class tortuga::installer::apache::server {
 class tortuga::installer::apache {
   contain tortuga::installer::apache::package
   contain tortuga::installer::apache::config
-
-  Class['tortuga::installer::apache::config']
-    ~> Class['tortuga::installer::apache::server']
 }
