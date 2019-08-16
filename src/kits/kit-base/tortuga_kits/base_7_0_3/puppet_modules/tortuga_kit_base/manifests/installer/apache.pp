@@ -91,6 +91,7 @@ class tortuga_kit_base::installer::apache (
   contain tortuga_kit_base::installer::apache::certs
   contain tortuga_kit_base::installer::apache::config
   contain tortuga::installer::apache
+  contain tortuga::installer::apache::server
 
   Class['tortuga_kit_base::installer::apache::config']
     ~> Class['tortuga::installer::apache::server']
