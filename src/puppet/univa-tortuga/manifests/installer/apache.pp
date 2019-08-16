@@ -33,8 +33,7 @@ class tortuga::installer::apache::config {
 
   augeas { 'stop_listening_80':
     context => '/files/etc/httpd/conf/httpd.conf',
-    changes => 'rm directive[.="Listen"]',
-    notify  => Service['httpd'],
+    changes => 'rm directive[.="Listen"]'
   }
 
 }
@@ -54,7 +53,4 @@ class tortuga::installer::apache::server {
 class tortuga::installer::apache {
   contain tortuga::installer::apache::package
   contain tortuga::installer::apache::config
-
-  Class['tortuga::installer::apache::config']
-    ~> Class['tortuga::installer::apache::server']
 }
