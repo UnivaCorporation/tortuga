@@ -106,7 +106,6 @@ setup(
             'add-admin-to-profile=tortuga.scripts.add_admin_to_profile:main',
             'add-network=tortuga.scripts.add_network:main',
             'add-nodes=tortuga.scripts.add_nodes:main',
-            'build-kit=tortuga.scripts.build_kit:main',
             'copy-hardware-profile=tortuga.scripts.copy_hardware_profile:main',
             'copy-software-profile=tortuga.scripts.copy_software_profile:main',
             'create-hardware-profile=tortuga.scripts.create_hardware_profile:main',
