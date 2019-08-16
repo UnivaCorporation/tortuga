@@ -27,14 +27,12 @@ class tortuga::installer::apache::config {
   require tortuga::installer::apache::package
 
   file { '/etc/httpd/conf.d/ssl.conf':
-    ensure => absent,
-    notify => Service['httpd'],
+    ensure => absent
   }
 
   augeas { 'stop_listening_80':
     context => '/files/etc/httpd/conf/httpd.conf',
-    changes => 'rm directive[.="Listen"]',
-    notify  => Service['httpd'],
+    changes => 'rm directive[.="Listen"]'
   }
 
 }
@@ -48,13 +46,10 @@ class tortuga::installer::apache::server {
     hasrestart => true,
     hasstatus  => true,
   }
+
 }
 
 class tortuga::installer::apache {
   contain tortuga::installer::apache::package
   contain tortuga::installer::apache::config
-  contain tortuga::installer::apache::server
-
-  Class['tortuga::installer::apache::config']
-    ~> Class['tortuga::installer::apache::server']
 }
