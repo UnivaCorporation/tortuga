@@ -16,6 +16,7 @@ import copy
 import json
 import logging
 import os
+from pathlib import Path
 import shutil
 
 from tortuga.config import version_is_compatible, VERSION
@@ -31,15 +32,14 @@ logger = logging.getLogger(KIT_NAMESPACE)
 
 
 KIT_METADATA_FILE = 'kit.json'
+KIT_PACKAGE_NAME = 'tortuga_kits'
 
 SRC_DIR = 'src'
 BUILD_DIR = 'build'
 DIST_DIR = 'dist'
 
 DEFAULT_INCLUDE_FILES = [
-    'kit.json',
     'python_packages',
-    'tortuga_kits',
     'bin',
     'doc',
     'README.*'
@@ -59,12 +59,18 @@ DEFAULT_EXCLUDE_FILES = [
 
 
 class KitBuilder(object):
-    def __init__(self, working_directory: str = None):
+    def __init__(self, working_directory: str = None, version: str = None,
+                 ignore_directory_version: bool = False):
         """
         Initialization.
 
-        :param str working_directory: the working directory in which the
-                                      build process will be run.
+        :param str working_directory:         the working directory in which
+                                              the build process will be run.
+        :param str version:                   override the version number in
+                                              the kit.json file in the form
+                                              of x.y.z
+        :param bool ignore_directory_version: don't move tortuga_kits/kitname
+                                              to tortuga_kits/kitname_x_y_z
 
         """
         if working_directory:
@@ -72,7 +78,7 @@ class KitBuilder(object):
 
         self._third_party_path = os.getenv('THIRD_PARTY')
 
-        self._kit_meta = KitBuilder.get_kit_metadata()
+        self._kit_meta = KitBuilder.get_kit_metadata(version)
 
         self._kit_descriptor = 'kit-{}-{}-{}'.format(
             self._kit_meta['name'],
@@ -80,10 +86,15 @@ class KitBuilder(object):
             self._kit_meta['iteration']
         )
 
-        self._kit_dir = '{}_{}'.format(
-            self._kit_meta['name'],
-            self._kit_meta['version'].replace('.', '_')
-        )
+        self._kit_src_dir = self._get_kit_src_dir()
+        if ignore_directory_version:
+            self._kit_dest_dir = self._kit_src_dir
+
+        else:
+            self._kit_dest_dir = '{}_{}'.format(
+                self._kit_meta['name'],
+                self._kit_meta['version'].replace('.', '_')
+            )
 
         self._include_files = copy.copy(DEFAULT_INCLUDE_FILES)
         self._include_files.extend(self._kit_meta.get('include_files', []))
@@ -101,10 +112,12 @@ class KitBuilder(object):
         self._discover_puppet_modules()
 
     @staticmethod
-    def get_kit_metadata():
+    def get_kit_metadata(version: str = None):
         """
         Gets kit metadata from the KIT_METADATA_FILE, validates it, and
         returns the result as a python dict.
+
+        :param str version: override the version string
 
         :return: dict of the loaded metadata
 
@@ -117,6 +130,10 @@ class KitBuilder(object):
 
         kit_meta_fp = open(KIT_METADATA_FILE)
         kit_meta = json.load(kit_meta_fp)
+
+        if version:
+            kit_meta['version'] = version
+
         errors = KitMetadataSchema().validate(kit_meta)
         if errors:
             raise KitBuildError(
@@ -132,6 +149,30 @@ class KitBuilder(object):
             )
 
         return kit_meta
+
+    def _get_kit_src_dir(self):
+        """
+        Gets the source directory for the kit.
+
+        :return str: the source directory name for the kit
+
+        """
+        tortuga_kits_dir = Path('./{}'.format(KIT_PACKAGE_NAME))
+
+        dir_list = [
+            x for x in tortuga_kits_dir.iterdir()
+            if x.is_dir() and not x.name.startswith('.')
+        ]
+
+        if len(dir_list) > 1:
+            raise KitBuildError(
+                'Multiple sub-directories found under tortuga_kits')
+
+        if len(dir_list) == 0:
+            raise KitBuildError(
+                'No sub-directories found under tortuga_kits')
+
+        return dir_list[0].name
 
     def _discover_src_makefile(self):
         """
@@ -174,8 +215,8 @@ class KitBuilder(object):
         """
         logger.info('Discovering puppet modules...')
 
-        puppet_modules_path = os.path.join('tortuga_kits',
-                                           self._kit_dir,
+        puppet_modules_path = os.path.join(KIT_PACKAGE_NAME,
+                                           self._kit_src_dir,
                                            'puppet_modules')
         logger.info('Puppet modules path: {}'.format(puppet_modules_path))
         if not os.path.exists(puppet_modules_path) or \
@@ -233,31 +274,6 @@ class KitBuilder(object):
         cmd = 'rsync -a {} {}{}'.format(src_path, dst_path, exclude_params)
         self._run_command(cmd)
 
-    def _copy_local_file(self, src_path, dst_path):
-        """
-        Special 'copy' routine that will look for a file in the path
-        pointed to by THIRD_PARTY if it doesn't find it locally. Also
-        re-creates any hierarchy as specified by local files.
-
-        :param src_path:  the src_path to copy from
-        :param dst_path:  the destination to copy to
-        :raises KitBuildError: Something bad happened (tm)
-
-        """
-        if os.path.exists(src_path):
-            self._copy_file(src_path, dst_path)
-
-        elif self._third_party_path:
-            file_path = os.path.join(self._third_party_path, src_path)
-            if os.path.exists(file_path):
-                self._copy_file(file_path, dst_path)
-            else:
-                raise KitBuildError(
-                    'File does not exist: {}'.format(src_path))
-
-        else:
-            raise KitBuildError('File does not exist: {}'.format(src_path))
-
     def build(self):
         """
         Builds the current kit.
@@ -288,6 +304,21 @@ class KitBuilder(object):
         self._build_src()
 
         #
+        # Write the metadata file
+        #
+        with open(os.path.join(kit_build_dir, KIT_METADATA_FILE), 'w') as mfp:
+            json.dump(self._kit_meta, mfp)
+
+        #
+        # Copy the kit source directory
+        #
+        build_kit_src_dir = os.path.join(KIT_PACKAGE_NAME, self._kit_src_dir)
+        build_kit_dest_dir = os.path.join(kit_build_dir, KIT_PACKAGE_NAME,
+                                          self._kit_dest_dir)
+        os.makedirs(build_kit_dest_dir, exist_ok=True)
+        self._copy_file('{}/'.format(build_kit_src_dir), build_kit_dest_dir)
+
+        #
         # Copy default kit files
         #
         logger.info('Copying kit files...')
@@ -315,7 +346,7 @@ class KitBuilder(object):
 
     def _build_src(self):
         """
-        Builds anyting in the src directory if a Makefile is found.
+        Builds anything in the src directory if a Makefile is found.
 
         """
         if not self._src_makefile_found:
@@ -355,6 +386,7 @@ class KitBuilder(object):
                 cmd = 'docker run --rm=true -v {}:/root puppet/puppet-agent module build /root'.format(
                     target_path
                 )
+
             else:
                 target_path = puppet_module['path']
                 cmd = 'puppet module build --color false {}'.format(
@@ -407,8 +439,8 @@ class KitBuilder(object):
 
         puppet_pkg_dest_path = os.path.join(
             kit_build_dir,
-            'tortuga_kits',
-            self._kit_dir,
+            KIT_PACKAGE_NAME,
+            self._kit_dest_dir,
             'puppet_modules'
         )
 
