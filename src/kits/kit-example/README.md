@@ -23,7 +23,7 @@ Set the name, version, iteration, and description for your kit.
 
 Under **tortuga_kits**, rename the kit directory name as follows:
 
-**<kit_name>_<kit_version>**
+**<kit_name>**
 
 For example, if your kit name is **mykit** and your kit version is **1.2.0** the directory would be named as follows:
 
@@ -31,8 +31,6 @@ For example, if your kit name is **mykit** and your kit version is **1.2.0** the
 
 Notes on kit directory naming:
 
-- Since the kit directory is a python package, it must be named in accordance with python packaging requirements, which is why we change the version numbers to use underscores.
-- Since it is possible for multiple versions of the kit to be installed simultaneously, having the python package names versioned is important.
 - The top-level *tortuga_kits* directory is a python3 namespace, and must not contain an *\_\_init\_\_.py* file.
 
 ### 3. Implement kit installer methods
@@ -45,4 +43,4 @@ Each kit must have at least 1 component. See the example component to see how to
 
 ### 5 Build your kit
 
-To build your kit, run the **build-kit** utility, which is included as part of the **tortuga-core** python package (see prerequisites above).
+To build your kit, run the **tortuga kits build** utility, which is included as part of the **tortuga-core** python package (see prerequisites above).
