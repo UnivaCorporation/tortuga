@@ -685,6 +685,19 @@ class SoftwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
     def copySoftwareProfile(self, session: Session,
                             srcSoftwareProfileName: str,
                             dstSoftwareProfileName: str) -> None:
+
+        #
+        # Ensure the destination software profile doesn't already exist
+        #
+        try:
+            self.getSoftwareProfile(session, dstSoftwareProfileName)
+            raise TortugaException(
+                'Destination software profile already exists: {}'.format(
+                    dstSoftwareProfileName)
+            )
+        except SoftwareProfileNotFound:
+            pass
+
         src_swprofile = self._softwareProfilesDbHandler.getSoftwareProfile(
             session, srcSoftwareProfileName)
 
