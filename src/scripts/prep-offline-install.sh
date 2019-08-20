@@ -65,7 +65,7 @@ zeromq3 \
 
 required_pkgs="${pkgs}"
 
-readonly puppet_module_urls="https://forge.puppet.com/v3/files/puppetlabs-stdlib-4.25.1.tar.gz"
+readonly puppet_module_urls="https://forge.puppet.com/v3/files/puppetlabs-stdlib-5.2.0.tar.gz"
 
 install_epel_repository() {
     local epel_repo_url=http://dl.fedoraproject.org/pub/epel/epel-release-latest-${distver}.noarch.rpm

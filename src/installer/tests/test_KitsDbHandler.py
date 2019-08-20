@@ -98,7 +98,7 @@ def test_deleteKit(dbm):
     with dbm.session() as session:
         with pytest.raises(KitInUse):
             KitsDbHandler().deleteKit(
-                session, 'base', version='7.0.3', iteration='0')
+                session, 'base', version='7.1.0', iteration='0')
 
 
 def test_addKit(dbm):

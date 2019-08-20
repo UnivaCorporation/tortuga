@@ -519,7 +519,7 @@ install_puppet_module() {
         install_args+=" --force"
     fi
 
-    /opt/puppetlabs/bin/puppet module install ${install_args} $1
+    /opt/puppetlabs/bin/puppet module install ${install_args} "$@"
 }
 
 # Main script execution starts here
@@ -811,9 +811,9 @@ if [[ ${FORCE} -eq 1 ]] || ! is_puppet_module_installed puppetlabs-stdlib; then
     echo "Installing puppetlabs-stdlib Puppet module..."
 
     if [[ -n "${local_deps}" ]]; then
-        puppet_module_src="${local_deps}/puppet/puppetlabs-stdlib-4.25.1.tar.gz"
+        puppet_module_src="${local_deps}/puppet/puppetlabs-stdlib-5.2.0.tar.gz"
     else
-        puppet_module_src="puppetlabs-stdlib"
+        puppet_module_src="puppetlabs-stdlib --version 5.2.0"
     fi
 
     install_puppet_module ${puppet_module_src}
