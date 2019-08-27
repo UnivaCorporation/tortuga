@@ -27,7 +27,6 @@ from tortuga.kit.registry import get_all_kit_installers
 from tortuga.logging import ROOT_NAMESPACE, KIT_NAMESPACE
 from tortuga.objects.component import Component
 from tortuga.objects.kit import Kit
-from tortuga.objects.softwareProfile import SoftwareProfile
 from tortuga.softwareprofile.softwareProfileApi import SoftwareProfileApi
 from tortuga.types.application import Application
 from .task import TortugaTask
