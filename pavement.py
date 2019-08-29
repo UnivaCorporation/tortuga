@@ -28,7 +28,7 @@ def get_git_revision():
 
     return result.decode().rstrip()
 
-version = '7.0.3+rev{}'.format(get_git_revision())
+version = '7.1.0+rev{}'.format(get_git_revision())
 
 build_number = os.getenv('CI_PIPELINE_ID')
 if build_number:
@@ -82,7 +82,7 @@ def build(options):
         sh('puppet module build --color false src/puppet/univa-tortuga')
 
     for kit in distKits:
-        cmd = 'build-kit'
+        cmd = 'tortuga kits build'
         sh('cd src/kits/{} && {}'.format(kit, cmd))
 
     # Copy dependencies into build directory
@@ -99,7 +99,7 @@ def dist(options):
     for kit_dir in kit_dirs:
         if kit_dir.name in distKits or kit_dir.name in ignoreKits:
             continue
-        cmd = 'build-kit'
+        cmd = 'tortuga kits build'
         sh('cd {} && {}'.format(kit_dir, cmd))
         kits_built.append(kit_dir.name)
     _copyKits(kits_built, distDir)
@@ -191,7 +191,7 @@ def tarball(options):
 @task
 def clean(options):
     for kit in distKits:
-        cmd = 'build-kit clean'
+        cmd = 'tortuga kits clean'
         sh('cd src/kits/{} && {}'.format(kit, cmd))
 
     for dir_name in ['build', 'dist', 'install']:

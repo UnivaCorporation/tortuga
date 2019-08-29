@@ -15,7 +15,7 @@
 # pylint: disable=not-callable,multiple-statements,no-member
 from typing import Dict, List, Optional
 
-from sqlalchemy import and_, or_
+from sqlalchemy import and_
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.session import Session
 
@@ -125,7 +125,8 @@ class SoftwareProfilesDbHandler(TortugaDbObjectHandler):
                     #
                     searchspec.append(SoftwareProfile.tags.any(name=name))
 
-        return q.filter(or_(*searchspec)).order_by(SoftwareProfile.name).all()
+        return q.filter(
+            and_(*searchspec)).order_by(SoftwareProfile.name).all()
 
     def __getHardwareProfile(
             self, session: Session, hardwareProfileName: str): \

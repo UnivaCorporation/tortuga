@@ -14,9 +14,9 @@
 
 
 class tortuga_kit_base::params {
-  $major_version = '7.0'
+  $major_version = '7.1'
 
-  $kitvers = "7.0.3"
+  $kitvers = "7.1.0"
   $kititer = '0'
   $kitname = 'base'
 

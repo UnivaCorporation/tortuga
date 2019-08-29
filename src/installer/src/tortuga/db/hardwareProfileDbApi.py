@@ -250,6 +250,18 @@ class HardwareProfileDbApi(TagsDbApiMixin, TortugaDbApi):
     def copyHardwareProfile(self, session: Session,
                             srcHardwareProfileName: str,
                             dstHardwareProfileName: str):
+        #
+        # Ensure the destination hardware profile doesn't already exist
+        #
+        try:
+            self.getHardwareProfile(session, dstHardwareProfileName)
+            raise TortugaException(
+                'Destination hardware profile already exists: {}'.format(
+                    dstHardwareProfileName)
+            )
+        except HardwareProfileNotFound:
+            pass
+
         srcHardwareProfile = self.getHardwareProfile(
             session,
             srcHardwareProfileName, {

@@ -10,4 +10,4 @@ RUN . /opt/rh/rh-python36/enable && \
 
 WORKDIR /kit-src
 
-CMD [ "bash", "-c", "build-kit clean && build-kit" ]
+CMD [ "bash", "-c", "tortuga kits clean && tortuga kits build" ]

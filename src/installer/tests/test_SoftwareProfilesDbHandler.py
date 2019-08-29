@@ -89,13 +89,11 @@ class TestSoftwareProfilesDbHandler(unittest.TestCase):
             'tag2' in [tag.name for tag in result[0].tags]
 
     def test_getSoftwareProfileList_tag1_and_tag2(self):
-        # 'tag1' and 'tag2' returns both profiles
+        # 'tag1' and 'tag2' returns neither profiles (and operator)
         result = SoftwareProfilesDbHandler().getSoftwareProfileList(
             self.session, tags={'tag1': None, 'tag2': None})
 
-        assert result and \
-            len(result) == 2 and \
-            not set(['swprofile1', 'swprofile2']) - set([swp.name for swp in result])
+        assert len(result) == 0
 
     def test_get_software_profiles_with_component(self):
         result = SoftwareProfilesDbHandler().get_software_profiles_with_component(
@@ -128,7 +126,7 @@ class TestSoftwareProfilesDbHandler(unittest.TestCase):
         assert result1
 
         result2 = SoftwareProfilesDbHandler().get_software_profiles_with_component(
-            self.session, 'base', 'core', kit_version='7.0.3'
+            self.session, 'base', 'core', kit_version='7.1.0'
         )
 
         assert result2

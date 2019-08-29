@@ -177,6 +177,17 @@ class KitManager(TortugaObjectManager):
             try:
                 self._run_installer(db_manager, installer)
 
+            #
+            # If kit already installed, raise the error and don't do anything
+            # else
+            #
+            except KitAlreadyExists as ex:
+                raise ex
+
+            #
+            # All other exceptions, delete the kit so that there are no
+            # remnants left lying around
+            #
             except Exception as ex:
                 self._delete_kit(session, kit, force=False)
                 raise ex

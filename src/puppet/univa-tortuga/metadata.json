@@ -1,6 +1,6 @@
 {
   "name": "univa-tortuga",
-  "version": "7.0.3",
+  "version": "7.1.0",
   "author": "Univa Corporation",
   "summary": "Tortuga integration module",
   "license": "Apache 2.0",
@@ -10,6 +10,7 @@
   "project_page": "http://univa.com",
   "dependencies": [
     {
+      "version_requirement": "5.2.0",
       "name": "puppetlabs/stdlib"
     }
   ]
