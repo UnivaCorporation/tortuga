@@ -23,7 +23,7 @@ class tortuga::installer (
   }
 
   if $database_engine == undef {
-    $database_engine_arg = 'sqlite'
+    $database_engine_arg = 'mysql'
   } else {
     $database_engine_arg = $database_engine
   }
@@ -39,7 +39,7 @@ class tortuga::installer (
   contain tortuga::installer::sudo
 
   class { 'tortuga::installer::database':
-    database_engine => $database_engine,
+    database_engine => $database_engine_arg,
   }
   contain tortuga::installer::database
 

@@ -16,7 +16,7 @@ class tortuga::params {
   $instroot = '/opt/tortuga'
 
   $database_name = 'tortugadb'
-  $database_user = 'apache'
+  $database_user = 'tortuga'
 
   $puppet_server = lookup('puppet_server')
   $depot = lookup('depot')

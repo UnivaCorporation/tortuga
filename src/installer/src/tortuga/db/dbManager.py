@@ -45,20 +45,19 @@ class DbManager(TortugaObjectManager):
 
         if not engine:
             self._cm = ConfigManager()
-
-            self._dbConfig = self._refreshDbConfig()
+            engine = self._cm.getDbEngine()
+            schema = self._cm.getDbSchema()
 
             engineURI = self.__getDbEngineURI()
 
-            if self._dbConfig['engine'] == 'sqlite' and \
-                    not os.path.exists(self._dbConfig['path']):
-                # Ensure SQLite database file is created with proper permissions
-                fd = os.open(
-                    self._dbConfig['path'], os.O_CREAT, mode=0o600)
-
+            if engine == 'sqlite' and not os.path.exists(schema):
+                # Ensure SQLite database file is created with proper
+                # permissions
+                fd = os.open(schema, os.O_CREAT, mode=0o600)
                 os.close(fd)
 
             self._engine = sqlalchemy.create_engine(engineURI)
+
         else:
             self._engine = engine
 
@@ -89,135 +88,46 @@ class DbManager(TortugaObjectManager):
         # Create tables
         #
         self._register_database_tables()
-        try:
-            ModelBase.metadata.create_all(self.engine)
-        except Exception:
-            self._logger.exception('SQLAlchemy raised exception')
-            raise DbError('Check database settings or credentials')
+        ModelBase.metadata.create_all(self.engine)
 
     @property
     def metadata(self):
         return self._metadata
 
     def __getDbEngineURI(self):
-        dbPort = self._dbConfig['port']
-        dbHost = self._dbConfig['host']
-        engine = self._dbConfig['engine']
-        dbUser = self._dbConfig['username']
-        dbPassword = self._dbConfig['password']
+        engine = self._cm.getDbEngine()
+        schema = self._cm.getDbSchema()
+        driver = ''
+        host = ''
+        port = ''
+        user = ''
+        password = ''
 
-        if engine == 'sqlite':
-            engineURI = 'sqlite:///%s' % (self._dbConfig['path'])
+        if engine == 'mysql':
+            driver = "+pymysql"
+            host = self._cm.getDbHost()
+            port = self._cm.getDbPort()
+            user = self._cm.getDbUser()
+            password = self._cm.getDbPassword()
+
+        userspec = ''
+        if user:
+            if password:
+                userspec = '{}:{}@'.format(user, password)
+            else:
+                userspec = '{}@'.format(user)
+
+        hostspec = ''
+        if host:
+            if port:
+                hostspec = '{}:{}'.format(host, port)
         else:
-            if dbUser is not None:
-                if dbPassword is not None:
-                    userspec = '%s:%s' % (dbUser, dbPassword)
-                else:
-                    userspec = dbUser
-            else:
-                userspec = None
+            hostspec = host
 
-            if dbPort is not None:
-                hostspec = '%s:%s' % (dbHost, dbPort)
-            else:
-                hostspec = dbHost
-
-            engineURI = f'{engine}+pymysql' if engine == 'mysql' else engine
-            engineURI += '://'
-
-            if userspec is not None:
-                engineURI += f'{userspec}@'
-
-            engineURI += f'{hostspec}' + '/{}'.format(self._cm.getDbSchema())
+        engineURI = "{}{}://{}{}/{}".format(engine, driver, userspec,
+                                            hostspec, schema)
 
         return engineURI
-
-    def _getDefaultDbEngine(self): \
-            # pylint: disable=no-self-use
-        return 'sqlite'
-
-    def _getDefaultDbHost(self): \
-            # pylint: disable=no-self-use
-        return 'localhost'
-
-    def _getDefaultDbPort(self, engine): \
-            # pylint: disable=no-self-use
-        # MySQL default port
-        if engine == 'mysql':
-            return 3306
-
-        return None
-
-    def _getDefaultDbUserName(self):
-        return self._cm.getDbUser()
-
-    def _getDefaultDbPassword(self):
-        if os.path.exists(self._cm.getDbPasswordFile()):
-            with open(self._cm.getDbPasswordFile()) as fp:
-                dbPassword = fp.read()
-        else:
-            dbPassword = None
-
-        return dbPassword
-
-    def _refreshDbConfig(self, cfg=None):
-        dbConfig = {}
-
-        if cfg is None:
-            cfg = configparser.ConfigParser()
-
-            cfg.read(os.path.join(self._cm.getKitConfigBase(), 'tortuga.ini'))
-
-        # Database engine
-        val = cfg.get('database', 'engine').strip().lower() \
-            if cfg.has_option('database', 'engine') else \
-            self._getDefaultDbEngine()
-
-        dbConfig['engine'] = val
-
-        if dbConfig['engine'] == 'sqlite':
-            # If database is sqlite, read the path
-            dbConfig['path'] = cfg.get('database', 'path') \
-                if cfg.has_section('database') and \
-                cfg.has_option('database', 'path') else \
-                os.path.join(self._cm.getEtcDir(),
-                             self._cm.getDbSchema() + '.sqlite')
-
-        # Database host
-        val = cfg.get('database', 'host') \
-            if cfg.has_option('database', 'host') else \
-            self._getDefaultDbHost()
-
-        dbConfig['host'] = val
-
-        # Database port
-        val = cfg.get('database', 'port') \
-            if cfg.has_option('database', 'port') else None
-
-        dbConfig['port'] = val if val else self._getDefaultDbPort(
-            engine=dbConfig['engine'])
-
-        # Database username
-        val = cfg.get('database', 'username') \
-            if cfg.has_option('database', 'username') \
-            else self._getDefaultDbUserName()
-
-        dbConfig['username'] = val
-
-        # Database password
-        val = cfg.get('database', 'password') \
-            if cfg.has_option('database', 'password') \
-            else self._getDefaultDbPassword()
-
-        dbConfig['password'] = val
-
-        return dbConfig
-
-    def get_backend_opts(self): \
-            # pylint: disable=no-self-use
-        return {
-            'mysql_engine': 'InnoDB',
-        }
 
     def getMetadataTable(self, table):
         return self._metadata.tables[table]
