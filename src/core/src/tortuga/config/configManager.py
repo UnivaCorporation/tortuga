@@ -47,14 +47,17 @@ DEFAULT_TORTUGA_INT_WEB_SCHEME = 'http'
 DEFAULT_TORTUGA_INT_WEB_PORT = 8008
 DEFAULT_TORTUGA_DNS_ZONE = 'localdomain'
 DEFAULT_TORTUGA_TIME_ZONE = 'GMT'
+DEFAULT_TORTUGA_DB_ENGINE = 'mysql'
+DEFAULT_TORTUGA_DB_HOST = '127.0.0.1'
+DEFAULT_TORTUGA_DB_PORT = '3306'
+DEFAULT_TORTUGA_DB_SCHEMA = 'tortugadb'
+DEFAULT_TORTUGA_DB_USER = 'tortuga'
 DEFAULT_TORTUGA_DB_PASSWORD = ''
-DEFAULT_TORTUGA_DB_PASSWORD_FILE = os.path.join(
-    DEFAULT_TORTUGA_ETC, 'db.passwd')
+DEFAULT_TORTUGA_DB_PASSWORD_FILE = os.path.join(DEFAULT_TORTUGA_ETC,
+                                                'db.passwd')
 DEFAULT_TORTUGA_REDIS_PASSWORD = ''
 DEFAULT_TORTUGA_REDIS_PASSWORD_FILE = os.path.join(
     DEFAULT_TORTUGA_ETC, 'redis.passwd')
-DEFAULT_TORTUGA_DB_USER = 'apache'
-DEFAULT_TORTUGA_DB_SCHEMA = 'tortugadb'
 DEFAULT_TORTUGA_CFM_ROOT_DIR = '/etc/cfm'
 DEFAULT_TORTUGA_CFM_SECRET_FILE = os.path.join(
     DEFAULT_TORTUGA_CFM_ROOT_DIR, '.cfmsecret')
@@ -164,6 +167,11 @@ class ConfigManager(dict): \
         self['defaultAdminScheme'] = DEFAULT_TORTUGA_ADMIN_SCHEME
         self['defaultIntWebScheme'] = DEFAULT_TORTUGA_INT_WEB_SCHEME
         self['defaultIntWebPort'] = DEFAULT_TORTUGA_INT_WEB_PORT
+        self['defaultDbEngine'] = DEFAULT_TORTUGA_DB_ENGINE
+        self['defaultDbHost'] = DEFAULT_TORTUGA_DB_HOST
+        self['defaultDbPort'] = DEFAULT_TORTUGA_DB_PORT
+        self['defaultDbSchema'] = DEFAULT_TORTUGA_DB_SCHEMA
+        self['defaultDbUser'] = DEFAULT_TORTUGA_DB_USER
         self['defaultDbPassword'] = DEFAULT_TORTUGA_DB_PASSWORD
         self['defaultDbPasswordFile'] = DEFAULT_TORTUGA_DB_PASSWORD_FILE
         self['defaultRedisPassword'] = DEFAULT_TORTUGA_REDIS_PASSWORD
@@ -212,15 +220,25 @@ class ConfigManager(dict): \
     def __init_from_varfile(self):
         self.__setFromVarFile(
             'dbPassword', DEFAULT_TORTUGA_DB_PASSWORD_FILE)
-
         self.__setFromVarFile(
             'redisPassword', DEFAULT_TORTUGA_REDIS_PASSWORD_FILE)
-
         self.__setFromVarFile(
             'tortugaRelease', DEFAULT_TORTUGA_RELEASE_FILE)
-
         self.__setFromVarFile(
             'cfmPassword', DEFAULT_TORTUGA_CFM_SECRET_FILE)
+
+    def __init_from_cfgfile(self):
+        cfg = self._get_cfg()
+        self['dbEngine'] = cfg.get('database', 'engine',
+                                   fallback=self['defaultDbEngine'])
+        self['dbHost'] = cfg.get('database', 'host',
+                                 fallback=self['defaultDbHost'])
+        self['dbPort'] = cfg.get('database', 'port',
+                                 fallback=self['defaultDbPort'])
+        self['dbSchema'] = cfg.get('database', 'schema',
+                                   fallback=self['defaultDbSchema'])
+        self['dbUser'] = cfg.get('database', 'user',
+                                 fallback=self['defaultDbUser'])
 
     def __init__(self):
         super(ConfigManager, self).__init__()
@@ -241,6 +259,8 @@ class ConfigManager(dict): \
             self['adminPort'] = int(self['adminPort'])
 
         self.__init_from_varfile()
+
+        self.__init_from_cfgfile()
 
         # Check to see if CFM should be loaded from vault
         vault_data = self.loadFromVault('launch-services/tortuga')
@@ -630,15 +650,6 @@ class ConfigManager(dict): \
 
         return self.__getKeyValue('kitConfigBase', default)
 
-    def getDbPassword(self, default='__internal__'):
-        """
-        Get db password. If db password has not
-        been set, the function will return the specified default value.
-        If the default value is not specified, internal (predefined)
-        default will be returned.
-        """
-        return self.__getKeyValue('dbPassword', default)
-
     def getRedisPassword(self, default='__internal__'):
         """
         Get Redis password. If Redis password has not
@@ -705,8 +716,55 @@ class ConfigManager(dict): \
         """
         return self.__getKeyValue('timeZone', default)
 
+    def getDbEngine(self, default='__internal__'):
+        """
+        Get the database engine. Currently only sqlite and mysql are
+        supported.
+
+        """
+        return self.__getKeyValue('dbEngine', default)
+
+    def getDbHost(self, default='__internal__'):
+        """
+        Get the database hostname. Only required for the mysql engine.
+
+        """
+        return self.__getKeyValue('dbHost', default)
+
+    def getDbPort(self, default='__internal__'):
+        """
+        Get the database port. Only required for the mysql engine.
+
+        """
+        return self.__getKeyValue('dbPort', default)
+
+    def getDbSchema(self, default='__internal__'):
+        """
+        Get the database schema name. For mysql, this is the name of the
+        database. For sqlite, this is the path to the database file.
+
+        """
+        return self.__getKeyValue('dbSchema', default)
+
+    def getDbUser(self, default='__internal__'):
+        """
+        Get the database user.
+
+        """
+        return self.__getKeyValue('dbUser', default)
+
+    def getDbPassword(self, default='__internal__'):
+        """
+        Get the database password.
+
+        """
+        return self.__getKeyValue('dbPassword', default)
+
     def getDbPasswordFile(self, default='__internal__'):
-        """ return db password file...use default if not defined """
+        """
+        The name of the file where the database password is stored.
+
+        """
         return self.__getKeyValue('dbPasswordFile', default)
 
     def getRedisPasswordFile(self, default='__internal__'):
@@ -715,14 +773,6 @@ class ConfigManager(dict): \
 
         """
         return self.__getKeyValue('redisPasswordFile', default)
-
-    def getDbUser(self, default='__internal__'):
-        """ return db user ...use default if not defined """
-        return self.__getKeyValue('dbUser', default)
-
-    def getDbSchema(self, default='__internal__'):
-        """ return db schema ...use default if not defined """
-        return self.__getKeyValue('dbSchema', default)
 
     def getDepotDir(self, default='__internal__'):
         """ return depot dir...use default if not defined """
@@ -805,14 +855,6 @@ class ConfigManager(dict): \
         cfg.read(self.getIniFile())
 
         return cfg
-
-    def get_database_engine(self) -> str:
-        cfg = self._get_cfg()
-
-        if not cfg.has_option('database', 'engine'):
-            return 'sqlite'
-
-        return cfg.get('database', 'engine')
 
     def is_offline_installation(self) -> bool:
         cfg = self._get_cfg()

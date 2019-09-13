@@ -12,19 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-class tortuga::installer::mysqld::packages {
-  $pkgs = [
-    'rh-python36-python-PyMySQL'
-  ]
-
-  ensure_packages($pkgs, {'ensure' => 'installed'})
-}
-
 class tortuga::installer::mysqld::preinstall {
-  require tortuga::installer::mysqld::packages
-
   ensure_resource('class', 'mysql::client', {})
-  ensure_resource('class', 'mysql::server', {})
+  ensure_resource('class', 'mysql::server', {
+    package_name     => 'mariadb-server'
+  })
 }
 
 class tortuga::installer::mysqld::createdb {
@@ -45,7 +37,6 @@ class tortuga::installer::mysqld::createdb {
 class tortuga::installer::mysqld {
   require tortuga::packages
 
-  contain tortuga::installer::mysqld::packages
   contain tortuga::installer::mysqld::preinstall
   contain tortuga::installer::mysqld::createdb
 }
