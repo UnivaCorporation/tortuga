@@ -21,11 +21,10 @@ from tortuga.kit.actions import ComponentActionBase
 class GetPuppetArgsAction(ComponentActionBase):
     def do_action(self, db_software_profile, db_hardware_profile,
                   *args, **kwargs):
-        db_engine = self.kit_installer.config_manager.get_database_engine()
-
         return {
             'proxy_hash': self._get_proxy_hash(),
-            'database_engine': db_engine,
+            'database_engine':
+                self.kit_installer.config_manager.getDbEngine(),
         }
 
     def _get_proxy_hash(self):

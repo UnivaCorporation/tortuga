@@ -139,7 +139,7 @@ class TortugaDeployer: \
                 'Unsupported database engine [%s]' % (value))
 
         settings['database'] = {
-            'engine': value if value else 'sqlite'
+            'engine': value if value else 'mysql'
         }
 
         # Get depot directory

@@ -22,7 +22,7 @@ class tortuga_kit_base::installer::post_install {
 }
 
 class tortuga_kit_base::installer (
-  $database_engine = 'sqlite',
+  $database_engine = 'mysql',
   $proxy_hash = {},
 ) {
   include tortuga::config
@@ -47,6 +47,7 @@ class tortuga_kit_base::installer::actions {
   class { 'tortuga::installer':
     database_engine => $tortuga_kit_base::installer::database_engine,
   }
+
   contain tortuga::installer
 
   contain tortuga_kit_base::provisioning::packages
