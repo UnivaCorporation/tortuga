@@ -65,7 +65,7 @@ class HardwareProfile(ModelBase):
                                    backref='hardwareprofiles')
 
     default_resource_adapter_config = relationship(
-        'ResourceAdapterConfig', backref='hardwarprofiles'
+        'ResourceAdapterConfig', backref='hardwareprofiles'
     )
 
     tags = relationship('HardwareProfileTag', lazy=False,
