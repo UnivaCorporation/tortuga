@@ -318,7 +318,7 @@ class TortugaDeployer: \
         self.out(statusMsg + '  ')
 
         # Open the log file in unbuffered mode
-        fpOut = open(logFileName, 'wb', 0)
+        fpOut = open(logFileName, 'ab', 0)
 
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
                              stderr=subprocess.STDOUT, bufsize=1,
