@@ -304,8 +304,10 @@ download_python_packages
 
 # other packages
 mkdir -p ${dstdir}/other/3rdparty/mcollective-puppet-agent
-
 ( cd ${dstdir}/other/3rdparty/mcollective-puppet-agent; curl -s -LO https://github.com/puppetlabs/mcollective-puppet-agent/archive/1.13.1.tar.gz )
+
+mkdir -p ${dstdir}/other/3rdparty/mcollective-shell-agent
+( cd ${dstdir}/other/3rdparty/mcollective-shell-agent; curl -s -LO https://github.com/choria-legacy/mcollective-shell-agent/archive/0.0.2.tar.gz )
 
 echo
 echo "Dependencies download complete."

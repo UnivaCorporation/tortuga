@@ -24,7 +24,7 @@ from tortuga.events.types.node import NodeStateChanged, NodeTagsChanged
 from tortuga.objectstore.base import matches_filters
 from tortuga.typestore.base import TypeStore
 from .types import Node
-
+from tortuga.wsapi.syncWsApi import SyncWsApi
 
 logger = logging.getLogger(__name__)
 
@@ -170,3 +170,11 @@ class SqlalchemySessionNodeStore(TypeStore):
                 tags=node.tags,
                 previous_tags=node_old.tags
             )
+            opts = {}
+            opts['node'] = {
+                'id' : str(node.id),
+                'tags' : node.tags,
+                'previous_tags' : node_old.tags
+            }
+            logger.debug('Triggering cluster update with tags parameter: {}'.format(opts))
+            SyncWsApi().scheduleClusterUpdate(updateReason='Node tags updated', opts=opts)

@@ -15,19 +15,28 @@
 class tortuga::mcollective::package {
   include tortuga::config
 
-  $filename = '1.13.1.tar.gz'
+  $filename_puppet = '1.13.1.tar.gz'
+  $filename_shell = '0.0.2.tar.gz'
   $dstdir = '/opt/puppetlabs/mcollective/plugins/mcollective'
 
   if ! $tortuga::mcollective::is_installer {
-    $tmpdir = "${tortuga::config::instroot}/var/tmp/mcollective-puppet-agent"
-    $tarball = "${tmpdir}/${filename}"
-    $url = "http://${::primary_installer_hostname}:${tortuga::config::int_web_port}/3rdparty/mcollective-puppet-agent/${filename}"
-    file { $tmpdir:
+    $tmpdir_puppet = "${tortuga::config::instroot}/var/tmp/mcollective-puppet-agent"
+    $tarball_puppet = "${tmpdir_puppet}/${filename_puppet}"
+    $url_puppet = "http://${::primary_installer_hostname}:${tortuga::config::int_web_port}/3rdparty/mcollective-puppet-agent/${filename_puppet}"
+    file { $tmpdir_puppet:
+      ensure => directory,
+    }
+    $tmpdir_shell = "${tortuga::config::instroot}/var/tmp/mcollective-shell-agent"
+    $tarball_shell = "${tmpdir_shell}/${filename_shell}"
+    $url_shell = "http://${::primary_installer_hostname}:${tortuga::config::int_web_port}/3rdparty/mcollective-shell-agent/${filename_shell}"
+    file { $tmpdir_shell:
       ensure => directory,
     }
 
-    $cmd = "${tortuga::config::curl_cmd} ${url}"
-    $cwd = $tmpdir
+    $cmd_puppet = "${tortuga::config::curl_cmd} ${url_puppet}"
+    $cwd_puppet = $tmpdir_puppet
+    $cmd_shell = "${tortuga::config::curl_cmd} ${url_shell}"
+    $cwd_shell = $tmpdir_shell
 
     if $tortuga::config::proxy_uri {
       # both curl and wget honour 'http_proxy' environment variable
@@ -40,15 +49,25 @@ class tortuga::mcollective::package {
 
     exec { 'retrieve mcollective-puppet-agent':
       path        => ['/bin', '/usr/bin'],
-      command     => $cmd,
-      creates     => $tarball,
-      cwd         => $cwd,
-      require     => File[$tmpdir],
+      command     => $cmd_puppet,
+      creates     => $tarball_puppet,
+      cwd         => $cwd_puppet,
+      require     => File[$tmpdir_puppet],
       before      => Exec['extract mcollective-puppet-agent plugin'],
       environment => $environment,
     }
+    exec { 'retrieve mcollective-shell-agent':
+      path        => ['/bin', '/usr/bin'],
+      command     => $cmd_shell,
+      creates     => $tarball_shell,
+      cwd         => $cwd_shell,
+      require     => File[$tmpdir_shell],
+      before      => Exec['extract mcollective-shell-agent plugin'],
+      environment => $environment,
+    }
   } else {
-    $tarball = "${tortuga::config::instroot}/www_int/3rdparty/mcollective-puppet-agent/${filename}"
+    $tarball_puppet = "${tortuga::config::instroot}/www_int/3rdparty/mcollective-puppet-agent/${filename_puppet}"
+    $tarball_shell = "${tortuga::config::instroot}/www_int/3rdparty/mcollective-shell-agent/${filename_shell}"
   }
 
   file { "${dstdir}":
@@ -57,9 +76,16 @@ class tortuga::mcollective::package {
 
   exec { 'extract mcollective-puppet-agent plugin':
     path    => ['/bin', '/usr/bin'],
-    command => "tar --extract --gzip --strip-components 1 --file ${tarball} --directory ${dstdir}",
+    command => "tar --extract --gzip --strip-components 1 --file ${tarball_puppet} --directory ${dstdir}",
     require => File[$dstdir],
     creates => '/opt/puppetlabs/mcollective/plugins/mcollective/agent/puppet.rb',
+  }
+
+  exec { 'extract mcollective-shell-agent plugin':
+    path    => ['/bin', '/usr/bin'],
+    command => "tar --extract --gzip --strip-components 3 --file ${tarball_shell} --directory ${dstdir} mcollective-shell-agent-0.0.2/lib",
+    creates => '/opt/puppetlabs/mcollective/plugins/mcollective/agent/shell.rb',
+    require => Exec['extract mcollective-puppet-agent plugin'],
   }
 }
 

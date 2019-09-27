@@ -99,7 +99,7 @@ if [[ ! -d $ca_dir ]] || [[ ! -f $ca_dir/ca-key.pem ]] || \
 fi
 
 # Create host directory if it doesn't already exist
-[[ -d $hostdir ]] || mkdir $hostdir
+[[ -d $hostdir ]] || mkdir -p $hostdir
 
 sslcnf=$hostdir/${certname}-openssl.cnf
 

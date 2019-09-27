@@ -20,4 +20,13 @@
 # Run Puppet on the installer first...
 /opt/puppetlabs/bin/puppet agent --onetime --no-daemonize
 
-/opt/puppetlabs/bin/mco puppet runonce --no-progress --quiet >/dev/null 2>&1 ||:
+if [ ! -z "$FACTER_node_tags_update" ]; then
+  echo "Node tags update: FACTER_node_tags_update=$FACTER_node_tags_update"
+  export FACTER_node_tags_update; /opt/puppetlabs/bin/mco shell -A shell run "export FACTER_node_tags_update='$FACTER_node_tags_update'; /opt/puppetlabs/bin/puppet agent -t"
+elif [ ! -z "$FACTER_softwareprofile_tags_update" ]; then
+  echo "Software profile tags update: FACTER_softwareprofile_tags_update=$FACTER_softwareprofile_tags_update"
+  export FACTER_softwareprofile_tags_update; /opt/puppetlabs/bin/mco shell -A shell run "export FACTER_softwareprofile_tags_update='$FACTER_softwareprofile_tags_update'; /opt/puppetlabs/bin/puppet agent -t"
+else
+  echo "Normal puppet run"
+  /opt/puppetlabs/bin/mco puppet runonce
+fi

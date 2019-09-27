@@ -25,7 +25,7 @@ from .tortugaWsApi import TortugaWsApi
 class SyncWsApi(TortugaWsApi):
     """Cluster sync WS API class"""
 
-    def scheduleClusterUpdate(self, updateReason: Optional[Union[str, None]] = None):
+    def scheduleClusterUpdate(self, updateReason: Optional[Union[str, None]] = None, opts = {}):
         """Schedule cluster update.
 
             Returns:
@@ -41,6 +41,9 @@ class SyncWsApi(TortugaWsApi):
 
         if updateReason:
             postdata['reason'] = updateReason
+
+        if len(opts) > 0:
+            postdata['opts'] = json.dumps(opts)
 
         try:
             self.post(url, postdata)

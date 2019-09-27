@@ -18,6 +18,7 @@ import logging
 import os.path
 import threading
 import time
+import json
 
 from tortuga.config.configManager import ConfigManager
 from tortuga.exceptions.commandFailed import CommandFailed
@@ -47,9 +48,9 @@ class SyncManager(TortugaObjectManager):
         self._cm = ConfigManager()
         self._logger = logging.getLogger(SYNC_NAMESPACE)
 
-    def __runClusterUpdate(self):
+    def __runClusterUpdate(self, opts={}):
         """ Run cluster update. """
-        self._logger.debug('Update timer running')
+        self._logger.debug('Update timer running, opts={}'.format(opts))
 
         updateCmd = os.path.join(self._cm.getBinDir(),
                                  'run_cluster_update.sh')
@@ -85,12 +86,28 @@ class SyncManager(TortugaObjectManager):
 
             self.__resetIsUpdateScheduled()
 
-            p = TortugaSubprocess(updateCmd)
+            if 'node' in opts:
+                node_update = opts['node']
+                env = {**os.environ,
+                       'FACTER_node_tags_update' : json.dumps(node_update)
+                      }
+                self._logger.debug('FACTER_node_tags_update={}'.format(env['FACTER_node_tags_update']))
+                p = TortugaSubprocess(updateCmd, env=env)
+            elif 'software_profile' in opts:
+                sp_update = opts['software_profile']
+                env = {**os.environ,
+                       'FACTER_softwareprofile_tags_update' : json.dumps(sp_update)
+                      }
+                self._logger.debug('FACTER_softwareprofile_tags_update={}'.format(env['FACTER_softwareprofile_tags_update']))
+                p = TortugaSubprocess(updateCmd, env=env)
+            else:
+                p = TortugaSubprocess(updateCmd)
 
             try:
                 p.run()
-
                 self._logger.debug('Cluster update successful')
+                self._logger.debug('stdout: {}'.format(p.getStdOut().decode().rstrip()))
+                self._logger.debug('stderr: {}'.format(p.getStdErr().decode().rstrip()))
             except CommandFailed:
                 if p.getExitStatus() == tortugaStatus.\
                         TORTUGA_ANOTHER_INSTANCE_OWNS_LOCK_ERROR:
@@ -102,7 +119,7 @@ class SyncManager(TortugaObjectManager):
 
                     self.scheduleClusterUpdate(
                         updateReason='another update already running',
-                        delay=60)
+                        delay=60, opts=opts)
 
                     break
                 else:
@@ -127,7 +144,7 @@ class SyncManager(TortugaObjectManager):
         finally:
             SyncManager.__instanceLock.release()
 
-    def scheduleClusterUpdate(self, updateReason=None, delay=5):
+    def scheduleClusterUpdate(self, updateReason=None, delay=5, opts={}):
         """ Schedule cluster update. """
         SyncManager.__instanceLock.acquire()
         try:
@@ -140,9 +157,9 @@ class SyncManager(TortugaObjectManager):
             if not self._isUpdateRunning:
                 self._logger.debug(
                     'Scheduling cluster update in %s seconds,'
-                    ' reason: %s' % (delay, updateReason))
+                    ' reason: %s, opts: %s' % (delay, updateReason, opts))
 
-                t = threading.Timer(delay, self.__runClusterUpdate)
+                t = threading.Timer(delay, self.__runClusterUpdate, kwargs=dict(opts=opts))
 
                 t.start()
             else:

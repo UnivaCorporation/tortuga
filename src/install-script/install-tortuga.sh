@@ -791,6 +791,29 @@ cachedpkgs+=" ${commonpkgs}"
     echo "done."
 }
 
+[[ -d ${INTWEBROOT}/3rdparty/mcollective-shell-agent ]] || \
+    mkdir -p ${INTWEBROOT}/3rdparty/mcollective-shell-agent
+[[ -z ${local_deps} ]] && {
+    # Download mcollective-shell-agent plugin
+    echo -n "Downloading 'mcollective-shell-agent' plugin... "
+
+    url=https://github.com/choria-legacy/mcollective-shell-agent/archive/0.0.2.tar.gz
+
+    ( cd ${INTWEBROOT}/3rdparty/mcollective-shell-agent; \
+        curl --retry 10 --retry-max-time 60 --silent --fail --location \
+        --remote-name ${url} 2>&1 | tee -a /tmp/install-tortuga.log )
+
+    [[ $? -eq 0 ]] || {
+    echo "failed."
+        echo
+        echo "Error retrieving mcollective-shell-agent. Unable to proceed" >&2
+
+        exit 1
+    }
+
+    echo "done."
+}
+
 [[ "${download_only}" -eq 1 ]] && {
     # Force next Puppet run to synchronize newly downloaded packages
     echo "Done."

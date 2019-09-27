@@ -27,6 +27,9 @@ class ScheduleUpdateCli(TortugaCli):
         self.addOption('reason',
                        help='Reason for update (optional)',
                        nargs='?')
+#        self.addOption('opts',
+#                       help='Json string with additional options (optional)',
+#                       nargs='?')
 
         super().parseArgs(usage=usage)
 
@@ -35,6 +38,7 @@ class ScheduleUpdateCli(TortugaCli):
 
         api = self.configureClient(SyncWsApi)
         api.scheduleClusterUpdate(updateReason=self.getArgs().reason)
+#        api.scheduleClusterUpdate(updateReason=self.getArgs().reason, opts=self.getArgs().opts if self.getArgs().opts else {})
 
 
 def main():

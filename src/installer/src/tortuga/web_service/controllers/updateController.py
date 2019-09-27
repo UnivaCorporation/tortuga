@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import cherrypy
+import json
 
 from tortuga.sync.syncApi import SyncApi
 from tortuga.types.application import Application
@@ -65,8 +66,11 @@ class UpdateController(TortugaController):
         updateReason = postdata['reason'] \
             if 'reason' in postdata else None
 
+        opts = json.loads(postdata['opts']) \
+            if 'opts' in postdata else {}
+
         try:
-            self._syncApi.scheduleClusterUpdate(updateReason)
+            self._syncApi.scheduleClusterUpdate(updateReason=updateReason, opts=opts)
         except Exception as ex:
             self._logger.exception('scheduleClusterUpdate() failed')
             self.handleException(ex)

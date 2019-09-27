@@ -31,7 +31,7 @@ class SyncApi(TortugaApi):
         
         self._logger = logging.getLogger(SYNC_NAMESPACE)
 
-    def scheduleClusterUpdate(self, updateReason=None):
+    def scheduleClusterUpdate(self, updateReason=None, opts={}):
         """Schedule cluster update.
 
             Returns:
@@ -41,7 +41,7 @@ class SyncApi(TortugaApi):
                 TortugaException
         """
         try:
-            SyncManager().scheduleClusterUpdate(updateReason)
+            SyncManager().scheduleClusterUpdate(updateReason=updateReason, opts=opts)
         except Exception as ex:
             if isinstance(ex, TortugaException):
                 raise

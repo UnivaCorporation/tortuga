@@ -24,6 +24,7 @@ from tortuga.events.types.software_profile import SoftwareProfileTagsChanged
 from tortuga.objectstore.base import matches_filters
 from tortuga.typestore.base import TypeStore
 from .types import SoftwareProfile
+from tortuga.wsapi.syncWsApi import SyncWsApi
 
 
 logger = logging.getLogger(__name__)
@@ -167,3 +168,12 @@ class SqlalchemySessionSoftwareProfileStore(TypeStore):
                 tags=swp.tags,
                 previous_tags=swp_old.tags
             )
+            opts = {}
+            opts['software_profile'] = {
+                'id' : str(swp.id),
+                'name' : swp.name,
+                'tags' : swp.tags,
+                'previous_tags' : swp_old.tags
+            }
+            logger.debug('Triggering cluster update with tags parameter: {}'.format(opts))
+            SyncWsApi().scheduleClusterUpdate(updateReason='Software profile tags updated', opts=opts)
