@@ -173,6 +173,7 @@ class SqlalchemySessionNodeStore(TypeStore):
             opts = {}
             opts['node'] = {
                 'id' : str(node.id),
+                'name' : node.name,
                 'tags' : node.tags,
                 'previous_tags' : node_old.tags
             }

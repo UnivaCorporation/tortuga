@@ -19,6 +19,7 @@ import logging
 from tortuga.os_utility import tortugaSubprocess
 from tortuga.exceptions.commandFailed import CommandFailed
 from tortuga.wsapi.nodeWsApi import NodeWsApi
+from tortuga.wsapi.softwareProfileWsApi import SoftwareProfileWsApi
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +27,7 @@ class NodeManagedTags:
     managed_prefix = "managed:"
     managed_prefix_len = len(managed_prefix)
     node_api = NodeWsApi()
+    swp_api = SoftwareProfileWsApi()
     env = {**os.environ,
         'PATH': '/opt/tortuga/bin:' + os.environ['PATH'],
         'TORTUGA_ROOT': '/opt/tortuga'}
@@ -56,47 +58,59 @@ class NodeManagedTags:
         logger.warn('modified_tags={}'.format(modified_tags))
 
         node = self.node_api.getNodeById(update['id'])
+        node_name = node.getName()
         software_profile = node.getSoftwareProfile()
         logger.warn('node={}, software_profile={}'.format(node, software_profile))
         if software_profile['metadata'].get('uge'):
             for cluster in software_profile['metadata']['uge']['clusters']:
+                logger.warn('cluster={}'.format(cluster))
                 cluster_name = cluster['name']
-                for setting in cluster['settings']:
-                    if setting['key'] == 'sge_root':
-                        uge_root = setting['value']
-                        break
+                found = False
+                if software_profile['name'] in cluster['qmaster_swprofiles']:
+                    found = True
+                else:
+                    for execd_swp in cluster['execd_swprofiles']:
+                        if node_name in [ n.getName() for n in self.swp_api.getNodeList(execd_swp['name']) ]:
+                            found = True
+                            break
+                if found:
+                    for setting in cluster['settings']:
+                        if setting['key'] == 'sge_root':
+                            uge_root = setting['value']
+                            break
 
-                cell_dir = os.path.join(uge_root, cluster_name)
+                    cell_dir = os.path.join(uge_root, cluster_name)
 
-                cmd = ('. {}/common/settings.sh; '
-                    '{} '
-                    '--software-profile {} '
-                    '--cell-dir {} '
-                    '{} {} {} {} {}'.format(
-                    cell_dir,
-                    self.script,
-                    software_profile['name'],
-                    cell_dir,
-                    '--added-tags ' + ','.join('{}={}'.format(k, v) for k, v in
-                                            added_tags.items()) if added_tags else '',
-                    '--removed-tags ' + ','.join('{}={}'.format(k, v) for k, v in
-                                                removed_tags.items()) if removed_tags else '',
-                    '--modified-tags ' + ','.join('{}={}'.format(k, v) for k, v in
-                                                modified_tags.items()) if modified_tags else '',
-                    '--unmanaged-tags ' + '"' + unmanaged_tags + '"' if unmanaged_tags else '',
-                    '--node ' + node.getName()))
+                    cmd = ('. {}/common/settings.sh; '
+                        '{} '
+                        '--software-profile {} '
+                        '--cell-dir {} '
+                        '{} {} {} {} {}'.format(
+                        cell_dir,
+                        self.script,
+                        software_profile['name'],
+                        cell_dir,
+                        '--added-tags ' + ','.join('{}={}'.format(k, v) for k, v in
+                                                added_tags.items()) if added_tags else '',
+                        '--removed-tags ' + ','.join('{}={}'.format(k, v) for k, v in
+                                                    removed_tags.items()) if removed_tags else '',
+                        '--modified-tags ' + ','.join('{}={}'.format(k, v) for k, v in
+                                                    modified_tags.items()) if modified_tags else '',
+                        '--unmanaged-tags ' + '"' + unmanaged_tags + '"' if unmanaged_tags else '',
+                        '--node ' + node.getName()))
 
-                logger.warn('Calling cmd: {}'.format(cmd))
+                    logger.warn('Calling cmd: {}'.format(cmd))
 
-                p = tortugaSubprocess.TortugaSubprocess(cmd, env=self.env,
-                                                        useExceptions=False)
-                p.run()
-                logger.warn('stdout: {}'.format(p.getStdOut().decode().rstrip()))
-                logger.warn('stderr: {}'.format(p.getStdErr().decode().rstrip()))
-                es = p.getExitStatus()
-                logger.warn('exit status: {}'.format(es))
-                if es != 0:
-                    raise CommandFailed(str(p.getStdErr().decode().rstrip()))
+                    p = tortugaSubprocess.TortugaSubprocess(cmd, env=self.env,
+                                                            useExceptions=False)
+                    p.run()
+                    logger.warn('stdout: {}'.format(p.getStdOut().decode().rstrip()))
+                    logger.warn('stderr: {}'.format(p.getStdErr().decode().rstrip()))
+                    es = p.getExitStatus()
+                    logger.warn('exit status: {}'.format(es))
+                    if es != 0:
+                        raise CommandFailed(str(p.getStdErr().decode().rstrip()))
+                break
         else:
             logger.warn('Managed tagging supported only on UGE cluster, metadata: {}'.format(software_profile['metadata']))
 

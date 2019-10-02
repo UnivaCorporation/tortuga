@@ -89,14 +89,18 @@ class SyncManager(TortugaObjectManager):
             if 'node' in opts:
                 node_update = opts['node']
                 env = {**os.environ,
+                       'PATH': '/opt/tortuga/bin:' + os.environ['PATH'],
+                       'TORTUGA_ROOT': '/opt/tortuga',
                        'FACTER_node_tags_update' : json.dumps(node_update)
                       }
                 self._logger.debug('FACTER_node_tags_update={}'.format(env['FACTER_node_tags_update']))
                 p = TortugaSubprocess(updateCmd, env=env)
             elif 'software_profile' in opts:
-                sp_update = opts['software_profile']
+                swp_update = opts['software_profile']
                 env = {**os.environ,
-                       'FACTER_softwareprofile_tags_update' : json.dumps(sp_update)
+                       'PATH': '/opt/tortuga/bin:' + os.environ['PATH'],
+                       'TORTUGA_ROOT': '/opt/tortuga',
+                       'FACTER_softwareprofile_tags_update' : json.dumps(swp_update)
                       }
                 self._logger.debug('FACTER_softwareprofile_tags_update={}'.format(env['FACTER_softwareprofile_tags_update']))
                 p = TortugaSubprocess(updateCmd, env=env)
