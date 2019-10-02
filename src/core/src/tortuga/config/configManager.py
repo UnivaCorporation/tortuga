@@ -269,18 +269,6 @@ class ConfigManager(dict): \
             if vault_cfm_password is not None:
                 self['cfmPassword'] = vault_cfm_password
 
-        # set encryption key
-        password = self.getCfmPassword().encode()
-        salt = b'salt_fixed'
-        kdf = PBKDF2HMAC(
-            algorithm=hashes.SHA256(),
-            length=32,
-            salt=salt,
-            iterations=100000,
-            backend=default_backend()
-        )
-        self['defaultEncryptionKey'] = base64.urlsafe_b64encode(kdf.derive(password)) 
-
         # Set host based on provisioning info
         if self.getProvisioningInfo() is None:
             self['installer'] = self['host'] = getfqdn()
@@ -866,4 +854,19 @@ class ConfigManager(dict): \
 
     def get_encryption_key(self, default='__internal__') -> bytes:
         """ return encryption key """
+        # We do this on demand since it is an expensive operation and this method
+        # is not used by most of the system
+        if self.get('defaultEncryptionKey') is None:
+            # set encryption key
+            password = self.getCfmPassword().encode()
+            salt = b'salt_fixed'
+            kdf = PBKDF2HMAC(
+                algorithm=hashes.SHA256(),
+                length=32,
+                salt=salt,
+                iterations=100000,
+                backend=default_backend()
+            )
+            self['defaultEncryptionKey'] = base64.urlsafe_b64encode(kdf.derive(password))
+
         return self.__getKeyValue('encryptionKey', default)  
