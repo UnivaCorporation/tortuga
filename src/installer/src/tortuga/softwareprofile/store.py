@@ -175,5 +175,5 @@ class SqlalchemySessionSoftwareProfileStore(TypeStore):
                 'tags' : swp.tags,
                 'previous_tags' : swp_old.tags
             }
-            logger.debug('Triggering cluster update with tags parameter: {}'.format(opts))
+            logger.debug('Triggering cluster update with software profile tags parameter: {}'.format(opts))
             SyncWsApi().scheduleClusterUpdate(updateReason='Software profile tags updated', opts=opts)

@@ -17,16 +17,72 @@
 
 # Trigger Puppet agent on all managed nodes
 
-# Run Puppet on the installer first...
-/opt/puppetlabs/bin/puppet agent --onetime --no-daemonize
+# select only associated qmaster nodes
+function node_mco_param() {
+  local node=$1
+  local mco_param=
+  for cl in $(uge-cluster list 2> /dev/null); do
+    for execd_sp in $(uge-cluster show $cl --list-execd-swprofiles 2> /dev/null); do
+      execd_nodes=$(get-software-profile-nodes --software-profile $execd_sp)
+      if [[ "$execd_nodes" = *"$node"* ]]; then
+        for qmaster_sp in $(uge-cluster show $cl --list-qmaster-swprofiles 2> /dev/null); do
+          for qmaster_node in $(get-software-profile-nodes --software-profile $qmaster_sp); do
+            mco_param="$mco_param -I ${qmaster_node%%.*}"
+          done
+        done
+        br=1
+        break
+      fi
+    done
+    if [ ! -z "$br" ]; then
+      break
+    fi
+  done
+  if [ -z "$br" ]; then
+    echo "-I ${node%%.*}"
+  else
+    echo $mco_param
+  fi
+}
+
+function swp_mco_param() {
+  local swp=$1
+  local mco_param=
+  for node in $(get-software-profile-nodes --software-profile $swp); do
+    mco_param="$mco_param -I $node"
+  done
+  echo $mco_param
+}
 
 if [ ! -z "$FACTER_node_tags_update" ]; then
   echo "Node tags update: FACTER_node_tags_update=$FACTER_node_tags_update"
-  export FACTER_node_tags_update; /opt/puppetlabs/bin/mco shell -A shell run "export FACTER_node_tags_update='$FACTER_node_tags_update'; /opt/puppetlabs/bin/puppet agent -t"
+  node=$(echo "$FACTER_node_tags_update" | python -c 'import sys, json; print(json.load(sys.stdin)["name"])')
+  if [ $? -ne 0 ] || [ -z "$node" ]; then
+    echo "Cannot get node from tags update"
+    exit 1
+  fi
+
+  mco_param="$(node_mco_param $node)"
+  echo "$mco_param"
+
+  export FACTER_node_tags_update; /opt/puppetlabs/bin/mco shell $mco_param run "export FACTER_node_tags_update='$FACTER_node_tags_update'; /opt/puppetlabs/bin/puppet agent -t"
 elif [ ! -z "$FACTER_softwareprofile_tags_update" ]; then
   echo "Software profile tags update: FACTER_softwareprofile_tags_update=$FACTER_softwareprofile_tags_update"
-  export FACTER_softwareprofile_tags_update; /opt/puppetlabs/bin/mco shell -A shell run "export FACTER_softwareprofile_tags_update='$FACTER_softwareprofile_tags_update'; /opt/puppetlabs/bin/puppet agent -t"
+  swp=$(echo "$FACTER_softwareprofile_tags_update" | python -c 'import sys, json; print(json.load(sys.stdin)["name"])')
+  if [ $? -ne 0 ] || [ -z "$swp" ]; then
+    echo "Cannot get software profile from tags update"
+    exit 1
+  fi
+  mco_param="$(swp_mco_param $swp)"
+  echo "$mco_param"
+  if [ -z "$mco_param" ]; then
+    echo "Didn't find any nodes for software profile $swp"
+    exit 1
+  fi
+  export FACTER_softwareprofile_tags_update; /opt/puppetlabs/bin/mco shell $mco_param run "export FACTER_softwareprofile_tags_update='$FACTER_softwareprofile_tags_update'; /opt/puppetlabs/bin/puppet agent -t"
 else
   echo "Normal puppet run"
+  # Run Puppet on the installer first...
+  /opt/puppetlabs/bin/puppet agent --onetime --no-daemonize
   /opt/puppetlabs/bin/mco puppet runonce
 fi
