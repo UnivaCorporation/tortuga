@@ -48,9 +48,21 @@ function node_mco_param() {
 function swp_mco_param() {
   local swp=$1
   local mco_param=
-  for node in $(get-software-profile-nodes --software-profile $swp); do
-    mco_param="$mco_param -I $node"
+  for cl in $(uge-cluster list 2> /dev/null); do
+    execd_swps=$(uge-cluster show $cl --list-execd-swprofiles 2> /dev/null)
+    if [[ "$execd_swps" = *"$swp"* ]]; then
+      for qmaster_swp in $(uge-cluster show $cl --list-qmaster-swprofiles 2> /dev/null); do
+        for qmaster_node in $(get-node-status -l --software-profile $qmaster_swp --installed); do
+          mco_param="$mco_param -I ${qmaster_node%%.*}"
+        done
+      done
+    fi
   done
+  if [ -z "$mco_param" ]; then
+    for node in $(get-software-profile-nodes --software-profile $swp); do
+      mco_param="$mco_param -I $node"
+    done
+  fi
   echo $mco_param
 }
 
@@ -76,7 +88,7 @@ elif [ ! -z "$FACTER_softwareprofile_tags_update" ]; then
   mco_param="$(swp_mco_param $swp)"
   echo "$mco_param"
   if [ -z "$mco_param" ]; then
-    echo "Didn't find any nodes for software profile $swp"
+    echo "Didn't find any appropriate mco identity for software profile $swp"
     exit 1
   fi
   export FACTER_softwareprofile_tags_update; /opt/puppetlabs/bin/mco shell $mco_param run "export FACTER_softwareprofile_tags_update='$FACTER_softwareprofile_tags_update'; /opt/puppetlabs/bin/puppet agent -t"
