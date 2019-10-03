@@ -177,5 +177,5 @@ class SqlalchemySessionNodeStore(TypeStore):
                 'tags' : node.tags,
                 'previous_tags' : node_old.tags
             }
-            logger.debug('Triggering cluster update with tags parameter: {}'.format(opts))
+            logger.debug('Triggering cluster update with node tags parameter: {}'.format(opts))
             SyncWsApi().scheduleClusterUpdate(updateReason='Node tags updated', opts=opts)
