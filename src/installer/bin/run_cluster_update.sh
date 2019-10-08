@@ -60,10 +60,20 @@ function swp_mco_param() {
   done
   if [ -z "$mco_param" ]; then
     for node in $(get-software-profile-nodes --software-profile $swp); do
-      mco_param="$mco_param -I $node"
+      mco_param="$mco_param -I ${node%%.*}"
     done
   fi
   echo $mco_param
+}
+
+function mco_exit_code() {
+  local ret=$1
+  if [ $ret -ne 0 ]; then
+    echo "mco run failed: exit code: $ret"
+    exit $ret
+  else
+    echo "mco run succeeded"
+  fi
 }
 
 if [ ! -z "$FACTER_node_tags_update" ]; then
@@ -78,6 +88,7 @@ if [ ! -z "$FACTER_node_tags_update" ]; then
   echo "$mco_param"
 
   export FACTER_node_tags_update; /opt/puppetlabs/bin/mco shell $mco_param run "export FACTER_node_tags_update='$FACTER_node_tags_update'; /opt/puppetlabs/bin/puppet agent -t"
+  mco_exit_code $?
 elif [ ! -z "$FACTER_softwareprofile_tags_update" ]; then
   echo "Software profile tags update: FACTER_softwareprofile_tags_update=$FACTER_softwareprofile_tags_update"
   swp=$(echo "$FACTER_softwareprofile_tags_update" | python -c 'import sys, json; print(json.load(sys.stdin)["name"])')
@@ -92,9 +103,11 @@ elif [ ! -z "$FACTER_softwareprofile_tags_update" ]; then
     exit 1
   fi
   export FACTER_softwareprofile_tags_update; /opt/puppetlabs/bin/mco shell $mco_param run "export FACTER_softwareprofile_tags_update='$FACTER_softwareprofile_tags_update'; /opt/puppetlabs/bin/puppet agent -t"
+  mco_exit_code $?
 else
   echo "Normal puppet run"
   # Run Puppet on the installer first...
   /opt/puppetlabs/bin/puppet agent --onetime --no-daemonize
   /opt/puppetlabs/bin/mco puppet runonce
+  mco_exit_code $?
 fi
