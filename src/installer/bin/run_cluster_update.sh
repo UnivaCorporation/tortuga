@@ -23,10 +23,11 @@ if [ ! -z "$FACTER_node_tags_update" ]  || [ ! -z "$FACTER_softwareprofile_tags_
     exit 1
   fi
   export FACTER_node_tags_update; export FACTER_softwareprofile_tags_update; $TAGS_CLUSTER_UPDATE
+  exit $?
 else
   echo "Normal cluster update puppet run"
   # Run Puppet on the installer first...
   /opt/puppetlabs/bin/puppet agent --onetime --no-daemonize
   /opt/puppetlabs/bin/mco puppet runonce
-  mco_exit_code $?
+  exit $?
 fi
