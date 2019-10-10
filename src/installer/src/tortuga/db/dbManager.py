@@ -56,7 +56,7 @@ class DbManager(TortugaObjectManager):
                 fd = os.open(schema, os.O_CREAT, mode=0o600)
                 os.close(fd)
 
-            self._engine = sqlalchemy.create_engine(engineURI)
+            self._engine = sqlalchemy.create_engine(engineURI, pool_pre_ping=True)
 
         else:
             self._engine = engine
