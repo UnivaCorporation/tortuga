@@ -201,12 +201,52 @@ class tortuga_kit_base::core::install::install_tortuga_python_package(
   }
 }
 
-class tortuga_kit_base::core::install::install_tortuga_base {
-  require tortuga_kit_base::core::install::create_tortuga_instroot
-  ensure_resource('class', 'tortuga_kit_base::core::install::install_tortuga_python_package', {
-    package => 'tortuga-core'
-  })
+class tortuga_kit_base::core::install::install_tortuga_base()
+{
+  include tortuga::config
+
+  $intweburl = "http://${::primary_installer_hostname}:${tortuga::config::int_web_port}"
+
+  $tortuga_pkg_url = "${intweburl}/python-tortuga/simple/"
+
+  $pipcmd = "${tortuga::config::instroot}/bin/pip"
+
+  if ! $tortuga_kit_base::core::offline_installation {
+    # regular installation
+    $pip_install_opts = "--extra-index-url ${tortuga_pkg_url} \
+--trusted-host ${::primary_installer_hostname}"
+  } else {
+    # offline installation
+
+    $tortuga_offline_url = "${intweburl}/offline-deps/python/simple/"
+
+    $pip_install_opts = "--index-url ${tortuga_pkg_url} \
+--extra-index-url ${tortuga_offline_url} \
+--trusted-host ${::primary_installer_hostname}"
+  }
+
+  if $tortuga::config::proxy_uri {
+    $env = [
+      "https_proxy=${tortuga::config::proxy_uri}",
+      "http_proxy=${tortuga::config::proxy_uri}",
+    ]
+  } else {
+    $env = undef
+  }
+
+  exec { "install tortuga-core Python package":
+    command => "${pipcmd} install ${pip_install_opts} tortuga-core",
+    unless  => "${pipcmd} show tortuga-core",
+    environment => $env,
+  }
 }
+
+#class tortuga_kit_base::core::install::install_tortuga_base {
+#  require tortuga_kit_base::core::install::create_tortuga_instroot
+#  ensure_resource('class', 'tortuga_kit_base::core::install::install_tortuga_python_package', {
+#    package => 'tortuga-core'
+#  })
+#}
 
 class tortuga_kit_base::core::install::bootstrap {
   require tortuga_kit_base::core::install::install_tortuga_base
