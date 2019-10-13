@@ -204,6 +204,7 @@ class tortuga_kit_base::core::install::install_tortuga_python_package(
 class tortuga_kit_base::core::install::install_tortuga_base()
 {
   include tortuga::config
+  require tortuga_kit_base::core::install::create_tortuga_instroot
 
   $intweburl = "http://${::primary_installer_hostname}:${tortuga::config::int_web_port}"
 
