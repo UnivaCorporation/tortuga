@@ -113,6 +113,14 @@ class tortuga::installer::activemq::config {
   file { '/etc/httpd/conf.d/activemq-httpd.conf':
     ensure => absent
   }
+
+  systemd::dropin_file { 'Ensure SystemD understands ActiveMQ will drop superuser':
+    filename => 'user.conf',
+    unit     => 'activemq.service',
+    source   => "puppet:///modules/${module_name}/activemq-systemd-dropin.conf",
+    notify   => Service['activemq'],
+  }
+
 }
 
 class tortuga::installer::activemq::service {
