@@ -209,7 +209,11 @@ class tortuga_kit_base::core::install::install_tortuga_base {
 #  ensure_resource('class', 'tortuga_kit_base::core::install::install_tortuga_python_package', {
 #    package => 'tortuga-core'
 #  })
-  tortuga_kit_base::core::install::install_tortuga_python_package('tortuga-core')
+#  tortuga_kit_base::core::install::install_tortuga_python_package('tortuga-core')
+
+  ensure_resource('tortuga_kit_base::core::install::install_tortuga_python_package', 'tortuga-core', {
+    package => 'tortuga-core',
+  })
 }
 
 class tortuga_kit_base::core::install::bootstrap {
