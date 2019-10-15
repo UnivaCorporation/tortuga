@@ -160,7 +160,8 @@ class tortuga_kit_base::core::install::create_tortuga_instroot {
   }
 }
 
-class tortuga_kit_base::core::install::install_tortuga_python_package(
+#class tortuga_kit_base::core::install::install_tortuga_python_package(
+define tortuga_kit_base::core::install::install_tortuga_python_package(
   String $package)
 {
   include tortuga::config
@@ -205,9 +206,10 @@ class tortuga_kit_base::core::install::install_tortuga_python_package(
 class tortuga_kit_base::core::install::install_tortuga_base {
   include tortuga_kit_base::core::install::create_tortuga_instroot
   Class['tortuga_kit_base::core::install::create_tortuga_instroot'] -> Class['tortuga_kit_base::core::install::install_tortuga_base']
-  ensure_resource('class', 'tortuga_kit_base::core::install::install_tortuga_python_package', {
-    package => 'tortuga-core'
-  })
+#  ensure_resource('class', 'tortuga_kit_base::core::install::install_tortuga_python_package', {
+#    package => 'tortuga-core'
+#  })
+  tortuga_kit_base::core::install::install_tortuga_python_package('tortuga-core')
 }
 
 class tortuga_kit_base::core::install::bootstrap {
