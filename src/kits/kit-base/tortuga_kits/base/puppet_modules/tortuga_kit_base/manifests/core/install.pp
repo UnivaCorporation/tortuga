@@ -160,10 +160,11 @@ class tortuga_kit_base::core::install::create_tortuga_instroot {
   }
 }
 
-class tortuga_kit_base::core::install::install_tortuga_base {
-  require tortuga_kit_base::core::install::create_tortuga_instroot
-
+define tortuga_kit_base::core::install::install_tortuga_python_package(
+  String $package)
+{
   include tortuga::config
+  require tortuga_kit_base::core::install::create_tortuga_instroot
 
   $intweburl = "http://${::primary_installer_hostname}:${tortuga::config::int_web_port}"
 
@@ -194,11 +195,19 @@ class tortuga_kit_base::core::install::install_tortuga_base {
     $env = undef
   }
 
-  exec { 'install tortuga-core Python package':
-    command => "${pipcmd} install ${pip_install_opts} tortuga-core",
-    unless  => "${pipcmd} show tortuga-core",
+  exec { "install ${package} Python package":
+    command => "${pipcmd} install ${pip_install_opts} ${package}",
+    unless  => "${pipcmd} show ${package}",
     environment => $env,
   }
+}
+
+class tortuga_kit_base::core::install::install_tortuga_base {
+  include tortuga_kit_base::core::install::create_tortuga_instroot
+  Class['tortuga_kit_base::core::install::create_tortuga_instroot'] -> Class['tortuga_kit_base::core::install::install_tortuga_base']
+  ensure_resource('tortuga_kit_base::core::install::install_tortuga_python_package', 'tortuga-core', {
+    package => 'tortuga-core',
+  })
 }
 
 class tortuga_kit_base::core::install::bootstrap {
