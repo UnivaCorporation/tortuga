@@ -293,11 +293,12 @@ class KitInstallerBase(ConfigurableMixin, metaclass=KitInstallerMeta):
         #
         try:
             comp_pkg = importlib.import_module(comp_pkg_name)
-        except ModuleNotFoundError:
+        except ModuleNotFoundError as e:
             logger.warning(
                 'No component installers found for kit: %s',
                 kit_pkg_name
             )
+            logger.debug('The reason: {}'.format(e))
             return
 
         #
@@ -338,8 +339,9 @@ class KitInstallerBase(ConfigurableMixin, metaclass=KitInstallerMeta):
                     'Component installer registered: %s', comp_inst.spec
                 )
 
-            except ModuleNotFoundError:
+            except ModuleNotFoundError as e:
                 logger.debug('Package not a component: %s', full_pkg_path)
+                logger.debug('The reason: {}'.format(e))
 
             self._component_installers_loaded = True
 
