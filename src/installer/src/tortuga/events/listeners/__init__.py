@@ -14,3 +14,4 @@
 
 from .base import get_all_listener_classes, get_listnener_class, BaseListener
 from .node import NodeProvisioningListener
+from .tags import TagListener

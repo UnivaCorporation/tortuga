@@ -131,6 +131,49 @@ class ResourceAdapter(UserDataMixin): \
 
         return []
 
+    def push_tags(self, sess: Session, node_id: int):
+        """
+        Pushes the current set of tags for the node to the instance in the
+        resource adapter/provider.
+
+        :param sess:    a database session instance
+        :param node_id: the id of the node, whose tags need to be pushed to
+                        the resource adapter/provider.
+
+        """
+        node: TortugaNode = self.__nodeApi.getNodeById(sess, node_id)
+        tags_to_set = {}
+        for k, v in node.getTags().items():
+            #
+            # For managed tags, remove the managed: prefix
+            #
+            if k.startswith('managed:'):
+                tags_to_set[k.replace('managed:', '')] = v
+                continue
+            #
+            # Everything else is good to go as-is
+            #
+            tags_to_set[k] = v
+
+        self.set_remote_tags(sess, node, tags_to_set)
+
+    def set_remote_tags(self, sess: Session, node: TortugaNode,
+                        tags: Dict[str, str]):
+        """
+        Sets the tags in the resource adapter/provider instance for the
+        node to a specific set. It is worth noting that the tags on the
+        node instance may be different than what is being passed-in via
+        the tags parameter. The reason for this is that the tags will have
+        been pre-sanitized by the push_tags method first.
+
+        :param sess: a database session instance
+        :param node: the node who's tags must be changed in the remote
+                     provider
+        :param tags: the value(s) that the nodes tags must be set to
+
+        """
+        raise NotImplementedError()
+
     def fire_state_change_event(self, db_node: Node, previous_state: str):
         """
         Fires a node state changed event. This is a "fake" operation allowing
@@ -384,11 +427,11 @@ class ResourceAdapter(UserDataMixin): \
         """
         pass
 
-    def get_tags(self, config: Dict[str, str], hwp_name: str,
-                 swp_name: str) -> Dict[str, str]:
+    def get_initial_tags(self, config: Dict[str, str], hwp_name: str,
+                         swp_name: str) -> Dict[str, str]:
         """
         Returns the list of tags that should be applied to one or more
-        nodes.
+        nodes upon creation.
 
         :param Dict[str, str] config: the resource adapter profile config
         :param str hwp_name:          the node hardware profile name
