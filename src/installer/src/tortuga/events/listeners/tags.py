@@ -47,7 +47,9 @@ class TagListener(BaseListener):
         #
         sess = Session()
         ra = self._get_resource_adapter(sess, event.node_id)
-        ra.push_tags(sess, int(event.node_id))
+        ra.session = sess
+        ra.push_tags(int(event.node_id))
+        sess.close()
 
     def _get_resource_adapter(self, sess: Session,
                               node_id: str) -> ResourceAdapter:
