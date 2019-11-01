@@ -38,9 +38,11 @@ CELERY_APP="tortuga.tasks"
 CELERYD_MULTI="multi"
 
 #
-# Extra command-line arguments to the worker
+# Extra command-line arguments to the worker.  This works
+# with only one worker (you can have concurrency) due to the -B flag
+# for embedded beat.
 #
-CELERYD_OPTS="--time-limit=21600 --concurrency=4"
+CELERYD_OPTS="--time-limit=21600 --concurrency=4 -B"
 
 #
 # - %n will be replaced with the first part of the nodename.
