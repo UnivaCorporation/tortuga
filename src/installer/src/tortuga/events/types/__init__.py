@@ -20,4 +20,5 @@ from .noderequest import (AddNodeRequestComplete, AddNodeRequestQueued,
 from .resourcerequest import (ResourceRequestCreated, ResourceRequestUpdated,
                               ResourceRequestDeleted)
 from .software_profile import SoftwareProfileTagsChanged
+from .tag import TagCreated, TagUpdated, TagDeleted
 from .task import TaskFailed

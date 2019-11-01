@@ -384,6 +384,22 @@ class SoftwareProfilesCommand(RootCommand):
     ]
 
 
+class TagsCommand(RootCommand):
+    """
+    This is a command for interacting with WS API endpoints.
+
+    """
+    name = 'tags'
+    help = 'Tortuga tags API'
+
+    sub_commands = [
+        ListCommand(),
+        GetCommand(),
+        UpdateCommand(),
+        DeleteCommand(),
+    ]
+
+
 def get_client(config: TortugaScriptConfig,
                endpoint: str) -> TortugaWsApiClient:
     """

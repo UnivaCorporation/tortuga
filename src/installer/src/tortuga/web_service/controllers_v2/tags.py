@@ -12,5 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .base import get_all_listener_classes, get_listnener_class, BaseListener
-from .node import NodeProvisioningListener
+from tortuga.tags.manager import TagStoreManager
+from .base import Controller
+
+
+class TagController(Controller):
+    """
+    SoftwareProfile web service controller class.
+
+    """
+    name = 'tags'
+    type_store = TagStoreManager.get()
+    methods = ['GET', 'POST', 'PUT', 'DELETE']

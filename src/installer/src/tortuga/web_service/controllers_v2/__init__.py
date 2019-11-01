@@ -21,6 +21,7 @@ from .hardwareprofiles import HardwareProfileController
 from .nodes import NodeController
 from .resourcerequests import ResourceRequestController
 from .softwareprofiles import SoftwareProfileController
+from .tags import TagController
 
 
 #
@@ -31,6 +32,7 @@ register_ws_controller(HardwareProfileController)
 register_ws_controller(NodeController)
 register_ws_controller(ResourceRequestController)
 register_ws_controller(SoftwareProfileController)
+register_ws_controller(TagController)
 
 
 def setup_routes():

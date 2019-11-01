@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-from typing import Dict, Iterator, Optional
+from typing import Dict, Iterator, List, Optional, Tuple
 
 from sqlalchemy import desc
 from sqlalchemy.orm import Session, sessionmaker
@@ -20,8 +20,10 @@ from sqlalchemy.orm import Session, sessionmaker
 from tortuga.db.dbManager import DbManager
 from tortuga.db.models.node import Node as DbNode
 from tortuga.db.models.nodeTag import NodeTag
-from tortuga.events.types.node import NodeStateChanged, NodeTagsChanged
+from tortuga.events.types import TagCreated, TagDeleted, TagUpdated, \
+    NodeStateChanged, NodeTagsChanged
 from tortuga.objectstore.base import matches_filters
+from tortuga.tags.types import Tag
 from tortuga.typestore.base import TypeStore
 from .types import Node
 
@@ -39,7 +41,10 @@ class SqlalchemySessionNodeStore(TypeStore):
     def __init__(self, db_manager: DbManager):
         self._Session = sessionmaker(bind=db_manager.engine)
 
-    def _to_db_node(self, node: Node, session: Session) -> Optional[DbNode]:
+    def _to_db_node(
+            self,
+            node: Node,
+            session: Session) -> Tuple[Optional[DbNode], List, List, List]:
         if node.id:
             db_node = session.query(DbNode).filter(
                 DbNode.id == int(node.id)).first()
@@ -47,29 +52,52 @@ class SqlalchemySessionNodeStore(TypeStore):
                 return None
         else:
             raise Exception('Creating nodes is currently not supported')
+
         db_node.name = node.name
         db_node.public_hostname = node.public_hostname
         db_node.softwareProfileId = int(node.softwareprofile_id)
         db_node.hardwareProfileId = int(node.hardwareprofile_id)
         db_node.state = node.state
         db_node.lockedState = node.locked
-        self._set_db_node_tags(db_node, node.tags)
-        return db_node
+        tag_create_events, tag_update_events, tag_delete_events = \
+            self._set_db_node_tags(db_node, node.tags)
 
-    def _set_db_node_tags(self, db_node: DbNode, tags: Dict[str, str]):
+        return (db_node, tag_create_events, tag_update_events,
+                tag_delete_events)
+
+    def _set_db_node_tags(self, db_node: DbNode,
+                          tags: Dict[str, str]) -> Tuple[List, List, List]:
         if not tags:
             tags = {}
+        create_events = []
+        update_events = []
+        delete_events = []
         tags_to_delete = {tag.name: tag for tag in db_node.tags}
         for name, value in tags.items():
             if name in tags_to_delete.keys():
+                update_events.append({
+                    "name": name,
+                    "value": value,
+                    "previous_value": tag.value
+                })
                 tag = tags_to_delete.pop(name)
                 tag.value = value
             else:
+                create_events.append({
+                    "name": name,
+                    "value": value,
+                })
                 db_node.tags.append(
                     NodeTag(name=name, value=value)
                 )
         for tag in tags_to_delete.values():
+            delete_events.append({
+                "name": tag.name,
+                "value": tag.value
+            })
             db_node.tags.remove(tag)
+
+        return create_events, update_events, delete_events
 
     def _to_node(self, db_node: DbNode) -> Node:
         return Node(
@@ -136,14 +164,17 @@ class SqlalchemySessionNodeStore(TypeStore):
             node_old = self.get(obj.id)
 
         session = self._Session()
-        db_node = self._to_db_node(obj, session)
+        db_node, tag_create_events, tag_update_events, tag_delete_events = \
+            self._to_db_node(obj, session)
         if not db_node:
             raise Exception('Node ID not found: %s', obj.id)
         session.commit()
         node = self._to_node(db_node)
         session.close()
 
-        self._fire_events(node_old, node)
+        self._fire_node_events(node_old, node)
+        self._fire_tag_events(node.id, tag_create_events, tag_update_events,
+                              tag_delete_events)
         logger.debug('save(...) -> %s', node)
         return node
 
@@ -152,7 +183,7 @@ class SqlalchemySessionNodeStore(TypeStore):
         marshalled = schema_class().dump(node)
         return marshalled.data
 
-    def _fire_events(self, node_old: Node, node: Node):
+    def _fire_node_events(self, node_old: Node, node: Node):
         self._event_state_changed(node_old, node)
         self._event_tags_changed(node_old, node)
 
@@ -168,4 +199,23 @@ class SqlalchemySessionNodeStore(TypeStore):
                 node_name=node.name,
                 tags=node.tags,
                 previous_tags=node_old.tags
+            )
+
+    def _fire_tag_events(self, node_id: str, created: List[Dict],
+                         updated: List[Dict], deleted: List[Dict]):
+        for evt in created:
+            TagCreated.fire(
+                tag_id='node:{}:{}'.format(node_id, evt['name']),
+                value=evt['value']
+            )
+        for evt in updated:
+            TagUpdated.fire(
+                tag_id='node:{}:{}'.format(node_id, evt['name']),
+                value=evt['value'],
+                previous_value=evt['previous_value']
+            )
+        for evt in deleted:
+            TagDeleted.fire(
+                tag_id='node:{}:{}'.format(node_id, evt['name']),
+                value=evt['value']
             )
