@@ -200,7 +200,9 @@ class SqlalchemySessionTagStore(TypeStore):
 
         session = self._Session()
         db_tag = self._get_db_tag(session, object_type, object_id, tag_name)
-        tag = self._to_tag(db_tag)
+        tag = None
+        if db_tag:
+            tag = self._to_tag(db_tag)
         session.close()
 
         logger.debug('get(...) -> %s', tag)
@@ -216,11 +218,11 @@ class SqlalchemySessionTagStore(TypeStore):
         session = self._Session()
         db_tag_old = self._get_db_tag(session, object_type, object_id,
                                       tag_name)
-        created = False
+        created = True
         tag_old = None
         if db_tag_old:
             tag_old = self._to_tag(db_tag_old)
-            created = True
+            created = False
 
         if object_type == 'node':
             obj_store = NodeStoreManager.get()
@@ -259,27 +261,33 @@ class SqlalchemySessionTagStore(TypeStore):
     def delete(self, tag_id: str):
         logger.debug('delete(tag_id=%s) -> ...', tag_id)
 
-        object_type, object_id, tag_id = self._parse_id(id_=tag_id)
-        tag = self.get(tag_id)
-
         session = self._Session()
+        object_type, object_id, tag_name = self._parse_id(id_=tag_id)
+        db_tag = self._get_db_tag(session, object_type, object_id, tag_name)
+        #
+        # If tag not found, do nothing
+        #
+        if not db_tag:
+            session.close()
+            return
+        tag = self._to_tag(db_tag)
+
         if object_type == 'node':
             obj_store = NodeStoreManager.get()
             obj_old = obj_store.get(object_id)
-            session.delete(NodeTag).where(NodeTag.id == int(tag_id))
         elif object_type == 'softwareprofile':
             obj_store = SoftwareProfileStoreManager.get()
             obj_old = obj_store.get(object_id)
-            session.delete(SoftwareProfileTag).where(
-                SoftwareProfileTag.id == int(tag_id))
         elif object_type == 'hardwareprofile':
             obj_store = HardwareProfileStoreManager.get()
             obj_old = obj_store.get(object_id)
-            session.delete(HardwareProfileTag).where(
-                HardwareProfileTag.id == int(tag_id))
 
         else:
             raise Exception('Unsupported object_type: '.format(object_type))
+
+        session.delete(db_tag)
+        session.commit()
+        session.close()
 
         self._event_tag_deleted(tag)
         obj = obj_store.get(object_id)

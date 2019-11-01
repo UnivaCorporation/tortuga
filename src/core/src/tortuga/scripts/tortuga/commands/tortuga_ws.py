@@ -395,6 +395,7 @@ class TagsCommand(RootCommand):
     sub_commands = [
         ListCommand(),
         GetCommand(),
+        CreateCommand(),
         UpdateCommand(),
         DeleteCommand(),
     ]
