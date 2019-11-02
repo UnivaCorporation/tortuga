@@ -16,9 +16,11 @@ import logging
 from sqlalchemy.orm import sessionmaker
 
 from tortuga.db.resourceAdaptersDbHandler import ResourceAdaptersDbHandler
+from tortuga.db.nodesDbHandler import NodesDbHandler
 from tortuga.web_service.database import dbm
 from tortuga.events.listeners.base import BaseListener
-from tortuga.events.types import BaseEvent, NodeTagsChanged
+from tortuga.events.types.tag import BaseTagEvent
+from tortuga.events.types import TagCreated, TagUpdated, TagDeleted
 from tortuga.hardwareprofile.manager import HardwareProfileStoreManager
 from tortuga.resourceAdapter.resourceAdapter import ResourceAdapter
 from tortuga.resourceAdapter.resourceAdapterFactory import get_api
@@ -31,24 +33,47 @@ logger = logging.getLogger(__name__)
 Session = sessionmaker(bind=dbm.engine)
 
 
-class TagListener(BaseListener):
-    name = 'push-tags-listener'
-    event_types = [NodeTagsChanged]
+class TagChangeListener(BaseListener):
+    name = 'push-tags-changes-to-resource-adapter'
+    event_types = [TagCreated, TagUpdated, TagDeleted]
 
-    def run(self, event: BaseEvent):
+    def run(self, event: BaseTagEvent):
         #
         # Make sure this is the right event type, and that it is relevant
         # for this resource adapter.
         #
-        if not isinstance(event, NodeTagsChanged):
+        if not isinstance(event, BaseTagEvent):
             return
+        #
+        # Parse the tag ID to get the metadata
+        #
+        id_parts = event.tag_id.split(":")
+        if len(id_parts) != 3:
+            raise Exception('Invalid tag ID: {}'.format(event.tag_id))
+        object_type = id_parts[0]
+        object_id = id_parts[1]
+        tag_name = id_parts[2]
+        #
+        # Currently only changes to node tags are supported
+        #
+        if object_type != 'node':
+            return
+        #
+        # Managed tags need to have their prefix removed
+        #
+        if tag_name.startswith('managed:'):
+            tag_name = tag_name.replace('managed:', '')
         #
         # Do the actual tag update in the resource adapter
         #
         sess = Session()
-        ra = self._get_resource_adapter(sess, event.node_id)
+        ra = self._get_resource_adapter(sess, object_id)
         ra.session = sess
-        ra.push_tags(int(event.node_id))
+        node = NodesDbHandler().getNodeById(sess, int(object_id))
+        if isinstance(event, TagDeleted):
+            ra.unset_node_tag(node, tag_name)
+        else:
+            ra.set_node_tag(node, tag_name, event.value)
         sess.close()
 
     def _get_resource_adapter(self, sess: Session,

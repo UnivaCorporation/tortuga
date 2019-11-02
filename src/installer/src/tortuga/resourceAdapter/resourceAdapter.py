@@ -132,45 +132,26 @@ class ResourceAdapter(UserDataMixin): \
 
         return []
 
-    def push_tags(self, node_id: int):
+    def set_node_tag(self, node: Node, tag_name: str, tag_value: str):
         """
-        Pushes the current set of tags for the node to the instance in the
-        resource adapter/provider.
+        Sets a tag on a node in the resource adapter/provider instance.
 
-        :param node_id: the id of the node, whose tags need to be pushed to
-                        the resource adapter/provider.
-
-        """
-        node: Node = NodesDbHandler().getNodeById(self.session, node_id)
-        tags_to_set = {}
-        for tag in node.tags:
-            #
-            # For managed tags, remove the managed: prefix
-            #
-            if tag.name.startswith('managed:'):
-                tags_to_set[tag.name.replace('managed:', '')] = tag.value
-                continue
-            #
-            # Everything else is good to go as-is
-            #
-            tags_to_set[tag.name] = tag.value
-
-        self.set_remote_tags(node, tags_to_set)
-
-    def set_remote_tags(self, node: Node, tags: Dict[str, str]):
-        """
-        Sets the tags in the resource adapter/provider instance for the
-        node to a specific set. It is worth noting that the tags on the
-        node instance may be different than what is being passed-in via
-        the tags parameter. The reason for this is that the tags will have
-        been pre-sanitized by the push_tags method first.
-
-        :param node: the node who's tags must be changed in the remote
-                     provider
-        :param tags: the value(s) that the nodes tags must be set to
+        :param Node node:     the Tortuga node
+        :param str tag_name:  the name of the tag to set
+        :param str tag_value: the value to set the tag to
 
         """
-        raise NotImplementedError()
+        raise NotImplemented()
+
+    def unset_node_tag(self, node: Node, tag_name: str):
+        """
+        Removes a tag from a node in the resource adapter/provider instance.
+
+        :param Node node:     the Tortuga node
+        :param str tag_name:  the name of the tag to remove
+
+        """
+        raise NotImplemented()
 
     def fire_state_change_event(self, db_node: Node, previous_state: str):
         """
