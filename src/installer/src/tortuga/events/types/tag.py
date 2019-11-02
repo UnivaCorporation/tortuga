@@ -36,9 +36,6 @@ class BaseTagEvent(BaseEvent):
         Initializer.
 
         :param str tag_id:      the ID of the tag
-        :param str object_type: the object type that the tag points to
-        :param str object_id:   the object id that the tag points to
-        :param str name:        the name of the tag
         :param str value:       the value of the tag
 
         """
@@ -72,7 +69,6 @@ class TagUpdated(BaseTagEvent):
         """
         Initializer.
 
-        :param str previous_name:  the previous name of the tag
         :param str previous_value: the previous value of the tag
         :param kwargs:             see superclass for additional params
 
