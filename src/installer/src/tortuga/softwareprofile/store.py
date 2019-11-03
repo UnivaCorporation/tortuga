@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-from typing import Dict, Iterator, Optional
+from typing import Dict, Iterator, List, Optional, Tuple
 
 from sqlalchemy import desc
 from sqlalchemy.orm import Session, sessionmaker
@@ -20,7 +20,8 @@ from sqlalchemy.orm import Session, sessionmaker
 from tortuga.db.dbManager import DbManager
 from tortuga.db.models.softwareProfile import SoftwareProfile as DbSoftwareProfile
 from tortuga.db.models.softwareProfileTag import SoftwareProfileTag
-from tortuga.events.types.software_profile import SoftwareProfileTagsChanged
+from tortuga.events.types import SoftwareProfileTagsChanged, TagCreated, \
+    TagUpdated, TagDeleted
 from tortuga.objectstore.base import matches_filters
 from tortuga.typestore.base import TypeStore
 from .types import SoftwareProfile
@@ -40,7 +41,10 @@ class SqlalchemySessionSoftwareProfileStore(TypeStore):
     def __init__(self, db_manager: DbManager):
         self._Session = sessionmaker(bind=db_manager.engine)
 
-    def _to_db_swp(self, swp: SoftwareProfile, session: Session) -> Optional[DbSoftwareProfile]:
+    def _to_db_swp(
+            self,
+            swp: SoftwareProfile,
+            session: Session) -> Tuple[Optional[DbSoftwareProfile], List, List, List]:
         if swp.id:
             db_swp = session.query(DbSoftwareProfile).filter(
                 DbSoftwareProfile.id == int(swp.id)).first()
@@ -48,6 +52,7 @@ class SqlalchemySessionSoftwareProfileStore(TypeStore):
                 return None
         else:
             raise Exception('Creating swps is currently not supported')
+
         db_swp.name = swp.name
         db_swp.description = swp.description
         db_swp.minNodes = swp.min_nodes
@@ -55,23 +60,44 @@ class SqlalchemySessionSoftwareProfileStore(TypeStore):
         db_swp.lockedState = swp.locked
         db_swp.dataRoot = swp.data_root
         db_swp.dataRsync = swp.data_rsync
-        self._set_db_swp_tags(db_swp, swp.tags)
-        return db_swp
+        tag_create_events, tag_update_events, tag_delete_events = \
+            self._set_db_swp_tags(db_swp, swp.tags)
 
-    def _set_db_swp_tags(self, db_swp: DbSoftwareProfile, tags: Dict[str, str]):
+        return db_swp, tag_create_events, tag_update_events, tag_delete_events
+
+    def _set_db_swp_tags(self, db_swp: DbSoftwareProfile,
+                         tags: Dict[str, str]) -> Tuple[List, List, List]:
         if not tags:
             tags = {}
+        create_events = []
+        update_events = []
+        delete_events = []
         tags_to_delete = {tag.name: tag for tag in db_swp.tags}
         for name, value in tags.items():
             if name in tags_to_delete.keys():
+                update_events.append({
+                    "name": name,
+                    "value": value,
+                    "previous_value": tag.value
+                })
                 tag = tags_to_delete.pop(name)
                 tag.value = value
             else:
+                create_events.append({
+                    "name": name,
+                    "value": value,
+                })
                 db_swp.tags.append(
                     SoftwareProfileTag(name=name, value=value)
                 )
         for tag in tags_to_delete.values():
+            delete_events.append({
+                "name": tag.name,
+                "value": tag.value
+            })
             db_swp.tags.remove(tag)
+
+        return create_events, update_events, delete_events
 
     def _to_swp(self, db_swp: DbSoftwareProfile) -> SoftwareProfile:
         return SoftwareProfile(
@@ -104,9 +130,13 @@ class SqlalchemySessionSoftwareProfileStore(TypeStore):
             #       as it is the default behavior for strings
             #
             if desc:
-                result = result.order_by(desc(getattr(DbSoftwareProfile, order_by)))
+                result = result.order_by(
+                    desc(getattr(DbSoftwareProfile, order_by))
+                )
             else:
-                result = result.order_by(getattr(DbSoftwareProfile, order_by))
+                result = result.order_by(
+                    getattr(DbSoftwareProfile, order_by)
+                )
         count = 0
         for db_swp in result:
             swp = self._to_swp(db_swp)
@@ -139,7 +169,8 @@ class SqlalchemySessionSoftwareProfileStore(TypeStore):
             swp_old = self.get(obj.id)
 
         session = self._Session()
-        db_swp = self._to_db_swp(obj, session)
+        db_swp, tag_create_events, tag_update_events, tag_delete_events = \
+            self._to_db_swp(obj, session)
         if not db_swp:
             raise Exception('SoftwareProfile ID not found: %s', obj.id)
         session.commit()
@@ -147,6 +178,8 @@ class SqlalchemySessionSoftwareProfileStore(TypeStore):
         session.close()
 
         self._fire_events(swp_old, swp)
+        self._fire_tag_events(swp.id, tag_create_events, tag_update_events,
+                              tag_delete_events)
         logger.debug('save(...) -> %s', swp)
         return swp
 
@@ -168,3 +201,24 @@ class SqlalchemySessionSoftwareProfileStore(TypeStore):
                 previous_tags=swp_old.tags
             )
 
+    def _fire_tag_events(self, softwareprofile_id: str, created: List[Dict],
+                         updated: List[Dict], deleted: List[Dict]):
+        for evt in created:
+            TagCreated.fire(
+                tag_id='softwareprofile:{}:{}'.format(
+                    softwareprofile_id, evt['name']),
+                value=evt['value']
+            )
+        for evt in updated:
+            TagUpdated.fire(
+                tag_id='softwareprofile:{}:{}'.format(
+                    softwareprofile_id, evt['name']),
+                value=evt['value'],
+                previous_value=evt['previous_value']
+            )
+        for evt in deleted:
+            TagDeleted.fire(
+                tag_id='softwareprofile:{}:{}'.format(
+                    softwareprofile_id, evt['name']),
+                value=evt['value']
+            )

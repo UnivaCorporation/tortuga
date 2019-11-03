@@ -26,6 +26,7 @@ import gevent
 from sqlalchemy.orm.session import Session
 from tortuga.addhost.addHostManager import AddHostManager
 from tortuga.config.configManager import ConfigManager
+from tortuga.db.nodesDbHandler import NodesDbHandler
 from tortuga.db.models.hardwareProfile import HardwareProfile
 from tortuga.db.models.network import Network
 from tortuga.db.models.nic import Nic
@@ -130,6 +131,27 @@ class ResourceAdapter(UserDataMixin): \
         self.__tags_requested = addNodesRequest.get('tags', {})
 
         return []
+
+    def set_node_tag(self, node: Node, tag_name: str, tag_value: str):
+        """
+        Sets a tag on a node in the resource adapter/provider instance.
+
+        :param Node node:     the Tortuga node
+        :param str tag_name:  the name of the tag to set
+        :param str tag_value: the value to set the tag to
+
+        """
+        raise NotImplemented()
+
+    def unset_node_tag(self, node: Node, tag_name: str):
+        """
+        Removes a tag from a node in the resource adapter/provider instance.
+
+        :param Node node:     the Tortuga node
+        :param str tag_name:  the name of the tag to remove
+
+        """
+        raise NotImplemented()
 
     def fire_state_change_event(self, db_node: Node, previous_state: str):
         """
@@ -384,11 +406,11 @@ class ResourceAdapter(UserDataMixin): \
         """
         pass
 
-    def get_tags(self, config: Dict[str, str], hwp_name: str,
-                 swp_name: str) -> Dict[str, str]:
+    def get_initial_tags(self, config: Dict[str, str], hwp_name: str,
+                         swp_name: str) -> Dict[str, str]:
         """
         Returns the list of tags that should be applied to one or more
-        nodes.
+        nodes upon creation.
 
         :param Dict[str, str] config: the resource adapter profile config
         :param str hwp_name:          the node hardware profile name

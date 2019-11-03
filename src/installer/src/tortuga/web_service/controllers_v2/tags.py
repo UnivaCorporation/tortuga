@@ -12,13 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .base import BaseEvent, get_event_class
-from .hardwareprofile import HardwareProfileTagsChanged
-from .node import NodeStateChanged, NodeTagsChanged
-from .noderequest import (AddNodeRequestComplete, AddNodeRequestQueued,
-                          DeleteNodeRequestComplete, DeleteNodeRequestQueued)
-from .resourcerequest import (ResourceRequestCreated, ResourceRequestUpdated,
-                              ResourceRequestDeleted)
-from .software_profile import SoftwareProfileTagsChanged
-from .tag import TagCreated, TagUpdated, TagDeleted
-from .task import TaskFailed
+from tortuga.tags.manager import TagStoreManager
+from .base import Controller
+
+
+class TagController(Controller):
+    """
+    SoftwareProfile web service controller class.
+
+    """
+    name = 'tags'
+    type_store = TagStoreManager.get()
+    methods = ['GET', 'POST', 'PUT', 'DELETE']

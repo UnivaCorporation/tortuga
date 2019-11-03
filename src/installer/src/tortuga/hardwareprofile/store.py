@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-from typing import Dict, Iterator, Optional
+from typing import Dict, Iterator, List, Optional, Tuple
 
 from sqlalchemy import desc
 from sqlalchemy.orm import Session, sessionmaker
@@ -20,7 +20,8 @@ from sqlalchemy.orm import Session, sessionmaker
 from tortuga.db.dbManager import DbManager
 from tortuga.db.models.hardwareProfile import HardwareProfile as DbHardwareProfile
 from tortuga.db.models.hardwareProfileTag import HardwareProfileTag
-from tortuga.events.types.hardwareprofile import HardwareProfileTagsChanged
+from tortuga.events.types import HardwareProfileTagsChanged, TagCreated, \
+    TagUpdated, TagDeleted
 from tortuga.objectstore.base import matches_filters
 from tortuga.typestore.base import TypeStore
 from .types import HardwareProfile
@@ -40,7 +41,10 @@ class SqlalchemySessionHardwareProfileStore(TypeStore):
     def __init__(self, db_manager: DbManager):
         self._Session = sessionmaker(bind=db_manager.engine)
 
-    def _to_db_hwp(self, hwp: HardwareProfile, session: Session) -> Optional[DbHardwareProfile]:
+    def _to_db_hwp(
+            self,
+            hwp: HardwareProfile,
+            session: Session) -> Tuple[Optional[DbHardwareProfile], List, List, List]:
         if hwp.id:
             db_hwp = session.query(DbHardwareProfile).filter(
                 DbHardwareProfile.id == int(hwp.id)).first()
@@ -52,23 +56,44 @@ class SqlalchemySessionHardwareProfileStore(TypeStore):
         db_hwp.description = hwp.description
         db_hwp.name_format = hwp.name_format
         db_hwp.resourceAdapterId = hwp.resourceadapter_id
-        self._set_db_hwp_tags(db_hwp, hwp.tags)
-        return db_hwp
+        tag_create_events, tag_update_events, tag_delete_events = \
+            self._set_db_hwp_tags(db_hwp, hwp.tags)
+        
+        return db_hwp, tag_create_events, tag_update_events, tag_delete_events
 
-    def _set_db_hwp_tags(self, db_hwp: DbHardwareProfile, tags: Dict[str, str]):
+    def _set_db_hwp_tags(self, db_hwp: DbHardwareProfile,
+                         tags: Dict[str, str]) -> Tuple[List, List, List]:
         if not tags:
             tags = {}
+        create_events = []
+        update_events = []
+        delete_events = []
         tags_to_delete = {tag.name: tag for tag in db_hwp.tags}
         for name, value in tags.items():
             if name in tags_to_delete.keys():
+                update_events.append({
+                    "name": name,
+                    "value": value,
+                    "previous_value": tag.value
+                })
                 tag = tags_to_delete.pop(name)
                 tag.value = value
             else:
+                create_events.append({
+                    "name": name,
+                    "value": value,
+                })
                 db_hwp.tags.append(
                     HardwareProfileTag(name=name, value=value)
                 )
         for tag in tags_to_delete.values():
+            delete_events.append({
+                "name": tag.name,
+                "value": tag.value
+            })
             db_hwp.tags.remove(tag)
+
+        return create_events, update_events, delete_events
 
     def _to_hwp(self, db_hwp: DbHardwareProfile) -> HardwareProfile:
         return HardwareProfile(
@@ -133,7 +158,8 @@ class SqlalchemySessionHardwareProfileStore(TypeStore):
             hwp_old = self.get(obj.id)
 
         session = self._Session()
-        db_hwp = self._to_db_hwp(obj, session)
+        db_hwp, tag_create_events, tag_update_events, tag_delete_events = \
+            self._to_db_hwp(obj, session)
         if not db_hwp:
             raise Exception('HardwareProfile ID not found: %s', obj.id)
         session.commit()
@@ -141,6 +167,8 @@ class SqlalchemySessionHardwareProfileStore(TypeStore):
         session.close()
 
         self._fire_events(hwp_old, hwp)
+        self._fire_tag_events(hwp.id, tag_create_events, tag_update_events,
+                              tag_delete_events)
         logger.debug('save(...) -> %s', hwp)
         return hwp
 
@@ -160,4 +188,26 @@ class SqlalchemySessionHardwareProfileStore(TypeStore):
                 hardwareprofile_name=hwp.name,
                 tags=hwp.tags,
                 previous_tags=hwp_old.tags
+            )
+
+    def _fire_tag_events(self, hardwareprofile_id: str, created: List[Dict],
+                         updated: List[Dict], deleted: List[Dict]):
+        for evt in created:
+            TagCreated.fire(
+                tag_id='hardwareprofile:{}:{}'.format(
+                    hardwareprofile_id, evt['name']),
+                value=evt['value']
+            )
+        for evt in updated:
+            TagUpdated.fire(
+                tag_id='hardwareprofile:{}:{}'.format(
+                    hardwareprofile_id, evt['name']),
+                value=evt['value'],
+                previous_value=evt['previous_value']
+            )
+        for evt in deleted:
+            TagDeleted.fire(
+                tag_id='hardwareprofile:{}:{}'.format(
+                    hardwareprofile_id, evt['name']),
+                value=evt['value']
             )
