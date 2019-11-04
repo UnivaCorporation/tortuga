@@ -101,12 +101,12 @@ class SqlalchemySessionTagStore(TypeStore):
         elif object_type == 'softwareprofile':
             db_tag = session.query(SoftwareProfileTag).filter(
                 SoftwareProfileTag.softwareprofile_id == int(object_id),
-                NodeTag.name == tag_name
+                SoftwareProfileTag.name == tag_name
             ).first()
         elif object_type == 'hardwareprofile':
             db_tag = session.query(HardwareProfileTag).filter(
                 HardwareProfileTag.hardwareprofile_id == int(object_id),
-                NodeTag.name == tag_name
+                HardwareProfileTag.name == tag_name
             ).first()
         else:
             raise Exception('Unsupported object_type: '.format(
