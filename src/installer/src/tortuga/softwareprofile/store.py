@@ -18,14 +18,14 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session, sessionmaker
 
 from tortuga.db.dbManager import DbManager
-from tortuga.db.models.softwareProfile import SoftwareProfile as DbSoftwareProfile
+from tortuga.db.models.softwareProfile import \
+    SoftwareProfile as DbSoftwareProfile
 from tortuga.db.models.softwareProfileTag import SoftwareProfileTag
 from tortuga.events.types import SoftwareProfileTagsChanged, TagCreated, \
     TagUpdated, TagDeleted
 from tortuga.objectstore.base import matches_filters
 from tortuga.typestore.base import TypeStore
 from .types import SoftwareProfile
-
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ class SqlalchemySessionSoftwareProfileStore(TypeStore):
             db_swp = session.query(DbSoftwareProfile).filter(
                 DbSoftwareProfile.id == int(swp.id)).first()
             if not db_swp:
-                return None
+                return None, [], [], []
         else:
             raise Exception('Creating swps is currently not supported')
 
@@ -75,12 +75,12 @@ class SqlalchemySessionSoftwareProfileStore(TypeStore):
         tags_to_delete = {tag.name: tag for tag in db_swp.tags}
         for name, value in tags.items():
             if name in tags_to_delete.keys():
+                tag = tags_to_delete.pop(name)
                 update_events.append({
                     "name": name,
                     "value": value,
                     "previous_value": tag.value
                 })
-                tag = tags_to_delete.pop(name)
                 tag.value = value
             else:
                 create_events.append({

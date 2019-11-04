@@ -18,14 +18,14 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session, sessionmaker
 
 from tortuga.db.dbManager import DbManager
-from tortuga.db.models.hardwareProfile import HardwareProfile as DbHardwareProfile
+from tortuga.db.models.hardwareProfile import \
+    HardwareProfile as DbHardwareProfile
 from tortuga.db.models.hardwareProfileTag import HardwareProfileTag
 from tortuga.events.types import HardwareProfileTagsChanged, TagCreated, \
     TagUpdated, TagDeleted
 from tortuga.objectstore.base import matches_filters
 from tortuga.typestore.base import TypeStore
 from .types import HardwareProfile
-
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ class SqlalchemySessionHardwareProfileStore(TypeStore):
             db_hwp = session.query(DbHardwareProfile).filter(
                 DbHardwareProfile.id == int(hwp.id)).first()
             if not db_hwp:
-                return None
+                return None, [], [], []
         else:
             raise Exception('Creating hwps is currently not supported')
         db_hwp.name = hwp.name
@@ -71,12 +71,12 @@ class SqlalchemySessionHardwareProfileStore(TypeStore):
         tags_to_delete = {tag.name: tag for tag in db_hwp.tags}
         for name, value in tags.items():
             if name in tags_to_delete.keys():
+                tag = tags_to_delete.pop(name)
                 update_events.append({
                     "name": name,
                     "value": value,
                     "previous_value": tag.value
                 })
-                tag = tags_to_delete.pop(name)
                 tag.value = value
             else:
                 create_events.append({
