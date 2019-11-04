@@ -23,7 +23,6 @@ from tortuga.db.models.nodeTag import NodeTag
 from tortuga.events.types import TagCreated, TagDeleted, TagUpdated, \
     NodeStateChanged, NodeTagsChanged
 from tortuga.objectstore.base import matches_filters
-from tortuga.tags.types import Tag
 from tortuga.typestore.base import TypeStore
 from .types import Node
 
@@ -49,7 +48,7 @@ class SqlalchemySessionNodeStore(TypeStore):
             db_node = session.query(DbNode).filter(
                 DbNode.id == int(node.id)).first()
             if not db_node:
-                return None
+                return None, [], [], []
         else:
             raise Exception('Creating nodes is currently not supported')
 
@@ -75,12 +74,12 @@ class SqlalchemySessionNodeStore(TypeStore):
         tags_to_delete = {tag.name: tag for tag in db_node.tags}
         for name, value in tags.items():
             if name in tags_to_delete.keys():
+                tag = tags_to_delete.pop(name)
                 update_events.append({
                     "name": name,
                     "value": value,
                     "previous_value": tag.value
                 })
-                tag = tags_to_delete.pop(name)
                 tag.value = value
             else:
                 create_events.append({
