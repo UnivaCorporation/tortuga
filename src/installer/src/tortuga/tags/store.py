@@ -51,25 +51,10 @@ class SqlalchemySessionTagStore(TypeStore):
     def __init__(self, db_manager: DbManager):
         self._Session = sessionmaker(bind=db_manager.engine)
 
-    def _parse_id(self, id_: str = None):
-        #
-        # Tag IDs are an amalgamation of:
-        #
-        #     <object_type>:<object_id>:<tag_name>
-        #
-        id_parts = id_.split(":")
-        if len(id_parts) != 3:
-            raise Exception('Invalid tag ID: {}'.format(id_))
-        object_type = id_parts[0]
-        object_id = id_parts[1]
-        tag_name = id_parts[2]
-        
-        return object_type, object_id, tag_name
-
     def _to_db_tag(self, tag: Tag, session: Session) -> Optional[TagMixin]:
         if not tag.id:
             raise Exception('Tag ID required')
-        object_type, object_id, tag_name = self._parse_id(tag.id)
+        object_type, object_id, tag_name = Tag.parse_id(tag.id)
 
         #
         # If tag doesn't already exist, create it
@@ -103,6 +88,11 @@ class SqlalchemySessionTagStore(TypeStore):
 
     def _get_db_tag(self, session: Session, object_type: str, object_id: str,
                     tag_name: str) -> Optional[TagMixin]:
+        try:
+            int(object_id)
+        except ValueError:
+            return None
+
         if object_type == 'node':
             db_tag = session.query(NodeTag).filter(
                 NodeTag.node_id == int(object_id),
@@ -111,12 +101,12 @@ class SqlalchemySessionTagStore(TypeStore):
         elif object_type == 'softwareprofile':
             db_tag = session.query(SoftwareProfileTag).filter(
                 SoftwareProfileTag.softwareprofile_id == int(object_id),
-                NodeTag.name == tag_name
+                SoftwareProfileTag.name == tag_name
             ).first()
         elif object_type == 'hardwareprofile':
             db_tag = session.query(HardwareProfileTag).filter(
                 HardwareProfileTag.hardwareprofile_id == int(object_id),
-                NodeTag.name == tag_name
+                HardwareProfileTag.name == tag_name
             ).first()
         else:
             raise Exception('Unsupported object_type: '.format(
@@ -196,7 +186,7 @@ class SqlalchemySessionTagStore(TypeStore):
     def get(self, tag_id: str) -> Optional[Tag]:
         logger.debug('get(obj_id=%s) -> ...', tag_id)
 
-        object_type, object_id, tag_name = self._parse_id(tag_id)
+        object_type, object_id, tag_name = Tag.parse_id(tag_id)
 
         session = self._Session()
         db_tag = self._get_db_tag(session, object_type, object_id, tag_name)
@@ -213,7 +203,7 @@ class SqlalchemySessionTagStore(TypeStore):
 
         if not tag.id:
             raise Exception('Tag ID not set')
-        object_type, object_id, tag_name = self._parse_id(tag.id)
+        object_type, object_id, tag_name = Tag.parse_id(tag.id)
 
         session = self._Session()
         db_tag_old = self._get_db_tag(session, object_type, object_id,
@@ -262,7 +252,7 @@ class SqlalchemySessionTagStore(TypeStore):
         logger.debug('delete(tag_id=%s) -> ...', tag_id)
 
         session = self._Session()
-        object_type, object_id, tag_name = self._parse_id(id_=tag_id)
+        object_type, object_id, tag_name = Tag.parse_id(tag_id)
         db_tag = self._get_db_tag(session, object_type, object_id, tag_name)
         #
         # If tag not found, do nothing

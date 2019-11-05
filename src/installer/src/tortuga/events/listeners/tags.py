@@ -26,6 +26,7 @@ from tortuga.hardwareprofile.manager import HardwareProfileStoreManager
 from tortuga.resourceAdapter.resourceAdapter import ResourceAdapter
 from tortuga.resourceAdapter.resourceAdapterFactory import get_api
 from tortuga.node.manager import NodeStoreManager
+from tortuga.tags.types import Tag
 
 
 logger = logging.getLogger(__name__)
@@ -48,12 +49,11 @@ class TagChangeListener(BaseListener):
         #
         # Parse the tag ID to get the metadata
         #
-        id_parts = event.tag_id.split(":")
-        if len(id_parts) != 3:
-            raise Exception('Invalid tag ID: {}'.format(event.tag_id))
-        object_type = id_parts[0]
-        object_id = id_parts[1]
-        tag_name = id_parts[2]
+        object_type, object_id, tag_name = Tag.parse_id(event.tag_id)
+        try:
+            int(object_id)
+        except ValueError:
+            logger.error('Invalid object ID in tag ID: %s', event.tag_id)
         #
         # Currently only changes to node tags are supported
         #
