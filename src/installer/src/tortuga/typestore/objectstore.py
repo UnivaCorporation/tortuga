@@ -37,6 +37,18 @@ class ObjectStoreTypeStore(TypeStore):
         self._store.set(obj.id, self.marshall(obj))
         return self.get(obj.id)
 
+    def rollback(self, obj: BaseType) -> BaseType:
+        """
+        See superclass.
+
+        :param BaseType obj:
+
+        """
+        logger.debug('rollback({})'.format(obj.id))
+
+        self._store.set(obj.id, self.marshall(obj))
+        return self.get(obj.id)
+
     def get(self, obj_id: str) -> Optional[BaseType]:
         """
         See superclass.

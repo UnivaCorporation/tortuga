@@ -43,6 +43,16 @@ class ResourceRequestStore:
         """
         raise NotImplementedError()
 
+    def rollback(self, resource_request: BaseResourceRequest) -> BaseResourceRequest:
+        """
+        Rolls back the resource_request to the resource_request store.
+
+        :param BaseResourceRequest resource_request: the resource request to
+                                                     roll back.
+
+        """
+        raise NotImplemented()
+
     def get(self, resource_request_id: str) -> Optional[BaseResourceRequest]:
         """
         Gets an resource_request from the resource_request store.
@@ -92,7 +102,13 @@ class ObjectStoreResourceRequestStore(ObjectStoreTypeStore,
         rr = super().save(resource_request)
         self._fire_events(rr_old, rr)
 
-        return resource_request
+        return rr
+
+    def rollback(self, resource_request: BaseResourceRequest) -> BaseResourceRequest:
+        if not resource_request.id:
+            raise Exception('Rollback requires an resource request ID')
+
+        return super().rollback(resource_request)
 
     def _fire_events(self, rr_old: Optional[BaseResourceRequest],
                      rr: BaseResourceRequest):
