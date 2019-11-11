@@ -25,6 +25,20 @@ class TypeStore:
         """
         raise NotImplementedError()
 
+    def rollback(self, obj: BaseType) -> BaseType:
+        """
+        Similar to a save, however, this is considered a re-insert of
+        an object that was previously deleted or changed. This function will
+        insert or update an object, but will not fire the create or
+        update events, but rather will fire rollback events.
+
+        :param BaseType obj: the object instance to rollback to
+
+        :return BaseType: the object that was rolled back
+
+        """
+        raise NotImplementedError()
+
     def get(self, obj_id: str) -> Optional[BaseType]:
         """
         Gets an object from the store.
