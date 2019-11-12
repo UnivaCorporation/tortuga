@@ -423,8 +423,8 @@ class ResourceAdapter(UserDataMixin): \
         # Default tags for all nodes
         #
         tags: Dict[str, str] = {
-            'tortuga-softwareprofile': self._sanitze_tag_value(hwp_name),
-            'tortuga-hardwareprofile': self._sanitze_tag_value(swp_name),
+            'tortuga-hardwareprofile': self._sanitze_tag_value(hwp_name),
+            'tortuga-softwareprofile': self._sanitze_tag_value(swp_name),
             'tortuga-installer_hostname':
                 self._sanitze_tag_value(self.installer_public_hostname),
             'tortuga-installer_ipaddress':
