@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -x
 # Trigger Puppet agent on all managed nodes, or specific nodes for tags update
 TAGS_CLUSTER_UPDATE=/etc/puppetlabs/code/environments/production/modules/tortuga_kit_uge/files/setup/tags-cluster-update.sh
 if [ ! -z "$FACTER_node_tags_update" ]  || [ ! -z "$FACTER_softwareprofile_tags_update" ]; then
@@ -22,6 +21,7 @@ if [ ! -z "$FACTER_node_tags_update" ]  || [ ! -z "$FACTER_softwareprofile_tags_
     echo "Cannot find $TAGS_CLUSTER_UPDATE"
     exit 1
   fi
+  set -x
   export FACTER_node_tags_update; export FACTER_softwareprofile_tags_update; $TAGS_CLUSTER_UPDATE
   exit $?
 else

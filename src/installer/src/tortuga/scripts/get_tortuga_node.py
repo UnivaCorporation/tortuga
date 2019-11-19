@@ -149,8 +149,14 @@ def get_puppet_node_yaml(session, nodeName):
                     if puppet_class_args is not None:
                         puppet_classes[_component.puppet_class] = \
                             puppet_class_args
-                except Exception:  # noqa pylint: disable=broad-except
-                    # suppress exception if unable to get Puppet args
+                except Exception as e:  # noqa pylint: disable=broad-except
+                    # display exception message in puppet output
+                    msg = '{}: {}'.format(_component.puppet_class, e)
+                    if not puppet_classes.get('tortuga_kit_base::common::message'):
+                        puppet_classes['tortuga_kit_base::common::message'] = { 'msg' : [ msg ] }
+                    else:
+                        puppet_classes['tortuga_kit_base::common::message']['msg'].append(msg)
+                     # suppress exception if unable to get Puppet args
                     puppet_classes[_component.puppet_class] = {}
 
             else:
