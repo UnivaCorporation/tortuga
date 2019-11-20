@@ -79,9 +79,11 @@ if [[ ! -d $ca_dir ]] || [[ ! -f $ca_dir/ca-key.pem ]] || \
     [[ ! -f $ca_dir/ca.pem ]]; then
   # Ensure destination directory exists
   [[ -d $ca_dir ]] || mkdir -p $ca_dir
+  chmod 700 $ca_dir
 
   # Create private key for CA
   openssl genrsa -out $ca_dir/ca-key.pem 2048
+  chmod 600 $ca_dir/ca-key.pem
 
   # Initialize CA
   openssl req -x509 -new -nodes -key $ca_dir/ca-key.pem -days 3650 \
