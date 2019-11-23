@@ -49,8 +49,7 @@ class tortuga_kit_base::installer::apache::certs {
   }
 
   file { "${tortuga::config::instroot}/www_int/ca.pem":
-    ensure  => symlink,
-    target  => "${tortuga::config::instroot}/etc/CA/ca.pem",
+    source  => "${tortuga::config::instroot}/etc/CA/ca.pem",
     owner   => apache,
     group   => apache,
     require => Exec['create_apache_x509_certificate'],
