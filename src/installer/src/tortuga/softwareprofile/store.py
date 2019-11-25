@@ -203,6 +203,17 @@ class SqlalchemySessionSoftwareProfileStore(TypeStore):
 
     def _fire_tag_events(self, softwareprofile_id: str, created: List[Dict],
                          updated: List[Dict], deleted: List[Dict]):
+        #
+        # Make sure deletes happen first, as a rename is interpreted as a
+        # delete then a create, which can have undesirable effects when the
+        # create happens before the delete
+        #
+        for evt in deleted:
+            TagDeleted.fire(
+                tag_id='softwareprofile:{}:{}'.format(
+                    softwareprofile_id, evt['name']),
+                value=evt['value']
+            )
         for evt in created:
             TagCreated.fire(
                 tag_id='softwareprofile:{}:{}'.format(
@@ -215,10 +226,4 @@ class SqlalchemySessionSoftwareProfileStore(TypeStore):
                     softwareprofile_id, evt['name']),
                 value=evt['value'],
                 previous_value=evt['previous_value']
-            )
-        for evt in deleted:
-            TagDeleted.fire(
-                tag_id='softwareprofile:{}:{}'.format(
-                    softwareprofile_id, evt['name']),
-                value=evt['value']
             )
