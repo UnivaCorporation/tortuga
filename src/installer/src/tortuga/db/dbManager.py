@@ -28,6 +28,10 @@ from .models.base import ModelBase
 from .sessionContextManager import SessionContextManager
 
 
+#
+# Remove collations from SQLite, otherwise MySQL specific ones will cause
+# SQLite to fail
+#
 @compiles(sqlalchemy.String, 'sqlite')
 def compile_unicode(element, compiler, **kw):
     element.collation = None
