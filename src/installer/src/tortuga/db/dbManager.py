@@ -15,18 +15,23 @@
 # pylint: disable=multiple-statements,no-member,no-name-in-module
 # pylint: disable=not-callable
 
-import configparser
 import os
 
 import sqlalchemy
+from sqlalchemy.ext.compiler import compiles
 import sqlalchemy.orm
 
 from tortuga.config.configManager import ConfigManager
-from tortuga.exceptions.dbError import DbError
 from tortuga.kit.registry import get_all_kit_installers
 from tortuga.objects.tortugaObjectManager import TortugaObjectManager
 from .models.base import ModelBase
 from .sessionContextManager import SessionContextManager
+
+
+@compiles(sqlalchemy.String, 'sqlite')
+def compile_unicode(element, compiler, **kw):
+    element.collation = None
+    return compiler.visit_string(element, **kw)
 
 
 class DbManager(TortugaObjectManager):
