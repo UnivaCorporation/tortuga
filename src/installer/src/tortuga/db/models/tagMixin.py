@@ -19,5 +19,5 @@ from sqlalchemy import Column, Integer, String
 
 class TagMixin:
     id = Column(Integer, primary_key=True)
-    name = Column(String(255), nullable=False)
+    name = Column(String(255, collation='utf8_bin'), nullable=False)
     value = Column(String(255))
