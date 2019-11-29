@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Dict
+
 from datetime import datetime
 import random
 from tortuga.exceptions.networkNotFound import NetworkNotFound
@@ -122,7 +124,21 @@ def get_random_sleep_time(max_sleep_time=10000, sleep_interval=2000,
     :param sleep_interval: maximum sleep interval
     :param retries: number of retries (used when looping)
     :return: milliseconds to sleep
+
     """
     temp = min(max_sleep_time, sleep_interval * 2 ** retries)
 
     return temp / 2 + random.randint(0, temp / 2)
+
+
+def patch_managed_tags(tags: Dict[str, str]) -> Dict[str, str]:
+    """
+    Remove 'managed:' prefix from any tag keys/names. This should only be used
+    to prevent the 'managed:' prefix from being propagated to the cloud
+    provider; we want to maintain that prefix in the database.
+    This is a temporary fix and should be resolved in a later version of
+    Tortuga by adding a 'managed' column to the node_tags database table.
+
+    """
+    return {(k if not k.startswith('managed:') else k.split('managed:')[1]):
+            v for k, v in tags.items()}
