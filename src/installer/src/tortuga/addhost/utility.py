@@ -11,38 +11,35 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-# pylint: disable=no-member
-
 from typing import Any, Dict
 
 from sqlalchemy.orm.session import Session
 from tortuga.config.configManager import ConfigManager
 from tortuga.db.hardwareProfilesDbHandler import HardwareProfilesDbHandler
 from tortuga.db.models.hardwareProfile import HardwareProfile
-from tortuga.db.models.node import Node
 from tortuga.db.models.softwareProfile import SoftwareProfile
 from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
 from tortuga.exceptions.invalidArgument import InvalidArgument
-from tortuga.exceptions.nodeAlreadyExists import NodeAlreadyExists
 from tortuga.exceptions.operationFailed import OperationFailed
 from tortuga.exceptions.profileMappingNotAllowed import \
     ProfileMappingNotAllowed
+from tortuga.node import node_count_validator
 from tortuga.resourceAdapter import resourceAdapterFactory
 from cryptography.fernet import Fernet
 import json
 
 
-def validate_addnodes_request(session: Session, addNodesRequest: Dict[str, Any]):
+def validate_addnodes_request(session: Session,
+                              addNodesRequest: Dict[str, Any]):
     """
-    Raises:
+    :raises:
         HardwareProfileNotFound
         SoftwareProfileNotFound
         ProfileMappingNotAllowed
         InvalidArgument
         OperationFailed
-    """
 
+    """
     if 'hardwareProfile' not in addNodesRequest and \
             'softwareProfile' not in addNodesRequest:
         raise InvalidArgument(
@@ -104,10 +101,7 @@ def validate_addnodes_request(session: Session, addNodesRequest: Dict[str, Any])
     if 'hardwareProfile' not in addNodesRequest:
         addNodesRequest['hardwareProfile'] = hp.name
 
-    swprofile_node_count = len(sp.nodes)
-
     # Validate 'nodeDetails'
-
     if nodeDetails:
         # Reconcile nodeDetails that contain hostnames with hwp name
         # format
@@ -141,12 +135,7 @@ def validate_addnodes_request(session: Session, addNodesRequest: Dict[str, Any])
                 )
 
     # ensure adding nodes does not exceed imposed limits
-    if sp.maxNodes > 0 and \
-            (swprofile_node_count + nodeCount) > sp.maxNodes:
-        raise OperationFailed(
-            'Request to add {} node(s) exceeds software profile'
-            ' limit of {} nodes'.format(nodeCount, sp.maxNodes)
-        )
+    node_count_validator.validate_add_count(session, sp.name, nodeCount)
 
     # Prohibit running add-host against installer
     validate_hwprofile(hp)
@@ -166,6 +155,7 @@ def validate_addnodes_request(session: Session, addNodesRequest: Dict[str, Any])
     adapter.validate_start_arguments(
         addNodesRequest, hp, dbSoftwareProfile=sp)
 
+
 def decrypt_insertnode_request(key: bytes, token: str) -> Dict[str, Any]:
     """
     Raises Exception if the token can't be decrypted
@@ -173,12 +163,14 @@ def decrypt_insertnode_request(key: bytes, token: str) -> Dict[str, Any]:
     f = Fernet(key)
     return json.loads(f.decrypt(token))
 
+
 def encrypt_insertnode_request(key: bytes,  request: Dict[str, Any]) -> str:
     """
     Raises Exception if the token can't be decrypted
     """
     f = Fernet(key)
     return f.encrypt(json.dumps(request).encode())
+
 
 def checkProfilesMapped(swProfile: SoftwareProfile, hwProfile: HardwareProfile):
     """

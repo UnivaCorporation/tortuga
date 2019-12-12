@@ -395,97 +395,45 @@ class NodeManager(TortugaObjectManager): \
 
         return result
 
-    def __get_nodes_for_deletion(self, session: Session, nodespec: str,
-                                 force: bool) -> List[NodeModel]:
+    def deleteNode(self, session: Session, nodespec: str,
+                   force: bool = False):
         """
-        :raises NodeNotFound:
+        Delete nodes by node spec
+
+        :param Session session: a database session
+        :param str nodespec:    a node spec
+        :param bool force:      whether or not this is a force operation
+
         """
-        nodes = self._nodesDbHandler.expand_nodespec(
-            session, nodespec, include_installer=False)
-        if not nodes:
-            raise NodeNotFound(
-                'No nodes matching nodespec [%s]' % nodespec
-            )
-
-        # ensure nodes aren't locked
-        self.__validate_delete_nodes_request(nodes, force)
-
-        return nodes
-
-    def deleteNode(self, session, nodespec: str, force: bool = False):
-        """Delete nodes by nodespec
-
-        :raises NodeNotFound: no matching nodes for nodespec
-        """
-
         try:
-            nodes = self.__get_nodes_for_deletion(session, nodespec, force)
+            nodes = self.__get_nodes_for_deletion(session, nodespec)
 
             kitmgr = KitActionsManager()
             kitmgr.session = session
-
-            # perform actual node deletion
             self.__delete_nodes(session, kitmgr, nodes)
+
         except Exception:
             session.rollback()
-
             raise
 
-    def __validate_delete_nodes_request(self, nodes: List[NodeModel],
-                                        force: bool):
+    def __get_nodes_for_deletion(self, session: Session,
+                                 nodespec: str) -> List[NodeModel]:
         """
-        Raises:
-            DeleteNodeFailed
+        Gets a list of nodes from a node spec.
+
+        :param Session session: a database session
+        :param str nodespec:    a node spec
+
+        :raise NodeNotFound:
+
         """
+        nodes = self._nodesDbHandler.expand_nodespec(session, nodespec,
+                                                     include_installer=False)
+        if not nodes:
+            raise NodeNotFound(
+                'No nodes matching nodespec [{}]'.format(nodespec))
 
-        swprofile_distribution: Dict[SoftwareProfileModel, int] = {}
-
-        for node in nodes:
-            if node.softwareprofile not in swprofile_distribution:
-                swprofile_distribution[node.softwareprofile] = 0
-
-            swprofile_distribution[node.softwareprofile] += 1
-
-        errors: List[str] = []
-
-        for software_profile, num_nodes_deleted in \
-                swprofile_distribution.items():
-            if software_profile.lockedState == 'HardLocked':
-                errors.append(
-                    f'Nodes cannot be deleted from hard locked software'
-                    ' profile [{software_profile.name}]'
-                )
-
-                continue
-
-            if software_profile.minNodes and \
-                    len(software_profile.nodes) - \
-                    num_nodes_deleted < software_profile.minNodes:
-                if force and software_profile.lockedState == 'SoftLocked':
-                    # allow deletion of nodes when force is set and profile
-                    # is soft locked
-                    continue
-
-                # do not allow number of software profile nodes to drop
-                # below configured minimum
-                errors.append(
-                    'Software profile [{}] requires minimum of {} nodes;'
-                    ' denied request to delete {} node(s)'.format(
-                        software_profile.name, software_profile.minNodes,
-                        num_nodes_deleted
-                    )
-                )
-
-                continue
-
-            if software_profile.lockedState == 'SoftLocked' and not force:
-                errors.append(
-                    'Nodes cannot be deleted from soft locked software'
-                    f' profile [{software_profile.name}]'
-                )
-
-        if errors:
-            raise OperationFailed('\n'.join(errors))
+        return nodes
 
     def __delete_nodes(self, session: Session, kitmgr: KitActionsManager,
                        nodes: List[NodeModel]) -> None:

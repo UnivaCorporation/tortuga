@@ -20,6 +20,7 @@ import cherrypy
 from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.exceptions.operationFailed import OperationFailed
+from tortuga.node import node_count_validator
 from tortuga.node.task import enqueue_delete_hosts_request
 from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.schema import NodeSchema
@@ -402,6 +403,8 @@ class NodeController(TortugaController):
         """
 
         try:
+            node_count_validator.validate_remove_count(cherrypy.request.db,
+                                                       nodespec)
             transaction_id = enqueue_delete_hosts_request(
                 cherrypy.request.db,
                 nodespec,
