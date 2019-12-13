@@ -15,6 +15,8 @@ daemonize = 1
 securityprovider = psk
 plugin.psk = unset
 
+identity = <%= @fqdn -%>
+
 connector = activemq
 plugin.activemq.pool.size = 1
 plugin.activemq.pool.1.host = <%= @puppet_server %>
