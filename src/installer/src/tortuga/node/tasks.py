@@ -41,7 +41,7 @@ class NodePinger:
 
 
 class McollectiveNodePinger(NodePinger):
-    _command = 'mco ping'
+    _command = '/opt/puppetlabs/bin/mco ping'
 
     def ping_all_nodes(self) -> List[NodePingReply]:
         p = executeCommand(self._command)
