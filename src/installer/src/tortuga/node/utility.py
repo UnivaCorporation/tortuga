@@ -1,6 +1,20 @@
+# Copyright 2008-2018 Univa Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import json
 import threading
-from typing import Any, Dict, List
+from typing import Dict, List
 
 from sqlalchemy.orm import Session
 
@@ -9,7 +23,9 @@ from tortuga.db.models.nodeRequest import NodeRequest
 from tortuga.db.models.softwareProfile import SoftwareProfile
 from tortuga.db.nodesDbHandler import NodesDbHandler
 from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
+from tortuga.events.types import DeleteNodeRequestQueued
 from tortuga.exceptions.operationFailed import OperationFailed
+from tortuga.node.nodeManager import init_async_node_request
 
 
 class SoftwareProfileNodeCountValidator:
@@ -223,3 +239,33 @@ class SoftwareProfileNodeCountValidator:
         return nodes
 
 
+def enqueue_delete_hosts_request(session: Session, nodespec: str,
+                                 force: bool):
+    #
+    # Prevent a circular import...
+    #
+    from tortuga.resourceAdapter.tasks import delete_nodes
+
+    # use Celery task id as 'addHostSession' and persist request in database
+    request = init_async_node_request('DELETE', nodespec)
+    session.add(request)
+    session.commit()
+
+    #
+    # Run async task
+    #
+    delete_nodes.apply_async(
+        args=[nodespec], kwargs=dict(force=force),
+        task_id=request.addHostSession,
+    )
+
+    #
+    # Fire the delete node request queued event
+    #
+    evt_request = {
+        'name': nodespec,
+        'force': force,
+    }
+    DeleteNodeRequestQueued.fire(request_id=request.id, request=evt_request)
+
+    return request.addHostSession

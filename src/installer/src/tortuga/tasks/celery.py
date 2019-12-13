@@ -58,6 +58,7 @@ if 'TORTUGA_TEST' in os.environ:
     app = TestApp(
         include=[
             'tortuga.events.tasks',
+            'tortuga.node.tasks',
             'tortuga.resourceAdapter.tasks',
         ]
     )
@@ -128,6 +129,7 @@ else:
         backend='redis://:{}@localhost:6379/0'.format(redis_password),
         include=[
             'tortuga.events.tasks',
+            'tortuga.node.tasks',
             'tortuga.resourceAdapter.tasks',
         ] + kit_task_modules + component_task_modules
     )
