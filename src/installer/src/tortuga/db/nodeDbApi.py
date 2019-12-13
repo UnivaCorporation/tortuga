@@ -17,7 +17,6 @@ from typing import Dict, List, Optional
 from sqlalchemy.orm.session import Session
 from tortuga.config.configManager import getfqdn
 from tortuga.exceptions.tortugaException import TortugaException
-from tortuga.node import state
 from tortuga.objects.node import Node
 from tortuga.objects.parameter import Parameter
 from tortuga.objects.provisioningInfo import ProvisioningInfo

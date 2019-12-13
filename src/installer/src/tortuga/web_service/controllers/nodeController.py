@@ -21,7 +21,7 @@ from tortuga.exceptions.invalidArgument import InvalidArgument
 from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.exceptions.operationFailed import OperationFailed
 from tortuga.node import node_count_validator
-from tortuga.node.task import enqueue_delete_hosts_request
+from tortuga.node.utility import enqueue_delete_hosts_request
 from tortuga.objects.tortugaObject import TortugaObjectList
 from tortuga.schema import NodeSchema
 from tortuga.utility.helper import str2bool
