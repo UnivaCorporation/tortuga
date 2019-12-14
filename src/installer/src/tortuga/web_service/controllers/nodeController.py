@@ -403,12 +403,13 @@ class NodeController(TortugaController):
         """
 
         try:
+            force = str2bool(kwargs.get('force'))
             node_count_validator.validate_remove_count(cherrypy.request.db,
-                                                       nodespec)
+                                                       nodespec, force)
             transaction_id = enqueue_delete_hosts_request(
                 cherrypy.request.db,
                 nodespec,
-                str2bool(kwargs.get('force'))
+                force
             )
 
             self._logger.debug(
