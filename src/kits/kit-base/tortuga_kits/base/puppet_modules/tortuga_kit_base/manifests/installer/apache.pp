@@ -76,8 +76,15 @@ class tortuga_kit_base::installer::apache::config {
 
   $installer_fqdn = $tortuga::config::installer_fqdn
 
+  file { $cache_dir:
+    ensure => directory,
+    owner  => apache,
+    group  => apache,
+  }
+
   file { '/etc/httpd/conf.d/tortuga.conf':
     content => template('tortuga_kit_base/httpd.tortuga.conf.erb'),
+    require => File[$cache_dir],
   }
 }
 
