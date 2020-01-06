@@ -14,7 +14,8 @@
 
 # pylint: disable=too-few-public-methods
 
-from sqlalchemy import Column, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import Column, ForeignKey, Integer, String, Text, \
+    UniqueConstraint
 from sqlalchemy.orm import relationship, validates
 
 from .base import ModelBase
@@ -30,7 +31,7 @@ class ResourceAdapterSetting(ModelBase):
 
     id = Column(Integer, primary_key=True)
     key = Column(String(255), nullable=False)
-    value = Column(String(255))
+    value = Column(Text)
     resource_adapter_config_id = Column(
         Integer, ForeignKey('resource_adapter_config.id'))
     resource_adapter_config = relationship(
