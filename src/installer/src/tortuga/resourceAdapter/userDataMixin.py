@@ -31,6 +31,16 @@ class UserDataMixin: \
         ConfigurationError
     """
 
+    def _get_cloud_init_template_vars(self, configDict: Dict[str, Any]) \
+        -> Dict[str, str]:
+        return {
+            'installer': self.installer_public_hostname,
+            'installer_ip_address': self.installer_public_ipaddress,
+            'override_dns_domain': configDict.get('override_dns_domain',
+                                                  False),
+            'dns_domain': configDict.get('dns_domain', ''),
+        }
+
     def expand_cloud_init_user_data_template(
             self, configDict: dict,
             node: Optional[Node] = None,
@@ -55,13 +65,8 @@ class UserDataMixin: \
         else:
             template_ = template
 
-        tmpl_vars = {
-            'installer': self.installer_public_hostname,
-            'installer_ip_address': self.installer_public_ipaddress,
-            'override_dns_domain': configDict.get('override_dns_domain',
-                                                  False),
-            'dns_domain': configDict.get('dns_domain', ''),
-        }
+        # Get values for template variables
+        tmpl_vars = self._get_cloud_init_template_vars(configDict)
 
         if node:
             tmpl_vars['fqdn'] = node.name
