@@ -12,8 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 import os.path
-from typing import Optional
+import sys
+from typing import Any, Dict, List, Optional
 
 from jinja2 import Environment, FileSystemLoader
 
@@ -72,3 +75,30 @@ class UserDataMixin: \
             tmpl_vars['fqdn'] = node.name
 
         return template_.render(tmpl_vars)
+
+    def _construct_mime_multipart_userdata(
+        self, script_data: List[Dict[str, str]]
+    ) -> str:
+        # If only one data element, we don't need a multipart message
+        if len(script_data) == 1:
+            if isinstance(script_data[0], str):
+                return script_data
+            elif isinstance(script_data[0], dict):
+                return script_data['data']
+            else:
+                # TODO: improve
+                raise Exception
+
+        # Otherwise, construct a MIME multipart message
+        combined_message = MIMEMultipart()
+
+        for script in script_data:
+            sub_message = MIMEText(script['data'], script['type'],
+                                   sys.getdefaultencoding())
+            sub_message.add_header(
+                'Content-Disposition',
+                'attachment; filename="%s"' % (script['filename'])
+            )
+            combined_message.attach(sub_message)
+
+        return str(combined_message)
