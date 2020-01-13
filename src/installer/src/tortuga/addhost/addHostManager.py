@@ -98,7 +98,7 @@ class AddHostManager(TagsDbApiMixin, TortugaObjectManager):
 
         if 'tags' in addHostRequest and addHostRequest['tags']:
             for node in newNodes:
-                self._set_tags(node, addHostRequest['tags'])
+                self._set_tags(node, addHostRequest['tags'], merge=True)
 
         # Commit new node(s) to database
         session.commit()
