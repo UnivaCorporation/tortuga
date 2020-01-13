@@ -108,7 +108,8 @@ def validate_addnodes_request(session: Session,
         bWildcardNameFormat = hp.nameFormat == '*'
         hostname = nodeDetails[0]['name'] \
             if 'name' in nodeDetails[0] else None
-        if hostname and not bWildcardNameFormat:
+        if (hostname and not bWildcardNameFormat and not
+            addNodesRequest.get('skip_hostname_hwprofile_validation', False)):
             # Host name specified, but hardware profile does not
             # allow setting the host name
             raise InvalidArgument(
