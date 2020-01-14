@@ -29,7 +29,7 @@ class TagsDbApiMixin:
     tag_model: TagMixin = None
 
     def _set_tags(self, db_instance: ModelBase,
-                  tags: Dict[str, str]):
+                  tags: Dict[str, str], merge: bool = False):
         """
         Sets the tags on a database model instance to a specified list. The
         model for this instance is expected to have a FK relationship to
@@ -37,6 +37,10 @@ class TagsDbApiMixin:
 
         :param db_instance: a database model instance
         :param tags:        a dictionary of tags to set on this instance
+        :param merge:       if True, the provided tags are merged into the
+                            existing list of tags for the model instance;
+                            otherwise, any tags in the db but not in the
+                            tags dict will be removed
 
         """
         #
@@ -70,7 +74,8 @@ class TagsDbApiMixin:
 
         #
         # Anything left in current_tags was not part of the tags dict, and
-        # thus needs to be removed
+        # thus needs to be removed, unless we are doing a merge
         #
-        for tag in tags_to_delete.values():
-            db_instance.tags.remove(tag)
+        if not merge:
+            for tag in tags_to_delete.values():
+                db_instance.tags.remove(tag)
