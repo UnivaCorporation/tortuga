@@ -20,17 +20,21 @@ class tortuga_kit_base::core::install::virtualenv::package {
 
   if $facts['os']['family'] == 'RedHat' {
     if $facts['os']['name'] == 'Amazon' {
-      # Amazon Linux has a native python36 package
-      $pkgs = [
-        'python36',
-      ]
-    } else {
+      # Amazon Linux has a native python36 package and/or python
+      if versioncmp($::facts['os']['release']['major'], '2') == 0 {
+        $pkgs = [
+          'python3',
+        ]
+      } else {
+        $pkgs = [
+          'python36',
+        ]
+      }
+    }  else {
       # Install Python 3.6 package and dependencies
       $pkgs = [
         'rh-python36-python-virtualenv',
       ]
-
-      ensure_packages($pkgs, {'ensure' => 'installed'})
     }
   } elsif $facts['os']['name'] == 'Ubuntu' {
       if versioncmp($::facts['os']['release']['full'], '18.04') < 0 {
