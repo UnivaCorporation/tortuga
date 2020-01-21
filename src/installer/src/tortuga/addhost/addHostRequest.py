@@ -67,9 +67,8 @@ def process_addhost_request(session: Session, request: dict,
                 req.addHostSession
             )
         except Exception as exc:  # noqa pylint: disable=broad-except
-            if not isinstance(exc, TortugaException):
-                logger.exception(
-                    'Exception occurred during add host workflow')
+            logger.exception(
+                'Exception occurred during add host workflow')
 
             req.state = 'error'
             req.message = 'Exception: {}: {}'.format(

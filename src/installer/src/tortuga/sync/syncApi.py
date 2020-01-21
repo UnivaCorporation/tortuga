@@ -43,11 +43,12 @@ class SyncApi(TortugaApi):
         try:
             SyncManager().scheduleClusterUpdate(updateReason=updateReason, opts=opts)
         except Exception as ex:
+            self._logger.exception('Error scheduling cluster update')
+
             if isinstance(ex, TortugaException):
                 raise
 
-            self._logger.exception('Error scheduling cluster update')
-
+            # Wrap exception
             raise TortugaException(exception=ex)
 
     def getUpdateStatus(self):
@@ -61,9 +62,10 @@ class SyncApi(TortugaApi):
         try:
             return SyncManager().getUpdateStatus()
         except Exception as ex:
+            self._logger.exception('Error getting update status')
+
             if isinstance(ex, TortugaException):
                 raise
 
-            self._logger.exception('Error getting update status')
-
+            # Wrap exception
             raise TortugaException(exception=ex)

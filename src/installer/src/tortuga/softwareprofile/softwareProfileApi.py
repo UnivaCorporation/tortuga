@@ -295,11 +295,10 @@ class SoftwareProfileApi(TortugaApi): \
                 compVersion,
             )
         except Exception as ex:
+            self._logger.exception(
+                'Exception raised in {0}.enableComponent()'.format(
+                    self.__class__.__name__))
             if not isinstance(ex, TortugaException):
-                self._logger.exception(
-                    'Exception raised in {0}.enableComponent()'.format(
-                        self.__class__.__name__))
-
                 # Wrap exception
                 raise TortugaException(exception=ex)
 
