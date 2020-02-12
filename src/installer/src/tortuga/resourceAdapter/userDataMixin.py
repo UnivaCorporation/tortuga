@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from abc import ABC, abstractmethod
 import os.path
 from typing import Optional
 
@@ -21,7 +22,7 @@ from tortuga.db.models.node import Node
 from tortuga.exceptions.configurationError import ConfigurationError
 
 
-class UserDataMixin: \
+class UserDataMixin(ABC): \
         # pylint: disable=too-few-public-methods
     """
     Common methods used to process user-data for cloud instances. Currently
@@ -67,3 +68,20 @@ class UserDataMixin: \
             tmpl_vars['fqdn'] = node.name
 
         return template_.render(tmpl_vars)
+
+    @abstractmethod
+    def generate_startup_script(self, config: dict,
+                                node: Optional[Node] = None,
+                                insertnode_request: Optional[bytes] = None) \
+            -> str:
+        """
+        Build a node/instance-specific startup script that will initialize
+        VPN, install Puppet, and bootstrap the instance.
+
+        :param configDict: resource adapter configuration settings
+        :param node: Node instance, optional
+        :param insertnode_request: encrypted insertnode_request, optional
+
+        :return: full startup script as a `str`
+        """
+        pass
