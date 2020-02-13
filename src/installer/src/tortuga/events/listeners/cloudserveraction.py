@@ -38,6 +38,9 @@ class CloudServerActionListener(BaseListener):
             CloudServerActionStoreManager.get()
 
     def run(self, event: CloudServerActionCreated):
+        #
+        # Lookup the action referenced in the event
+        #
         csa: CloudServerAction = self._store.get(event.cloudserveraction_id)
         if csa is None:
             logger.warning(
@@ -45,52 +48,75 @@ class CloudServerActionListener(BaseListener):
                     event.cloudserveraction_id))
             return
 
+        #
+        # Wrap everything so we can capture any exceptions and log them to
+        # the action
+        #
         try:
             self._run(csa)
 
         except Exception as ex:
             self._error(csa, ex)
 
+        #
+        # Assuming we get this far, then we assume the action successfully
+        # ran, and we can mark the action as complete
+        #
+        csa.status = CloudServerAction.STATUS_COMPLETE
+        self._store.save(csa)
+
     def _run(self, csa: CloudServerAction):
+        #
+        # Mark the action as "running"
+        #
         csa.status = CloudServerAction.STATUS_PROCESSING
         self._store.save(csa)
 
+        #
+        # Get the resource adapter
+        #
         parts = csa.cloudserver_id.split(":")
         if len(parts) == 1:
             raise Exception("Node ID does not contain resource adapter")
         ra_name = parts.pop(0)
-
         ra = get_api(ra_name)
         logger.info('Found resource adapter: {}'.format(ra.__adaptername__))
 
+        #
+        # Get the cloud connector profile ID
+        #
         ccp_id = csa.cloudconnectorprofile_id
         if not ccp_id:
             ccp_id = DEFAULT_CONFIGURATION_PROFILE_NAME
 
-        if csa.action == "shutdown":
-            self._shutdown(ra, csa.cloudserver_id, ccp_id)
+        #
+        # Get the action method from the resource adapter instance. Supported
+        # actions are any methods on the ResourceAdapter instance that have
+        # the method name cloudserveraction_<action-name>
+        #
+        action_name = "cloudserveraction_{}".format(csa.action)
+        action = getattr(ra, action_name)
+        if not action:
+            raise Exception('Action not supported: {}'.format(csa.action))
 
-        elif csa.action == "reboot":
-            self._shutdown(ra, csa.cloudserver_id, ccp_id)
-
-        elif csa.action == "delete":
-            self._delete(ra, csa.cloudserver_id, ccp_id)
-
+        #
+        # Get any additional action parameters
+        #
+        if csa.action_params:
+            if not isinstance(csa.action_params, dict):
+                raise Exception(
+                    "Invalid action_params: {}".format(csa.action_params))
+            params = csa.action_params
         else:
-            self._error(csa, Exception(
-                'Action not supported: {}'.format(csa.action)))
+            params = {}
+
+        #
+        # Run the action!
+        #
+        action(ccp_id, csa.cloudserver_id, **params)
 
     def _error(self, na: CloudServerAction, exception: Exception):
         na.status = CloudServerAction.STATUS_ERROR
         na.status_message = str(exception)
         self._store.save(na)
         raise exception
-
-    def _shutdown(self, ra: ResourceAdapter, cs_id: str, ccp_id: str):
-        pass
-
-    def _reboot(self, ra: ResourceAdapter, cs_id: str, ccp_id: str):
-        pass
-
-    def _delete(self, ra: ResourceAdapter, cs_id: str, ccp_id: str):
-        pass

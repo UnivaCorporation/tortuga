@@ -736,3 +736,59 @@ class ResourceAdapter(UserDataMixin): \
             self.__adaptername__,
             name if name else DEFAULT_CONFIGURATION_PROFILE_NAME,
         )
+
+    def cloudserveraction_stop(self, cloudconnectorprofile_id: str,
+                               cloudserver_id: str, **kwargs):
+        """
+        Shuts down a cloud server.
+
+        :param cloudconnectorprofile_id: the cloud connector profile to use
+                                         for making the request
+        :param cloudserver_id:           the id of the cloud server to
+                                         shutdown
+
+        """
+
+        raise NotImplementedError()
+
+    def cloudserveraction_start(self, cloudconnectorprofile_id: str,
+                                cloudserver_id: str, **kwargs):
+        """
+        Starts a cloud server.
+
+        :param cloudconnectorprofile_id: the cloud connector profile to use
+                                         for making the request
+        :param cloudserver_id:           the id of the cloud server to
+                                         start
+
+        """
+        raise NotImplementedError()
+
+    def cloudserveraction_restart(self, cloudconnectorprofile_id: str,
+                                  cloudserver_id: str, hard: bool = False,
+                                  **kwargs):
+        """
+        Restarts a cloud server.
+
+        :param cloudconnectorprofile_id: the cloud connector profile to use
+                                         for making the request
+        :param cloudserver_id:           the id of the cloud server to
+                                         restart
+        :param hard:                     perform a hard restart
+
+        """
+        raise NotImplementedError()
+
+    def cloudserveraction_delete(self, cloudconnectorprofile_id: str,
+                                 cloudserver_id: str, **kwargs):
+        """
+        Deletes a cloud server.
+
+        :param cloudconnectorprofile_id: the cloud connector profile to use
+                                         for making the request
+        :param cloudserver_id:           the id of the cloud server to
+                                         delete
+
+        """
+        raise NotImplementedError()
+
