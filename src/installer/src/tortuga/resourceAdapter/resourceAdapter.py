@@ -765,8 +765,7 @@ class ResourceAdapter(UserDataMixin): \
         raise NotImplementedError()
 
     def cloudserveraction_restart(self, cloudconnectorprofile_id: str,
-                                  cloudserver_id: str, hard: bool = False,
-                                  **kwargs):
+                                  cloudserver_id: str, **kwargs):
         """
         Restarts a cloud server.
 
