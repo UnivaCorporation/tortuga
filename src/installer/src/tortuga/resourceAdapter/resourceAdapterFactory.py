@@ -61,7 +61,7 @@ def get_resourceadapter_class(adapter_name: str):
 
     """
     for adapter in find_resourceadapters():
-        if adapter.__adaptername__ == adapter_name:
+        if adapter.__adaptername__.lower() == adapter_name.lower():
             return adapter
 
     raise ResourceNotFound(

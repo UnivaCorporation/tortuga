@@ -12,7 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .base import get_all_listener_classes, get_listnener_class, BaseListener
-from .node import NodeProvisioningListener
-from .cloudserveraction import CloudServerActionListener
-from .tags import TagChangeListener
+from tortuga.cloudserveraction.manager import CloudServerActionStoreManager
+
+from .base import Controller
+
+
+class CloudServerActionController(Controller):
+    """
+    NodeAction web service controller class.
+
+    """
+    name = 'cloudserveractions'
+    type_store = CloudServerActionStoreManager.get()
+    methods = ['GET', 'POST', 'PUT', 'DELETE']
