@@ -48,7 +48,8 @@ class AddHostManager(TagsDbApiMixin, TortugaObjectManager):
         self._addHostLock = threading.RLock()
         self._logger = logging.getLogger(ADD_HOST_NAMESPACE)
         self._nodeDbApi = NodeDbApi()
-        self._sessions = ObjectStoreManager.get(namespace='add-host-manager')
+        self._sessions = ObjectStoreManager.get(
+            namespace='add-host-manager', expire=86400)
 
     def addHosts(self, session: Session, addHostRequest: dict) -> None:
         """

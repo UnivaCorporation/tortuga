@@ -101,14 +101,16 @@ def matches_filters(obj: Union[object, dict],
 
 
 class ObjectStore:
-    def __init__(self, namespece: str):
+    def __init__(self, namespace: str, expire: int = 0):
         """
         Initialization.
 
-        :param str namespece: a namespace to use for these objects
+        :param str namespace: a namespace to use for these objects
+        :param int expire:    objects should expire after x seconds
 
         """
-        self._namespace = namespece
+        self._namespace = namespace
+        self._expire = expire
 
     def get_key_name(self, key: str) -> str:
         """

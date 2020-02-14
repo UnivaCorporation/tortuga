@@ -32,7 +32,11 @@ class CloudServerActionStoreManager:
 
         """
         if not cls._cloudserver_action_store:
-            object_store = ObjectStoreManager.get('cloudserveractions')
+            #
+            # Cloud server actions only need to hang around for 24 hours
+            #
+            object_store = ObjectStoreManager.get('cloudserveractions',
+                                                  expire=86400)
             cls._cloudserver_action_store = ObjectStoreCloudServerActionStore(
                 object_store)
         return cls._cloudserver_action_store
