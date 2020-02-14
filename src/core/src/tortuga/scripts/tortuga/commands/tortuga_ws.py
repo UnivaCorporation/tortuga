@@ -337,6 +337,23 @@ class HardwareProfilesCommand(RootCommand):
     ]
 
 
+class CloudServersCommand(RootCommand):
+    """
+    This is a command for interacting with WS API endpoints.
+
+    """
+    name = 'cloudserveractions'
+    help = 'Tortuga cloud server actions API'
+
+    sub_commands = [
+        ListCommand(),
+        GetCommand(),
+        CreateCommand(),
+        UpdateCommand(),
+        DeleteCommand(),
+    ]
+
+
 class NodesCommand(RootCommand):
     """
     This is a command for interacting with WS API endpoints.

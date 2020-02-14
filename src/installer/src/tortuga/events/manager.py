@@ -36,7 +36,10 @@ class EventStoreManager:
 
         """
         if not cls._event_store:
-            object_store = ObjectStoreManager.get('events')
+            #
+            # Events only need to exist for 24 hours
+            #
+            object_store = ObjectStoreManager.get('events', expire=86400)
             cls._event_store = ObjectStoreEventStore(object_store)
         return cls._event_store
 

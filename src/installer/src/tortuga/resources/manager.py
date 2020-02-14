@@ -32,7 +32,12 @@ class ResourceRequestStoreManager:
 
         """
         if not cls._event_store:
-            object_store = ObjectStoreManager.get('resourcerequests')
+            #
+            # We want to keep resource requests around indefinitely, so
+            # no expiry here!
+            #
+            object_store = ObjectStoreManager.get('resourcerequests',
+                                                  expire=0)
             cls._event_store = ObjectStoreResourceRequestStore(object_store)
         return cls._event_store
 

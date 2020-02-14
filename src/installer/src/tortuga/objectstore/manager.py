@@ -28,11 +28,13 @@ class ObjectStoreManager:
     _config_manager: ConfigManager = ConfigManager()
 
     @classmethod
-    def get(cls, namespace: str) -> ObjectStore:
+    def get(cls, namespace: str, expire: int = 0) -> ObjectStore:
         """
         Get an object store for a specified namespace.
 
         :param str namespace: the namespace for the object store
+        :param int expire:    objects should expire after x seconds
+
         :return ObjectStore:  the object store instance
 
         """
@@ -40,4 +42,4 @@ class ObjectStoreManager:
             cls._redis_client = Redis(
                 password=cls._config_manager.getRedisPassword())
         return RedisObjectStore(namespace=namespace,
-                                redis_client=cls._redis_client)
+                                redis_client=cls._redis_client, expire=expire)

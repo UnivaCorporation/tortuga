@@ -35,15 +35,16 @@ class RedisObjectStore(ObjectStore):
     #
     RESERVED_KEYS = ['INDEX']
 
-    def __init__(self, namespace: str, redis_client):
+    def __init__(self, namespace: str, redis_client, expire: int = 0):
         """
         Initialization.
 
         :param str namespace:      the namespace to use for storing objects
         :param Redis redis_client: the (initialized) redis client to use
+        :param int expire:         objects should expire after x seconds
 
         """
-        super().__init__(namespace)
+        super().__init__(namespace, expire)
         self._redis = redis_client
 
     def _get_index_key_name(self) -> str:
@@ -86,6 +87,8 @@ class RedisObjectStore(ObjectStore):
 
         key = self.get_key_name(key)
         self._redis.hmset(key, to_store)
+        if self._expire:
+            self._redis.expire(key, self._expire)
 
         #
         # Create a Redis set for the purposes of indexing, sorting, etc.

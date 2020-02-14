@@ -15,6 +15,9 @@
 from .base import BaseEvent, get_event_class
 from .hardwareprofile import HardwareProfileTagsChanged
 from .node import NodeStateChanged, NodeTagsChanged
+from .cloudserveraction import (CloudServerActionCreated,
+                                CloudServerActionUpdated,
+                                CloudServerActionDeleted)
 from .noderequest import (AddNodeRequestComplete, AddNodeRequestQueued,
                           DeleteNodeRequestComplete, DeleteNodeRequestQueued)
 from .resourcerequest import (ResourceRequestCreated, ResourceRequestUpdated,

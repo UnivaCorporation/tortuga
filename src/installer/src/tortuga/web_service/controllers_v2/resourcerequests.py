@@ -20,7 +20,7 @@ from .base import Controller
 
 class ResourceRequestController(Controller):
     """
-    SoftwareProfile web service controller class.
+    ResourceRequest web service controller class.
 
     """
     name = 'resourcerequests'
