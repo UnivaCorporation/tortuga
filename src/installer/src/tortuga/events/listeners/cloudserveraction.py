@@ -13,9 +13,9 @@
 # limitations under the License.
 
 import logging
+import traceback
 
-from .base import BaseListener
-from ..types import CloudServerActionCreated
+from sqlalchemy.orm import sessionmaker
 
 from tortuga.cloudserveraction.manager import CloudServerActionStoreManager
 from tortuga.cloudserveraction.store import CloudServerActionStore
@@ -24,6 +24,9 @@ from tortuga.resourceAdapter.resourceAdapter import ResourceAdapter, \
     DEFAULT_CONFIGURATION_PROFILE_NAME
 from tortuga.resourceAdapter.resourceAdapterFactory import get_api
 from tortuga.types.application import Application
+from tortuga.web_service.database import dbm
+from .base import BaseListener
+from ..types import CloudServerActionCreated
 
 
 logger = logging.getLogger(__name__)
@@ -34,6 +37,7 @@ class CloudServerActionListener(BaseListener):
 
     def __init__(self, app: Application):
         super().__init__(app)
+        self._sess = sessionmaker(bind=dbm.engine)()
         self._store: CloudServerActionStore = \
             CloudServerActionStoreManager.get()
 
@@ -56,7 +60,10 @@ class CloudServerActionListener(BaseListener):
             self._run(csa)
 
         except Exception as ex:
-            self._error(csa, ex)
+            csa.status = CloudServerAction.STATUS_ERROR
+            csa.status_message = traceback.format_exc()
+            self._store.save(csa)
+            raise ex
 
         #
         # Assuming we get this far, then we assume the action successfully
@@ -66,6 +73,7 @@ class CloudServerActionListener(BaseListener):
         self._store.save(csa)
 
     def _run(self, csa: CloudServerAction):
+
         #
         # Mark the action as "running"
         #
@@ -80,6 +88,7 @@ class CloudServerActionListener(BaseListener):
             raise Exception("Node ID does not contain resource adapter")
         ra_name = parts.pop(0)
         ra = get_api(ra_name)
+        ra.session = self._sess
         logger.info('Found resource adapter: {}'.format(ra.__adaptername__))
 
         #
@@ -114,9 +123,3 @@ class CloudServerActionListener(BaseListener):
         # Run the action!
         #
         action(ccp_id, csa.cloudserver_id, **params)
-
-    def _error(self, na: CloudServerAction, exception: Exception):
-        na.status = CloudServerAction.STATUS_ERROR
-        na.status_message = str(exception)
-        self._store.save(na)
-        raise exception

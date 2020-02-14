@@ -67,6 +67,7 @@ class CloudServerAction(BaseType):
         """
         super().__init__(**kwargs)
         self.action: str = kwargs.get('action', None)
+        self.action_params: str = kwargs.get('action_params', None)
         self.cloudserver_id: str = kwargs.get('cloudserver_id', None)
         self.cloudconnectorprofile_id: str = kwargs.get(
             'cloudconnectorprofile_id', None)
