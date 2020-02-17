@@ -36,6 +36,9 @@ class MockRedis:
 
         return bkey in self._data_store.keys()
 
+    def expire(self, key: str, timeout: int):
+
+
     def hmset(self, key: str, value: dict):
         bkey = key.encode()
 
@@ -85,7 +88,10 @@ class MockRedis:
         bkey = key.encode()
 
         set_ = self._data_store.get(bkey, [])
-        set_.remove(value.encode())
+        try:
+            set_.remove(value.encode())
+        except ValueError:
+            pass
         self._data_store[bkey] = set_
 
     def smembers(self, key: str) -> List[bytes]:
