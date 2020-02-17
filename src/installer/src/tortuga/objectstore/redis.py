@@ -119,6 +119,7 @@ class RedisObjectStore(ObjectStore):
         result = self._redis.hgetall(key)
 
         if not result:
+            self._redis.srem(self._get_index_key_name(), key)
             return None
 
         logger.debug('get({}) -> {}'.format(key, result))
@@ -169,7 +170,10 @@ class RedisObjectStore(ObjectStore):
         if not order_by:
             for key in self._redis.smembers(self._get_index_key_name()):
                 key = key.decode()
-                yield (self._remove_namespace(key), self._get(key))
+                obj = self._get(key)
+                if obj is None:
+                    continue
+                yield (self._remove_namespace(key), obj)
 
             return
 
