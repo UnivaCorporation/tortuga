@@ -37,7 +37,7 @@ class MockRedis:
         return bkey in self._data_store.keys()
 
     def expire(self, key: str, timeout: int):
-
+        pass
 
     def hmset(self, key: str, value: dict):
         bkey = key.encode()
