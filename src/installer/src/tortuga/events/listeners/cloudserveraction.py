@@ -14,6 +14,7 @@
 
 import logging
 import traceback
+from typing import Optional
 
 from sqlalchemy.orm import sessionmaker
 
@@ -57,7 +58,7 @@ class CloudServerActionListener(BaseListener):
         # the action
         #
         try:
-            self._run(csa)
+            msg = self._run(csa)
 
         except Exception as ex:
             csa.status = CloudServerAction.STATUS_ERROR
@@ -70,10 +71,11 @@ class CloudServerActionListener(BaseListener):
         # ran, and we can mark the action as complete
         #
         csa.status = CloudServerAction.STATUS_COMPLETE
+        if msg:
+            csa.status_message = msg
         self._store.save(csa)
 
-    def _run(self, csa: CloudServerAction):
-
+    def _run(self, csa: CloudServerAction) -> Optional[str]:
         #
         # Mark the action as "running"
         #
@@ -85,7 +87,10 @@ class CloudServerActionListener(BaseListener):
         #
         parts = csa.cloudserver_id.split(":")
         if len(parts) == 1:
-            raise Exception("Node ID does not contain resource adapter")
+            msg = ("Cloud server ID does not contain resource adapter "
+                   "prefix, skipping: {}".format(csa.cloudserver_id))
+            logger.warning(msg)
+            return msg
         ra_name = parts.pop(0)
         ra = get_api(ra_name)
         ra.session = self._sess
