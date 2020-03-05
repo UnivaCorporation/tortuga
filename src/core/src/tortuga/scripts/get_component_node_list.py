@@ -57,15 +57,14 @@ class GetComponentNodeListCli(TortugaCli):
         results = {}
         for sw_profile in api.getSoftwareProfileList():
             nodes = []
-
-            for component in sw_profile.components:
+            for component in sw_profile.getComponents():
                 if not self.getArgs().kitName or \
-                        component.kit.name == self.getArgs().kitName:
-                    if comp_name and component.name == comp_name:
-                        nodes = [node.name for node in sw_profile.nodes]
+                        component.getKit().getName() == self.getArgs().kitName:
+                    if comp_name and component.getName() == comp_name:
+                        nodes = [node.name for node in sw_profile.getNodes()]
                         break
 
-            results[sw_profile.name] = nodes
+            results[sw_profile.getName()] = nodes
 
         print(yaml.safe_dump(results), end=' ')
 
