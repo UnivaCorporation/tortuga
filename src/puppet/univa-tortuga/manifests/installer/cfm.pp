@@ -36,9 +36,6 @@ class tortuga::installer::cfm {
       creates => '/etc/cfm/.cfmsecret',
       require => File['/etc/cfm'],
     }
-
-    # Replicate the same file for service to Puppet clients.  This is a temporary
-    # measure until the reliance on /etc/cfm/.cfmsecret is removed completely.
     file { '/etc/cfm/.cfmsecret':
       owner   => apache,
       group   => apache,
@@ -46,8 +43,22 @@ class tortuga::installer::cfm {
       require => Exec['create_cfmsecret'],
     }
 
-    # 'private' directory created in tortuga::installer::puppetmaster
+    # Base64 encoded version of the password
+    exec { 'create_cfmsecret64':
+      command => "/bin/base64 /etc/cfm/.cfmsecret > /etc/cfm/.cfmsecret64",
+      creates => '/etc/cfm/.cfmsecret64',
+      require => File['/etc/cfm/.cfmsecret'],
+    }
+    file { '/etc/cfm/.cfmsecret64':
+      owner   => root,
+      group   => root,
+      mode    => '0600',
+      require => Exec['create_cfmsecret64'],
+    }
 
+    # Replicate the same file for service to Puppet clients.  This is a temporary
+    # measure until the reliance on /etc/cfm/.cfmsecret is removed completely.
+    # 'private' directory created in tortuga::installer::puppetmaster
     file { "${tortuga::config::instroot}/private/.cfmsecret":
       ensure => present,
       source => '/etc/cfm/.cfmsecret',
