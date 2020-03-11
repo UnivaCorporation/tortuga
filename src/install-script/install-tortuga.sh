@@ -726,7 +726,7 @@ check_puppet_memory $FORCE
 # 'cachedpkgs' are cached for use by on-prem nodes
 
 # these packages are installed locally and cached
-commonpkgs="\
+commonpkgs76="\
 rh-python36 \
 rh-python36-runtime \
 rh-python36-python \
@@ -735,6 +735,17 @@ rh-python36-python-libs \
 rh-python36-python-devel \
 rh-python36-python-setuptools \
 rh-python36-python-virtualenv \
+python3 \
+python3-libs \
+python3-pip \
+python3-setuptools \
+"
+
+commonpkgs77="\
+python3 \
+python3-libs \
+python3-pip \
+python3-setuptools \
 "
 
 # Packages common to all RHEL versions
@@ -748,6 +759,20 @@ rsync \
 cachedpkgs="\
 puppet-agent \
 "
+
+# Default to old package list
+commonpkgs=$commonpkgs76
+
+# Use different packages for post 7.6 rhel versions
+[[ $distmajversion -eq 7 ]] && [[ $distminversion -gt 6 ]] && {
+    commonpkgs=$commonpkgs77
+}
+
+# Version 8 has python3 by default
+[[ $distmajversion -eq 7 ]] && {
+    commonpkgs="\
+"
+}
 
 pkgs+=" ${commonpkgs}"
 cachedpkgs+=" ${commonpkgs}"
@@ -858,7 +883,7 @@ is_puppet_module_installed univa-tortuga || {
 }
 
 # source SCL Python 3.6 environment
-. /opt/rh/rh-python36/enable
+[[ -f /opt/rh/rh-python36/enable ]] && . /opt/rh/rh-python36/enable
 
 # Setup virtualenv (creates $TORTUGA_ROOT)
 readonly virtualenv="python3 -m venv --system-site-packages"
