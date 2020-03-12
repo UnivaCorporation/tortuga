@@ -27,6 +27,7 @@ class ScaleSetResourceRequestSchema(BaseResourceRequestSchema):
     min_nodes = fields.Integer()
     max_nodes = fields.Integer()
     desired_nodes = fields.Integer()
+    instance_template_name = fields.String()
 
 
 class ScaleSetResourceRequest(BaseResourceRequest):
@@ -42,3 +43,5 @@ class ScaleSetResourceRequest(BaseResourceRequest):
         self.min_nodes: int = kwargs.get('min_nodes', 0)
         self.max_nodes: int = kwargs.get('max_nodes', 0)
         self.desired_nodes: int = kwargs.get('desired_nodes', 0)
+        self.instance_template_name: Optional[str] = \
+            kwargs.get('instance_template_name', None)

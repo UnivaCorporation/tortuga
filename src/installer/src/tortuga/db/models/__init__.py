@@ -40,6 +40,7 @@ from . import softwareProfile  # noqa
 from . import resourceAdapter  # noqa
 from . import hardwareProfileProvisioningNic  # noqa
 from . import nodeRequest  # noqa
+from . import dataRequest  # noqa
 from . import resourceAdapterConfig  # noqa
 from . import resourceAdapterSetting  # noqa
 from . import instanceMapping  # noqa

@@ -43,4 +43,16 @@ class tortuga_kit_base::core::cfmsecret {
       require => File['/etc/cfm'],
     }
   }
+
+  exec { 'create_cfmsecret64':
+    command => "/bin/base64 /etc/cfm/.cfmsecret > /etc/cfm/.cfmsecret64",
+    creates => '/etc/cfm/.cfmsecret64',
+    require => File['/etc/cfm/.cfmsecret'],
+  }
+  file { '/etc/cfm/.cfmsecret64':
+    owner   => root,
+    group   => root,
+    mode    => '0600',
+    require => Exec['create_cfmsecret64'],
+  }
 }

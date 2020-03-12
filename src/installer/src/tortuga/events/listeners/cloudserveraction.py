@@ -128,3 +128,62 @@ class CloudServerActionListener(BaseListener):
         # Run the action!
         #
         action(ccp_id, csa.cloudserver_id, **params)
+
+        #
+        # Attempt a local delete, if possible
+        #
+        if csa.action == "delete":
+            self._local_delete(ra_name, ccp_id, csa.cloudserver_id)
+
+    def _local_delete(self, resource_adapter_name: str,
+                      resource_adapter_profile: str, cloudserver_id: str):
+        from tortuga.db.models.instanceMapping import InstanceMapping
+        from tortuga.db.models.instanceMetadata import InstanceMetadata
+        from tortuga.db.resourceAdapterConfigDbHandler import ResourceAdapterConfigDbHandler
+        from tortuga.node.nodeApi import NodeApi
+
+        node_api = NodeApi()
+
+        #
+        # Assume the node instance ID name is the last item in the
+        # delimited cloud server ID
+        #
+        instance = cloudserver_id.split(":")[-1]
+
+        #
+        # Lookup the resource adapter configuration profile...
+        #
+        rac_api = ResourceAdapterConfigDbHandler()
+        rac = rac_api.get(self._sess, resource_adapter_name,
+                          resource_adapter_profile)
+
+        #
+        # Check the instance mapping to see if there is a matching
+        # instance id...
+        #
+        im_list = self._sess.query(InstanceMapping).filter(
+            InstanceMapping.instance == instance,
+            InstanceMapping.resource_adapter_configuration_id == rac.id)
+        #
+        # Found something? Delete it and then return...
+        #
+        for im in im_list:
+            node = im.node
+            node_api.deleteNode(self._sess, node.name)
+
+        #
+        # Check the instance metadata so see if there is a
+        # matching vm_name...
+        #
+        im_list = self._sess.query(InstanceMetadata).filter(
+            InstanceMetadata.key == "vm_name",
+            InstanceMetadata.value == instance
+        )
+        #
+        # Found something? Delete it and then return...
+        #
+        for im in im_list:
+            if im.instance.resource_adapter_configuration_id != rac.id:
+                continue
+            node = im.instance.node
+            node_api.deleteNode(self._sess, node.name)
