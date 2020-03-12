@@ -35,11 +35,11 @@ class tortuga_kit_base::core::install::virtualenv::package {
       # RHEL + CentOS 8.x incorporate a python 3.6 package in AppStream (default) repos
       # Pre 7.7 releases require a software collections repo and different package name
       if versioncmp($facts['os']['release']['full'], '7.7') < 0 {
-        $pkgs = [ 'rh-python36-python-virtualenv' ]
+        $pkgs = [ 'rh-python36-python' ]
       } elsif versioncmp($facts['os']['release']['full'], '8.0') < 0 {
-        $pkgs = [ 'python3', 'python36-virtualenv' ]
+        $pkgs = [ 'python3' ]
       } else {
-        $pkgs = [ 'python36', 'python3-virtualenv' ]
+        $pkgs = [ 'python36' ]
       }
     }
   } elsif $facts['os']['name'] == 'Ubuntu' {
@@ -101,7 +101,7 @@ class tortuga_kit_base::core::install::virtualenv::pre_install {
       }
 
       Exec['enable rhscl repository']
-        -> Package['rh-python36-python-virtualenv']
+        -> Package['rh-python36-python']
     } elsif $facts['os']['name'] == 'CentOS' and versioncmp($::facts['os']['release']['full'], '7.7') < 0 {
       # Set up SCL repository
       ensure_packages(['centos-release-scl'], {'ensure' => 'installed'})
