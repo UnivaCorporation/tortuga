@@ -734,7 +734,6 @@ rh-python36-python-pip \
 rh-python36-python-libs \
 rh-python36-python-devel \
 rh-python36-python-setuptools \
-rh-python36-python-virtualenv \
 "
 
 commonpkgs77="\
