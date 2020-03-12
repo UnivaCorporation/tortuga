@@ -30,11 +30,17 @@ class tortuga_kit_base::core::install::virtualenv::package {
           'python36',
         ]
       }
-    }  else {
-      # Install Python 3.6 package and dependencies
-      $pkgs = [
-        'rh-python36-python-virtualenv',
-      ]
+    } else {
+      # RHEL + CentOS 7.7 incorporate a python 3.6 package in base repos
+      # RHEL + CentOS 8.x incorporate a python 3.6 package in AppStream (default) repos
+      # Pre 7.7 releases require a software collections repo and different package name
+      if versioncmp($facts['os']['release']['full'], '7.7') < 0 {
+        $pkgs = [ 'rh-python36-python' ]
+      } elsif versioncmp($facts['os']['release']['full'], '8.0') < 0 {
+        $pkgs = [ 'python3' ]
+      } else {
+        $pkgs = [ 'python36' ]
+      }
     }
   } elsif $facts['os']['name'] == 'Ubuntu' {
       if versioncmp($::facts['os']['release']['full'], '18.04') < 0 {
@@ -86,7 +92,7 @@ class tortuga_kit_base::core::install::virtualenv::pre_install {
       } else {
         ensure_packages(['python3'], {'ensure' => 'installed'})
       }
-    } elsif $facts['os']['name'] == 'Redhat' {
+    } elsif $facts['os']['name'] == 'Redhat' and versioncmp($::facts['os']['release']['full'], '7.7') < 0 {
       # enable rhscl repository on RHEL
       exec { 'enable rhscl repository':
         command => 'yum-config-manager --enable rhui-REGION-rhel-server-rhscl',
@@ -95,8 +101,8 @@ class tortuga_kit_base::core::install::virtualenv::pre_install {
       }
 
       Exec['enable rhscl repository']
-        -> Package['rh-python36-python-virtualenv']
-    } elsif $facts['os']['name'] == 'CentOS' {
+        -> Package['rh-python36-python']
+    } elsif $facts['os']['name'] == 'CentOS' and versioncmp($::facts['os']['release']['full'], '7.7') < 0 {
       # Set up SCL repository
       ensure_packages(['centos-release-scl'], {'ensure' => 'installed'})
     }
@@ -118,9 +124,10 @@ class tortuga_kit_base::core::install::create_tortuga_instroot {
   if $facts['os']['family'] == 'RedHat' {
     # Amazon Linux is the exception here since it puts python3 in the
     # default PATH
-    $virtualenv = $facts['os']['name'] ? {
-      'Amazon' => 'python3 -m venv',
-      default  => '/opt/rh/rh-python36/root/bin/python -m venv',
+    if versioncmp($facts['os']['release']['full'], '7.7') < 0 {
+      $virtualenv = '/opt/rh/rh-python36/root/bin/python -m venv'
+    } else {
+      $virtualenv = 'python3 -m venv'
     }
   } elsif $facts['os']['family'] == 'Debian' {
     if $facts['os']['name'] == 'Ubuntu' {
