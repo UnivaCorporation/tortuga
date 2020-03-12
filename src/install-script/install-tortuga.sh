@@ -735,10 +735,6 @@ rh-python36-python-libs \
 rh-python36-python-devel \
 rh-python36-python-setuptools \
 rh-python36-python-virtualenv \
-python3 \
-python3-libs \
-python3-pip \
-python3-setuptools \
 "
 
 commonpkgs77="\
