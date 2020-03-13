@@ -764,7 +764,7 @@ commonpkgs=$commonpkgs76
 }
 
 # Version 8 has python3 by default
-[[ $distmajversion -eq 7 ]] && {
+[[ $distmajversion -eq 8 ]] && {
     commonpkgs="\
 "
 }
