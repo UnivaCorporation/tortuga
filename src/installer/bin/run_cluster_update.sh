@@ -16,6 +16,7 @@
 
 # Trigger Puppet agent on all managed nodes, or specific nodes for tags update
 TAGS_CLUSTER_UPDATE=/etc/puppetlabs/code/environments/production/modules/tortuga_kit_uge/files/setup/tags-cluster-update.sh
+SLURM_CLUSTER_UPDATE=/etc/puppetlabs/code/environments/production/modules/tortuga_kit_slurm/files/cluster-update.sh
 if [ ! -z "$FACTER_node_tags_update" ]  || [ ! -z "$FACTER_softwareprofile_tags_update" ]; then
   if [ ! -f "$TAGS_CLUSTER_UPDATE" ]; then
     echo "Cannot find $TAGS_CLUSTER_UPDATE"
@@ -23,6 +24,13 @@ if [ ! -z "$FACTER_node_tags_update" ]  || [ ! -z "$FACTER_softwareprofile_tags_
   fi
   set -x
   export FACTER_node_tags_update; export FACTER_softwareprofile_tags_update; $TAGS_CLUSTER_UPDATE
+  exit $?
+elif [ ! -z "$FACTER_slurm_cluster" ]; then
+  if [ ! -f "$SLURM_CLUSTER_UPDATE" ]; then
+    echo "Cannot find $SLURM_CLUSTER_UPDATE"
+    exit 1
+  fi
+  export FACTER_slurm_cluster; $SLURM_CLUSTER_UPDATE
   exit $?
 else
   echo "Normal cluster update puppet run"
