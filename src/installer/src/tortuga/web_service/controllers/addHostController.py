@@ -86,12 +86,10 @@ class AddHostController(TortugaController):
              node['count'] = 1
              node['nodeDetails'] = [cherrypy.request.json.get('node_details')]
         except Exception as ex:
-            if not isinstance(ex, TortugaException):
-                if isinstance(ex, cryptography.fernet.InvalidToken):
-                    ex = TortugaException(args="InvalidToken")
-                else:
-                    self._logger.exception(
-                        'Exception occurred while adding hosts')
+            self._logger.exception('Exception occurred while adding hosts')
+
+            if isinstance(ex, cryptography.fernet.InvalidToken):
+                ex = TortugaException(args="InvalidToken")
 
             self.handleException(ex)
 
@@ -125,9 +123,7 @@ class AddHostController(TortugaController):
                     cherrypy.request.db, request),
             }
         except Exception as ex:  # pylint: disable=broad-except
-            if not isinstance(ex, TortugaException):
-                self._logger.exception(
-                    'Exception occurred while adding hosts')
+            self._logger.exception('Exception occurred while adding hosts')
 
             self.handleException(ex)
 

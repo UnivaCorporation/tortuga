@@ -103,9 +103,7 @@ class NodeDbApi(TagsDbApiMixin, TortugaDbApi):
                     include_installer=include_installer),
                 optionDict=optionDict)
         except Exception as ex:
-            if not isinstance(ex, TortugaException):
-                self._logger.exception(str(ex))
-
+            self._logger.exception(str(ex))
             raise
 
     def set_tags(self, session: Session, tags: Dict[str, str],
