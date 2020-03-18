@@ -738,6 +738,7 @@ rh-python36-python-setuptools \
 
 commonpkgs77="\
 python3 \
+python3-devel \
 python3-libs \
 python3-pip \
 python3-setuptools \
