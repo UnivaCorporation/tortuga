@@ -33,7 +33,7 @@ class tortuga_kit_base::common::nfs::package {
 
   $pkgname = $::osfamily ? {
     'RedHat' => 'nfs-utils',
-    'Debian' => 'nfs-common',
+    'Debian' => 'nfs-kernel-server',
     default  => undef,
   }
 
