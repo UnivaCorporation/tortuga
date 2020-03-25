@@ -45,7 +45,7 @@ class tortuga::installer::cfm {
 
     # Base64 encoded version of the password
     exec { 'create_cfmsecret64':
-      command => "/bin/base64 /etc/cfm/.cfmsecret > /etc/cfm/.cfmsecret64",
+      command => "/usr/bin/env base64 /etc/cfm/.cfmsecret > /etc/cfm/.cfmsecret64",
       creates => '/etc/cfm/.cfmsecret64',
       require => File['/etc/cfm/.cfmsecret'],
     }
