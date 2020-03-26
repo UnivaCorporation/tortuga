@@ -122,9 +122,9 @@ class tortuga_kit_base::core::install::create_tortuga_instroot {
   include tortuga::config
 
   if $facts['os']['family'] == 'RedHat' {
-    # Amazon Linux is the exception here since it puts python3 in the
-    # default PATH
-    if versioncmp($facts['os']['release']['full'], '7.7') < 0 {
+    if $facts['os']['name'] == 'Amazon' {
+      $virtualenv = 'python3 -m venv'
+    } elsif versioncmp($facts['os']['release']['full'], '7.7') < 0 {
       $virtualenv = '/opt/rh/rh-python36/root/bin/python -m venv'
     } else {
       $virtualenv = 'python3 -m venv'
