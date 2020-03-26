@@ -738,6 +738,15 @@ rh-python36-python-setuptools \
 
 commonpkgs77="\
 python3 \
+python3-devel \
+python3-libs \
+python3-pip \
+python3-setuptools \
+"
+
+commonpkgs8x="\
+python36 \
+python36-devel \
 python3-libs \
 python3-pip \
 python3-setuptools \
@@ -765,8 +774,7 @@ commonpkgs=$commonpkgs76
 
 # Version 8 has python3 by default
 [[ $distmajversion -eq 8 ]] && {
-    commonpkgs="\
-"
+    commonpkgs=$commonpkgs8x
 }
 
 pkgs+=" ${commonpkgs}"
