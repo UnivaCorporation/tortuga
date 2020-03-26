@@ -45,7 +45,7 @@ class tortuga_kit_base::core::cfmsecret {
   }
 
   exec { 'create_cfmsecret64':
-    command => "/bin/base64 /etc/cfm/.cfmsecret > /etc/cfm/.cfmsecret64",
+    command => "/usr/bin/env base64 /etc/cfm/.cfmsecret > /etc/cfm/.cfmsecret64",
     creates => '/etc/cfm/.cfmsecret64',
     require => File['/etc/cfm/.cfmsecret'],
   }
