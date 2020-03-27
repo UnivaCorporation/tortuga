@@ -53,7 +53,15 @@ class tortuga_kit_base::installer::apache::certs {
     owner   => apache,
     group   => apache,
     require => Exec['create_apache_x509_certificate'],
+    notify  => Exec['clean apache cache'],
   }
+
+  exec { 'clean apache cache':
+    path        => [ '/sbin', '/usr/sbin' ],
+    command     => "htcacheclean -l1B -p ${tortuga_kit_base::installer::apache::cache_dir}",
+    refreshonly => true,
+  }
+
 }
 
 class tortuga_kit_base::installer::apache::config {
