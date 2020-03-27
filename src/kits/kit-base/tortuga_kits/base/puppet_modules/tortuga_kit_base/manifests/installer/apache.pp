@@ -48,20 +48,18 @@ class tortuga_kit_base::installer::apache::certs {
     require => Exec['create_apache_x509_certificate'],
   }
 
+  $ca_notify = $tortuga_kit_base::installer::apache::cache_enabled ? {
+    true    => Exec['clean apache cache'],
+    default => undef,
+  }
+
   file { "${tortuga::config::instroot}/www_int/ca.pem":
     source  => "${tortuga::config::instroot}/etc/CA/ca.pem",
     owner   => apache,
     group   => apache,
     require => Exec['create_apache_x509_certificate'],
-    notify  => Exec['clean apache cache'],
+    notify  => $ca_notify,
   }
-
-  exec { 'clean apache cache':
-    path        => [ '/sbin', '/usr/sbin' ],
-    command     => "htcacheclean -l1B -p ${tortuga_kit_base::installer::apache::cache_dir}",
-    refreshonly => true,
-  }
-
 }
 
 class tortuga_kit_base::installer::apache::config {
@@ -84,10 +82,20 @@ class tortuga_kit_base::installer::apache::config {
 
   $installer_fqdn = $tortuga::config::installer_fqdn
 
-  file { $cache_dir:
-    ensure => directory,
-    owner  => apache,
-    group  => apache,
+  if $cache_enabled {
+    file { $cache_dir:
+      ensure => directory,
+      owner  => apache,
+      group  => apache,
+    }
+
+    exec { 'clean apache cache':
+      user        => apache,
+      path        => [ '/sbin', '/usr/sbin' ],
+      command     => "htcacheclean -l1B -p ${cache_dir}",
+      refreshonly => true,
+      require     => File[$cache_dir],
+    }
   }
 
   file { '/etc/httpd/conf.d/tortuga.conf':

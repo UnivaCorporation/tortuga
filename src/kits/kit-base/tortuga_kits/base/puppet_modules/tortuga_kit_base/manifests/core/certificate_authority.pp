@@ -33,6 +33,14 @@ class tortuga_kit_base::core::certificate_authority {
     $dest_ca_cert = 'tortuga-ca.crt'
   }
 
+  if defined(Class['tortuga_kit_base::installer::apache::certs']) {
+    Class['tortuga_kit_base::installer::apache::certs'] -> File['ca-pem']
+  }
+
+  if defined(Class['tortuga::installer::apache::server']) {
+    Class['tortuga::installer::apache::server'] -> File['ca-pem']
+  }
+
   file { 'ca-pem':
     ensure => file,
     path   => "${ca_path}/${dest_ca_cert}",
