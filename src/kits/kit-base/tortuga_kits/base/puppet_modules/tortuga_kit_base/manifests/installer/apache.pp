@@ -59,6 +59,7 @@ class tortuga_kit_base::installer::apache::certs {
   exec { 'clean apache cache':
     path        => [ '/sbin', '/usr/sbin' ],
     command     => "htcacheclean -l1B -p ${tortuga_kit_base::installer::apache::cache_dir}",
+    onlyif      => "/bin/test -d ${tortuga_kit_base::installer::apache::cache_dir}",
     refreshonly => true,
   }
 
