@@ -860,26 +860,6 @@ installpkgs ${pkgs}
 # Create Puppet modules directory, as necessary
 echo "Installing Puppet modules" | tee -a /tmp/install-tortuga.log
 
-# Install stdlib module from puppetlabs
-
-if [[ ${FORCE} -eq 1 ]] || ! is_puppet_module_installed puppetlabs-stdlib; then
-    echo "Installing puppetlabs-stdlib Puppet module..."
-
-    if [[ -n "${local_deps}" ]]; then
-        puppet_module_src="${local_deps}/puppet/puppetlabs-stdlib-5.2.0.tar.gz"
-    else
-        puppet_module_src="puppetlabs-stdlib --version 5.2.0"
-    fi
-
-    install_puppet_module ${puppet_module_src}
-    [[ $? -eq 0 ]] || {
-        echo "Error installing Puppet module \"puppetlabs-stdlib\"" | \
-            tee -a /tmp/install-tortuga.log
-
-        exit 1
-    }
-fi
-
 is_puppet_module_installed univa-tortuga || {
     echo "Installing Tortuga Puppet integration module..." | tee -a /tmp/install-tortuga.log
     install_puppet_module univa-tortuga-*.tar.gz
