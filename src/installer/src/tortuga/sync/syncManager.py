@@ -127,10 +127,10 @@ class SyncManager(TortugaObjectManager):
 
                     break
                 else:
-                    self._logger.error(
-                        'Update command "%s" failed (exit status: %s):'
-                        ' %s' % (
-                            updateCmd, p.getExitStatus(), p.getStdErr()))
+                   self._logger.error('Update command "%s" failed (exit status: %s)'
+                           % (updateCmd, p.getExitStatus()))
+                   self._logger.debug('stdout: {}'.format(p.getStdOut().decode().rstrip()))
+                   self._logger.debug('stderr: {}'.format(p.getStdErr().decode().rstrip()))
 
             self._logger.debug('Done with cluster update')
 
