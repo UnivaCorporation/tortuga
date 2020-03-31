@@ -506,18 +506,10 @@ function disto_patches() {
     esac
 }
 
-is_puppet_module_installed() {
-    /opt/puppetlabs/bin/puppet module list ${puppet_args} | grep --quiet "${1} "
-}
-
 install_puppet_module() {
     local install_args
 
     install_args="${puppet_args}"
-
-    if [[ ${FORCE} -eq 1 ]] || [[ -n "${local_deps}" ]]; then
-        install_args+=" --force"
-    fi
 
     /opt/puppetlabs/bin/puppet module install ${install_args} "$@"
 }
@@ -860,13 +852,16 @@ installpkgs ${pkgs}
 # Create Puppet modules directory, as necessary
 echo "Installing Puppet modules" | tee -a /tmp/install-tortuga.log
 
-is_puppet_module_installed univa-tortuga || {
-    echo "Installing Tortuga Puppet integration module..." | tee -a /tmp/install-tortuga.log
-    install_puppet_module univa-tortuga-*.tar.gz
-    [[ $? -eq 0 ]] || {
-        echo "Installation failed... unable to proceed" | tee -a /tmp/install-tortuga.log
-        exit 1
-    }
+echo "Installing Tortuga Puppet integration module..." | tee -a /tmp/install-tortuga.log
+
+if [[ ${FORCE} -eq 1 ]]; then
+    /opt/puppetlabs/bin/puppet module uninstall --force univa-tortuga
+fi
+
+install_puppet_module univa-tortuga-*.tar.gz
+[[ $? -eq 0 ]] || {
+    echo "Installation failed... unable to proceed" | tee -a /tmp/install-tortuga.log
+    exit 1
 }
 
 # source SCL Python 3.6 environment
