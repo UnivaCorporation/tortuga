@@ -781,14 +781,18 @@ pkgs+=" ${commonpkgs}"
 cachedpkgs+=" ${commonpkgs}"
 
 # only install 'centos-release-scl' when running normal installation
-[[ -z "${local_deps}" ]] && [[ ${dist} == centos ]] && {
-    echo "Installing SCL repository... "
-    installpkg centos-release-scl
-    [[ $? -eq 0 ]] || {
-        echo "Error installing \"centos-release-scl\". Unable to proceed." >&2
-        exit 1
-    }
-}
+if [[ -z "${local_deps}" ]] && [[ $distmajversion -eq 7 ]] && [[ $distminversion -le 6 ]]; then
+    if [[ ${dist} == centos ]]; then
+        echo "Installing SCL repository... "
+        installpkg centos-release-scl
+        [[ $? -eq 0 ]] || {
+            echo "Error installing \"centos-release-scl\". Unable to proceed." >&2
+            exit 1
+        }
+    elif [[ ${dist} == rhel ]]; then
+        subscription-manager repos --enable rhel-7-server-optional-rpms --enable rhel-server-rhscl-7-rpms
+    fi
+fi
 
 # download packages to local cache
 [[ $enable_package_caching -ne 0 ]] && cachepkgs ${commonpkgs}
