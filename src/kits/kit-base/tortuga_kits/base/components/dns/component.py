@@ -183,10 +183,19 @@ class ComponentInstaller(ComponentInstallerBase):
     def __init__(self, kit):
         """
         Initialise parent class.
+
         """
         super().__init__(kit)
+        self._provider = None
 
-        self.provider = DnsmasqDnsProvider(self._private_dns_zone())
+    @property
+    def provider(self):
+        if not self._provider:
+            self._provider = DnsmasqDnsProvider(self._private_dns_zone())
+        return self._provider
+
+    def _private_dns_zone(self):
+        return self._get_global_parameter('DNSZone')
 
     def _get_global_parameter(self, key, default=None):
         """
@@ -201,9 +210,6 @@ class ComponentInstaller(ComponentInstallerBase):
                 self.kit_installer.session, key).getValue()
         except ParameterNotFound:
             return default
-
-    def _private_dns_zone(self):
-        return self._get_global_parameter('DNSZone')
 
     def _provisioning_nics(self, provisioning_nic):
         """
