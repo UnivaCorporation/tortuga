@@ -479,6 +479,11 @@ class NodeManager(TortugaObjectManager): \
 
                 session.delete(node_data_dict['node'])
 
+                # Commit the actual deletion of this node to the DB.  This is required
+                # as the post_delete hooks may use a different DB session and we have
+                # already commited some changes for this node.
+                session.commit()
+
                 self.__post_delete(kitmgr, node_dict)
 
                 self._logger.info('Node [%s] deleted', node_dict['name'])
