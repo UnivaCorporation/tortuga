@@ -159,7 +159,6 @@ class KitActionsManager(TortugaObjectManager):
         else:
             nodes = nodes_db.getNodesByNodeState(self.session, 'Deleted')
 
-
         if 'nodes' in kwargs:
             aggregated_nodes = list(set(kwargs['nodes']) |
                                     set([node.name for node in nodes]))
