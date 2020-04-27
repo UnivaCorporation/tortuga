@@ -204,15 +204,15 @@ class SoftwareProfileNodeCountValidator:
                     'profile [{}]'.format(swp.name)
                 )
             #
-            # if there is no minimum, then no need to check anything else
-            #
-            if not swp.minNodes:
-                continue
-            #
             # if this is a force operation, then don't bother checking
             # any further
             #
             if force:
+                continue
+            #
+            # if there is no minimum, then no need to check anything else
+            #
+            if not swp.minNodes:
                 continue
             #
             # Ensure the proposed deletion keeps things above the minimum
