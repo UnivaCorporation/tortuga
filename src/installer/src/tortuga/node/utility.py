@@ -209,6 +209,12 @@ class SoftwareProfileNodeCountValidator:
             if not swp.minNodes:
                 continue
             #
+            # if this is a force operation, then don't bother checking
+            # any further
+            #
+            if force:
+                continue
+            #
             # Ensure the proposed deletion keeps things above the minimum
             #
             if len(swp.nodes) - num_nodes_deleted < swp.minNodes:
