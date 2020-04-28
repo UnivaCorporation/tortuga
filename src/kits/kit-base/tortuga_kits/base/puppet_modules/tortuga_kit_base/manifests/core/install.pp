@@ -216,8 +216,8 @@ define tortuga_kit_base::core::install::install_tortuga_python_package(
   }
 
   exec { "install ${package} Python package":
-    command => "${pipcmd} install ${pip_install_opts} ${package}",
-    unless  => "${pipcmd} show ${package}",
+    command     => "${pipcmd} install ${pip_install_opts} ${package}",
+    unless      => "${pipcmd} show ${package}",
     environment => $env,
   }
 }
