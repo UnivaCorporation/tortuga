@@ -225,9 +225,13 @@ define tortuga_kit_base::core::install::install_tortuga_python_package(
 class tortuga_kit_base::core::install::install_tortuga_base {
   include tortuga_kit_base::core::install::create_tortuga_instroot
   require tortuga_kit_base::core::install::create_tortuga_instroot
+
+  ensure_packages(['git'])
+
   Class['tortuga_kit_base::core::install::create_tortuga_instroot'] -> Class['tortuga_kit_base::core::install::install_tortuga_base']
   ensure_resource('tortuga_kit_base::core::install::install_tortuga_python_package', 'tortuga-core', {
     package => 'tortuga-core',
+    require => Package['git'],
   })
 }
 
