@@ -162,12 +162,22 @@ class tortuga_kit_base::core::install::create_tortuga_instroot {
     require => Exec['create_tortuga_base'],
   }
 
+  if $tortuga::config::proxy_uri {
+    $env = [
+      "https_proxy=${tortuga::config::proxy_uri}",
+      "http_proxy=${tortuga::config::proxy_uri}",
+    ]
+  } else {
+    $env = undef
+  }
+
   $pipcmd = "${tortuga::config::instroot}/bin/pip"
   exec { 'update pip':
-    path    => ['/bin', '/usr/bin'],
-    command => "${pipcmd} install --upgrade pip==19.0.3",
-    unless  => "${pipcmd} list -o | grep pip",
-    require => Exec['create_tortuga_base'],
+    path        => ['/bin', '/usr/bin'],
+    command     => "${pipcmd} install --upgrade pip==19.0.3",
+    unless      => "${pipcmd} show pip | grep '^Version: 19.0.3$' &>/dev/null",
+    require     => Exec['create_tortuga_base'],
+    environment => $env,
   }
 }
 
@@ -206,8 +216,8 @@ define tortuga_kit_base::core::install::install_tortuga_python_package(
   }
 
   exec { "install ${package} Python package":
-    command => "${pipcmd} install ${pip_install_opts} ${package}",
-    unless  => "${pipcmd} show ${package}",
+    command     => "${pipcmd} install ${pip_install_opts} ${package}",
+    unless      => "${pipcmd} show ${package}",
     environment => $env,
   }
 }
@@ -215,9 +225,13 @@ define tortuga_kit_base::core::install::install_tortuga_python_package(
 class tortuga_kit_base::core::install::install_tortuga_base {
   include tortuga_kit_base::core::install::create_tortuga_instroot
   require tortuga_kit_base::core::install::create_tortuga_instroot
+
+  ensure_packages(['git'])
+
   Class['tortuga_kit_base::core::install::create_tortuga_instroot'] -> Class['tortuga_kit_base::core::install::install_tortuga_base']
   ensure_resource('tortuga_kit_base::core::install::install_tortuga_python_package', 'tortuga-core', {
     package => 'tortuga-core',
+    require => Package['git'],
   })
 }
 
