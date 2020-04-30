@@ -172,10 +172,11 @@ class tortuga_kit_base::core::install::create_tortuga_instroot {
   }
 
   $pipcmd = "${tortuga::config::instroot}/bin/pip"
+  $pipver = '20.1'
   exec { 'update pip':
     path        => ['/bin', '/usr/bin'],
-    command     => "${pipcmd} install --upgrade pip==19.0.3",
-    unless      => "${pipcmd} show pip | grep '^Version: 19.0.3$' &>/dev/null",
+    command     => "${pipcmd} install --upgrade pip==${pipver}",
+    unless      => "${pipcmd} show pip | grep '^Version: ${pipver}$' &>/dev/null",
     require     => Exec['create_tortuga_base'],
     environment => $env,
   }
@@ -219,6 +220,7 @@ define tortuga_kit_base::core::install::install_tortuga_python_package(
     command     => "${pipcmd} install ${pip_install_opts} ${package}",
     unless      => "${pipcmd} show ${package}",
     environment => $env,
+    require     => Exec['update pip'],
   }
 }
 
