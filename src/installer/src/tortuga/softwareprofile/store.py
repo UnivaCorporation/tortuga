@@ -153,13 +153,17 @@ class SqlalchemySessionSoftwareProfileStore(TypeStore):
         logger.debug('get(obj_id=%s) -> ...', obj_id)
 
         session = self._Session()
-        db_swp = session.query(DbSoftwareProfile).filter(
-            DbSoftwareProfile.id == int(obj_id)).first()
-        swp = self._to_swp(db_swp)
-        session.close()
+        try:
+            db_swp = session.query(DbSoftwareProfile).filter(
+                DbSoftwareProfile.id == int(obj_id)).first()
+            swp = self._to_swp(db_swp)
+            session.close()
 
-        logger.debug('get(...) -> %s', swp)
-        return swp
+            logger.debug('get(...) -> %s', swp)
+            return swp
+
+        finally:
+            session.close()
 
     def save(self, obj: SoftwareProfile) -> SoftwareProfile:
         logger.debug('save(obj=%s) -> ...', obj)
@@ -169,19 +173,22 @@ class SqlalchemySessionSoftwareProfileStore(TypeStore):
             swp_old = self.get(obj.id)
 
         session = self._Session()
-        db_swp, tag_create_events, tag_update_events, tag_delete_events = \
-            self._to_db_swp(obj, session)
-        if not db_swp:
-            raise Exception('SoftwareProfile ID not found: %s', obj.id)
-        session.commit()
-        swp = self._to_swp(db_swp)
-        session.close()
+        try:
+            db_swp, tag_create_events, tag_update_events, tag_delete_events = \
+                self._to_db_swp(obj, session)
+            if not db_swp:
+                raise Exception('SoftwareProfile ID not found: %s', obj.id)
+            session.commit()
+            swp = self._to_swp(db_swp)
 
-        self._fire_events(swp_old, swp)
-        self._fire_tag_events(swp.id, tag_create_events, tag_update_events,
-                              tag_delete_events)
-        logger.debug('save(...) -> %s', swp)
-        return swp
+            self._fire_events(swp_old, swp)
+            self._fire_tag_events(swp.id, tag_create_events, tag_update_events,
+                                  tag_delete_events)
+            logger.debug('save(...) -> %s', swp)
+            return swp
+
+        finally:
+            session.close()
 
     def _marshall(self, swp: SoftwareProfile) -> dict:
         schema_class = SoftwareProfile.get_schema_class()

@@ -134,6 +134,8 @@ else:
         ] + kit_task_modules + component_task_modules
     )
 
+    sess.close()
+
 
 if __name__ == '__main__':
     app.start()

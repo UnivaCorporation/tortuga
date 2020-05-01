@@ -189,14 +189,17 @@ class SqlalchemySessionTagStore(TypeStore):
         object_type, object_id, tag_name = Tag.parse_id(tag_id)
 
         session = self._Session()
-        db_tag = self._get_db_tag(session, object_type, object_id, tag_name)
-        tag = None
-        if db_tag:
-            tag = self._to_tag(db_tag)
-        session.close()
+        try:
+            db_tag = self._get_db_tag(session, object_type, object_id, tag_name)
+            tag = None
+            if db_tag:
+                tag = self._to_tag(db_tag)
 
-        logger.debug('get(...) -> %s', tag)
-        return tag
+            logger.debug('get(...) -> %s', tag)
+            return tag
+
+        finally:
+            session.close()
 
     def save(self, tag: Tag) -> Tag:
         logger.debug('save(tag=%s) -> ...', tag)
@@ -206,31 +209,34 @@ class SqlalchemySessionTagStore(TypeStore):
         object_type, object_id, tag_name = Tag.parse_id(tag.id)
 
         session = self._Session()
-        db_tag_old = self._get_db_tag(session, object_type, object_id,
-                                      tag_name)
-        created = True
-        tag_old = None
-        if db_tag_old:
-            tag_old = self._to_tag(db_tag_old)
-            created = False
+        try:
+            db_tag_old = self._get_db_tag(session, object_type, object_id,
+                                          tag_name)
+            created = True
+            tag_old = None
+            if db_tag_old:
+                tag_old = self._to_tag(db_tag_old)
+                created = False
 
-        if object_type == 'node':
-            obj_store = NodeStoreManager.get()
-        elif object_type == 'softwareprofile':
-            obj_store = SoftwareProfileStoreManager.get()
-        elif object_type == 'hardwareprofile':
-            obj_store = HardwareProfileStoreManager.get()
-        else:
-            raise Exception(
-                'Unsupported object_type: '.format(object_type))
-        obj_old = obj_store.get(object_id)
+            if object_type == 'node':
+                obj_store = NodeStoreManager.get()
+            elif object_type == 'softwareprofile':
+                obj_store = SoftwareProfileStoreManager.get()
+            elif object_type == 'hardwareprofile':
+                obj_store = HardwareProfileStoreManager.get()
+            else:
+                raise Exception(
+                    'Unsupported object_type: '.format(object_type))
+            obj_old = obj_store.get(object_id)
 
-        db_tag = self._to_db_tag(tag, session)
-        if not db_tag:
-            raise Exception('Tag ID not found: %s', tag.id)
-        session.commit()
-        tag = self._to_tag(db_tag)
-        session.close()
+            db_tag = self._to_db_tag(tag, session)
+            if not db_tag:
+                raise Exception('Tag ID not found: %s', tag.id)
+            session.commit()
+            tag = self._to_tag(db_tag)
+
+        finally:
+            session.close()
 
         #
         # Fire tag events
@@ -252,32 +258,35 @@ class SqlalchemySessionTagStore(TypeStore):
         logger.debug('delete(tag_id=%s) -> ...', tag_id)
 
         session = self._Session()
-        object_type, object_id, tag_name = Tag.parse_id(tag_id)
-        db_tag = self._get_db_tag(session, object_type, object_id, tag_name)
-        #
-        # If tag not found, do nothing
-        #
-        if not db_tag:
+        try:
+            object_type, object_id, tag_name = Tag.parse_id(tag_id)
+            db_tag = self._get_db_tag(session, object_type, object_id, tag_name)
+            #
+            # If tag not found, do nothing
+            #
+            if not db_tag:
+                session.close()
+                return
+            tag = self._to_tag(db_tag)
+
+            if object_type == 'node':
+                obj_store = NodeStoreManager.get()
+                obj_old = obj_store.get(object_id)
+            elif object_type == 'softwareprofile':
+                obj_store = SoftwareProfileStoreManager.get()
+                obj_old = obj_store.get(object_id)
+            elif object_type == 'hardwareprofile':
+                obj_store = HardwareProfileStoreManager.get()
+                obj_old = obj_store.get(object_id)
+
+            else:
+                raise Exception('Unsupported object_type: '.format(object_type))
+
+            session.delete(db_tag)
+            session.commit()
+
+        finally:
             session.close()
-            return
-        tag = self._to_tag(db_tag)
-
-        if object_type == 'node':
-            obj_store = NodeStoreManager.get()
-            obj_old = obj_store.get(object_id)
-        elif object_type == 'softwareprofile':
-            obj_store = SoftwareProfileStoreManager.get()
-            obj_old = obj_store.get(object_id)
-        elif object_type == 'hardwareprofile':
-            obj_store = HardwareProfileStoreManager.get()
-            obj_old = obj_store.get(object_id)
-
-        else:
-            raise Exception('Unsupported object_type: '.format(object_type))
-
-        session.delete(db_tag)
-        session.commit()
-        session.close()
 
         self._event_tag_deleted(tag)
         obj = obj_store.get(object_id)

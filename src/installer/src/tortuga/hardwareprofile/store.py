@@ -123,7 +123,8 @@ class SqlalchemySessionHardwareProfileStore(TypeStore):
             #       as it is the default behavior for strings
             #
             if desc:
-                result = result.order_by(desc(getattr(DbHardwareProfile, order_by)))
+                result = result.order_by(
+                    desc(getattr(DbHardwareProfile, order_by)))
             else:
                 result = result.order_by(getattr(DbHardwareProfile, order_by))
         count = 0
@@ -142,13 +143,16 @@ class SqlalchemySessionHardwareProfileStore(TypeStore):
         logger.debug('get(obj_id=%s) -> ...', obj_id)
 
         session = self._Session()
-        db_hwp = session.query(DbHardwareProfile).filter(
-            DbHardwareProfile.id == int(obj_id)).first()
-        hwp = self._to_hwp(db_hwp)
-        session.close()
+        try:
+            db_hwp = session.query(DbHardwareProfile).filter(
+                DbHardwareProfile.id == int(obj_id)).first()
+            hwp = self._to_hwp(db_hwp)
 
-        logger.debug('get(...) -> %s', hwp)
-        return hwp
+            logger.debug('get(...) -> %s', hwp)
+            return hwp
+
+        finally:
+            session.close()
 
     def save(self, obj: HardwareProfile) -> HardwareProfile:
         logger.debug('save(obj=%s) -> ...', obj)
@@ -158,19 +162,22 @@ class SqlalchemySessionHardwareProfileStore(TypeStore):
             hwp_old = self.get(obj.id)
 
         session = self._Session()
-        db_hwp, tag_create_events, tag_update_events, tag_delete_events = \
-            self._to_db_hwp(obj, session)
-        if not db_hwp:
-            raise Exception('HardwareProfile ID not found: %s', obj.id)
-        session.commit()
-        hwp = self._to_hwp(db_hwp)
-        session.close()
+        try:
+            db_hwp, tag_create_events, tag_update_events, tag_delete_events = \
+                self._to_db_hwp(obj, session)
+            if not db_hwp:
+                raise Exception('HardwareProfile ID not found: %s', obj.id)
+            session.commit()
+            hwp = self._to_hwp(db_hwp)
 
-        self._fire_events(hwp_old, hwp)
-        self._fire_tag_events(hwp.id, tag_create_events, tag_update_events,
-                              tag_delete_events)
-        logger.debug('save(...) -> %s', hwp)
-        return hwp
+            self._fire_events(hwp_old, hwp)
+            self._fire_tag_events(hwp.id, tag_create_events, tag_update_events,
+                                  tag_delete_events)
+            logger.debug('save(...) -> %s', hwp)
+            return hwp
+
+        finally:
+            session.close()
 
     def _marshall(self, hwp: HardwareProfile) -> dict:
         schema_class = HardwareProfile.get_schema_class()

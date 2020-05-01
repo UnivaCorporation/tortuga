@@ -64,6 +64,7 @@ class CloudServerActionListener(BaseListener):
             csa.status = CloudServerAction.STATUS_ERROR
             csa.status_message = traceback.format_exc()
             self._store.save(csa)
+            self._sess.close()
             raise ex
 
         #
@@ -74,6 +75,7 @@ class CloudServerActionListener(BaseListener):
         if msg:
             csa.status_message = msg
         self._store.save(csa)
+        self._sess.close()
 
     def _run(self, csa: CloudServerAction) -> Optional[str]:
         #

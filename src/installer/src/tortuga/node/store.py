@@ -147,13 +147,16 @@ class SqlalchemySessionNodeStore(TypeStore):
         logger.debug('get(obj_id=%s) -> ...', obj_id)
 
         session = self._Session()
-        db_node = session.query(DbNode).filter(
-            DbNode.id == int(obj_id)).first()
-        node = self._to_node(db_node)
-        session.close()
+        try:
+            db_node = session.query(DbNode).filter(
+                DbNode.id == int(obj_id)).first()
+            node = self._to_node(db_node)
 
-        logger.debug('get(...) -> %s', node)
-        return node
+            logger.debug('get(...) -> %s', node)
+            return node
+
+        finally:
+            session.close()
 
     def save(self, obj: Node) -> Node:
         logger.debug('save(obj=%s) -> ...', obj)
@@ -163,19 +166,22 @@ class SqlalchemySessionNodeStore(TypeStore):
             node_old = self.get(obj.id)
 
         session = self._Session()
-        db_node, tag_create_events, tag_update_events, tag_delete_events = \
-            self._to_db_node(obj, session)
-        if not db_node:
-            raise Exception('Node ID not found: %s', obj.id)
-        session.commit()
-        node = self._to_node(db_node)
-        session.close()
+        try:
+            db_node, tag_create_events, tag_update_events, tag_delete_events = \
+                self._to_db_node(obj, session)
+            if not db_node:
+                raise Exception('Node ID not found: %s', obj.id)
+            session.commit()
+            node = self._to_node(db_node)
 
-        self._fire_node_events(node_old, node)
-        self._fire_tag_events(node.id, tag_create_events, tag_update_events,
-                              tag_delete_events)
-        logger.debug('save(...) -> %s', node)
-        return node
+            self._fire_node_events(node_old, node)
+            self._fire_tag_events(node.id, tag_create_events, tag_update_events,
+                                  tag_delete_events)
+            logger.debug('save(...) -> %s', node)
+            return node
+
+        finally:
+            session.close()
 
     def _marshall(self, node: Node) -> dict:
         schema_class = Node.get_schema_class()

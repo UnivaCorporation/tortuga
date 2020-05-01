@@ -68,14 +68,17 @@ class TagChangeListener(BaseListener):
         # Do the actual tag update in the resource adapter
         #
         sess = Session()
-        ra = self._get_resource_adapter(sess, object_id)
-        ra.session = sess
-        node = NodesDbHandler().getNodeById(sess, int(object_id))
-        if isinstance(event, TagDeleted):
-            ra.unset_node_tag(node, tag_name)
-        else:
-            ra.set_node_tag(node, tag_name, event.value)
-        sess.close()
+        try:
+            ra = self._get_resource_adapter(sess, object_id)
+            ra.session = sess
+            node = NodesDbHandler().getNodeById(sess, int(object_id))
+            if isinstance(event, TagDeleted):
+                ra.unset_node_tag(node, tag_name)
+            else:
+                ra.set_node_tag(node, tag_name, event.value)
+
+        finally:
+            sess.close()
 
     def _get_resource_adapter(self, sess: Session,
                               node_id: str) -> ResourceAdapter:
