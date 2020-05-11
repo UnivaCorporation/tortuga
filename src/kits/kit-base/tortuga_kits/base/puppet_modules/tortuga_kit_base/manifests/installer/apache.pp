@@ -98,9 +98,14 @@ class tortuga_kit_base::installer::apache::config {
     }
   }
 
+  $conf_reqs = $cache_enabled ? {
+    true    => File[$cache_dir],
+    default => undef,
+  }
+
   file { '/etc/httpd/conf.d/tortuga.conf':
     content => template('tortuga_kit_base/httpd.tortuga.conf.erb'),
-    require => File[$cache_dir],
+    require => $conf_reqs,
   }
 }
 
