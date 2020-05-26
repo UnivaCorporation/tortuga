@@ -35,7 +35,7 @@ class SoftwareProfile(ModelBase):
     __tablename__ = 'softwareprofiles'
 
     id = Column(Integer, primary_key=True)
-    name = Column(String(45), nullable=False, unique=True)
+    name = Column(String(255), nullable=False, unique=True)
     description = Column(String(255))
     kernel = Column(String(255))
     kernelParams = Column(String(512))
