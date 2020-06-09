@@ -132,7 +132,9 @@ def test_validate_mutually_exclusive():
 def test_validate_requires():
     s = {
         'integer': settings.IntegerSetting(requires=['string']),
-        'string': settings.StringSetting()
+        'string': settings.StringSetting(),
+        'bool': settings.BooleanSetting(requires=['sub_requirement']),
+        'sub_requirement': settings.StringSetting(),
     }
     p = ConfigurationValidator(s)
 
@@ -156,8 +158,23 @@ def test_validate_requires():
     #
     # Assert no validation errors
     #
-    p['string'] = 'abc'
+    p['string'] = 'integer satisfied'
     p.validate()
+
+    #
+    # Should be no validation error if bool is falsy
+    #
+    p['bool'] = 'False'
+    p.validate()
+
+    #
+    # Should have a validation error when truthy
+    #
+    p['bool'] = 'True'
+    with pytest.raises(ValidationError) as err_info:
+        p.validate()
+    err: ValidationError = err_info.value
+    assert str(err.errors['bool']) == 'Requires sub_requirement'
 
 
 def test_dump():

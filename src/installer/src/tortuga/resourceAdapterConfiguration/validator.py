@@ -134,16 +134,40 @@ class ConfigurationValidator(MutableMapping):
         #
         for k, v in self._settings.items():
             try:
+                if k in self._storage.keys():
+                    v.validate(self._storage[k])
                 if full:
                     self._validate_required(k, v)
                     #
                     # Don't bother validating if the key isn't set
                     #
-                    if k in self._storage.keys():
-                        self._validate_requires(v)
-                        self._validate_mutually_exclusive(v)
-                if k in self._storage.keys():
-                    v.validate(self._storage[k])
+                    if self._storage.get(k, "") != "":
+                        #
+                        # Dump as transformed/realized value
+                        #
+                        val = v.dump(self._storage[k])
+                        #
+                        # By default everything should validate dependencies
+                        #
+                        should_validate = True
+                        #
+                        # Booleans should only validate dependencies if their
+                        # value is true
+                        #
+                        if isinstance(val, bool):
+                            should_validate = val
+                        #
+                        # Strings, lists, and dicts should only validate
+                        # dependencies if they are truthy
+                        #
+                        if isinstance(val, (str, dict, list)):
+                            should_validate = bool(val)
+                        #
+                        # Validate dependencies
+                        #
+                        if should_validate:
+                            self._validate_requires(v)
+                            self._validate_mutually_exclusive(v)
             except SettingValidationError as err:
                 errors[k] = err
 
