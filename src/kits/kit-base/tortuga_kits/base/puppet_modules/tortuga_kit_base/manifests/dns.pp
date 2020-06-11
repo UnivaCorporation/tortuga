@@ -14,7 +14,8 @@
 
 
 class tortuga_kit_base::dns (
-  $server_type = 'dnsmasq',
+  String $domain,
+  String $server_type = 'dnsmasq',
 ) {
   include tortuga_kit_base::config
 
@@ -46,6 +47,8 @@ class tortuga_kit_base::dns::config {
   include tortuga_kit_base::dns
   include tortuga_kit_base::config
 
+  $domain = $tortuga_kit_base::dns::domain
+
   # This is a workaround for a bug in Puppet/Augeas which cannot parse
   # /etc/resolv.conf containing a blank line with a leading semicolon
   exec { 'fix-resolv-conf':
@@ -58,6 +61,20 @@ class tortuga_kit_base::dns::config {
     exec { 'rndc-confgen':
       command => '/usr/sbin/rndc-confgen -a -u named',
       creates => '/etc/rndc.key',
+    }
+  }
+
+  if $tortuga_kit_base::dns::server_type == 'dnsmasq' {
+    file { '/etc/dnsmasq.d/tortuga-dns.conf':
+      content => template('tortuga_kit_base/dnsmasq.conf.erb'),
+      notify => Service[$tortuga_kit_base::dns::server_type],
+    }
+    file { '/opt/tortuga/config/dnsmasq':
+      ensure => 'directory',
+      owner  => 'root',
+      group  => 'root',
+      mode  => '0755',
+      notify => Service[$tortuga_kit_base::dns::server_type],
     }
   }
 

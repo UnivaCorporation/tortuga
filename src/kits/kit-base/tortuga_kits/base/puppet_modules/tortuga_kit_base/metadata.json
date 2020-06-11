@@ -9,12 +9,8 @@
   "issues_url": "http://suppport.univa.com",
   "description": "Tortuga Base kit integration module",
   "dependencies": [
-    {
-      "version_requirement": "5.2.0",
-      "name": "puppetlabs/stdlib"
-    },
-    {
-      "name": "puppetlabs/apt"
-    }
+    {"version_requirement": "5.2.0", "name": "puppetlabs/stdlib"},
+    {"name": "puppetlabs/apt"},
+    {"name":"camptocamp/systemd"}
   ]
 }
