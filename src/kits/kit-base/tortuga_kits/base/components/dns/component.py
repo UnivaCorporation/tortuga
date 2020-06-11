@@ -13,30 +13,16 @@
 # limitations under the License.
 
 from logging import getLogger
-
-from jinja2 import Template
+import os
 
 from tortuga.db.nodesDbHandler import NodesDbHandler
 from tortuga.db.models.hardwareProfile import HardwareProfile
-from tortuga.os_utility.osUtility import getOsObjectFactory
 from tortuga.db.globalParameterDbApi import GlobalParameterDbApi
 from tortuga.kit.installer import ComponentInstallerBase
 from tortuga.exceptions.parameterNotFound import ParameterNotFound
 
 
 logger = getLogger(__name__)
-
-
-DNSMASQ_CONFIG_TEMPLATE = """
-# Tortuga DNS Config
-
-domain={{ domain }}
-local=/{{ domain }}/
-
-{% for host_record in host_records %}
-host-record={{ host_record.hostname }},{{ host_record.ip }}
-{% endfor %}
-"""
 
 
 class DnsProvider(object):
@@ -49,24 +35,25 @@ class DnsProvider(object):
         :returns: DnsProvider
         """
         self.private_dns_zone = private_dns_zone
-        self.host_records = []
 
-    def add_record(self, name, ip, record_type='A'):
+    def add_record(self, name, ip):
         """
         Overwrite in inheriting class.
         Write individual records into the
         DNS config.
 
         :returns: None
+
         """
         raise NotImplementedError
 
-    def write(self):
+    def remove_record(self, name):
         """
-        Overwrite in inheriting class.
-        Write the complete config file out.
+        Remove a single record.
 
-        :returns: None
+        :param name:
+        :return:
+
         """
         raise NotImplementedError
 
@@ -75,97 +62,27 @@ class DnsmasqDnsProvider(DnsProvider):
     """
     Provide DNS server with DNSMASQ.
     """
+    hostsdir = '/opt/tortuga/config/dnsmasq'
+
     def __init__(self, private_dns_zone):
         """
         :param private_dns_zone: String
         :returns: DnsmasqDnsProvider
+
         """
         super(DnsmasqDnsProvider, self).__init__(private_dns_zone)
-        self._service_handle = getOsObjectFactory().getOsServiceManager()
-        self._service_name = 'dnsmasq'
+        if not os.path.exists(self.hostsdir):
+            os.mkdir(self.hostsdir, mode=0o755)
 
-    def _add_a_record(self, name, ip):
-        """
-        Add A record type.
+    def add_record(self, name, ip):
+        hosts_file_path = os.path.join(self.hostsdir, name)
+        with open(hosts_file_path, 'w') as fp:
+            fp.write('{} {}\n'.format(ip, name))
 
-        :param name: String hostname
-        :param ip: String ip address
-        :returns: None
-        """
-        self.host_records.append({
-            'hostname': name,
-            'ip': ip,
-        })
-
-    def _add_aaaa_record(self, name, ip):
-        """
-        Add AAAA record type.
-
-        :param name: String hostname
-        :param ip: String ip address
-        :returns: None
-        """
-        raise NotImplementedError
-
-    def start_service(self):
-        """
-        Start the DNSMASQ service.
-
-        :returns: None
-        """
-        self._service_handle.start(self._service_name)
-
-    def stop_service(self):
-        """
-        Stop the DNSMASQ servce.
-
-        :returns: None
-        """
-        self._service_handle.stop(self._service_name)
-
-    def restart_service(self):
-        """
-        Restart the DNSMASQ service.
-
-        :returns: None
-        """
-        self._service_handle.restart(self._service_name)
-
-    def add_record(self, name, ip, record_type='A'):
-        """
-        Write individual records into the
-        DNS config.
-
-        :returns: None
-        """
-        record_types = {
-            'A': self._add_a_record,
-            'AAAA': self._add_aaaa_record
-        }
-
-        try:
-            record_types[record_type](name, ip)
-        except IndexError:
-            raise NotImplementedError(
-                'Record type {} is not implemented'.format(record_type)
-            )
-
-    def write(self):
-        """
-        Write the complete config file out.
-
-        :returns: None
-        """
-        template = Template(DNSMASQ_CONFIG_TEMPLATE)
-
-        context = {
-            'domain': self.private_dns_zone,
-            'host_records': self.host_records
-        }
-
-        rendered = template.render(context)
-        with open('/etc/dnsmasq.d/tortuga-dns.conf', 'w') as fp:
-            fp.write(rendered)
+    def remove_record(self, name):
+        hosts_file_path = os.path.join(self.hostsdir, name)
+        if os.path.exists(hosts_file_path):
+            os.remove(hosts_file_path)
 
 
 class ComponentInstaller(ComponentInstallerBase):
@@ -187,6 +104,13 @@ class ComponentInstaller(ComponentInstallerBase):
         """
         super().__init__(kit)
         self._provider = None
+
+    def action_get_puppet_args(self, db_software_profile,
+                               db_hardware_profile,
+                               *args, **kwargs):
+        return {
+            'domain': self._get_global_parameter('DNSZone')
+        }
 
     @property
     def provider(self):
@@ -309,7 +233,6 @@ class ComponentInstaller(ComponentInstallerBase):
         :returns: None
         """
         self.action_configure(software_profile_name, *args, **kwargs)
-        self.provider.write()
 
     def action_post_install(self, *args, **kwargs):
         """
@@ -318,16 +241,14 @@ class ComponentInstaller(ComponentInstallerBase):
         :returns: None
         """
         self.action_configure(None)
-        self.provider.write()
-        self.provider.start_service()
 
     def action_configure(self, _, *args, **kwargs):
         """
         Configure.
 
         :param _: Unused
-        :param *args: Unused
-        :param **kwargs: Unused
+        :param args: Unused
+        :param kwargs: Unused
         :returns: None
         """
         installer_node = NodesDbHandler().getNode(
@@ -352,10 +273,7 @@ class ComponentInstaller(ComponentInstallerBase):
 
         :returns: None
         """
-        self.action_configure(None)
         self.provider.add_record(hostname, ip)
-        self.provider.write()
-        self.provider.restart_service()
 
     def action_delete_host(self, hardware_profile_name,
                            software_profile_name, nodes, *args, **kwargs):
@@ -368,6 +286,5 @@ class ComponentInstaller(ComponentInstallerBase):
 
         :returns: None
         """
-        self.action_configure(None)
-        self.provider.write()
-        self.provider.restart_service()
+        for node in nodes:
+            self.provider.remove_record(node)
