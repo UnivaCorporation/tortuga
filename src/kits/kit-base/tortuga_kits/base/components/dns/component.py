@@ -14,15 +14,19 @@
 
 from logging import getLogger
 import os
+import re
 
 from tortuga.db.nodesDbHandler import NodesDbHandler
 from tortuga.db.models.hardwareProfile import HardwareProfile
 from tortuga.db.globalParameterDbApi import GlobalParameterDbApi
 from tortuga.kit.installer import ComponentInstallerBase
 from tortuga.exceptions.parameterNotFound import ParameterNotFound
+from tortuga.os_utility import tortugaSubprocess
 
 
 logger = getLogger(__name__)
+
+COMPONENT_PKG = re.sub(r'\.component$', '', __name__)
 
 
 class DnsProvider(object):
@@ -63,6 +67,7 @@ class DnsmasqDnsProvider(DnsProvider):
     Provide DNS server with DNSMASQ.
     """
     hostsdir = '/opt/tortuga/config/dnsmasq'
+    reload_flag = '.dnsmasq_reload'
 
     def __init__(self, private_dns_zone):
         """
@@ -74,6 +79,30 @@ class DnsmasqDnsProvider(DnsProvider):
         if not os.path.exists(self.hostsdir):
             os.mkdir(self.hostsdir, mode=0o755)
 
+    def _flag_for_reload(self):
+        """
+        Sets a flag (file) notifying a Celery task that dnsmasq needs to
+        be reloaded.
+
+        """
+        reload_file_path = os.path.join(self.hostsdir, self.reload_flag)
+        if not os.path.exists(reload_file_path):
+            with open(reload_file_path, 'w'):
+                pass
+
+    @classmethod
+    def reload(cls, force=False):
+        reload_file_path = os.path.join(cls.hostsdir, cls.reload_flag)
+        if not force and not os.path.exists(reload_file_path):
+            logger.debug('Reload flag not found, skipping dnsmasq reload')
+
+        cmd = 'systemctl kill -s HUP dnsmasq.service'
+        tortugaSubprocess.executeCommand(cmd)
+        logger.debug('dnsmasq service reloaded')
+
+        if os.path.exists(reload_file_path):
+            os.remove(reload_file_path)
+
     def add_record(self, name, ip):
         hosts_file_path = os.path.join(self.hostsdir, name)
         with open(hosts_file_path, 'w') as fp:
@@ -83,6 +112,7 @@ class DnsmasqDnsProvider(DnsProvider):
         hosts_file_path = os.path.join(self.hostsdir, name)
         if os.path.exists(hosts_file_path):
             os.remove(hosts_file_path)
+            self._flag_for_reload()
 
 
 class ComponentInstaller(ComponentInstallerBase):
@@ -92,6 +122,7 @@ class ComponentInstaller(ComponentInstallerBase):
     """
     name = 'dns'
     version = '7.1.0'
+    task_modules = ['{}.tasks'.format(COMPONENT_PKG)]
     os_list = [
         {'family': 'rhel', 'version': '6', 'arch': 'x86_64'},
         {'family': 'rhel', 'version': '7', 'arch': 'x86_64'},

@@ -12,6 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-domain=<%= @domain %>
-hostsdir=/opt/tortuga/config/dnsmasq
-<% if @local_ttl != 0 %>local-ttl=<%= @local_ttl %><% end %>
+import logging
+
+from celery.schedules import crontab
+
+from tortuga.tasks.celery import app
+from .component import DnsmasqDnsProvider
+
+logger = logging.getLogger(__name__)
+
+
+@app.on_after_finalize.connect
+def setup_periodic_tasks(sender, **kwargs):
+    #
+    # Reload the dnsmasq service every 5 minutes, if required
+    #
+    sender.add_periodic_task(
+        crontab(minute="*/5"),
+        reload_dnsmasq.s(),
+    )
+
+
+@app.task()
+def reload_dnsmasq():
+    DnsmasqDnsProvider.reload()
+

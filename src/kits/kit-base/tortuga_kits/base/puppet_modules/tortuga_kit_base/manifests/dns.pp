@@ -16,7 +16,7 @@
 class tortuga_kit_base::dns (
   String $domain,
   String $server_type = 'dnsmasq',
-  Integer $local_ttl = 300,
+  Integer $local_ttl = 0,
 ) {
   include tortuga_kit_base::config
 
