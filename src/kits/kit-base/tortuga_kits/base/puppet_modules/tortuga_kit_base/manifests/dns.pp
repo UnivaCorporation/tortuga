@@ -16,6 +16,7 @@
 class tortuga_kit_base::dns (
   String $domain,
   String $server_type = 'dnsmasq',
+  Integer $local_ttl = 300,
 ) {
   include tortuga_kit_base::config
 
@@ -48,6 +49,7 @@ class tortuga_kit_base::dns::config {
   include tortuga_kit_base::config
 
   $domain = $tortuga_kit_base::dns::domain
+  $local_ttl = $tortuga_kit_base::dns::local_ttl
 
   # This is a workaround for a bug in Puppet/Augeas which cannot parse
   # /etc/resolv.conf containing a blank line with a leading semicolon
