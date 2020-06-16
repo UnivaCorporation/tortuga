@@ -370,7 +370,7 @@ class NodeManager(TortugaObjectManager): \
                 'Updated timestamp for node [%s]' % (dbNode.name))
 
         dbNode.lastUpdate = time.strftime(
-            '%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+            '%Y-%m-%d %H:%M:%S', time.gmtime(time.time()))
 
         result = bool(changed)
 
