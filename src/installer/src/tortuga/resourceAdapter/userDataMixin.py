@@ -34,7 +34,8 @@ class UserDataMixin: \
     def expand_cloud_init_user_data_template(
             self, configDict: dict,
             node: Optional[Node] = None,
-            template=None) -> str:
+            template=None,
+            insertnode_request: Optional[bytes] = None) -> str:
         """
         Return cloud-init script template
 
@@ -62,6 +63,9 @@ class UserDataMixin: \
                                                   False),
             'dns_domain': configDict.get('dns_domain', ''),
         }
+
+        if insertnode_request:
+            tmpl_vars['insertnode_request'] = insertnode_request.decode('utf-8')
 
         if node:
             tmpl_vars['fqdn'] = node.name
