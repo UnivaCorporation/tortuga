@@ -133,6 +133,7 @@ class ComponentInstaller(ComponentInstallerBase):
         Initialise parent class.
         """
         super().__init__(kit)
+        self._provider = None
 
     def action_get_puppet_args(self, db_software_profile,
                                db_hardware_profile,
