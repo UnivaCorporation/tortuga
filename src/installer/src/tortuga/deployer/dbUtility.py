@@ -38,7 +38,7 @@ def primeDb(session: Session, settings: Dict[str, Any]):
     node.state = state.NODE_STATE_INSTALLED
     node.lockedState = 'HardLocked'
     node.lastUpdate = time.strftime(
-        '%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+        '%Y-%m-%d %H:%M:%S', time.gmtime(time.time()))
     node.bootFrom = 1
 
     # Create Installer Software Profile
