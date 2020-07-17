@@ -125,6 +125,6 @@ def node_pinger():
         #
         for node in nodes:
             node.lastUpdate = time.strftime(
-                '%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+                '%Y-%m-%d %H:%M:%S', time.gmtime(time.time()))
 
         sess.commit()

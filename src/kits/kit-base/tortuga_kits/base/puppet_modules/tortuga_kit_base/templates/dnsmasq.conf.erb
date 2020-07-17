@@ -12,6 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-server=/<%= dnszone -%>/127.0.0.1
-
-addn-hosts=/tmp/hosts.tortuga
+domain=<%= @domain %>
+hostsdir=/opt/tortuga/config/dnsmasq
+<% if @local_ttl != 0 %>local-ttl=<%= @local_ttl %><% end %>
