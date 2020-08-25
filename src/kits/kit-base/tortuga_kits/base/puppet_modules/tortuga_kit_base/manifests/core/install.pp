@@ -176,7 +176,7 @@ class tortuga_kit_base::core::install::create_tortuga_instroot {
   exec { 'update pip':
     path        => ['/bin', '/usr/bin'],
     command     => "${pipcmd} install --upgrade pip==${pipver}",
-    unless      => "${pipcmd} show pip | grep '^Version: ${pipver}$' &>/dev/null",
+    unless      => "${pipcmd} show pip | grep -q '^Version: ${pipver}$'",
     require     => Exec['create_tortuga_base'],
     environment => $env,
   }
