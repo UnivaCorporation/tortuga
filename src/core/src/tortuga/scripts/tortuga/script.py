@@ -212,7 +212,7 @@ class TortugaScriptConfig(Config):
         raise ConfigException('Authentication required. Use "tortuga login".')
 
     def _get_navops_token(self) -> str:
-        cmd = '{} token'.format(self.navops_cli)
+        cmd = '{} auth token'.format(self.navops_cli)
 
         try:
             p = executeCommand(cmd)
