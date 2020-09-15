@@ -150,8 +150,6 @@ class RestApiClient:
         except Exception:
             pass
 
-        self._logger.debug('Response Payload: {}'.format(json.dumps(data)))
-
         return data
 
     def process_error_response(self, error_response: requests.Response):
