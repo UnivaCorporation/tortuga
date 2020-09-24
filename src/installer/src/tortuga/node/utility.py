@@ -14,6 +14,7 @@
 
 import json
 import threading
+import logging
 from typing import Dict, List
 
 from sqlalchemy.orm import Session
@@ -27,6 +28,7 @@ from tortuga.events.types import DeleteNodeRequestQueued
 from tortuga.exceptions.operationFailed import OperationFailed
 from tortuga.node.nodeManager import init_async_node_request
 
+logger = logging.getLogger(__name__)
 
 class SoftwareProfileNodeCountValidator:
     def __init__(self):
@@ -134,11 +136,27 @@ class SoftwareProfileNodeCountValidator:
         for nr in sess.query(NodeRequest).filter(
                 NodeRequest.action == 'ADD').filter(
                 NodeRequest.state == 'pending'):
+            # Check if this request is for the passed in software profile
             req = json.loads(nr.request)
             if req.get('softwareProfile', None) != swp.name:
                 continue
-            count += int(req.get('count', 0))
 
+            # Load the number of nodes requested in this NodeRequest
+            req_count = int(req.get('count', 0))
+
+            # Check if requested count has been filled by existing nodes
+            fulfilled_count = sess.query(Node).filter(
+                Node.addHostSession == nr.addHostSession ).count()
+
+            # Calculate the number of nodes permitted to start that haven't yet registered
+            pending_count = req_count - fulfilled_count
+            logger.debug('Add Host Session {}: requested {} fulfilled {} pending {}'.format(nr.addHostSession,req_count,fulfilled_count,pending_count))
+
+            # Saftey check
+            if pending_count > 0:
+                count += pending_count
+
+        logger.debug('Current pending node requests: {}'.format(count))
         return count
 
     def validate_remove_count(self, sess: Session, nodespec: str,

@@ -32,7 +32,7 @@ class HardwareProfile(ModelBase):
     __tablename__ = 'hardwareprofiles'
 
     id = Column(Integer, primary_key=True)
-    name = Column(String(45), nullable=False, unique=True)
+    name = Column(String(255), nullable=False, unique=True)
     description = Column(String(255))
     nameFormat = Column(String(45))
     installType = Column(String(20), nullable=False, default='package')

@@ -23,6 +23,8 @@ class tortuga_kit_base::common::nfs {
     } else {
       $svcname = 'nfs-server'
     }
+  } elsif $::osfamily == 'Debian' {
+    $svcname = 'nfs-server'
   } else {
     $svcname = 'nfs'
   }

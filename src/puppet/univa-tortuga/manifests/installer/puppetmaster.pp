@@ -15,7 +15,8 @@
 # Ensure all configuration is done prior to starting the puppetmaster; once
 # the puppetmaster starts, the certificates are generated and there's no
 # turning back...
-class tortuga::installer::puppetmaster::config {
+class tortuga::installer::puppetmaster::config(
+  Integer $report_retain_days = 4) {
   require tortuga::installer::packages
 
   include tortuga::config
@@ -52,6 +53,19 @@ class tortuga::installer::puppetmaster::config {
       "set private/path ${tortuga::config::instroot}/private",
       "set private/allow[1] *",
     ],
+  }
+
+  $reportspath = '/opt/puppetlabs/server/data/puppetserver/reports'
+  cron { 'prune_puppetserver_reports':
+    command => "find ${reportspath} -type f -mmin +${report_retain_days} -delete",
+    minute  => 0,
+    user    => root,
+  }
+
+  cron { 'prune_puppetserver_reports_directories':
+    command => "find ${reportspath} -type d -empty -delete",
+    minute  => 30,
+    user    => root,
   }
 }
 
