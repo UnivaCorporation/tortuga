@@ -13,7 +13,8 @@
 # limitations under the License.
 
 from tortuga.objectstore.manager import ObjectStoreManager
-from .store import ResourceRequestStore, ObjectStoreResourceRequestStore
+from .store import ResourceRequestStore, ObjectStoreResourceRequestStore, \
+    EventGeneratingResourceRequestStore
 
 
 class ResourceRequestStoreManager:
@@ -21,7 +22,7 @@ class ResourceRequestStoreManager:
     ResourceRequest store manager
 
     """
-    _event_store: ResourceRequestStore = None
+    _rr_store: ResourceRequestStore = None
 
     @classmethod
     def get(cls) -> ResourceRequestStore:
@@ -31,13 +32,14 @@ class ResourceRequestStoreManager:
         :return EvemtStore:  the event store instance
 
         """
-        if not cls._event_store:
+        if not cls._rr_store:
             #
             # We want to keep resource requests around indefinitely, so
             # no expiry here!
             #
             object_store = ObjectStoreManager.get('resourcerequests',
                                                   expire=0)
-            cls._event_store = ObjectStoreResourceRequestStore(object_store)
-        return cls._event_store
+            base_store = ObjectStoreResourceRequestStore(object_store)
+            cls._rr_store = EventGeneratingResourceRequestStore(base_store)
+        return cls._rr_store
 
