@@ -886,9 +886,9 @@ echo "Performing Tortuga pre-installation... " | \
 
 pip_install_cmd="${TORTUGA_ROOT}/bin/pip install ${pip_install_opts}"
 
-# Upgrade pip and setuptools
-${pip_install_cmd} --upgrade pip==19.3.1 >>/tmp/install-tortuga.log 2>&1
-${pip_install_cmd} --upgrade setuptools==41.6.0 >>/tmp/install-tortuga.log 2>&1
+# Upgrade pip to 20.2 (last release before resolver changes)
+# Upgrade pip to setuptools from same era as pip 20.2 release
+${pip_install_cmd} --upgrade 'pip~=20.2.0' 'setuptools~=50.3.0' >> /tmp/install-tortuga.log 2>&1
 
 [[ -n ${local_deps} ]] && {
     # Install pip2pi manually so that tortuga-core does not try to
