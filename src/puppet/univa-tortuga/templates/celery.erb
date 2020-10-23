@@ -47,7 +47,7 @@ CELERYD_OPTS="--time-limit=21600 --concurrency=4 -B"
 # Due to some potential memory leaks in Python/Celery, limit the number of
 # tasks a worker runs before restarting it
 #
-CELERYD_MAX_TASKS_PER_CHILD="100"
+CELERYD_MAX_TASKS_PER_CHILD="1000"
 
 #
 # - %n will be replaced with the first part of the nodename.
