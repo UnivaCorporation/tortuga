@@ -1,9 +1,8 @@
 /var/log/celery/*.log {
+    rotate 28
+    daily
+    compress
+    delaycompress
     missingok
     notifempty
-    sharedscripts
-    delaycompress
-    postrotate
-        /usr/sbin/service celery restart >/dev/null 2>/dev/null || true
-    endscript
 }
