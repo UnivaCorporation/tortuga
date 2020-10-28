@@ -58,6 +58,11 @@ class SqlalchemySessionNodeStore(TypeStore):
         db_node.hardwareProfileId = int(node.hardwareprofile_id)
         db_node.state = node.state
         db_node.lockedState = node.locked
+
+        # If last_update field is provided, update the DB
+        if node.last_update:
+            db_node.lastUpdate = node.last_update
+
         tag_create_events, tag_update_events, tag_delete_events = \
             self._set_db_node_tags(db_node, node.tags)
 
@@ -107,7 +112,8 @@ class SqlalchemySessionNodeStore(TypeStore):
             hardwareprofile_id=str(db_node.hardwareProfileId),
             state=db_node.state,
             locked=db_node.lockedState,
-            tags={tag.name: tag.value for tag in db_node.tags}
+            tags={tag.name: tag.value for tag in db_node.tags},
+            last_update=db_node.lastUpdate
         )
 
     def list(

@@ -13,6 +13,7 @@ class NodeSchema(BaseTypeSchema):
     softwareprofile_id = fields.String()
     locked = fields.String()
     tags = fields.Dict()
+    last_update = fields.String(dump_only=True)
 
 
 class Node(BaseType):
@@ -28,3 +29,4 @@ class Node(BaseType):
         self.softwareprofile_id: Optional[str] = kwargs.get('softwareprofile_id', None)
         self.locked: Optional[str] = kwargs.get('locked', None)
         self.tags: Dict[str, str] = kwargs.get('tags', {})
+        self.last_update: Optional[str] = kwargs.get('last_update', None)
