@@ -1,14 +1,20 @@
 from typing import Dict, Optional
 
-from marshmallow import fields
+from marshmallow import fields, validate
 
+from tortuga.node.state import ALLOWED_NODE_STATES
 from tortuga.types.base import BaseType, BaseTypeSchema
 
+
+NodeStateValidator = validate.OneOf(
+    choices=ALLOWED_NODE_STATES,
+    error="Invalid node state '{input}'; must be one of {choices}"
+)
 
 class NodeSchema(BaseTypeSchema):
     name = fields.String()
     public_hostname = fields.String()
-    state = fields.String()
+    state = fields.String(validate=NodeStateValidator)
     hardwareprofile_id = fields.String()
     softwareprofile_id = fields.String()
     locked = fields.String()
