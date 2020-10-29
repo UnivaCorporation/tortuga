@@ -336,6 +336,22 @@ class HardwareProfilesCommand(RootCommand):
     ]
 
 
+class NodeStatusCommand(Command):
+    """
+    This is a command for interacting with WS API endpoints.
+
+    """
+    name = 'status'
+    _endpoint = 'node-status'
+    help = 'Tortuga node status API'
+
+    sub_commands = [
+        ListCommand(),
+        GetCommand(),
+        UpdateCommand(),
+    ]
+
+
 class NodesCommand(RootCommand):
     """
     This is a command for interacting with WS API endpoints.
@@ -348,6 +364,7 @@ class NodesCommand(RootCommand):
         ListCommand(),
         GetCommand(),
         UpdateCommand(),
+        NodeStatusCommand(),
     ]
 
 
