@@ -24,7 +24,7 @@ from tortuga.events.types import TagCreated, TagDeleted, TagUpdated, \
     NodeStateChanged, NodeTagsChanged
 from tortuga.objectstore.base import matches_filters
 from tortuga.typestore.base import TypeStore
-from .types import Node
+from .types import Node, NodeStatus
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +36,7 @@ class SqlalchemySessionNodeStore(TypeStore):
 
     """
     type_class = Node
+    status_type_class = NodeStatus
 
     def __init__(self, db_manager: DbManager):
         self._Session = sessionmaker(bind=db_manager.engine)

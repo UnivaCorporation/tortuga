@@ -36,3 +36,18 @@ class Node(BaseType):
         self.locked: Optional[str] = kwargs.get('locked', None)
         self.tags: Dict[str, str] = kwargs.get('tags', {})
         self.last_update: Optional[str] = kwargs.get('last_update', None)
+
+
+class NodeStatusSchema(BaseTypeSchema):
+    state = fields.String(validate=NodeStateValidator)
+    last_update = fields.String(dump_only=True)
+
+
+class NodeStatus(BaseType):
+    schema_class = NodeStatusSchema
+    type = 'node'
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.state: Optional[str] = kwargs.get('state', None)
+        self.last_update: Optional[str] = kwargs.get('last_update', None)
