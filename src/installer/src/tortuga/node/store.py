@@ -152,10 +152,30 @@ class SqlalchemySessionNodeStore(TypeStore):
 
     def get(self, obj_id: str) -> Optional[Node]:
         logger.debug('get(obj_id=%s) -> ...', obj_id)
-
         session = self._Session()
-        db_node = session.query(DbNode).filter(
-            DbNode.id == int(obj_id)).first()
+
+        # Check if ID maps to an int - if so, we have
+        # an ID, otherwise we expect it to be a name
+        try:
+            int(obj_id)
+        except ValueError:
+            is_id = False
+        else:
+            is_id = True
+
+        # Do database lookup
+        if is_id:
+            db_node = session.query(DbNode).filter(
+                DbNode.id == int(obj_id)).first()
+        else:
+            db_node = session.query(DbNode).filter(
+                DbNode.name == obj_id).first()
+
+        # If we didn't find anything, return None
+        if db_node is None:
+            return None
+
+        # Convert to Node object
         node = self._to_node(db_node)
         session.close()
 
