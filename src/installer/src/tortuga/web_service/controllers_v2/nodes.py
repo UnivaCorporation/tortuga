@@ -37,27 +37,9 @@ class NodeController(Controller):
 
 
 class NodeStatusController(Controller):
-    name = 'node_status'
+    name = 'node-status'
     type_store = NodeStoreManager.get()
     methods = ['GET', 'PUT']
-
-    @property
-    def actions(self):
-        actions = [
-            {
-                'name': '{}_get'.format(self.name),
-                'path': '/v2/{}/:(obj_id)/status'.format(NodeController.name),
-                'method': ['GET'],
-                'action': 'get',
-            },
-            {
-                'name': '{}_update'.format(self.name),
-                'path': '/v2/{}/:(obj_id)/status'.format(NodeController.name),
-                'method': ['PUT'],
-                'action': 'update',
-            },
-        ]
-        return actions
 
     def marshall(self, obj: 'Node') -> dict:
         schema_class = self.type_store.status_type_class.schema_class
