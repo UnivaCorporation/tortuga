@@ -51,13 +51,13 @@ class ListCommand(Command):
         # customize the help text by inserting the endpoint name as
         # required
         #
-        endpoint: str = self.parent.name
+        endpoint: str = self.parent.endpoint
 
         return super().get_help().format(endpoint)
 
     def execute(self, args: argparse.Namespace):
         config: TortugaScriptConfig = self.get_config()
-        ws_client = get_client(config, self.parent.name)
+        ws_client = get_client(config, self.parent.endpoint)
 
         query = args.query
         if not query:
@@ -98,7 +98,7 @@ class TortugaWsArgument(Argument):
         # customize the help text by inserting the endpoint name as
         # required
         #
-        endpoint: str = self.command.parent.name
+        endpoint: str = self.command.parent.endpoint
         #
         # Remove pluralization if found, as this argument represents
         # a single entity
@@ -132,7 +132,7 @@ class GetCommand(Command):
         # customize the help text by inserting the endpoint name as
         # required
         #
-        endpoint: str = self.parent.name
+        endpoint: str = self.parent.endpoint
         #
         # Remove pluralization if found, as this command represents
         # a single entity
@@ -144,8 +144,7 @@ class GetCommand(Command):
 
     def execute(self, args: argparse.Namespace):
         config: TortugaScriptConfig = self.get_config()
-        ws_client: TortugaWsApiClient = get_client(config, self.parent.name)
-
+        ws_client: TortugaWsApiClient = get_client(config, self.parent.endpoint)
         pretty_print(ws_client.get(args.id[0]), args.fmt)
 
 
@@ -206,7 +205,7 @@ class CreateCommand(CreateUpdateMixin, Command):
         # customize the help text by inserting the endpoint name as
         # required
         #
-        endpoint: str = self.parent.name
+        endpoint: str = self.parent.endpoint
         #
         # Remove pluralization if found, as this command represents
         # a single entity
@@ -218,7 +217,7 @@ class CreateCommand(CreateUpdateMixin, Command):
 
     def execute(self, args: argparse.Namespace):
         config: TortugaScriptConfig = self.get_config()
-        ws_client: TortugaWsApiClient = get_client(config, self.parent.name)
+        ws_client: TortugaWsApiClient = get_client(config, self.parent.endpoint)
 
         obj_filename = args.file[0]
         data = self._load_data(obj_filename)
@@ -249,7 +248,7 @@ class UpdateCommand(CreateUpdateMixin, Command):
         # customize the help text by inserting the endpoint name as
         # required
         #
-        endpoint: str = self.parent.name
+        endpoint: str = self.parent.endpoint
         #
         # Remove pluralization if found, as this command represents
         # a single entity
@@ -261,7 +260,7 @@ class UpdateCommand(CreateUpdateMixin, Command):
 
     def execute(self, args: argparse.Namespace):
         config: TortugaScriptConfig = self.get_config()
-        ws_client: TortugaWsApiClient = get_client(config, self.parent.name)
+        ws_client: TortugaWsApiClient = get_client(config, self.parent.endpoint)
 
         obj_filename = args.file[0]
         data = self._load_data(obj_filename)
@@ -292,7 +291,7 @@ class DeleteCommand(Command):
         # customize the help text by inserting the endpoint name as
         # required
         #
-        endpoint: str = self.parent.name
+        endpoint: str = self.parent.endpoint
         #
         # Remove pluralization if found, as this command represents
         # a single entity
@@ -304,7 +303,7 @@ class DeleteCommand(Command):
 
     def execute(self, args: argparse.Namespace):
         config: TortugaScriptConfig = self.get_config()
-        ws_client: TortugaWsApiClient = get_client(config, self.parent.name)
+        ws_client: TortugaWsApiClient = get_client(config, self.parent.endpoint)
         ws_client.delete(args.id[0])
 
 

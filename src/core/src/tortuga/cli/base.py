@@ -35,6 +35,7 @@ class Command:
 
     """
     name = None
+    _endpoint = None
     help = None
     sub_commands: List['Command'] = []
     arguments: List['Argument'] = []
@@ -48,6 +49,10 @@ class Command:
         self.parent: 'Command' = None
         self.parser: Optional[argparse.ArgumentParser] = None
         self._logger = logging.getLogger(CLI_NAMESPACE)
+
+    @property
+    def endpoint(self):
+        return self._endpoint or self.name
 
     def get_config(self) -> Optional[Config]:
         """
