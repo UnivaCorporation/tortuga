@@ -16,6 +16,7 @@ import traceback
 from typing import TYPE_CHECKING
 
 import cherrypy
+from marshmallow import ValidationError
 
 from tortuga.node.manager import NodeStoreManager
 from tortuga.web_service.auth.decorators import authentication_required
@@ -63,6 +64,18 @@ class NodeStatusController(Controller):
         marshalled = schema_class().dump(obj)
         return marshalled.data
 
+    def unmarshall(self, obj_dict: dict) -> 'Node':
+        """
+        Unmarshalls an obj dict into an obj class instance.
+        We override the base class unmarshalling to add validation, which is
+        not presently compatible with several schemas.
+        """
+        schema_class = self.type_store.type_class.get_schema_class()
+        unmarshalled = schema_class().load(obj_dict)
+        if unmarshalled.errors:
+            raise ValidationError(unmarshalled.errors)
+        return self.type_store.type_class(**unmarshalled.data)
+
     @authentication_required()
     @cherrypy.tools.json_in()
     @cherrypy.tools.json_out()
@@ -76,9 +89,9 @@ class NodeStatusController(Controller):
             # Convert request to Node object (will be incomplete)
             obj = self.unmarshall(cherrypy.request.json)
 
-            # Make sure the object IDs match
-            if obj_current.id != obj.id:
-                raise HttpError('Object ID mismatch')
+            # NOTE: we don't check that the object IDs match since the
+            # user may be doing the update by name and would not provide
+            # the ID in the data
 
             # Update the current object with the state from the request;
             # if state is not provided, keep the current state
