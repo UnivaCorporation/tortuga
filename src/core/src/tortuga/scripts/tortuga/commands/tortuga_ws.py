@@ -144,7 +144,8 @@ class GetCommand(Command):
 
     def execute(self, args: argparse.Namespace):
         config: TortugaScriptConfig = self.get_config()
-        ws_client: TortugaWsApiClient = get_client(config, self.parent.endpoint)
+        ws_client: TortugaWsApiClient = \
+            get_client(config, self.parent.endpoint)
         pretty_print(ws_client.get(args.id[0]), args.fmt)
 
 
@@ -217,7 +218,8 @@ class CreateCommand(CreateUpdateMixin, Command):
 
     def execute(self, args: argparse.Namespace):
         config: TortugaScriptConfig = self.get_config()
-        ws_client: TortugaWsApiClient = get_client(config, self.parent.endpoint)
+        ws_client: TortugaWsApiClient = \
+            get_client(config, self.parent.endpoint)
 
         obj_filename = args.file[0]
         data = self._load_data(obj_filename)
@@ -260,7 +262,8 @@ class UpdateCommand(CreateUpdateMixin, Command):
 
     def execute(self, args: argparse.Namespace):
         config: TortugaScriptConfig = self.get_config()
-        ws_client: TortugaWsApiClient = get_client(config, self.parent.endpoint)
+        ws_client: TortugaWsApiClient = \
+            get_client(config, self.parent.endpoint)
 
         obj_filename = args.file[0]
         data = self._load_data(obj_filename)
@@ -303,7 +306,8 @@ class DeleteCommand(Command):
 
     def execute(self, args: argparse.Namespace):
         config: TortugaScriptConfig = self.get_config()
-        ws_client: TortugaWsApiClient = get_client(config, self.parent.endpoint)
+        ws_client: TortugaWsApiClient = \
+            get_client(config, self.parent.endpoint)
         ws_client.delete(args.id[0])
 
 
