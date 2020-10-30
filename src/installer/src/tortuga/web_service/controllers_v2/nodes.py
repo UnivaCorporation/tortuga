@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING
 import cherrypy
 from marshmallow import ValidationError
 
-from tortuga.node.manager import NodeStoreManager
+from tortuga.node.manager import NodeStoreManager, NodeStatusStoreManager
 from tortuga.web_service.auth.decorators import authentication_required
 from .base import Controller, HttpError, HttpNotFoundError
 
@@ -38,7 +38,7 @@ class NodeController(Controller):
 
 class NodeStatusController(Controller):
     name = 'node-status'
-    type_store = NodeStoreManager.get()
+    type_store = NodeStatusStoreManager.get()
     methods = ['GET', 'PUT']
 
     def marshall(self, obj: 'Node') -> dict:
@@ -73,7 +73,7 @@ class NodeStatusController(Controller):
 
             # NOTE: we don't check that the object IDs match since the
             # user may be doing the update by name and would not provide
-            # the ID in the data
+            # the ID in the data.
 
             # Update the current object with the state from the request;
             # if state is not provided, keep the current state
