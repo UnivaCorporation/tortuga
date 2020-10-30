@@ -11,6 +11,7 @@ NodeStateValidator = validate.OneOf(
     error="Invalid node state '{input}'; must be one of {choices}"
 )
 
+
 class NodeSchema(BaseTypeSchema):
     name = fields.String()
     public_hostname = fields.String()
@@ -29,10 +30,13 @@ class Node(BaseType):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.name: Optional[str] = kwargs.get('name', None)
-        self.public_hostname: Optional[str] = kwargs.get('public_hostname', None)
+        self.public_hostname: Optional[str] = \
+            kwargs.get('public_hostname', None)
         self.state: Optional[str] = kwargs.get('state', None)
-        self.hardwareprofile_id: Optional[str] = kwargs.get('hardwareprofile_id', None)
-        self.softwareprofile_id: Optional[str] = kwargs.get('softwareprofile_id', None)
+        self.hardwareprofile_id: Optional[str] = \
+            kwargs.get('hardwareprofile_id', None)
+        self.softwareprofile_id: Optional[str] = \
+            kwargs.get('softwareprofile_id', None)
         self.locked: Optional[str] = kwargs.get('locked', None)
         self.tags: Dict[str, str] = kwargs.get('tags', {})
         self.last_update: Optional[str] = kwargs.get('last_update', None)
