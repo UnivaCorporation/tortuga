@@ -19,7 +19,7 @@ from .registry import register_ws_controller, get_all_ws_controllers
 from .events import EventController
 from .hardwareprofiles import HardwareProfileController
 from .cloudserveractions import CloudServerActionController
-from .nodes import NodeController
+from .nodes import NodeController, NodeStatusController
 from .resourcerequests import ResourceRequestController
 from .softwareprofiles import SoftwareProfileController
 from .tags import TagController
@@ -32,6 +32,7 @@ register_ws_controller(EventController)
 register_ws_controller(HardwareProfileController)
 register_ws_controller(CloudServerActionController)
 register_ws_controller(NodeController)
+register_ws_controller(NodeStatusController)
 register_ws_controller(ResourceRequestController)
 register_ws_controller(SoftwareProfileController)
 register_ws_controller(TagController)
