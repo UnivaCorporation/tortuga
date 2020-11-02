@@ -14,7 +14,7 @@
 
 from tortuga.db.dbManager import DbManager
 from tortuga.typestore.base import TypeStore
-from .store import SqlalchemySessionNodeStore
+from .store import SqlalchemySessionNodeStore, SqlalchemySessionNodeStatusStore
 
 
 class NodeStoreManager:
@@ -38,4 +38,28 @@ class NodeStoreManager:
             cls._db_manager = dbm
         if not cls._node_store:
             cls._node_store = SqlalchemySessionNodeStore(cls._db_manager)
+        return cls._node_store
+
+
+class NodeStatusStoreManager:
+    """
+    Node store manager
+
+    """
+    _db_manager: DbManager = None
+    _node_store: TypeStore = None
+
+    @classmethod
+    def get(cls) -> TypeStore:
+        """
+        Get an instance of the node store.
+
+        :return NodeStore:  the node store instance
+
+        """
+        if not cls._db_manager:
+            from tortuga.web_service.database import dbm
+            cls._db_manager = dbm
+        if not cls._node_store:
+            cls._node_store = SqlalchemySessionNodeStatusStore(cls._db_manager)
         return cls._node_store
