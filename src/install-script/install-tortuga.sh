@@ -149,10 +149,6 @@ readonly OFFLINEDEPS="${INTWEBROOT}/offline-deps"
 
     mkdir -p ${INTWEBROOT}/3rdparty
 
-    # copy 'mcollective-puppet-agent' tarball into expected location
-    ${rsync_cmd} ${local_deps}/other/3rdparty/mcollective-puppet-agent/ \
-        ${INTWEBROOT}/3rdparty/mcollective-puppet-agent/
-
     # Change the local_deps variable to point to the standard location
     local_deps="${OFFLINEDEPS}"
 
@@ -360,16 +356,15 @@ function rpm_install() {
 }
 
 function install_puppetlabs_repo {
-    local puppetlabspkgname="puppet5-release"
+    local puppetlabspkgname="puppet6-release"
 
-    # do not attempt to install 'puppet5-release' if already installed
+    # do not attempt to install 'puppet6-release' if already installed
     pkgexists ${puppetlabspkgname} || {
-        rpm_install http://puppet-mirror.univa.com/yum.puppetlabs.com/puppet5-release-el-${distmajversion}.noarch.rpm
-        sed -i 's,http://yum.puppetlabs.com,http://puppet-mirror.univa.com/yum.puppetlabs.com,' /etc/yum.repos.d/puppet5.repo
+        rpm_install http://puppet-mirror.univa.com/yum.puppetlabs.com/puppet6-release-el-${distmajversion}.noarch.rpm
+        sed -i 's,http://yum.puppetlabs.com,http://puppet-mirror.univa.com/yum.puppetlabs.com,' /etc/yum.repos.d/puppet6.repo
 
         pkgexists ${puppetlabspkgname} || {
             echo "Error installing \"${puppetlabspkgname}\". Unable to proceed." >&2
-
             exit 1
         }
     }
@@ -382,7 +377,18 @@ function install_puppetlabs_repo {
         pkgexists puppetlabs-release || {
             echo "Error installing \"puppetlabs-release\". Unable to proceed." >&2
             exit 1
+        }
     }
+
+    # install puppet development kit
+    pkgexists pdk || {
+        rpm_install http://puppet-mirror.univa.com/yum.puppetlabs.com/puppet-tools-release-el-${distmajversion}.noarch.rpm
+        sed -i 's,http://yum.puppetlabs.com,http://puppet-mirror.univa.com/yum,' /etc/yum.repos.d/puppet-tools.repo
+
+        pkgexists pdk || {
+            echo "Error installing \"pdk\". Unable to proceed." >&2
+            exit 1
+        }
     }
 }
 
@@ -748,6 +754,7 @@ python3-setuptools \
 pkgs="\
 git \
 puppetserver \
+pdk \
 rsync \
 "
 
@@ -791,52 +798,6 @@ fi
 
 # Create Tortuga internal webroot
 [[ -d $INTWEBROOT/3rdparty ]] || mkdir -p "$INTWEBROOT/3rdparty"
-
-[[ -d ${INTWEBROOT}/3rdparty/mcollective-puppet-agent ]] || \
-    mkdir -p ${INTWEBROOT}/3rdparty/mcollective-puppet-agent
-[[ -z ${local_deps} ]] && {
-    # Download mcollective-puppet-agent plugin
-    echo -n "Downloading 'mcollective-puppet-agent' plugin... "
-
-    url=https://github.com/puppetlabs/mcollective-puppet-agent/archive/1.13.1.tar.gz
-
-    ( cd ${INTWEBROOT}/3rdparty/mcollective-puppet-agent; \
-        curl --retry 10 --retry-max-time 60 --silent --fail --location \
-        --remote-name ${url} 2>&1 | tee -a /tmp/install-tortuga.log )
-
-    [[ $? -eq 0 ]] || {
-    echo "failed."
-        echo
-        echo "Error retrieving mcollective-puppet-agent. Unable to proceed" >&2
-
-        exit 1
-    }
-
-    echo "done."
-}
-
-[[ -d ${INTWEBROOT}/3rdparty/mcollective-shell-agent ]] || \
-    mkdir -p ${INTWEBROOT}/3rdparty/mcollective-shell-agent
-[[ -z ${local_deps} ]] && {
-    # Download mcollective-shell-agent plugin
-    echo -n "Downloading 'mcollective-shell-agent' plugin... "
-
-    url=https://github.com/choria-legacy/mcollective-shell-agent/archive/0.0.2.tar.gz
-
-    ( cd ${INTWEBROOT}/3rdparty/mcollective-shell-agent; \
-        curl --retry 10 --retry-max-time 60 --silent --fail --location \
-        --remote-name ${url} 2>&1 | tee -a /tmp/install-tortuga.log )
-
-    [[ $? -eq 0 ]] || {
-    echo "failed."
-        echo
-        echo "Error retrieving mcollective-shell-agent. Unable to proceed" >&2
-
-        exit 1
-    }
-
-    echo "done."
-}
 
 [[ "${download_only}" -eq 1 ]] && {
     # Force next Puppet run to synchronize newly downloaded packages
