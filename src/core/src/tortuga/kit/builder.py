@@ -389,9 +389,7 @@ class KitBuilder(object):
 
             else:
                 target_path = puppet_module['path']
-                cmd = 'puppet module build --color false {}'.format(
-                    target_path
-                )
+                cmd = 'cd {} && /opt/puppetlabs/pdk/bin/pdk build --force'.format(target_path)
             # Copy kit.json file in for future reference
             self._copy_file(KIT_METADATA_FILE, '{}/{}'.format(target_path, KIT_METADATA_FILE))
             self._run_command(cmd)

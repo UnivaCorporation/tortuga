@@ -79,7 +79,7 @@ def build(options):
     if os.environ.get('TORTUGA_BUILD_DOCKER'):
         sh('docker run --rm=true -v $PWD/src/puppet/univa-tortuga:/root puppet/puppet-agent module build /root')
     else:
-        sh('puppet module build --color false src/puppet/univa-tortuga')
+        sh('/opt/puppetlabs/pdk/bin/pdk build --force', cwd='src/puppet/univa-tortuga')
 
     for kit in distKits:
         cmd = 'tortuga kits build'
