@@ -36,6 +36,5 @@ else
   echo "Normal cluster update puppet run"
   # Run Puppet on the installer first...
   /opt/puppetlabs/bin/puppet agent --onetime --no-daemonize
-  /opt/puppetlabs/bin/mco puppet runonce
   exit $?
 fi
