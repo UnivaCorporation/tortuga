@@ -67,14 +67,15 @@ class AddHostManager(TagsDbApiMixin, TortugaObjectManager):
         # a node. Instead, throw an exception so that callers can deal with
         # the problem in an appropriate fashion.
         #
-        node_details = addHostRequest.get('nodeDetails', {})
-        node_name = node_details.get('name', '').strip()
-        if node_name:
-            try:
-                self._nodeDbApi.getNode(session, node_name)
-                raise Exception("Node already exists: {}".format(node_name))
-            except NodeNotFound:
-                pass
+        node_details = addHostRequest.get('nodeDetails', [])
+        for node_detail in node_details:
+            node_name = node_detail.get('name', '').strip()
+            if node_name:
+                try:
+                    self._nodeDbApi.getNode(session, node_name)
+                    raise Exception("Node already exists: {}".format(node_name))
+                except NodeNotFound:
+                    pass
 
         dbHardwareProfile = \
             HardwareProfilesDbHandler().getHardwareProfile(
