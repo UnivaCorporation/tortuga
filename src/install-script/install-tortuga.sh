@@ -380,13 +380,13 @@ function install_puppetlabs_repo {
         }
     }
 
-    # install puppet development kit
-    pkgexists pdk || {
+    # install puppet-tools-release to make sure we get 'pdk' (Puppet Development Kit)
+    pkgexists puppet-tools-release || {
         rpm_install http://puppet-mirror.univa.com/yum.puppetlabs.com/puppet-tools-release-el-${distmajversion}.noarch.rpm
         sed -i 's,http://yum.puppetlabs.com,http://puppet-mirror.univa.com/yum,' /etc/yum.repos.d/puppet-tools.repo
 
-        pkgexists pdk || {
-            echo "Error installing \"pdk\". Unable to proceed." >&2
+        pkgexists puppet-tools-release || {
+            echo "Error installing \"puppet-tools-release\". Unable to proceed." >&2
             exit 1
         }
     }
