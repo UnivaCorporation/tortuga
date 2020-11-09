@@ -24,7 +24,7 @@ from tortuga.events.types import TagCreated, TagDeleted, TagUpdated, \
     NodeStateChanged, NodeTagsChanged
 from tortuga.objectstore.base import matches_filters
 from tortuga.typestore.base import TypeStore
-from .types import Node
+from .types import Node, NodeStatus
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +58,11 @@ class SqlalchemySessionNodeStore(TypeStore):
         db_node.hardwareProfileId = int(node.hardwareprofile_id)
         db_node.state = node.state
         db_node.lockedState = node.locked
+
+        # If last_update field is provided, update the DB
+        if node.last_update:
+            db_node.lastUpdate = node.last_update
+
         tag_create_events, tag_update_events, tag_delete_events = \
             self._set_db_node_tags(db_node, node.tags)
 
@@ -107,7 +112,8 @@ class SqlalchemySessionNodeStore(TypeStore):
             hardwareprofile_id=str(db_node.hardwareProfileId),
             state=db_node.state,
             locked=db_node.lockedState,
-            tags={tag.name: tag.value for tag in db_node.tags}
+            tags={tag.name: tag.value for tag in db_node.tags},
+            last_update=db_node.lastUpdate
         )
 
     def list(
@@ -145,10 +151,15 @@ class SqlalchemySessionNodeStore(TypeStore):
 
     def get(self, obj_id: str) -> Optional[Node]:
         logger.debug('get(obj_id=%s) -> ...', obj_id)
-
         session = self._Session()
+
         db_node = session.query(DbNode).filter(
             DbNode.id == int(obj_id)).first()
+
+        # If we didn't find anything, return None
+        if db_node is None:
+            return None
+
         node = self._to_node(db_node)
         session.close()
 
@@ -223,3 +234,64 @@ class SqlalchemySessionNodeStore(TypeStore):
                 value=evt['value'],
                 previous_value=evt['previous_value']
             )
+
+
+class SqlalchemySessionNodeStatusStore(SqlalchemySessionNodeStore):
+    """
+    An implementation of the TypeStore class for Node objects, backed
+    by an Sqlalchemy database session.
+
+    """
+    type_class = Node
+    status_type_class = NodeStatus
+
+    def get(self, obj_id: str) -> Optional[Node]:
+        logger.debug('get(obj_id=%s) -> ...', obj_id)
+        session = self._Session()
+
+        # Check if ID maps to an int - if so, we have
+        # an ID, otherwise we expect it to be a name
+        try:
+            int(obj_id)
+        except ValueError:
+            is_id = False
+        else:
+            is_id = True
+
+        # Do database lookup
+        if is_id:
+            db_node = session.query(DbNode).filter(
+                DbNode.id == int(obj_id)).first()
+        else:
+            db_node = session.query(DbNode).filter(
+                DbNode.name == obj_id).first()
+
+        # If we didn't find anything, return None
+        if db_node is None:
+            return None
+
+        # Convert to Node object
+        node = self._to_node(db_node)
+        session.close()
+
+        logger.debug('get(...) -> %s', node)
+        return node
+
+    def save(self, obj: Node) -> Node:
+        logger.debug('save(obj=%s) -> ...', obj)
+
+        node_old = None
+        if obj.id:
+            node_old = self.get(obj.id)
+
+        session = self._Session()
+        db_node, _, _, _ = self._to_db_node(obj, session)
+        if not db_node:
+            raise Exception('Node ID not found: %s', obj.id)
+        session.commit()
+        node = self._to_node(db_node)
+        session.close()
+
+        self._fire_node_events(node_old, node)
+        logger.debug('save(...) -> %s', node)
+        return node

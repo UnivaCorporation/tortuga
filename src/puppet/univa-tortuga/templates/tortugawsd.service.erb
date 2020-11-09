@@ -14,7 +14,8 @@
 
 [Unit]
 Description=Tortuga web service daemon
-After=syslog.target network.target auditd.service
+After=syslog.target network.target auditd.service mariadb.service redis.service
+Wants=mariadb.service redis.service
 
 [Service]
 Type=simple
