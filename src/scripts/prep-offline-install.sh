@@ -95,12 +95,12 @@ download_rpms() {
     # install puppetlabs repo
     echo -n "Checking for puppet repo... "
 
-    rpm --query --quiet puppet5-release && {
+    rpm --query --quiet puppet6-release && {
         echo "found"
     } || {
         echo "not found"
 
-        yum install -y "http://yum.puppetlabs.com/puppet5/puppet5-release-el-${distmajversion}.noarch.rpm"
+        yum install -y "http://yum.puppetlabs.com/puppet6/puppet6-release-el-${distmajversion}.noarch.rpm"
         retval=$?
 
         echo "yum returned: ${retval}"
