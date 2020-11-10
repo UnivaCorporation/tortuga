@@ -50,7 +50,6 @@ from tortuga.resourceAdapter.resourceAdapter import ResourceAdapter
 from tortuga.schema import NodeSchema
 from tortuga.softwareprofile.softwareProfileManager import \
     SoftwareProfileManager
-from tortuga.sync.syncApi import SyncApi
 
 from . import state
 
@@ -68,7 +67,6 @@ class NodeManager(TortugaObjectManager): \
         self._cm = ConfigManager()
         self._bhm = osUtility.getOsObjectFactory().getOsBootHostManager(
             self._cm)
-        self._syncApi = SyncApi()
         self._nodesDbHandler = NodesDbHandler()
         self._addHostManager = AddHostManager()
         self._logger = logging.getLogger(NODE_NAMESPACE)
@@ -600,7 +598,7 @@ class NodeManager(TortugaObjectManager): \
         self._bhm.nodeCleanup(node_dict['name'])
 
     def __scheduleUpdate(self):
-        self._syncApi.scheduleClusterUpdate()
+        pass
 
     def getInstallerNode(self, session,
                          optionDict: Optional[OptionDict] = None):

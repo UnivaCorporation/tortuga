@@ -15,7 +15,6 @@
 import cherrypy
 import json
 
-from tortuga.sync.syncApi import SyncApi
 from tortuga.types.application import Application
 from tortuga.web_service.auth.decorators import authentication_required
 
@@ -35,11 +34,6 @@ class UpdateController(TortugaController):
             'method': ['POST', 'GET'],
         },
     ]
-
-    def __init__(self, app: Application) -> None:
-        super().__init__(app)
-
-        self._syncApi = SyncApi()
 
     @authentication_required()
     @cherrypy.tools.json_out()
@@ -69,12 +63,7 @@ class UpdateController(TortugaController):
         opts = json.loads(postdata['opts']) \
             if 'opts' in postdata else {}
 
-        try:
-            self._syncApi.scheduleClusterUpdate(updateReason=updateReason, opts=opts)
-        except Exception as ex:
-            self._logger.exception('scheduleClusterUpdate() failed')
-            self.handleException(ex)
-            response = self.errorResponse(str(ex))
+        # TODO - placeholder, need to handle cluster update here
 
         return self.formatResponse(response)
 
@@ -83,16 +72,7 @@ class UpdateController(TortugaController):
         """
         Get cluster update status
         """
-
-        try:
-            status = self._syncApi.getUpdateStatus()
-
-            response = {
-                'running': status,
-            }
-        except Exception as ex:
-            self._logger.exception('getUpdateStatus() failed')
-            self.handleException(ex)
-            response = self.errorResponse(str(ex))
+        # TODO - placeholder, need to provide a new way to get update status
+        response = None
 
         return self.formatResponse(response)
