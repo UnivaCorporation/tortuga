@@ -37,6 +37,7 @@ class tortuga::installer (
   contain tortuga::installer::apache
   contain tortuga::installer::cfm
   contain tortuga::installer::sudo
+  contain tortuga::installer::basic
 
   class { 'tortuga::installer::database':
     database_engine => $database_engine_arg,
