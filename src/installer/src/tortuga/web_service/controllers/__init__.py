@@ -29,7 +29,6 @@ from .registry import get_all_ws_controllers, register_ws_controller
 from .resourceAdapterConfigurationController import \
     ResourceAdapterConfigurationController
 from .softwareProfileController import SoftwareProfileController
-from .updateController import UpdateController
 
 
 #
@@ -45,7 +44,6 @@ register_ws_controller(NodeController)
 register_ws_controller(ParameterController)
 register_ws_controller(ResourceAdapterConfigurationController)
 register_ws_controller(SoftwareProfileController)
-register_ws_controller(UpdateController)
 register_ws_controller(MetadataController)
 
 
