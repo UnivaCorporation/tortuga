@@ -27,6 +27,7 @@ from tortuga.db.nodeDbApi import NodeDbApi
 from tortuga.db.softwareProfilesDbHandler import SoftwareProfilesDbHandler
 from tortuga.db.tagsDbApiMixin import TagsDbApiMixin
 from tortuga.exceptions.notFound import NotFound
+from tortuga.exceptions.nodeNotFound import NodeNotFound
 from tortuga.exceptions.resourceAdapterNotFound import ResourceAdapterNotFound
 from tortuga.kit.actions import KitActionsManager
 from tortuga.logging import ADD_HOST_NAMESPACE
@@ -59,6 +60,22 @@ class AddHostManager(TagsDbApiMixin, TortugaObjectManager):
         """
 
         self._logger.debug('addHosts()')
+
+        #
+        # Check if a node with the same name already exists. If it does,
+        # then we should not go any further, as you cannot re-register
+        # a node. Instead, throw an exception so that callers can deal with
+        # the problem in an appropriate fashion.
+        #
+        node_details = addHostRequest.get('nodeDetails', [])
+        for node_detail in node_details:
+            node_name = node_detail.get('name', '').strip()
+            if node_name:
+                try:
+                    self._nodeDbApi.getNode(session, node_name)
+                    raise Exception("Node already exists: {}".format(node_name))
+                except NodeNotFound:
+                    pass
 
         dbHardwareProfile = \
             HardwareProfilesDbHandler().getHardwareProfile(
