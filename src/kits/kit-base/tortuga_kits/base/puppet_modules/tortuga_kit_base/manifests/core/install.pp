@@ -172,11 +172,15 @@ class tortuga_kit_base::core::install::create_tortuga_instroot {
   }
 
   $pipcmd = "${tortuga::config::instroot}/bin/pip"
-  $pipver = '20.1'
+  $pip_compat_ver = '20.2.0'
+  $pip_check_ver = '20.2'
+  # in Puppet 6 we should adopt ability to use non-system pip with package
+  # resource. for now, the version check should allow for 20.2.x releases
+  # by anchoring the regex to beginning of line but leaving end unanchored
   exec { 'update pip':
     path        => ['/bin', '/usr/bin'],
-    command     => "${pipcmd} install --upgrade pip==${pipver}",
-    unless      => "${pipcmd} show pip | grep -q '^Version: ${pipver}$'",
+    command     => "${pipcmd} install --upgrade pip~=${pip_compat_ver}",
+    unless      => "${pipcmd} show pip | grep -q '^Version: ${pip_check_ver}'",
     require     => Exec['create_tortuga_base'],
     environment => $env,
   }
