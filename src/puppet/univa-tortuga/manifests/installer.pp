@@ -33,7 +33,6 @@ class tortuga::installer (
   contain tortuga::installer::puppetmaster
   contain tortuga::envscript
   contain tortuga::installer::redis
-  contain tortuga::installer::activemq
   contain tortuga::installer::apache
   contain tortuga::installer::cfm
   contain tortuga::installer::sudo
@@ -48,8 +47,4 @@ class tortuga::installer (
     installer => $tortuga::config::installer_fqdn
   }
 
-  class { 'tortuga::installer::mcollective':
-    puppet_server => $puppet_server_arg,
-  }
-  contain tortuga::installer::mcollective
 }
