@@ -87,28 +87,85 @@ class ResourceRequestStore:
         """
         raise NotImplementedError()
 
+    def get_non_event_generating_store(self) -> 'ResourceRequestStore':
+        raise NotImplementedError()
+
 
 class ObjectStoreResourceRequestStore(ObjectStoreTypeStore,
                                       ResourceRequestStore):
     type_class = BaseResourceRequest
 
     def save(self, resource_request: BaseResourceRequest) -> BaseResourceRequest:
-        rr_old: Optional[BaseResourceRequest] = None
-        if resource_request.id:
-            rr_old = self.get(resource_request.id)
-        else:
-            resource_request.id = str(uuid.uuid4())
-
-        rr = super().save(resource_request)
-        self._fire_events(rr_old, rr)
-
-        return rr
+        return super().save(resource_request)
 
     def rollback(self, resource_request: BaseResourceRequest) -> BaseResourceRequest:
         if not resource_request.id:
             raise Exception('Rollback requires an resource request ID')
 
         return super().rollback(resource_request)
+
+    def get(self, resource_request_id: str) -> Optional[BaseResourceRequest]:
+        return super().get(resource_request_id)
+
+    def list(
+            self,
+            order_by: Optional[str] = None,
+            order_desc: bool = False,
+            order_alpha: bool = False,
+            limit: Optional[int] = None,
+            **filters) -> Iterator[BaseResourceRequest]:
+        return super().list(order_by, order_desc, order_alpha, limit,
+                            **filters)
+
+    def get_non_event_generating_store(self):
+        return self
+
+    def marshall(self, obj: BaseResourceRequest) -> dict:
+        schema_class = obj.get_schema_class()
+        marshalled = schema_class().dump(obj)
+
+        return marshalled.data
+
+    def unmarshall(self, obj_dict: dict) -> BaseResourceRequest:
+        resource_request_class = get_resource_request_class(
+            obj_dict['resource_type'])
+        schema_class = resource_request_class.get_schema_class()
+        unmarshalled = schema_class().load(obj_dict)
+
+        return resource_request_class(**unmarshalled.data)
+
+
+class EventGeneratingResourceRequestStore(ResourceRequestStore):
+    """
+    A store wrapper that generates events when creates/updates/deletes occur.
+
+    """
+    def __init__(self, store: ObjectStoreResourceRequestStore):
+        self.store = store
+
+    def save(self, resource_request: BaseResourceRequest) -> BaseResourceRequest:
+        rr_old: Optional[BaseResourceRequest] = None
+        if resource_request.id:
+            rr_old = self.store.get(resource_request.id)
+        else:
+            resource_request.id = str(uuid.uuid4())
+
+        rr = self.store.save(resource_request)
+        self._fire_events(rr_old, rr)
+
+        return rr
+
+    def rollback(self, resource_request: BaseResourceRequest) -> BaseResourceRequest:
+        return self.store.rollback(resource_request)
+
+    def get(self, resource_request_id: str) -> Optional[BaseResourceRequest]:
+        return self.store.get(resource_request_id)
+
+    def list(self, order_by: Optional[str] = None, order_desc: bool = False,
+             order_alpha: bool = False, limit: Optional[int] = None,
+             **filters) -> Iterator[BaseResourceRequest]:
+        return self.store.list(order_by, order_desc, order_alpha, limit,
+                               **filters)
 
     def _fire_events(self, rr_old: Optional[BaseResourceRequest],
                      rr: BaseResourceRequest):
@@ -119,8 +176,8 @@ class ObjectStoreResourceRequestStore(ObjectStoreTypeStore,
 
     def _event_updated(self, rr_old: Optional[BaseResourceRequest],
                        rr: BaseResourceRequest):
-        data = self.marshall(rr)
-        previous_data = self.marshall(rr_old)
+        data = self.store.marshall(rr)
+        previous_data = self.store.marshall(rr_old)
 
         if data != previous_data:
             ResourceRequestUpdated.fire(
@@ -136,21 +193,12 @@ class ObjectStoreResourceRequestStore(ObjectStoreTypeStore,
         if not rr_old:
             return
 
-        super().delete(obj_id)
+        self.store.delete(obj_id)
 
         ResourceRequestDeleted.fire(
             resourcerequest_id=rr_old.id,
-            previous_resourcerequest=self.marshall(rr_old)
+            previous_resourcerequest=self.store.marshall(rr_old)
         )
 
-    def marshall(self, obj: BaseResourceRequest) -> dict:
-        schema_class = obj.get_schema_class()
-        marshalled = schema_class().dump(obj)
-        return marshalled.data
-
-    def unmarshall(self, obj_dict: dict) -> BaseResourceRequest:
-        resource_request_class = get_resource_request_class(
-            obj_dict['resource_type'])
-        schema_class = resource_request_class.get_schema_class()
-        unmarshalled = schema_class().load(obj_dict)
-        return resource_request_class(**unmarshalled.data)
+    def get_non_event_generating_store(self) -> 'ResourceRequestStore':
+        return self.store
